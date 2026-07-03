@@ -1,0 +1,2561 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>키오스크 요구사항 발표용 HTML V2.4</title>
+<style>
+  :root {
+    --bg:#eef2ff;
+    --slide:#f8fafc;
+    --ink:#111827;
+    --muted:#64748b;
+    --line:#dbe3ef;
+    --blue:#2563eb;
+    --navy:#111827;
+    --green:#059669;
+    --amber:#d97706;
+    --red:#dc2626;
+    --violet:#7c3aed;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--ink); font-family:"Pretendard","Noto Sans KR","Malgun Gothic",Arial,sans-serif; }
+  body { overflow-x:hidden; overflow-y:auto; }
+  .topbar {
+    position:fixed; left:0; top:0; right:0; min-height:60px; z-index:10;
+    background:rgba(11,16,32,.88); backdrop-filter:blur(10px);
+    display:flex; align-items:center; gap:12px; padding:10px 22px; color:#fff; border-bottom:1px solid rgba(255,255,255,.12);
+    flex-wrap:wrap;
+  }
+  .topbar b { font-size:16px; letter-spacing:-.2px; }
+  .topbar span { color:#cbd5e1; font-size:13px; margin-right:auto; }
+  .topbar a { color:#e0e7ff; text-decoration:none; font-size:13px; padding:6px 10px; border:1px solid rgba(255,255,255,.15); border-radius:999px; }
+  .deck { display:flex; flex-direction:column; align-items:center; gap:24px; padding:92px 24px 40px; width:100%; }
+  .slide {
+    width:min(1280px, calc(100vw - 48px)); min-height:420px; height:auto; overflow:visible; background:var(--slide); border-radius:28px;
+    box-shadow:0 24px 80px rgba(0,0,0,.12); padding:36px; display:flex; flex-direction:column; position:relative;
+    border:1px solid rgba(255,255,255,.6);
+  }
+  .slide::after { content:""; position:absolute; right:-80px; top:-80px; width:260px; height:260px; border-radius:50%; background:linear-gradient(135deg, rgba(37,99,235,.14), rgba(124,58,237,.08)); pointer-events:none; }
+  .slide.dark { background:linear-gradient(135deg,#111827,#172554 65%,#312e81); color:#fff; }
+  .slide h1 { margin:0; font-size:48px; letter-spacing:-2px; line-height:1.05; }
+  .slide h2 { margin:0 0 18px; font-size:34px; letter-spacing:-1px; }
+  .slide h3 { margin:0 0 10px; font-size:18px; }
+  .slide p { line-height:1.6; }
+  .muted { color:var(--muted); }
+  .dark .muted { color:#cbd5e1; }
+  .hero { display:grid; grid-template-columns: 1.08fr .92fr; gap:30px; align-items:start; }
+  .hero-copy p { font-size:18px; color:#dbeafe; max-width:660px; }
+  .chips { display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+  .chip { padding:9px 13px; border-radius:999px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); font-size:13px; color:#fff; }
+  .aside-stack { display:grid; gap:14px; }
+  .kpis { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+  .kpi { background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.16); border-radius:22px; padding:20px; min-height:118px; }
+  .kpi strong { font-size:42px; display:block; line-height:1; }
+  .kpi span { color:#dbeafe; font-size:14px; }
+  .legend-panel { background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.16); border-radius:22px; padding:18px; }
+  .legend-panel h3 { margin-bottom:14px; font-size:17px; }
+  .legend-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+  .legend-item { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); border-radius:16px; padding:12px; min-height:104px; }
+  .legend-item b { display:block; font-size:20px; margin-bottom:6px; }
+  .legend-item small { display:block; color:#dbeafe; font-size:12px; line-height:1.45; }
+  .note { position:absolute; left:36px; bottom:18px; color:#cbd5e1; font-size:12px; }
+  .flowchart-shell { background:#ffffff; border:1px solid var(--line); border-radius:24px; padding:16px; box-shadow:0 12px 28px rgba(15,23,42,.05); }
+  .flowchart-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:10px; flex-wrap:wrap; }
+  .flowchart-head .tag { padding:6px 10px; border-radius:999px; background:#eff6ff; color:#1d4ed8; font-weight:800; font-size:12px; }
+  .flowchart-board { overflow-x:auto; overflow-y:hidden; border:1px dashed #cbd5e1; border-radius:18px; background:#fcfcfd; padding:12px; }
+  .flowchart-board svg { display:block; width:2520px; height:520px; }
+  .flow-hint { margin-top:12px; color:#64748b; font-size:13px; }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:24px; min-height:0; flex:1; }
+  .three-col { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; min-height:0; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:20px; padding:20px; box-shadow:0 10px 30px rgba(15,23,42,.06); }
+  .card.dark-card { background:#111827; color:#fff; border-color:#1f2937; }
+  .flow-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:18px; }
+  .summary-chip { background:#fff; border:1px solid var(--line); border-radius:18px; padding:16px; }
+  .summary-chip b { display:block; margin-bottom:6px; font-size:16px; }
+  .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:18px; background:#fff; max-height:560px; }
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  th { position:sticky; top:0; background:#111827; color:#fff; z-index:1; text-align:left; }
+  th, td { padding:12px 13px; border-bottom:1px solid #e5e7eb; vertical-align:top; }
+  tr:hover td { background:#f8fafc; }
+  .mvp-list { list-style:none; padding:0; margin:0; display:grid; gap:8px; max-height:520px; overflow:auto; }
+  .mvp-list li { display:grid; grid-template-columns:70px 1fr 180px; gap:10px; align-items:center; background:#fff; border:1px solid var(--line); padding:11px 12px; border-radius:14px; }
+  .mvp-list small { color:var(--muted); }
+  .fid { font-family:Consolas, monospace; font-weight:800; color:#1d4ed8; }
+  .feature-panel { display:grid; grid-template-columns:280px 1fr; gap:18px; flex:1; min-height:0; }
+  .feature-tools { background:#111827; color:#fff; border-radius:20px; padding:18px; display:flex; flex-direction:column; gap:12px; }
+  .feature-tools input { width:100%; padding:12px 13px; border-radius:12px; border:1px solid #334155; background:#020617; color:#fff; }
+  .btns { display:grid; gap:8px; }
+  button { cursor:pointer; border:none; border-radius:12px; padding:11px 12px; font-weight:700; background:#e0e7ff; color:#1e3a8a; }
+  button.secondary { background:#1f2937; color:#fff; border:1px solid #374151; }
+  .feature-list { overflow:auto; padding-right:6px; max-height:860px; }
+  details { border-radius:16px; }
+  summary { cursor:pointer; list-style:none; }
+  summary::-webkit-details-marker { display:none; }
+  .target-group, .channel-group, .category-group { background:#fff; border:1px solid var(--line); margin-bottom:12px; padding:0; }
+  .target-group > summary { padding:16px 18px; font-size:18px; font-weight:900; display:flex; justify-content:space-between; align-items:center; }
+  .target-group > summary strong { color:#2563eb; }
+  .channel-group { margin:0 14px 12px; background:#f8fafc; }
+  .channel-group > summary { padding:14px 16px; font-weight:800; color:#0f172a; display:flex; justify-content:space-between; }
+  .category-group { margin:0 14px 12px; background:#fff; }
+  .category-group > summary { padding:13px 14px; font-weight:800; color:#334155; display:flex; justify-content:space-between; }
+  .feature-item { margin:8px 12px 10px; border:1px solid #e2e8f0; background:#fff; overflow:hidden; }
+  .feature-item > summary { padding:12px 14px; display:grid; grid-template-columns:76px 1fr 120px; gap:10px; align-items:center; }
+  .fname { font-weight:800; }
+  .badges { display:flex; gap:5px; justify-content:flex-end; }
+  .badges em { font-style:normal; padding:4px 7px; border-radius:999px; background:#f1f5f9; color:#334155; font-size:11px; }
+  .feature-item.p0 { border-left:5px solid var(--blue); }
+  .feature-item.p1 { border-left:5px solid var(--green); }
+  .feature-item.p2 { border-left:5px solid var(--violet); }
+  .feature-body { padding:0 14px 14px; display:grid; grid-template-columns:1fr 1fr; gap:12px; color:#334155; }
+  .feature-body div { background:#f8fafc; border-radius:12px; padding:12px; }
+  .feature-body b { color:#111827; }
+  .feature-body p { margin:5px 0 0; font-size:13px; }
+  .branch { display:flex; gap:18px; align-items:stretch; margin-top:26px; }
+  .branch-card { flex:1; background:#fff; border:1px solid var(--line); border-radius:22px; padding:22px; position:relative; }
+  .branch-card b { font-size:22px; display:block; margin-bottom:8px; }
+  .branch-card code { display:block; background:#0f172a; color:#dbeafe; padding:11px 12px; border-radius:12px; margin-top:14px; font-size:13px; }
+  .branch-arrow { display:flex; align-items:center; color:#2563eb; font-size:36px; font-weight:900; }
+  .rules { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:22px; }
+  .rule { background:#fff; border:1px solid var(--line); border-radius:18px; padding:16px; }
+  .rule code { color:#1d4ed8; font-weight:800; }
+  .print-tip { position:fixed; right:18px; bottom:18px; background:#111827; color:#fff; border:1px solid #334155; padding:10px 12px; border-radius:999px; font-size:12px; z-index:30; }
+  .hidden { display:none !important; }
+  @media (max-width: 980px) {
+    .hero, .two-col, .feature-panel, .branch, .flow-summary, .rules { grid-template-columns:1fr; display:grid; }
+    .kpis, .legend-grid { grid-template-columns:repeat(2,1fr); }
+    .branch-arrow { justify-content:center; transform:rotate(90deg); }
+    .feature-body { grid-template-columns:1fr; }
+  }
+  @media print {
+    @page { size:A4 landscape; margin:0; }
+    html, body { background:#fff; overflow:visible; }
+    .topbar, .print-tip { display:none; }
+    .deck { display:block; padding:0; width:auto; }
+    .slide { width:297mm; min-height:210mm; box-shadow:none; border-radius:0; page-break-after:always; margin:0; }
+  }
+</style>
+
+<style>
+  .relationship-grid { display:grid; grid-template-columns:1.05fr .95fr; gap:20px; }
+  .reason-list { display:grid; gap:12px; margin-top:14px; }
+  .reason-item { background:#fff; border:1px solid var(--line); border-radius:18px; padding:16px; display:grid; grid-template-columns:120px 1fr; gap:14px; align-items:start; }
+  .reason-item b { color:#1d4ed8; }
+  .relation-map { display:grid; gap:12px; }
+  .relation-card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:16px; }
+  .relation-card strong { display:block; font-size:18px; margin-bottom:6px; }
+  .relation-card small { color:#64748b; line-height:1.55; display:block; }
+  .flow-link-card { background:linear-gradient(135deg,#111827,#1e3a8a); color:#fff; border-radius:24px; padding:28px; display:grid; grid-template-columns:1.1fr .9fr; gap:22px; align-items:center; }
+  .flow-link-card a { display:inline-block; color:#111827; background:#fff; text-decoration:none; padding:13px 18px; border-radius:999px; font-weight:900; margin-top:16px; }
+  .flow-preview { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); border-radius:20px; padding:18px; }
+  .mini-flow { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .mini-flow span { background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.16); border-radius:14px; padding:10px 12px; font-size:13px; }
+  .branch-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:20px; }
+  .branch-node { background:#fff; border:1px solid var(--line); border-radius:20px; padding:18px; min-height:155px; }
+  .branch-node code { display:block; background:#0f172a; color:#dbeafe; padding:10px 12px; border-radius:12px; margin-top:10px; font-size:13px; line-height:1.55; }
+  .merge-flow { display:flex; align-items:center; gap:10px; margin:20px 0; }
+  .merge-flow .pill { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:12px 16px; border-radius:999px; font-weight:900; }
+  .merge-flow .arr { color:#2563eb; font-size:26px; font-weight:900; }
+  .branch-rules-table td:first-child { font-weight:900; color:#1d4ed8; white-space:nowrap; }
+  @media (max-width:980px) {
+    .relationship-grid, .flow-link-card, .branch-grid { grid-template-columns:1fr; }
+    .merge-flow { flex-wrap:wrap; }
+  }
+</style>
+
+</head>
+<body>
+  <div class="topbar">
+    <b>키오스크 요구사항 발표용 HTML</b>
+    <span>세로 스크롤 · 기능 배경 설명 · 전체 기능 목록 접기/펼치기 · 기본/확장 분리 · 브랜치 전략</span>
+    <a href="#slide1">개요</a>
+    <a href="#slide2">배경</a>
+    <a href="#slide3">플로우차트</a>
+    <a href="#slide5">전체 기능</a>
+    <a href="#slide7">브랜치</a>
+  </div>
+  <main class="deck">
+    
+<section class="slide dark" id="slide1">
+  <div class="hero">
+    <div class="hero-copy">
+      <h1>키오스크 시스템<br/>요구사항 발표용 HTML</h1>
+      <p>고객 주문·결제 흐름을 중심으로 지점 주문처리, 본점 기준정보 관리, 보안/운영 기능을 하나의 구조로 연결한 발표용 문서입니다.</p>
+      <p>이번 버전에서는 발표용 HTML과 플로우차트 전용 HTML을 분리했습니다. 발표용 문서는 위에서 아래로 읽고, 플로우차트는 별도 파일에서 좌 → 우로 확인합니다.</p>
+      <div class="chips">
+        <span class="chip">발표용 세로 문서</span>
+        <span class="chip">별도 플로우차트</span>
+        <span class="chip">전체 기능 목록</span>
+        <span class="chip">기본/확장 분리</span>
+        <span class="chip">브랜치 전략</span>
+      </div>
+    </div>
+    <div class="aside-stack">
+      <div class="kpis">
+        <div class="kpi"><strong>103</strong><span>전체 요구사항</span></div>
+        <div class="kpi"><strong>32</strong><span>P0 · 1차 MVP 핵심</span></div>
+        <div class="kpi"><strong>44</strong><span>고객 기능</span></div>
+        <div class="kpi"><strong>18</strong><span>보안/운영 기능</span></div>
+      </div>
+      <div class="legend-panel">
+        <h3>식별 코드 안내</h3>
+        <div class="legend-grid">
+          <div class="legend-item"><b>K</b><small><strong>Kiosk</strong><br/>키오스크 화면에서 고객이 직접 사용하는 주문 기능</small></div>
+          <div class="legend-item"><b>U</b><small><strong>User</strong><br/>PC·모바일 고객 기능을 뜻하는 사용자 영역</small></div>
+          <div class="legend-item"><b>B</b><small><strong>Branch</strong><br/>지점 관리자와 매장 운영 기능</small></div>
+          <div class="legend-item"><b>H</b><small><strong>Head Office</strong><br/>본점 관리자와 통합 운영 기능</small></div>
+          <div class="legend-item"><b>S</b><small><strong>System</strong><br/>보안, 로그, 권한, 배포 같은 공통 기능</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+    
+<section class="slide" id="slide2">
+  <h2>2. 기능을 넣은 배경과 관계 구조</h2>
+  <p class="muted">기능 목록을 바로 보여주면 “왜 이 기능이 필요한지”가 약하게 보일 수 있습니다. 그래서 먼저 키오스크, 고객, 지점, 본사가 어떤 관계인지 설명하고 그 관계에서 필요한 기능을 도출하는 구조로 정리했습니다.</p>
+
+  <div class="relationship-grid">
+    <div class="card">
+      <h3>기능을 넣은 배경</h3>
+      <div class="reason-list">
+        <div class="reason-item"><b>주문 대기 감소</b><span>고객이 직원에게 직접 말하지 않고 키오스크에서 메뉴, 옵션, 결제를 처리하면 매장 대기 시간을 줄일 수 있습니다.</span></div>
+        <div class="reason-item"><b>주문 오류 감소</b><span>콘/컵, 사이즈, 맛 개수, 포장 여부를 화면에서 직접 선택하게 하면 직원 전달 과정의 실수를 줄일 수 있습니다.</span></div>
+        <div class="reason-item"><b>지점 운영 연결</b><span>주문이 결제에서 끝나는 것이 아니라 지점 관리자 화면으로 넘어가야 제조, 픽업, 완료 상태를 관리할 수 있습니다.</span></div>
+        <div class="reason-item"><b>본사 기준 통일</b><span>메뉴명, 가격, 이벤트, 쿠폰, 판매기간을 본사에서 관리해야 전체 지점의 정보가 일관되게 유지됩니다.</span></div>
+        <div class="reason-item"><b>보안과 추적</b><span>결제, 관리자 행위, 개인정보 처리에는 권한 관리와 감사 로그가 필요합니다. 문제가 발생했을 때 누가 무엇을 했는지 추적할 수 있어야 합니다.</span></div>
+      </div>
+    </div>
+
+    <div class="relation-map">
+      <div class="relation-card"><strong>K · 키오스크</strong><small>고객이 매장 안에서 주문을 생성하는 입력 장치입니다. 메뉴 선택, 옵션 선택, 장바구니, 결제, 주문번호 발급을 담당합니다.</small></div>
+      <div class="relation-card"><strong>U · 사용자</strong><small>PC·모바일에서 회원가입, 로그인, 주문내역, 적립, 배달 주문, 문의 기능을 사용하는 고객 영역입니다.</small></div>
+      <div class="relation-card"><strong>B · 지점</strong><small>키오스크에서 들어온 주문을 실제로 제조하고 처리하는 매장 운영 영역입니다. 주문 상태 변경, 품절 처리, 재고 요청이 필요합니다.</small></div>
+      <div class="relation-card"><strong>H · 본사</strong><small>전체 지점이 공통으로 사용할 메뉴, 가격, 이벤트, 쿠폰, 지점 정보, 정책을 관리하는 기준정보 관리 영역입니다.</small></div>
+      <div class="relation-card"><strong>S · 시스템</strong><small>고객·지점·본사를 안전하게 연결하기 위한 공통 기반입니다. 인증, 권한, 로그, 결제 검증, 예외 처리를 담당합니다.</small></div>
+    </div>
+  </div>
+</section>
+
+    
+<section class="slide" id="slide3">
+  <h2>3. 플로우차트는 별도 HTML로 분리</h2>
+  <div class="flow-link-card">
+    <div>
+      <h3 style="font-size:28px;">키오스크 플로우차트 전용 화면</h3>
+      <p>발표용 문서 안에 플로우차트를 억지로 넣으면 화면 크기 때문에 찌그러지거나 화살표가 어색하게 보일 수 있습니다. 그래서 플로우차트는 별도 HTML로 분리했습니다.</p>
+      <p>별도 파일에서는 고객 주문 흐름, 지점 처리 흐름, 본사·시스템 관리 흐름을 좌 → 우 방향으로 넓게 확인할 수 있습니다.</p>
+      <a href="키오스크_플로우차트_전용_V1.html">플로우차트 전용 HTML 열기</a>
+    </div>
+    <div class="flow-preview">
+      <h3>읽는 순서</h3>
+      <div class="mini-flow">
+        <span>고객 주문</span><b>→</b>
+        <span>옵션/장바구니</span><b>→</b>
+        <span>결제</span><b>→</b>
+        <span>지점 처리</span><b>→</b>
+        <span>본사/시스템 관리</span>
+      </div>
+      <p style="color:#dbeafe;">플로우차트는 발표 중 “주문이 어디로 흘러가는지”를 설명할 때 사용하면 됩니다.</p>
+    </div>
+  </div>
+</section>
+
+    <section class="slide" id="slide4">
+      <h2>4. 기본기능 / 확장기능 분리표</h2>
+      <p class="muted">기존 “A/B 통합기능”은 발표자가 이해하기 쉽도록 “기본 기능(A) / 확장 기능(B)” 구조로 명칭을 바꿨습니다.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:50px;">번호</th>
+              <th style="width:150px;">기능 묶음</th>
+              <th>기본 기능(A)</th>
+              <th>확장 기능(B)</th>
+              <th>구현 판단 / 분리 기준</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+      <tr>
+        <td>1</td>
+        <td><b>회원/비회원 주문</b></td>
+        <td>비회원 빠른 주문</td>
+        <td>회원 로그인·적립 주문</td>
+        <td>키오스크는 비회원 우선, PC/모바일은 회원 기능 강화</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><b>메뉴 옵션</b></td>
+        <td>콘/컵/사이즈</td>
+        <td>용기/복수 맛 선택</td>
+        <td>메뉴 유형에 따라 옵션 UI를 분기</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><b>장바구니</b></td>
+        <td>일회성 장바구니</td>
+        <td>회원 저장 장바구니</td>
+        <td>키오스크는 세션 종료 시 삭제, 모바일은 저장</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><b>포장/매장/배달</b></td>
+        <td>매장/포장</td>
+        <td>배달</td>
+        <td>1차는 매장/포장, 배달은 3차 확장</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><b>쿠폰/적립</b></td>
+        <td>전화번호 적립</td>
+        <td>QR/로그인 자동 적립</td>
+        <td>키오스크는 입력·스캔, 온라인은 로그인 기반</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><b>결제</b></td>
+        <td>카드 결제</td>
+        <td>간편/QR 결제</td>
+        <td>1차는 카드/기본 PG, 이후 간편결제 추가</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td><b>영수증</b></td>
+        <td>종이영수증</td>
+        <td>전자영수증</td>
+        <td>키오스크는 선택, 온라인은 전자 중심</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td><b>주문번호</b></td>
+        <td>고객 호출번호</td>
+        <td>내부 주문식별번호</td>
+        <td>화면 표시용과 DB 식별용을 분리</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td><b>품절 처리</b></td>
+        <td>수동 품절</td>
+        <td>재고 연동 자동 품절</td>
+        <td>1차 수동, 3차 재고 연동</td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td><b>메뉴 삭제</b></td>
+        <td>비표시/판매중지</td>
+        <td>완전 삭제</td>
+        <td>주문 이력 보존을 위해 비표시 우선</td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td><b>배너</b></td>
+        <td>본점 공통 배너</td>
+        <td>지점별 배너</td>
+        <td>공통 정책 위에 지점 예외를 허용</td>
+      </tr>
+      <tr>
+        <td>12</td>
+        <td><b>관리자 권한</b></td>
+        <td>본점 최고권한</td>
+        <td>지점/직원 제한권한</td>
+        <td>관리자 기능은 권한별 메뉴 접근으로 분리</td>
+      </tr>
+      <tr>
+        <td>13</td>
+        <td><b>문의/상담</b></td>
+        <td>고객 문의</td>
+        <td>지점-본점 상담</td>
+        <td>대상별 문의 흐름을 분리하되 문의 상태 관리는 통합</td>
+      </tr>
+      <tr>
+        <td>14</td>
+        <td><b>매출</b></td>
+        <td>지점 매출</td>
+        <td>본점 지점별 비교</td>
+        <td>지점은 자기 매장, 본점은 전체 비교</td>
+      </tr>
+      <tr>
+        <td>15</td>
+        <td><b>재고/물류</b></td>
+        <td>지점 재고 신청</td>
+        <td>본점 승인/물류 발주</td>
+        <td>지점 요청 → 본점 승인 → 물류 처리 흐름</td>
+      </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="slide" id="slide5">
+      <h2>5. 전체 기능 목록</h2>
+      <p class="muted">목록을 클릭하면 상세 구조가 아래로 펼쳐집니다. 다시 클릭하면 원래 기능 목록 상태로 접힙니다.</p>
+      <div class="feature-panel">
+        <aside class="feature-tools">
+          <h3>기능 탐색</h3>
+          <input id="searchBox" placeholder="기능명, ID, 설명 검색" />
+          <div class="btns">
+            <button onclick="expandAll()">전체 펼치기</button>
+            <button class="secondary" onclick="collapseAll()">전체 접기</button>
+            <button class="secondary" onclick="filterPriority('P0')">P0만 보기</button>
+            <button class="secondary" onclick="filterPriority('ALL')">전체 보기</button>
+          </div>
+          <p style="font-size:13px; color:#cbd5e1; line-height:1.55;">
+            발표 중에는 P0만 먼저 보여주고, 질문이 나오면 P1/P2를 펼쳐 설명하는 방식이 안정적입니다.
+          </p>
+        </aside>
+        <div class="feature-list" id="featureList">
+          <details class="target-group" open><summary><span>고객</span><strong>44개</strong></summary>
+<details class="channel-group"><summary>키오스크 <strong>30개</strong></summary>
+<details class="category-group"><summary>공통 화면 <strong>4개</strong></summary>
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">K-001</span>
+        <span class="fname">대기화면 광고/이벤트 배너</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>주문이 없을 때 행사 이미지, 신메뉴, 매장 공지, 접근성 안내를 순환 표시한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 본점 공통 배너 / 확장: 지점별 배너</p></div>
+        <div><b>수용 기준</b><p>관리자가 등록한 배너가 시작일/종료일 기준으로 노출되고, 주문 시작 시 즉시 메뉴 화면으로 전환된다.</p></div>
+        <div><b>예외/비고</b><p>이미지 미등록 시 기본 배경 표시</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">K-002</span>
+        <span class="fname">언어 선택</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>한국어, 영어, 일본어를 선택할 수 있고 선택한 언어가 주문 완료 전까지 유지된다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 기본 한국어 / 확장: 다국어</p></div>
+        <div><b>수용 기준</b><p>언어 변경 시 카테고리, 메뉴명, 안내 문구, 결제 안내가 함께 변경된다.</p></div>
+        <div><b>예외/비고</b><p>번역 미등록 메뉴는 한국어로 대체 표시</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">K-003</span>
+        <span class="fname">큰 글씨/고대비 모드</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>고령자와 시력이 약한 사용자를 위해 큰 글씨, 고대비, 버튼 간격 확대 모드를 제공한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 일반 화면 / 확장: 접근성 화면</p></div>
+        <div><b>수용 기준</b><p>접근성 모드 선택 시 주요 버튼 크기와 글자 크기가 확대된다.</p></div>
+        <div><b>예외/비고</b><p>키오스크 실사용성 향상 요소</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">K-004</span>
+        <span class="fname">직원 호출 버튼</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>결제 오류, 주문 도움, 품절 문의 상황에서 직원을 호출할 수 있는 버튼을 제공한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 주문 화면 호출 / 확장: 결제 실패 호출</p></div>
+        <div><b>수용 기준</b><p>호출 버튼 클릭 시 지점 관리자 화면에 알림이 생성된다.</p></div>
+        <div><b>예외/비고</b><p>알림음/알림 팝업은 지점 설정에서 조정</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>메뉴 <strong>8개</strong></summary>
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-005</span>
+        <span class="fname">카테고리 선택</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>이달의 맛, 아이스크림, 프리팩, 아이스크림 케이크, 디저트, 음료, 커피 등 카테고리를 선택한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 고정 카테고리 / 확장: 관리자 변경 카테고리</p></div>
+        <div><b>수용 기준</b><p>선택한 카테고리에 속한 판매 가능 메뉴만 목록에 표시된다.</p></div>
+        <div><b>예외/비고</b><p>카테고리 순서는 관리자 설정 반영</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-006</span>
+        <span class="fname">메뉴판 표시</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>메뉴 이미지, 이름, 가격, 행사 여부, 품절 여부를 카드 형태로 표시한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 기본 메뉴판 / 확장: 행사 메뉴판</p></div>
+        <div><b>수용 기준</b><p>품절 메뉴는 선택 불가 상태로 보이고, 판매중 메뉴만 장바구니에 담을 수 있다.</p></div>
+        <div><b>예외/비고</b><p>이미지 없는 메뉴는 기본 이미지 표시</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">K-007</span>
+        <span class="fname">메뉴 검색 및 필터</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>키워드 검색, 신메뉴, 인기순, 가격순, 품절 제외 필터를 제공한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 카테고리 탐색 / 확장: 검색 탐색</p></div>
+        <div><b>수용 기준</b><p>검색어 입력 시 일치하는 메뉴가 즉시 필터링된다.</p></div>
+        <div><b>예외/비고</b><p>키오스크 화면에서는 키보드 UI 필요</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">K-008</span>
+        <span class="fname">메뉴 상세 정보</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>메뉴 설명, 알레르기 정보, 영양 정보, 원산지, 옵션 선택 영역을 표시한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 간단 상세 / 확장: 영양·알레르기 포함 상세</p></div>
+        <div><b>수용 기준</b><p>상세 화면에서 필수 옵션 선택 전까지 장바구니 담기 버튼이 비활성화된다.</p></div>
+        <div><b>예외/비고</b><p>알레르기 정보는 안전 관련 항목</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-009</span>
+        <span class="fname">콘/컵/사이즈 선택</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>싱글레귤러, 싱글킹, 더블주니어, 트리플주니어, 더블레귤러 등 옵션을 선택한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 콘/컵 옵션 / 확장: 사이즈 옵션</p></div>
+        <div><b>수용 기준</b><p>옵션별 추가금액이 총 주문금액에 즉시 반영된다.</p></div>
+        <div><b>예외/비고</b><p>필수 옵션 누락 시 안내 문구 표시</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-010</span>
+        <span class="fname">용기/패키지 선택</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>파인트, 쿼터, 패밀리, 하프갤론 등 용기 메뉴의 패키지 옵션을 선택한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 단품 옵션 / 확장: 용기 옵션</p></div>
+        <div><b>수용 기준</b><p>선택 가능한 맛 개수와 선택 완료 여부가 화면에 표시된다.</p></div>
+        <div><b>예외/비고</b><p>맛 선택 수 제한 필요</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-011</span>
+        <span class="fname">맛 선택 제한</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>파인트/쿼터/패밀리 등 여러 맛을 담는 상품에서 선택 가능한 맛 개수를 제한한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 단일 맛 / 확장: 복수 맛</p></div>
+        <div><b>수용 기준</b><p>허용 개수보다 적거나 많으면 장바구니 담기가 차단된다.</p></div>
+        <div><b>예외/비고</b><p>실제 아이스크림 키오스크 핵심 로직</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">K-012</span>
+        <span class="fname">토핑/추가 옵션</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>토핑, 스푼, 초, 드라이아이스 추가 여부 등 부가 옵션을 선택한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 무료 옵션 / 확장: 유료 추가 옵션</p></div>
+        <div><b>수용 기준</b><p>유료 옵션 선택 시 가격이 합산되고 주문 상세에 표시된다.</p></div>
+        <div><b>예외/비고</b><p>옵션 재고와 연동 가능</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>장바구니 <strong>3개</strong></summary>
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-013</span>
+        <span class="fname">장바구니 담기</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>선택한 메뉴, 옵션, 수량, 가격을 장바구니에 담는다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 신규 담기 / 확장: 동일 옵션 수량 합치기</p></div>
+        <div><b>수용 기준</b><p>동일 메뉴와 동일 옵션은 수량 증가로 합산 표시된다.</p></div>
+        <div><b>예외/비고</b><p>구매 전 상태 표시</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-014</span>
+        <span class="fname">장바구니 수정/삭제</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>장바구니에서 수량 변경, 옵션 재선택, 항목 삭제가 가능하다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 수량 변경 / 확장: 항목 삭제</p></div>
+        <div><b>수용 기준</b><p>수정 즉시 총 결제금액이 재계산된다.</p></div>
+        <div><b>예외/비고</b><p>결제 진입 후에는 이전 단계로 돌아가 수정</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">K-015</span>
+        <span class="fname">추가 구매 추천</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>장바구니 기준으로 음료, 디저트, 행사 상품을 추천한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 단순 추천 / 확장: 장바구니 기반 추천</p></div>
+        <div><b>수용 기준</b><p>추천 상품을 클릭하면 옵션 선택 후 장바구니에 담긴다.</p></div>
+        <div><b>예외/비고</b><p>매출 향상 요소</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>주문 <strong>6개</strong></summary>
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-016</span>
+        <span class="fname">매장/포장 선택</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>매장 이용 또는 포장을 선택하고 주문서에 이용방식을 저장한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 매장 / 확장: 포장</p></div>
+        <div><b>수용 기준</b><p>선택한 이용방식이 영수증과 주문관리 화면에 표시된다.</p></div>
+        <div><b>예외/비고</b><p>PC/모바일은 주소 또는 픽업 매장 정보와 연결</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">K-017</span>
+        <span class="fname">드라이아이스 선택</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>포장 선택 시 이동시간에 따른 드라이아이스 양을 선택한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 기본 제공 / 확장: 이동시간별 추가</p></div>
+        <div><b>수용 기준</b><p>이동시간 선택에 따라 제공량 또는 추가금액이 주문 상세에 표시된다.</p></div>
+        <div><b>예외/비고</b><p>매장 정책에 따라 무료/유료 설정</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-018</span>
+        <span class="fname">비회원 주문</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>로그인 없이 주문할 수 있으며 주문번호와 결제정보만으로 주문 확인이 가능하다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 비회원 / 확장: 회원</p></div>
+        <div><b>수용 기준</b><p>비회원 주문은 개인정보 입력 없이 결제와 주문번호 발급이 완료된다.</p></div>
+        <div><b>예외/비고</b><p>키오스크 기본 흐름은 비회원 중심 권장</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">K-019</span>
+        <span class="fname">회원 적립 연결</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>전화번호 입력 또는 앱 QR 스캔으로 회원 적립을 연결한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 전화번호 적립 / 확장: QR 적립</p></div>
+        <div><b>수용 기준</b><p>유효한 회원이면 포인트 적립 예정 금액이 주문 확인 화면에 표시된다.</p></div>
+        <div><b>예외/비고</b><p>PC/모바일은 로그인 상태에서 자동 적립</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">K-020</span>
+        <span class="fname">쿠폰 적용</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>앱 쿠폰 QR, 번호 쿠폰, 행사 쿠폰을 결제 전 적용한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: QR 쿠폰 / 확장: 번호 쿠폰</p></div>
+        <div><b>수용 기준</b><p>중복 불가 쿠폰은 하나만 적용되고 할인 금액이 총액에서 차감된다.</p></div>
+        <div><b>예외/비고</b><p>쿠폰 정책 테이블 필요</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-021</span>
+        <span class="fname">최종 주문 확인</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>결제 전 메뉴, 옵션, 수량, 할인, 적립, 최종 금액을 확인한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 일반 확인 / 확장: 할인·적립 포함 확인</p></div>
+        <div><b>수용 기준</b><p>확인 버튼 전까지 결제가 진행되지 않는다.</p></div>
+        <div><b>예외/비고</b><p>결제 직전 핵심 화면</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>결제 <strong>3개</strong></summary>
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-022</span>
+        <span class="fname">결제 타입 선택</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>카드, 간편결제, QR결제 등 사용 가능한 결제수단을 선택한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 카드 결제 / 확장: 간편 결제</p></div>
+        <div><b>수용 기준</b><p>결제수단 선택 후 PG 또는 단말기 결제 단계로 이동한다.</p></div>
+        <div><b>예외/비고</b><p>토스/PG API 사용 가능</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-023</span>
+        <span class="fname">결제 승인 처리</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>결제 요청, 승인 성공, 승인 실패, 취소 응답을 주문 상태와 연동한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 승인 성공 / 확장: 승인 실패·재시도</p></div>
+        <div><b>수용 기준</b><p>결제 성공 시 주문 생성, 결제 실패 시 주문 미생성 또는 대기 상태로 처리한다.</p></div>
+        <div><b>예외/비고</b><p>결제 로그 저장 필수</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-024</span>
+        <span class="fname">결제 실패 안내/재시도</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>결제 실패 사유를 사용자가 이해할 수 있게 표시하고 재시도 또는 장바구니 복귀를 제공한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 재시도 / 확장: 주문취소</p></div>
+        <div><b>수용 기준</b><p>실패 시 중복 주문과 중복 결제가 발생하지 않아야 한다.</p></div>
+        <div><b>예외/비고</b><p>실사용에서 가장 많이 필요한 예외 처리</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>영수증 <strong>1개</strong></summary>
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">K-025</span>
+        <span class="fname">결제 실패 안내/재시도</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>종이영수증, 전자영수증, 미발급 중 선택할 수 있다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 종이영수증 / 확장: 전자영수증</p></div>
+        <div><b>수용 기준</b><p>선택한 방식에 따라 프린터 출력 또는 QR/문자 안내가 진행된다.</p></div>
+        <div><b>예외/비고</b><p>PC/모바일은 전자영수증 중심</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>주문완료 <strong>3개</strong></summary>
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-026</span>
+        <span class="fname">주문번호 발급</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>결제 완료 후 지점별 당일 주문번호를 발급하고 화면에 크게 표시한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 숫자형 호출번호 / 확장: 전체 주문식별번호</p></div>
+        <div><b>수용 기준</b><p>주문번호는 주문관리 화면, 영수증, 고객 완료 화면에 동일하게 표시된다.</p></div>
+        <div><b>예외/비고</b><p>내부 DB용 주문ID와 고객용 호출번호 분리 권장</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">K-027</span>
+        <span class="fname">픽업 안내 화면</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>주문 완료 후 주문번호, 예상 대기시간, 픽업 위치, 유의사항을 표시한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 일반 완료 / 확장: 대기시간 포함 완료</p></div>
+        <div><b>수용 기준</b><p>완료 화면에서 일정 시간이 지나면 대기화면으로 자동 복귀된다.</p></div>
+        <div><b>예외/비고</b><p>대기시간은 지점 설정 또는 주문량 기반</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">K-028</span>
+        <span class="fname">주문 상태 표시</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>주문 접수, 제조중, 픽업대기, 완료 상태를 고객 화면 또는 별도 대기화면에 표시한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 키오스크 완료화면 / 확장: 대기번호 표시판</p></div>
+        <div><b>수용 기준</b><p>직원이 상태를 변경하면 고객용 상태 화면에 반영된다.</p></div>
+        <div><b>예외/비고</b><p>키오스크 단독이면 완료 화면만 가능</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>예외 <strong>2개</strong></summary>
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">K-029</span>
+        <span class="fname">미입력 시간초과 처리</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>일정 시간 입력이 없으면 경고 후 장바구니를 초기화하고 대기화면으로 돌아간다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 경고 후 연장 / 확장: 자동 초기화</p></div>
+        <div><b>수용 기준</b><p>시간초과 전 남은 시간을 표시하고 사용자가 연장할 수 있다.</p></div>
+        <div><b>예외/비고</b><p>개인정보/결제정보 노출 방지</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">K-030</span>
+        <span class="fname">키오스크 점검/오프라인 안내</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>네트워크, 결제단말기, 프린터 장애 시 주문 가능 여부와 직원 문의 안내를 표시한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 부분 장애 / 확장: 전체 점검</p></div>
+        <div><b>수용 기준</b><p>필수 장치 장애 시 결제 진입을 차단하고 관리자에게 알림을 보낸다.</p></div>
+        <div><b>예외/비고</b><p>운영 안정성 요소</p></div>
+      </div>
+    </details>
+    
+</details>
+</details>
+<details class="channel-group"><summary>PC/모바일 <strong>14개</strong></summary>
+<details class="category-group"><summary>회원 <strong>6개</strong></summary>
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">U-031</span>
+        <span class="fname">일반 회원가입</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>아이디, 비밀번호, 닉네임, 주소, 휴대폰번호, 이메일을 입력해 회원가입한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 일반 가입 / 확장: SNS 가입</p></div>
+        <div><b>수용 기준</b><p>아이디와 닉네임은 중복될 수 없고 비밀번호 정책을 통과해야 한다.</p></div>
+        <div><b>예외/비고</b><p>주소 API 사용 권장</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">U-032</span>
+        <span class="fname">SNS 회원가입/로그인</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>카카오 등 외부 계정으로 가입 및 로그인한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 일반 로그인 / 확장: SNS 로그인</p></div>
+        <div><b>수용 기준</b><p>SNS 인증 성공 시 기존 회원과 연결하거나 신규 회원을 생성한다.</p></div>
+        <div><b>예외/비고</b><p>OAuth API 연동</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">U-033</span>
+        <span class="fname">로그인/로그아웃</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>아이디와 비밀번호로 로그인하고 세션 또는 토큰을 발급한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 로그인 / 확장: 로그아웃</p></div>
+        <div><b>수용 기준</b><p>로그인 성공 시 마이페이지와 주문내역 접근이 가능하다.</p></div>
+        <div><b>예외/비고</b><p>키오스크는 기본적으로 비회원 중심</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">U-034</span>
+        <span class="fname">아이디 찾기</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>이메일 인증번호 확인 후 가입된 아이디 일부 또는 전체를 안내한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 이메일 인증 / 확장: 휴대폰 인증</p></div>
+        <div><b>수용 기준</b><p>인증번호가 일치하고 유효시간 이내일 때만 아이디를 표시한다.</p></div>
+        <div><b>예외/비고</b><p>개인정보 마스킹 권장</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">U-035</span>
+        <span class="fname">비밀번호 재설정</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>아이디와 이메일 인증 후 임시 비밀번호 발급 또는 새 비밀번호 설정을 제공한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 임시 비밀번호 / 확장: 새 비밀번호 설정</p></div>
+        <div><b>수용 기준</b><p>재설정 완료 후 기존 세션은 만료 처리된다.</p></div>
+        <div><b>예외/비고</b><p>비밀번호 원문 저장 금지</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">U-044</span>
+        <span class="fname">회원 탈퇴</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>사용자가 회원 탈퇴를 요청하고 개인정보 보관 정책에 따라 비활성화 또는 삭제한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 비활성화 / 확장: 완전 삭제</p></div>
+        <div><b>수용 기준</b><p>탈퇴 후 로그인 불가 상태가 되며 보관 의무 데이터는 별도 처리된다.</p></div>
+        <div><b>예외/비고</b><p>주문/결제 기록은 법적 보관 가능</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>마이페이지 <strong>4개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">U-036</span>
+        <span class="fname">사용자 홈</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>아이디, 닉네임, 보유 쿠폰, 적립 포인트, 최근 주문을 요약 표시한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 기본 정보 / 확장: 주문·혜택 요약</p></div>
+        <div><b>수용 기준</b><p>로그인 사용자는 마이페이지 진입 시 본인 정보만 조회한다.</p></div>
+        <div><b>예외/비고</b><p>PC/모바일 전용</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">U-037</span>
+        <span class="fname">회원정보 수정</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>닉네임, 주소, 이메일, 휴대폰번호를 수정한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 일반 정보 수정 / 확장: 배송지 수정</p></div>
+        <div><b>수용 기준</b><p>중복 닉네임과 잘못된 연락처 형식은 저장되지 않는다.</p></div>
+        <div><b>예외/비고</b><p>변경 이력 로그 가능</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">U-038</span>
+        <span class="fname">이전 구매 내역</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>과거 주문 이력, 결제금액, 주문상태, 영수증을 조회한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 목록 조회 / 확장: 상세 조회</p></div>
+        <div><b>수용 기준</b><p>사용자는 본인의 주문만 조회할 수 있다.</p></div>
+        <div><b>예외/비고</b><p>비회원 주문조회는 주문번호+인증값 필요</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">U-039</span>
+        <span class="fname">저장 장바구니</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>로그인 사용자의 장바구니를 서버에 저장하고 재접속 시 복원한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 키오스크 일회성 / 확장: PC·모바일 저장형</p></div>
+        <div><b>수용 기준</b><p>동일 회원이 다시 접속해도 담아둔 상품이 유지된다.</p></div>
+        <div><b>예외/비고</b><p>품절/가격 변경 시 안내</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>주문 <strong>2개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">U-040</span>
+        <span class="fname">배달 주문</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>주소 기반으로 배달 가능 매장을 찾고 배달 주문을 생성한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 포장/픽업 / 확장: 배달</p></div>
+        <div><b>수용 기준</b><p>배달 불가 지역이면 주문 진행이 차단된다.</p></div>
+        <div><b>예외/비고</b><p>키오스크에는 표시하지 않음</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">U-041</span>
+        <span class="fname">배달 상태 조회</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>접수, 제조중, 배달중, 배달완료 상태를 표시한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 매장 픽업 상태 / 확장: 배달 상태</p></div>
+        <div><b>수용 기준</b><p>지점 또는 배달 관리자가 상태를 변경하면 사용자 화면에 반영된다.</p></div>
+        <div><b>예외/비고</b><p>실시간까지는 아니어도 새로고침 기반 가능</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>매장 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">U-042</span>
+        <span class="fname">가까운 지점 찾기</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>지도 또는 주소 검색으로 가까운 지점, 영업시간, 전화번호, 배달 가능 여부를 확인한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 목록 / 확장: 지도</p></div>
+        <div><b>수용 기준</b><p>선택한 지점 기준으로 주문 가능한 메뉴와 운영 상태가 표시된다.</p></div>
+        <div><b>예외/비고</b><p>지도 API 연동 가능</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>문의 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">U-043</span>
+        <span class="fname">고객 문의</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>사용자가 주문, 결제, 환불, 매장 관련 문의를 작성한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 일반 문의 / 확장: 주문 연결 문의</p></div>
+        <div><b>수용 기준</b><p>문의 등록 시 담당 지점 또는 본점에 문의가 배정된다.</p></div>
+        <div><b>예외/비고</b><p>매장과의 연락 기능 확장</p></div>
+      </div>
+    </details>
+    
+</details>
+</details>
+</details>
+<details class="target-group" open><summary><span>지점 관리자</span><strong>19개</strong></summary>
+<details class="channel-group"><summary>관리자 웹 <strong>19개</strong></summary>
+<details class="category-group"><summary>계정 <strong>2개</strong></summary>
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">B-045</span>
+        <span class="fname">지점 관리자 로그인</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>본점이 발급한 지점 계정으로 관리자 페이지에 로그인한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 수동 로그인 / 확장: 자동 로그인 유지</p></div>
+        <div><b>수용 기준</b><p>권한이 지점 관리자일 때만 지점 관리 메뉴에 접근한다.</p></div>
+        <div><b>예외/비고</b><p>원본의 자동 로그인은 보안상 선택 기능으로 분리</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">B-046</span>
+        <span class="fname">직원 권한 분리</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>지점장, 직원, 제조 담당, 배달 담당 등 역할별 접근 메뉴를 제한한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 관리자 / 확장: 직원</p></div>
+        <div><b>수용 기준</b><p>직원 계정은 매출/개인정보 등 민감 메뉴에 접근하지 못한다.</p></div>
+        <div><b>예외/비고</b><p>고용 기능과 연결</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>키오스크 <strong>2개</strong></summary>
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">B-047</span>
+        <span class="fname">키오스크 장치 등록</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>지점에 설치된 키오스크 장치ID, 위치, 상태를 등록한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 신규 등록 / 확장: 장치 비활성화</p></div>
+        <div><b>수용 기준</b><p>등록된 장치만 주문 API를 호출할 수 있다.</p></div>
+        <div><b>예외/비고</b><p>장치 인증/보안과 연결</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">B-048</span>
+        <span class="fname">키오스크 상태 모니터링</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>네트워크, 결제단말기, 프린터, 앱 버전, 마지막 접속 시간을 확인한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 정상 / 확장: 장애</p></div>
+        <div><b>수용 기준</b><p>장애 상태가 감지되면 관리자 화면에 알림이 표시된다.</p></div>
+        <div><b>예외/비고</b><p>운영 안정성</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>주문 <strong>4개</strong></summary>
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">B-049</span>
+        <span class="fname">실시간 주문 접수</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>키오스크/PC/모바일에서 들어온 주문을 한 화면에서 확인한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 키오스크 주문 / 확장: 온라인 주문</p></div>
+        <div><b>수용 기준</b><p>결제 완료 주문만 제조 대기 목록에 표시된다.</p></div>
+        <div><b>예외/비고</b><p>주문관리 핵심</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">B-050</span>
+        <span class="fname">주문 상태 변경</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>접수, 제조중, 픽업대기, 완료, 취소 상태를 변경한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 제조 상태 / 확장: 취소·환불 상태</p></div>
+        <div><b>수용 기준</b><p>상태 변경 시 고객 화면과 주문 이력에 반영된다.</p></div>
+        <div><b>예외/비고</b><p>상태 변경자 로그 저장</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">B-051</span>
+        <span class="fname">주문 상세 확인</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>주문번호, 메뉴, 옵션, 수량, 결제금액, 요청사항, 이용방식을 확인한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 요약 보기 / 확장: 상세 보기</p></div>
+        <div><b>수용 기준</b><p>주문 상세에서 제조에 필요한 옵션 정보가 누락 없이 표시된다.</p></div>
+        <div><b>예외/비고</b><p>영수증/주문번호 기능 확장</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">B-052</span>
+        <span class="fname">주문 취소/환불 처리</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>결제 완료 주문의 취소 또는 환불을 권한 있는 관리자가 처리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 전체 취소 / 확장: 부분 취소</p></div>
+        <div><b>수용 기준</b><p>환불 처리 결과가 결제 내역과 주문 상태에 함께 반영된다.</p></div>
+        <div><b>예외/비고</b><p>PG 환불 API와 연동</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>메뉴 <strong>2개</strong></summary>
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">B-053</span>
+        <span class="fname">품절 표시</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>지점에서 특정 메뉴 또는 옵션을 품절 처리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 메뉴 품절 / 확장: 옵션 품절</p></div>
+        <div><b>수용 기준</b><p>품절 처리 즉시 고객 주문 화면에서 선택 불가로 표시된다.</p></div>
+        <div><b>예외/비고</b><p>원본 43</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">B-054</span>
+        <span class="fname">지점별 판매 가능 메뉴</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>본점 메뉴 중 지점에서 실제 판매 가능한 메뉴만 활성화한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 본점 공통 메뉴 / 확장: 지점 판매 메뉴</p></div>
+        <div><b>수용 기준</b><p>비활성화 메뉴는 해당 지점 키오스크에 노출되지 않는다.</p></div>
+        <div><b>예외/비고</b><p>지점별 재고/장비 차이 반영</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>재고 <strong>3개</strong></summary>
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">B-055</span>
+        <span class="fname">지점 재고 확인</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>아이스크림, 용기, 토핑, 포장재, 드라이아이스 재고를 확인한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 메뉴 재고 / 확장: 부자재 재고</p></div>
+        <div><b>수용 기준</b><p>안전재고 미만 항목은 부족 표시가 뜬다.</p></div>
+        <div><b>예외/비고</b><p>부족한 메뉴 추가 요청과 연결</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">B-056</span>
+        <span class="fname">주문 후 재고 자동 차감</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>주문 완료 또는 제조 완료 시 메뉴와 옵션 기준으로 재고를 차감한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 주문 시 차감 / 확장: 제조 완료 시 차감</p></div>
+        <div><b>수용 기준</b><p>재고가 0 이하가 되면 자동 품절 처리 또는 관리자 확인이 필요하다.</p></div>
+        <div><b>예외/비고</b><p>정확한 재고단위 설계 필요</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">B-057</span>
+        <span class="fname">부족 재고 추가 신청</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>부족한 메뉴 또는 재료를 본점/물류에 신청한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 지점 신청 / 확장: 본점 승인</p></div>
+        <div><b>수용 기준</b><p>신청 수량, 사유, 희망 입고일을 입력하고 처리 상태를 조회한다.</p></div>
+        <div><b>예외/비고</b><p>원본 오타 &#x27;베뉴&#x27; 정정</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>배달 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">B-058</span>
+        <span class="fname">배달 주문 관리</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>온라인 배달 주문의 접수, 제조, 배달 출발, 완료 상태를 관리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 픽업 / 확장: 배달</p></div>
+        <div><b>수용 기준</b><p>배달 주문은 주소와 연락처 확인 후 처리된다.</p></div>
+        <div><b>예외/비고</b><p>키오스크와 분리</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>매출 <strong>1개</strong></summary>
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">B-059</span>
+        <span class="fname">지점 매출 통계</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>일/월/년 매출, 결제수단별 매출, 메뉴별 판매량을 조회한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 요약 통계 / 확장: 상세 통계</p></div>
+        <div><b>수용 기준</b><p>기간을 선택하면 해당 기간의 매출 합계와 주문 건수가 표시된다.</p></div>
+        <div><b>예외/비고</b><p>숫자 3자리 콤마 표시 권장</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>지출 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">B-060</span>
+        <span class="fname">지점 지출 관리</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>임대료, 인건비, 재료비, 기타 지출을 입력해 손익을 확인한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 지출 입력 / 확장: 손익 계산</p></div>
+        <div><b>수용 기준</b><p>매출 - 지출 결과로 흑자/적자를 표시한다.</p></div>
+        <div><b>예외/비고</b><p>회계 기능은 과도하게 깊게 만들지 않아도 됨</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>고용 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">B-061</span>
+        <span class="fname">고용 인원 관리</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>직원 목록, 연락처, 근무상태, 권한을 관리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 직원 목록 / 확장: 직원 상세</p></div>
+        <div><b>수용 기준</b><p>개인정보는 권한 있는 관리자에게만 표시된다.</p></div>
+        <div><b>예외/비고</b><p>성별/나이 수집은 최소화 권장</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>상담 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">B-062</span>
+        <span class="fname">본점과의 상담</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>지점이 본점에 메뉴, 재고, 운영 관련 문의를 보낸다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 일반 문의 / 확장: 긴급 문의</p></div>
+        <div><b>수용 기준</b><p>문의 작성 후 답변 상태를 확인할 수 있다.</p></div>
+        <div><b>예외/비고</b><p>1대1 대화창</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>공지 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">B-063</span>
+        <span class="fname">지점별 운영 공지</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>영업시간 변경, 임시 휴무, 품절 안내 등 지점 공지를 등록한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 관리자 내부 공지 / 확장: 고객 노출 공지</p></div>
+        <div><b>수용 기준</b><p>고객 노출 공지는 승인 또는 기간 설정 후 표시된다.</p></div>
+        <div><b>예외/비고</b><p>운영성 추가</p></div>
+      </div>
+    </details>
+    
+</details>
+</details>
+</details>
+<details class="target-group" open><summary><span>본점 관리자</span><strong>22개</strong></summary>
+<details class="channel-group"><summary>관리자 웹 <strong>22개</strong></summary>
+<details class="category-group"><summary>계정 <strong>2개</strong></summary>
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">H-064</span>
+        <span class="fname">최고 관리자 로그인</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>본점 최고 관리자가 전체 시스템 관리 페이지에 로그인한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 본점 관리자 / 확장: 슈퍼 관리자</p></div>
+        <div><b>수용 기준</b><p>최고 관리자 권한만 지점 계정 생성과 전체 매출 조회가 가능하다.</p></div>
+        <div><b>예외/비고</b><p>최고 권한 로그인</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">H-065</span>
+        <span class="fname">지점 계정 생성</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>신규 지점의 관리자 계정을 생성하고 초기 비밀번호를 발급한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 단일 생성 / 확장: 일괄 생성</p></div>
+        <div><b>수용 기준</b><p>생성된 계정은 최초 로그인 시 비밀번호 변경을 요구한다.</p></div>
+        <div><b>예외/비고</b><p>원본 &#x27;이미로 생성&#x27; → 임의 생성으로 정정</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>권한 <strong>1개</strong></summary>
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">H-066</span>
+        <span class="fname">권한 그룹 관리</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>본점 관리자, 지점 관리자, 직원, 물류 담당자 권한을 관리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 기본 권한 / 확장: 세부 권한</p></div>
+        <div><b>수용 기준</b><p>권한이 없는 메뉴 접근 시 차단된다.</p></div>
+        <div><b>예외/비고</b><p>보안 요구사항과 연결</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>메뉴 <strong>5개</strong></summary>
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">H-067</span>
+        <span class="fname">메뉴 추가</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>신규 메뉴의 이름, 이미지, 설명, 가격, 카테고리, 옵션, 판매기간을 등록한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 단품 메뉴 / 확장: 옵션형 메뉴</p></div>
+        <div><b>수용 기준</b><p>필수 정보 누락 시 저장되지 않고 오류 메시지가 표시된다.</p></div>
+        <div><b>예외/비고</b><p>원본 27</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">H-068</span>
+        <span class="fname">메뉴 수정</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>메뉴 가격, 설명, 이미지, 옵션, 판매 상태를 수정한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 기본정보 수정 / 확장: 옵션·가격 수정</p></div>
+        <div><b>수용 기준</b><p>수정된 정보는 선택한 지점 또는 전체 지점에 반영된다.</p></div>
+        <div><b>예외/비고</b><p>변경 이력 저장 권장</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">H-069</span>
+        <span class="fname">메뉴 삭제 및 표시/비표시</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>메뉴를 완전 삭제하지 않고 비표시 또는 판매중지 상태로 관리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 비표시 / 확장: 삭제</p></div>
+        <div><b>수용 기준</b><p>주문 이력이 있는 메뉴는 삭제 대신 비표시 처리한다.</p></div>
+        <div><b>예외/비고</b><p>원본 28, 30 통합</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">H-070</span>
+        <span class="fname">카테고리 관리</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>카테고리 생성, 이름 수정, 노출 순서 변경, 사용 여부를 관리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 기본 카테고리 / 확장: 관리자 정의 카테고리</p></div>
+        <div><b>수용 기준</b><p>카테고리 비활성화 시 해당 카테고리 메뉴는 고객 화면에서 숨김 처리된다.</p></div>
+        <div><b>예외/비고</b><p>원본 7 확장</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">H-071</span>
+        <span class="fname">메뉴 할인 설정</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>할인율 또는 할인금액을 설정하고 적용 기간과 적용 지점을 선택한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 정액 할인 / 확장: 정률 할인</p></div>
+        <div><b>수용 기준</b><p>할인 기간이 끝나면 자동으로 정상가가 적용된다.</p></div>
+        <div><b>예외/비고</b><p>% 입력 시 적용</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>이벤트 <strong>1개</strong></summary>
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">H-072</span>
+        <span class="fname">이벤트/광고 배너 관리</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>메인 배너, 키오스크 대기화면, 모바일 광고 이미지를 등록하고 기간별 노출한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 메인 배너 / 확장: 키오스크 배경</p></div>
+        <div><b>수용 기준</b><p>노출 시작일과 종료일을 기준으로 자동 표시/종료된다.</p></div>
+        <div><b>예외/비고</b><p>원본 32</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>쿠폰 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">H-073</span>
+        <span class="fname">쿠폰 캠페인 관리</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>쿠폰명, 할인방식, 사용조건, 발급대상, 사용기간을 설정한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 전체 발급 / 확장: 회원 대상 발급</p></div>
+        <div><b>수용 기준</b><p>쿠폰 사용 조건을 만족하지 않으면 결제 전 적용되지 않는다.</p></div>
+        <div><b>예외/비고</b><p>쿠폰/적립과 연결</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>지점 <strong>3개</strong></summary>
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">H-074</span>
+        <span class="fname">지점 상세 정보 관리</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>지점명, 주소, 전화번호, 영업시간, 배달 가능 여부, 좌표를 관리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 기본 정보 / 확장: 운영 정보</p></div>
+        <div><b>수용 기준</b><p>수정된 지점 정보는 고객의 지점 찾기 화면에 반영된다.</p></div>
+        <div><b>예외/비고</b><p>원본 33</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">H-075</span>
+        <span class="fname">전체 지점 위치 조회</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>지도에서 전체 지점 위치와 운영상태를 확인한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 목록 / 확장: 지도</p></div>
+        <div><b>수용 기준</b><p>지도 마커 클릭 시 지점 상세 정보가 표시된다.</p></div>
+        <div><b>예외/비고</b><p>지도 API</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">H-076</span>
+        <span class="fname">지점별 매출 비교</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>전체 지점 매출, 기간별 매출, 전년/전월 대비 매출을 비교한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 지점 단일 조회 / 확장: 지점 비교 조회</p></div>
+        <div><b>수용 기준</b><p>기간과 지점을 선택하면 매출 비교표와 그래프가 표시된다.</p></div>
+        <div><b>예외/비고</b><p>원본 34</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>물류 <strong>3개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">H-077</span>
+        <span class="fname">메뉴/재료 재고 마스터</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>본점 기준 메뉴, 재료, 포장재, 드라이아이스 품목을 관리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 메뉴 재고 / 확장: 부자재 재고</p></div>
+        <div><b>수용 기준</b><p>품목별 기본 단위와 안전재고 기준을 설정할 수 있다.</p></div>
+        <div><b>예외/비고</b><p>원본 39 확장</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">H-078</span>
+        <span class="fname">지점 재고 신청 승인</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>지점에서 요청한 부족 재고 신청을 승인, 반려, 보류 처리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 승인 / 확장: 반려</p></div>
+        <div><b>수용 기준</b><p>승인 결과가 지점 신청 목록에 반영된다.</p></div>
+        <div><b>예외/비고</b><p>물류회사 연계 전 내부 승인 기능</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">H-079</span>
+        <span class="fname">물류회사 발주 연계</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>승인된 재고 신청을 물류회사 발주 목록으로 전송하거나 CSV로 내보낸다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 수동 발주 / 확장: API 연계</p></div>
+        <div><b>수용 기준</b><p>발주번호와 처리상태가 저장된다.</p></div>
+        <div><b>예외/비고</b><p>처음에는 CSV 다운로드로 구현 가능</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>상담 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">H-080</span>
+        <span class="fname">지점 상담 창구</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>본점과 지점 간 운영, 재고, 배달, 매출 관련 상담 메시지를 관리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 1대1 채팅 / 확장: 문의게시판</p></div>
+        <div><b>수용 기준</b><p>문의 상태가 접수, 답변완료, 보류로 관리된다.</p></div>
+        <div><b>예외/비고</b><p>문의게시판 방식으로 시작 가능</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>가맹 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">H-081</span>
+        <span class="fname">개업 상담</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>예비 점주가 개업 상담을 신청하고 본점이 처리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 상담 신청 / 확장: 관리자 처리</p></div>
+        <div><b>수용 기준</b><p>상담 신청자 정보와 희망 지역, 문의내용이 저장된다.</p></div>
+        <div><b>예외/비고</b><p>가맹점 확장 기능</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>고객 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">H-082</span>
+        <span class="fname">통합 문의 관리</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>고객 문의를 본점 또는 지점 담당자에게 배정하고 답변한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 본점 처리 / 확장: 지점 이관</p></div>
+        <div><b>수용 기준</b><p>문의 배정 후 담당자가 답변하면 고객이 확인할 수 있다.</p></div>
+        <div><b>예외/비고</b><p>고객센터 확장 기능</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>콘텐츠 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">H-083</span>
+        <span class="fname">다국어 번역 관리</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>메뉴명, 설명, 카테고리명, 안내 문구의 다국어 번역을 관리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 수동 번역 / 확장: 번역 누락 대체</p></div>
+        <div><b>수용 기준</b><p>번역이 등록된 언어는 고객 화면에 해당 언어로 표시된다.</p></div>
+        <div><b>예외/비고</b><p>다국어 고객 화면과 연결</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>정산 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">H-084</span>
+        <span class="fname">결제 정산 관리</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>결제수단별 매출, 수수료, 취소/환불 금액, 정산 예정 금액을 조회한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 매출 기준 / 확장: 정산 기준</p></div>
+        <div><b>수용 기준</b><p>기간별 정산 합계와 결제 건수를 확인할 수 있다.</p></div>
+        <div><b>예외/비고</b><p>PG 연동 시 필요</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>약관 <strong>1개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">H-085</span>
+        <span class="fname">이용약관/개인정보 처리방침 관리</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>회원가입, 주문, 쿠폰, 개인정보 처리방침 내용을 관리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 약관 등록 / 확장: 버전 관리</p></div>
+        <div><b>수용 기준</b><p>약관 변경 시 신규 동의가 필요한 항목을 표시한다.</p></div>
+        <div><b>예외/비고</b><p>회원 기능 사용 시 필요</p></div>
+      </div>
+    </details>
+    
+</details>
+</details>
+</details>
+<details class="target-group" open><summary><span>시스템</span><strong>18개</strong></summary>
+<details class="channel-group"><summary>전체 <strong>18개</strong></summary>
+<details class="category-group"><summary>보안 <strong>8개</strong></summary>
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">S-086</span>
+        <span class="fname">HTTPS 적용</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>관리자 페이지, 키오스크 API, PC/모바일 주문 API에 HTTPS를 적용한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 개발 HTTP / 확장: 운영 HTTPS</p></div>
+        <div><b>수용 기준</b><p>운영 환경에서 로그인·결제·개인정보 요청은 HTTPS로만 처리된다.</p></div>
+        <div><b>예외/비고</b><p>보안 2차 적용 항목</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">S-087</span>
+        <span class="fname">비밀번호 암호화</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>회원과 관리자 비밀번호는 BCrypt 등 단방향 해시로 저장한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 회원 / 확장: 관리자</p></div>
+        <div><b>수용 기준</b><p>DB에 비밀번호 원문이 저장되지 않는다.</p></div>
+        <div><b>예외/비고</b><p>Spring Security 권장</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">S-088</span>
+        <span class="fname">로그인 실패 횟수 제한</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>관리자 또는 회원 로그인 실패가 반복되면 일정 시간 계정을 잠금 처리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 실패 횟수 제한 / 확장: CAPTCHA</p></div>
+        <div><b>수용 기준</b><p>정해진 횟수 이상 실패 시 잠금 또는 추가 인증이 요구된다.</p></div>
+        <div><b>예외/비고</b><p>아이디가 틀릴 때 횟수 제한</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">S-089</span>
+        <span class="fname">역할 기반 접근제어</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>본점, 지점, 직원, 고객 권한에 따라 접근 가능한 API와 화면을 제한한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 화면 권한 / 확장: API 권한</p></div>
+        <div><b>수용 기준</b><p>권한 없는 사용자가 관리자 API를 호출하면 403으로 차단된다.</p></div>
+        <div><b>예외/비고</b><p>ROLE_SUPER, ROLE_BRANCH 등</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">S-090</span>
+        <span class="fname">SQL Injection 방지</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>MyBatis 파라미터 바인딩을 사용하고 문자열 직접 결합 쿼리를 금지한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 검색 조건 / 확장: 관리자 입력</p></div>
+        <div><b>수용 기준</b><p>사용자 입력값이 SQL 문법으로 실행되지 않는다.</p></div>
+        <div><b>예외/비고</b><p>#{ } 사용, ${ } 최소화</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">S-091</span>
+        <span class="fname">XSS 방지</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>배너, 문의, 메뉴 설명 등 사용자가 입력한 HTML/스크립트가 실행되지 않게 처리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 화면 출력 이스케이프 / 확장: 관리자 입력 정화</p></div>
+        <div><b>수용 기준</b><p>스크립트 태그를 입력해도 고객 화면에서 실행되지 않는다.</p></div>
+        <div><b>예외/비고</b><p>관리자 콘텐츠도 예외 아님</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">S-092</span>
+        <span class="fname">파일 업로드 보안</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>메뉴 이미지, 배너 이미지 업로드 시 확장자, MIME 타입, 용량, 저장경로를 검증한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 이미지 업로드 / 확장: 파일 차단</p></div>
+        <div><b>수용 기준</b><p>허용되지 않은 확장자와 대용량 파일은 업로드되지 않는다.</p></div>
+        <div><b>예외/비고</b><p>실행 파일 업로드 금지</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">S-093</span>
+        <span class="fname">결제 위변조 방지</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>결제 승인금액, 주문금액, 결제 토큰, webhook 서명을 검증한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 승인 검증 / 확장: webhook 검증</p></div>
+        <div><b>수용 기준</b><p>프론트에서 조작한 금액으로 결제가 완료되지 않는다.</p></div>
+        <div><b>예외/비고</b><p>결제 API 핵심 보안</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>로그 <strong>2개</strong></summary>
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">S-094</span>
+        <span class="fname">감사 로그 기록</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>언제, 어디서, 누가, 어떻게, 왜, 무엇을 했는지 관리자 주요 행위와 결제 행위를 기록한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 관리자 로그 / 확장: 주문·결제 로그</p></div>
+        <div><b>수용 기준</b><p>로그에는 시간, IP/경로, 사용자ID, 행위, 결과, 실패 사유가 저장된다.</p></div>
+        <div><b>예외/비고</b><p>A09 로그처리 기준</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p0">
+      <summary>
+        <span class="fid">S-095</span>
+        <span class="fname">예외 처리/오류 응답 표준화</span>
+        <span class="badges">
+          <em>P0</em>
+          <em>1차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>서버 오류를 사용자에게 그대로 노출하지 않고 표준 오류코드와 메시지로 응답한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 사용자 오류 / 확장: 서버 오류</p></div>
+        <div><b>수용 기준</b><p>예외 발생 시 화면에는 안전한 메시지, 로그에는 상세 원인이 남는다.</p></div>
+        <div><b>예외/비고</b><p>트러블슈팅에 중요</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>운영 <strong>4개</strong></summary>
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">S-096</span>
+        <span class="fname">장애 모니터링</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>서버, DB, 결제 API, 키오스크 장치 상태를 모니터링한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 서버 모니터링 / 확장: 장치 모니터링</p></div>
+        <div><b>수용 기준</b><p>장애 발생 시 관리자에게 알림이 생성된다.</p></div>
+        <div><b>예외/비고</b><p>AWS/CloudWatch 또는 로그 기반 가능</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">S-097</span>
+        <span class="fname">DB 백업/복구</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>주문, 결제, 회원, 메뉴 데이터를 주기적으로 백업하고 복구 절차를 마련한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 정기 백업 / 확장: 복구 테스트</p></div>
+        <div><b>수용 기준</b><p>백업 파일이 생성되고 복구 절차 문서가 존재한다.</p></div>
+        <div><b>예외/비고</b><p>운영 안정성</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">S-102</span>
+        <span class="fname">운영/개발 환경 분리</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>개발, 테스트, 운영 환경의 DB와 API 주소를 분리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 개발 환경 / 확장: 운영 환경</p></div>
+        <div><b>수용 기준</b><p>운영 데이터가 개발 환경에서 임의로 수정되지 않는다.</p></div>
+        <div><b>예외/비고</b><p>AWS/Docker/CICD 적용 시 필요</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">S-103</span>
+        <span class="fname">무중단 또는 안전 배포</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>배포 시 서비스 중단을 최소화하고 실패하면 이전 버전으로 되돌릴 수 있게 한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 수동 배포 / 확장: CI/CD 배포</p></div>
+        <div><b>수용 기준</b><p>배포 실패 시 이전 버전으로 복구할 수 있다.</p></div>
+        <div><b>예외/비고</b><p>GitLab/Jenkins 확장 가능</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>개인정보 <strong>2개</strong></summary>
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">S-098</span>
+        <span class="fname">개인정보 마스킹</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>관리자 화면에서 휴대폰번호, 이메일, 주소 등 개인정보를 권한에 따라 마스킹한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 목록 마스킹 / 확장: 상세 권한 보기</p></div>
+        <div><b>수용 기준</b><p>직원 권한에서는 민감정보 전체가 노출되지 않는다.</p></div>
+        <div><b>예외/비고</b><p>고객/직원 정보 보호</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p2">
+      <summary>
+        <span class="fid">S-099</span>
+        <span class="fname">개인정보 보관/삭제 정책</span>
+        <span class="badges">
+          <em>P2</em>
+          <em>3차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>회원 탈퇴, 주문 보관기간, 로그 보관기간을 정책에 따라 관리한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 보관 / 확장: 삭제·비식별</p></div>
+        <div><b>수용 기준</b><p>탈퇴 회원은 로그인 불가이며 불필요한 개인정보는 삭제 또는 비식별 처리된다.</p></div>
+        <div><b>예외/비고</b><p>회원 기능 확장 시 필요</p></div>
+      </div>
+    </details>
+    
+</details>
+<details class="category-group"><summary>API <strong>2개</strong></summary>
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">S-100</span>
+        <span class="fname">세션·토큰 만료 처리</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>관리자와 고객 인증 세션 또는 토큰에 만료 시간을 적용한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 사용자 세션 / 확장: 관리자 세션</p></div>
+        <div><b>수용 기준</b><p>만료된 토큰으로 API 호출 시 재로그인이 요구된다.</p></div>
+        <div><b>예외/비고</b><p>자동 로그인은 보안 요구와 균형 필요</p></div>
+      </div>
+    </details>
+    
+
+    <details class="feature-item p1">
+      <summary>
+        <span class="fid">S-101</span>
+        <span class="fname">키오스크 장치 인증</span>
+        <span class="badges">
+          <em>P1</em>
+          <em>2차</em>
+        </span>
+      </summary>
+      <div class="feature-body">
+        <div><b>기능 설명</b><p>등록된 키오스크만 주문 생성, 결제 요청, 상태 전송 API를 사용할 수 있게 한다.</p></div>
+        <div><b>기본/확장 구분</b><p>기본: 장치ID / 확장: 장치토큰</p></div>
+        <div><b>수용 기준</b><p>미등록 장치의 API 요청은 차단된다.</p></div>
+        <div><b>예외/비고</b><p>키오스크 위조 요청 방지</p></div>
+      </div>
+    </details>
+    
+</details>
+</details>
+</details>
+        </div>
+      </div>
+    </section>
+    <section class="slide" id="slide6">
+      <h2>6. 1차 MVP 핵심 기능</h2>
+      <p class="muted">최소 완성 기준은 “주문 가능 + 결제 가능 + 지점 주문 처리 가능”입니다.</p>
+      <div class="two-col">
+        <div>
+          <h3>우선 구현 목록</h3>
+          <ul class="mvp-list">
+            <li><span class="fid">K-005</span><b>카테고리 선택</b><small>고객 · 메뉴</small></li>
+<li><span class="fid">K-006</span><b>메뉴판 표시</b><small>고객 · 메뉴</small></li>
+<li><span class="fid">K-009</span><b>콘/컵/사이즈 선택</b><small>고객 · 메뉴</small></li>
+<li><span class="fid">K-010</span><b>용기/패키지 선택</b><small>고객 · 메뉴</small></li>
+<li><span class="fid">K-011</span><b>맛 선택 제한</b><small>고객 · 메뉴</small></li>
+<li><span class="fid">K-013</span><b>장바구니 담기</b><small>고객 · 장바구니</small></li>
+<li><span class="fid">K-014</span><b>장바구니 수정/삭제</b><small>고객 · 장바구니</small></li>
+<li><span class="fid">K-016</span><b>매장/포장 선택</b><small>고객 · 주문</small></li>
+<li><span class="fid">K-018</span><b>비회원 주문</b><small>고객 · 주문</small></li>
+<li><span class="fid">K-021</span><b>최종 주문 확인</b><small>고객 · 주문</small></li>
+<li><span class="fid">K-022</span><b>결제 타입 선택</b><small>고객 · 결제</small></li>
+<li><span class="fid">K-023</span><b>결제 승인 처리</b><small>고객 · 결제</small></li>
+<li><span class="fid">K-024</span><b>결제 실패 안내/재시도</b><small>고객 · 결제</small></li>
+<li><span class="fid">K-026</span><b>주문번호 발급</b><small>고객 · 주문완료</small></li>
+<li><span class="fid">K-029</span><b>미입력 시간초과 처리</b><small>고객 · 예외</small></li>
+<li><span class="fid">B-045</span><b>지점 관리자 로그인</b><small>지점 관리자 · 계정</small></li>
+<li><span class="fid">B-049</span><b>실시간 주문 접수</b><small>지점 관리자 · 주문</small></li>
+<li><span class="fid">B-050</span><b>주문 상태 변경</b><small>지점 관리자 · 주문</small></li>
+<li><span class="fid">B-051</span><b>주문 상세 확인</b><small>지점 관리자 · 주문</small></li>
+<li><span class="fid">B-053</span><b>품절 표시</b><small>지점 관리자 · 메뉴</small></li>
+<li><span class="fid">H-064</span><b>최고 관리자 로그인</b><small>본점 관리자 · 계정</small></li>
+<li><span class="fid">H-065</span><b>지점 계정 생성</b><small>본점 관리자 · 계정</small></li>
+<li><span class="fid">H-067</span><b>메뉴 추가</b><small>본점 관리자 · 메뉴</small></li>
+<li><span class="fid">H-068</span><b>메뉴 수정</b><small>본점 관리자 · 메뉴</small></li>
+<li><span class="fid">H-069</span><b>메뉴 삭제 및 표시/비표시</b><small>본점 관리자 · 메뉴</small></li>
+<li><span class="fid">H-074</span><b>지점 상세 정보 관리</b><small>본점 관리자 · 지점</small></li>
+<li><span class="fid">S-087</span><b>비밀번호 암호화</b><small>시스템 · 보안</small></li>
+<li><span class="fid">S-089</span><b>역할 기반 접근제어</b><small>시스템 · 보안</small></li>
+<li><span class="fid">S-090</span><b>SQL Injection 방지</b><small>시스템 · 보안</small></li>
+<li><span class="fid">S-093</span><b>결제 위변조 방지</b><small>시스템 · 보안</small></li>
+<li><span class="fid">S-094</span><b>감사 로그 기록</b><small>시스템 · 로그</small></li>
+<li><span class="fid">S-095</span><b>예외 처리/오류 응답 표준화</b><small>시스템 · 로그</small></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>발표용 설명 흐름</h3>
+          <p><b>첫째, 고객은 키오스크에서 메뉴를 고르고 옵션을 선택합니다.</b></p>
+          <p><b>둘째, 장바구니와 결제를 거쳐 주문번호를 받습니다.</b></p>
+          <p><b>셋째, 지점 관리자는 실시간 주문을 확인하고 상태를 변경합니다.</b></p>
+          <p><b>넷째, 본점 관리자는 메뉴와 지점 정보를 통합 관리합니다.</b></p>
+          <p class="muted">이 흐름이 완성되면 1차 MVP는 발표 가능한 상태입니다.</p>
+        </div>
+      </div>
+    </section>
+    
+<section class="slide" id="slide7">
+  <h2>7. 브랜치 전략</h2>
+  <p class="muted">기능 개발 브랜치에서 작업하고, dev에서 통합 테스트를 한 뒤, 검증된 내용만 main으로 배포합니다. 프로젝트에서는 브랜치명에 <code>/</code> 대신 <code>_</code>를 사용해 규칙을 통일합니다.</p>
+
+  <div class="merge-flow">
+    <span class="pill">feature_기능명</span>
+    <span class="pill">fix_오류명</span>
+    <span class="arr">→</span>
+    <span class="pill">dev 통합</span>
+    <span class="arr">→</span>
+    <span class="pill">main 배포</span>
+  </div>
+
+  <div class="branch-grid">
+    <div class="branch-node">
+      <h3>기능 개발</h3>
+      <p>새 기능은 기능 단위로 브랜치를 분리합니다.</p>
+      <code>feature_kiosk_order<br/>feature_menu_option<br/>feature_payment</code>
+    </div>
+    <div class="branch-node">
+      <h3>오류 수정</h3>
+      <p>버그 수정은 기능 개발과 분리해서 추적합니다.</p>
+      <code>fix_login_error<br/>fix_payment_retry<br/>fix_order_status</code>
+    </div>
+    <div class="branch-node">
+      <h3>긴급 수정</h3>
+      <p>운영 배포 후 치명 오류가 있으면 hotfix로 처리합니다.</p>
+      <code>hotfix_payment_error<br/>hotfix_security_header</code>
+    </div>
+    <div class="branch-node">
+      <h3>문서/정리</h3>
+      <p>문서, 설정, 리팩토링은 목적별로 구분합니다.</p>
+      <code>docs_requirement_update<br/>refactor_order_service<br/>chore_ci_setting</code>
+    </div>
+  </div>
+
+  <div class="table-wrap" style="margin-top:20px; max-height:480px;">
+    <table class="branch-rules-table">
+      <thead>
+        <tr>
+          <th>항목</th>
+          <th>규칙</th>
+          <th>예시</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>기본 흐름</td>
+          <td>기능 브랜치에서 작업 → dev 병합 → 통합 테스트 → main 배포</td>
+          <td><code>feature_kiosk_order → dev → main</code></td>
+        </tr>
+        <tr>
+          <td>네이밍</td>
+          <td><code>feature/fix</code> 방식은 많이 쓰지만, 이 프로젝트에서는 <code>/</code> 대신 <code>_</code>를 사용한다.</td>
+          <td><code>feature_payment</code>, <code>fix_login_error</code></td>
+        </tr>
+        <tr>
+          <td>단위</td>
+          <td>하나의 브랜치는 하나의 기능 또는 하나의 오류 수정만 담당한다.</td>
+          <td><code>feature_coupon</code> 안에서 재고 기능까지 같이 개발하지 않음</td>
+        </tr>
+        <tr>
+          <td>dev</td>
+          <td>여러 개발자의 기능을 모아 테스트하는 통합 브랜치로 사용한다.</td>
+          <td>키오스크 주문 + 지점 주문관리 연동 테스트</td>
+        </tr>
+        <tr>
+          <td>main</td>
+          <td>발표/배포 가능한 안정 버전만 병합한다. 직접 커밋하지 않는 것을 원칙으로 한다.</td>
+          <td>발표 전 최종 안정 버전</td>
+        </tr>
+        <tr>
+          <td>hotfix</td>
+          <td>main 배포 후 긴급 오류는 hotfix에서 수정하고 main과 dev 양쪽에 반영한다.</td>
+          <td><code>hotfix_payment_error → main</code>, 이후 <code>dev</code>에도 반영</td>
+        </tr>
+        <tr>
+          <td>커밋 메시지</td>
+          <td>작업 유형이 보이도록 짧게 작성한다.</td>
+          <td><code>feat: 키오스크 장바구니 추가</code>, <code>fix: 로그인 오류 수정</code></td>
+        </tr>
+        <tr>
+          <td>병합 기준</td>
+          <td>기능 확인, 충돌 해결, 기본 실행 테스트 후 병합한다.</td>
+          <td>주문 생성 API 호출 성공, 화면 이동 확인</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+    <section class="slide dark" id="slide8">
+      <div class="hero">
+        <div class="hero-copy">
+          <h1>8. 발표 결론</h1>
+          <p>이 시스템은 고객의 주문·결제 흐름을 중심으로, 지점 관리자의 주문 처리와 본점 관리자의 기준정보 관리를 연결합니다.</p>
+          <p>1차는 주문 가능 상태, 2차는 실사용 편의성, 3차는 배달·물류·운영 자동화로 확장합니다.</p>
+        </div>
+        <div class="card dark-card">
+          <h3>한 줄 요약</h3>
+          <p style="font-size:22px;">“고객 주문 → 지점 처리 → 본점 통합관리 → 보안/운영”으로 이어지는 실사용형 키오스크 관리 시스템입니다.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div class="print-tip">PDF 저장: Ctrl + P → 가로 방향</div>
+<script>
+  function expandAll() {
+    document.querySelectorAll('#featureList details').forEach(d => d.open = true);
+  }
+  function collapseAll() {
+    document.querySelectorAll('#featureList details').forEach(d => d.open = false);
+    document.querySelectorAll('#featureList .target-group').forEach(d => d.open = true);
+  }
+  function filterPriority(priority) {
+    const items = document.querySelectorAll('.feature-item');
+    items.forEach(item => {
+      if (priority === 'ALL') {
+        item.classList.remove('hidden');
+      } else {
+        item.classList.toggle('hidden', !item.classList.contains(priority.toLowerCase()));
+      }
+    });
+    document.querySelectorAll('#featureList details').forEach(d => d.open = priority !== 'ALL');
+    if (priority === 'ALL') collapseAll();
+  }
+  document.getElementById('searchBox').addEventListener('input', function(e) {
+    const q = e.target.value.trim().toLowerCase();
+    document.querySelectorAll('.feature-item').forEach(item => {
+      const text = item.innerText.toLowerCase();
+      item.classList.toggle('hidden', q && !text.includes(q));
+      if (q && text.includes(q)) {
+        let p = item.parentElement;
+        while (p && p.id !== 'featureList') {
+          if (p.tagName && p.tagName.toLowerCase() === 'details') p.open = true;
+          p = p.parentElement;
+        }
+      }
+    });
+  });
+</script>
+</body>
+</html>
