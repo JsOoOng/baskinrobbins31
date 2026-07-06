@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>키오스크 요구사항 발표용 HTML V2.4</title>
+<title>키오스크 요구사항 발표용 HTML V2.5</title>
 <style>
   :root {
     --bg:#eef2ff;
@@ -122,7 +122,7 @@
   .print-tip { position:fixed; right:18px; bottom:18px; background:#111827; color:#fff; border:1px solid #334155; padding:10px 12px; border-radius:999px; font-size:12px; z-index:30; }
   .hidden { display:none !important; }
   @media (max-width: 980px) {
-    .hero, .two-col, .feature-panel, .branch, .flow-summary, .rules { grid-template-columns:1fr; display:grid; }
+    .hero, .two-col, .feature-panel, .branch, .flow-summary, .rules, .tech-grid { grid-template-columns:1fr !important; display:grid; }
     .kpis, .legend-grid { grid-template-columns:repeat(2,1fr); }
     .branch-arrow { justify-content:center; transform:rotate(90deg); }
     .feature-body { grid-template-columns:1fr; }
@@ -157,6 +157,12 @@
   .merge-flow .pill { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:12px 16px; border-radius:999px; font-weight:900; }
   .merge-flow .arr { color:#2563eb; font-size:26px; font-weight:900; }
   .branch-rules-table td:first-child { font-weight:900; color:#1d4ed8; white-space:nowrap; }
+  
+  /* 기술 스택 스타일 추가 */
+  .tech-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:16px; }
+  .tech-card h3 { color:var(--blue); border-bottom:2px solid var(--line); padding-bottom:8px; margin-bottom:12px; }
+  .tech-tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .tech-tag { padding:5px 10px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; font-size:12px; font-weight:700; color:#334155; }
   @media (max-width:980px) {
     .relationship-grid, .flow-link-card, .branch-grid { grid-template-columns:1fr; }
     .merge-flow { flex-wrap:wrap; }
@@ -167,12 +173,13 @@
 <body>
   <div class="topbar">
     <b>키오스크 요구사항 발표용 HTML</b>
-    <span>세로 스크롤 · 기능 배경 설명 · 전체 기능 목록 접기/펼치기 · 기본/확장 분리 · 브랜치 전략</span>
+    <span>세로 스크롤 · 기능 배경 설명 · 전체 기능 목록 접기/펼치기 · 기본/확장 분리 · 기술 스택 · 브랜치 전략</span>
     <a href="#slide1">개요</a>
     <a href="#slide2">배경</a>
     <a href="#slide3">플로우차트</a>
     <a href="#slide5">전체 기능</a>
-    <a href="#slide7">브랜치</a>
+    <a href="#slide7">기술 스택</a>
+    <a href="#slide8">브랜치</a>
   </div>
   <main class="deck">
     
@@ -187,6 +194,7 @@
         <span class="chip">별도 플로우차트</span>
         <span class="chip">전체 기능 목록</span>
         <span class="chip">기본/확장 분리</span>
+        <span class="chip">기술 스택</span>
         <span class="chip">브랜치 전략</span>
       </div>
     </div>
@@ -697,7 +705,7 @@
       <div class="feature-body">
         <div><b>기능 설명</b><p>매장 이용 또는 포장을 선택하고 주문서에 이용방식을 저장한다.</p></div>
         <div><b>기본/확장 구분</b><p>기본: 매장 / 확장: 포장</p></div>
-        <div><b>수용 기준</b><p>선택한 이용방식이 영수증과 주문관리 화면에 표시된다.</p></div>
+        <div><b>수용 기준</b><p>선택한 이용방식이 영수증 and 주문관리 화면에 표시된다.</p></div>
         <div><b>예외/비고</b><p>PC/모바일은 주소 또는 픽업 매장 정보와 연결</p></div>
       </div>
     </details>
@@ -1075,7 +1083,7 @@
     </details>
     
 </details>
-<details class="category-group"><summary>마이페이지 <strong>4개</strong></summary>
+<details class="card-group"><summary>마이페이지 <strong>4개</strong></summary>
 
     <details class="feature-item p2">
       <summary>
@@ -2415,9 +2423,50 @@
         </div>
       </div>
     </section>
-    
+
 <section class="slide" id="slide7">
-  <h2>7. 브랜치 전략</h2>
+  <h2>7. 개발 기술 스택 (Tech Stack)</h2>
+  <p class="muted">키오스크, 사용자 웹, 그리고 지점/본점 관리 인프라를 안정적으로 구동하고 유지보수하기 위한 표준 기술 스택 사양입니다.</p>
+  
+  <div class="tech-grid">
+    <div class="card">
+      <h3>Frontend</h3>
+      <p>고객 인터페이스 및 비즈니스 대시보드</p>
+      <div class="tech-tags">
+        <span class="tech-tag">HTML5 / CSS3</span>
+        <span class="tech-tag">JavaScript (ES6+)</span>
+        <span class="tech-tag">React / Vue.js</span>
+      </div>
+      <p style="font-size:12px; margin-top:12px; color:var(--muted);">키오스크의 터치 반응성 및 관리자 대시보드의 실시간 화면 갱신을 고려하여 컴포넌트 기반 라이브러리를 채택합니다.</p>
+    </div>
+
+    <div class="card">
+      <h3>Backend</h3>
+      <p>비즈니스 로직 및 통합 API 서버</p>
+      <div class="tech-tags">
+        <span class="tech-tag">Java 17</span>
+        <span class="tech-tag">Spring Boot 3.x</span>
+        <span class="tech-tag">Spring Security</span>
+        <span class="tech-tag">MyBatis / JPA</span>
+      </div>
+      <p style="font-size:12px; margin-top:12px; color:var(--muted);">대규모 트랜잭션 분산 처리와 보안 요건(암호화, 접근제어) 충족을 위해 기업 표준인 Spring 생태계를 구성합니다.</p>
+    </div>
+
+    <div class="card">
+      <h3>Data & Infra</h3>
+      <p>안정성 기반의 데이터 관리 및 배포 인프라</p>
+      <div class="tech-tags">
+        <span class="tech-tag">MySQL / PostgreSQL</span>
+        <span class="tech-tag">Docker / AWS</span>
+        <span class="tech-tag">GitHub Actions</span>
+      </div>
+      <p style="font-size:12px; margin-top:12px; color:var(--muted);">주문 정보의 정합성을 보장하는 RDBMS와, 실시간 주문 접수 및 장바구니 세션 처리를 위한 인메모리 캐시를 혼용합니다.</p>
+    </div>
+  </div>
+</section>
+    
+<section class="slide" id="slide8">
+  <h2>8. 브랜치 전략</h2>
   <p class="muted">기능 개발 브랜치에서 작업하고, dev에서 통합 테스트를 한 뒤, 검증된 내용만 main으로 배포합니다. 프로젝트에서는 브랜치명에 <code>/</code> 대신 <code>_</code>를 사용해 규칙을 통일합니다.</p>
 
   <div class="merge-flow">
@@ -2507,10 +2556,10 @@
   </div>
 </section>
 
-    <section class="slide dark" id="slide8">
+    <section class="slide dark" id="slide9">
       <div class="hero">
         <div class="hero-copy">
-          <h1>8. 발표 결론</h1>
+          <h1>9. 발표 결론</h1>
           <p>이 시스템은 고객의 주문·결제 흐름을 중심으로, 지점 관리자의 주문 처리와 본점 관리자의 기준정보 관리를 연결합니다.</p>
           <p>1차는 주문 가능 상태, 2차는 실사용 편의성, 3차는 배달·물류·운영 자동화로 확장합니다.</p>
         </div>
