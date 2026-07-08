@@ -1,24 +1,45 @@
 package com.kiosk.headquarter.service;
 
-import com.kiosk.headquarter.dto.product.HeadProductCreateRequest;
-import com.kiosk.headquarter.dto.product.HeadProductCreateResponse;
-import com.kiosk.headquarter.dto.product.HeadProductInsertDTO;
-import com.kiosk.headquarter.dto.product.HeadProductOptionCreateRequest;
-import com.kiosk.headquarter.dto.product.HeadProductOptionInsertDTO;
-import com.kiosk.headquarter.dto.product.HeadProductOptionResponse;
-import com.kiosk.headquarter.mapper.HeadProductMapper;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
+import com.kiosk.headquarter.dto.product.HeadProductCreateRequest;
+import com.kiosk.headquarter.dto.product.HeadProductCreateResponse;
+import com.kiosk.headquarter.dto.product.HeadProductInsertDTO;
+import com.kiosk.headquarter.dto.product.HeadProductListResponseDTO;
+import com.kiosk.headquarter.dto.product.HeadProductDetailResponseDTO;
+import com.kiosk.headquarter.dto.product.HeadProductUpdateRequestDTO;
+import com.kiosk.headquarter.dto.product.HeadProductOptionInsertDTO;
+import com.kiosk.headquarter.dto.product.HeadProductOptionCreateRequest;
+import com.kiosk.headquarter.dto.product.HeadProductOptionResponse;
+import com.kiosk.headquarter.mapper.HeadProductMapper;
+
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class HeadProductService {
 
     private final HeadProductMapper headProductMapper;
-
-    public HeadProductService(HeadProductMapper headProductMapper) {
-        this.headProductMapper = headProductMapper;
+    
+    public List<HeadProductListResponseDTO> getProductList() {
+        return headProductMapper.selectProductList();
+    }
+    
+    public HeadProductDetailResponseDTO getProductDetail(Integer productId) {
+        return headProductMapper.selectProductDetail(productId);
+    }
+    
+    public boolean updateProduct(Integer productId, HeadProductUpdateRequestDTO updateDTO) {
+        int result = headProductMapper.updateProduct(productId, updateDTO);
+        return result > 0;
+    }
+    
+    public boolean deleteProduct(Integer productId) {
+        int result = headProductMapper.deleteProduct(productId);
+        return result > 0;
     }
 
     public HeadProductCreateResponse createProduct(HeadProductCreateRequest request) {
