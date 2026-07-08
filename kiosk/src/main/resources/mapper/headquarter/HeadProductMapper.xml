@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kiosk.headquarter.mapper.HeadProductMapper">
+
+    <select id="countCategoryById" resultType="int">
+        SELECT COUNT(*)
+        FROM categories
+        WHERE category_id = #{categoryId}
+    </select>
+
+    <select id="countStoreById" resultType="int">
+        SELECT COUNT(*)
+        FROM stores
+        WHERE store_id = #{storeId}
+    </select>
+
+    <insert id="insertProduct"
+            parameterType="com.kiosk.headquarter.dto.product.HeadProductInsertDTO"
+            useGeneratedKeys="true"
+            keyProperty="productId">
+
+        INSERT INTO products (
+            category_id,
+            product_name,
+            description,
+            base_price,
+            discount_rate,
+            is_display,
+            created_at
+        ) VALUES (
+            #{categoryId},
+            #{productName},
+            #{description},
+            #{basePrice},
+            #{discountRate},
+            #{isDisplay},
+            CURRENT_TIMESTAMP
+        )
+
+    </insert>
+
+    <insert id="insertProductOption"
+            parameterType="com.kiosk.headquarter.dto.product.HeadProductOptionInsertDTO"
+            useGeneratedKeys="true"
+            keyProperty="optionId">
+
+        INSERT INTO product_options (
+            product_id,
+            option_type,
+            option_name,
+            extra_price,
+            max_flavor_count
+        ) VALUES (
+            #{productId},
+            #{optionType},
+            #{optionName},
+            #{extraPrice},
+            #{maxFlavorCount}
+        )
+
+    </insert>
+
+    <insert id="insertStoreProduct">
+        INSERT INTO store_products (
+            store_id,
+            product_id,
+            is_sold_out
+        ) VALUES (
+            #{storeId},
+            #{productId},
+            FALSE
+        )
+    </insert>
+
+    <select id="findProductById"
+            resultType="com.kiosk.headquarter.dto.product.HeadProductCreateResponse">
+
+        SELECT
+            p.product_id AS productId,
+            p.category_id AS categoryId,
+            c.category_name AS categoryName,
+            p.product_name AS productName,
+            p.description AS description,
+            p.base_price AS basePrice,
+            p.discount_rate AS discountRate,
+            p.is_display AS isDisplay
+        FROM products p
+        INNER JOIN categories c
+            ON p.category_id = c.category_id
+        WHERE p.product_id = #{productId}
+
+    </select>
+
+    <select id="findOptionsByProductId"
+            resultType="com.kiosk.headquarter.dto.product.HeadProductOptionResponse">
+
+        SELECT
+            option_id AS optionId,
+            product_id AS productId,
+            option_type AS optionType,
+            option_name AS optionName,
+            extra_price AS extraPrice,
+            max_flavor_count AS maxFlavorCount
+        FROM product_options
+        WHERE product_id = #{productId}
+        ORDER BY option_id ASC
+
+    </select>
+    
+    <select id="findStoreIdsByProductId" resultType="int">
+
+        SELECT store_id
+        FROM store_products
+        WHERE product_id = #{productId}
+        ORDER BY store_id ASC
+
+    </select>
+</mapper>

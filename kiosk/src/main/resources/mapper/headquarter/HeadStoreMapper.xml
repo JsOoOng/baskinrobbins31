@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kiosk.headquarter.mapper.HeadStoreMapper">
+
+    <select id="findAllStores"
+            resultType="com.kiosk.headquarter.dto.store.HeadStoreResponse">
+        SELECT
+            store_id AS storeId,
+            store_name AS storeName,
+            address AS address,
+            phone AS phone,
+            business_hours AS businessHours,
+            created_at AS createdAt
+        FROM stores
+        ORDER BY store_id ASC
+    </select>
+
+    <select id="findStoreById"
+            resultType="com.kiosk.headquarter.dto.store.HeadStoreResponse">
+        SELECT
+            store_id AS storeId,
+            store_name AS storeName,
+            address AS address,
+            phone AS phone,
+            business_hours AS businessHours,
+            created_at AS createdAt
+        FROM stores
+        WHERE store_id = #{storeId}
+    </select>
+
+    <update id="updateStore"
+            parameterType="com.kiosk.headquarter.dto.store.HeadStoreUpdateRequest">
+        UPDATE stores
+        SET
+            store_name = #{storeName},
+            address = #{address},
+            phone = #{phone},
+            business_hours = #{businessHours}
+        WHERE store_id = #{storeId}
+    </update>
+
+</mapper>

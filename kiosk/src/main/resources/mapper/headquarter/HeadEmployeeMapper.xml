@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kiosk.headquarter.mapper.HeadEmployeeMapper">
+
+    <select id="countStoreById" resultType="int">
+        SELECT COUNT(*)
+        FROM stores
+        WHERE store_id = #{storeId}
+    </select>
+
+    <select id="countEmployeeByLoginId" resultType="int">
+        SELECT COUNT(*)
+        FROM employees
+        WHERE login_id = #{loginId}
+    </select>
+
+    <insert id="insertStoreAdminEmployee"
+            parameterType="com.kiosk.headquarter.dto.employee.HeadEmployeeInsertDTO"
+            useGeneratedKeys="true"
+            keyProperty="employeeId">
+
+        INSERT INTO employees (
+            store_id,
+            login_id,
+            password,
+            name,
+            role,
+            status
+        ) VALUES (
+            #{storeId},
+            #{loginId},
+            #{password},
+            #{name},
+            #{role},
+            #{status}
+        )
+
+    </insert>
+
+</mapper>
