@@ -27,6 +27,10 @@ public class RestockRequest {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id", nullable = false)
     private InventoryItem item;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admin_id")
+    private HeadquarterAdmin admin;
 
     @Column(name = "request_quantity", nullable = false)
     private Integer requestQuantity;

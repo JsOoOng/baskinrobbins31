@@ -28,6 +28,10 @@ public class Inquiry {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admin_id")
+    private HeadquarterAdmin admin;
 
     @Column(name = "title", length = 200, nullable = false)
     private String title;
