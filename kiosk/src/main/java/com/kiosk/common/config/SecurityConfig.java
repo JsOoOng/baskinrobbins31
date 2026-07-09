@@ -15,6 +15,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtUtil jwtUtil) throws Exception {
         http
+	     	// 프론트엔드(5173)와의 통신 및 쿠키 공유를 허용합니다.
+	        .cors(cors -> cors.configurationSource(request -> {
+	            var config = new org.springframework.web.cors.CorsConfiguration();
+	            config.setAllowedOrigins(java.util.List.of("http://localhost:5173")); // 프론트 주소
+	            config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+	            config.setAllowedHeaders(java.util.List.of("*"));
+	            config.setAllowCredentials(true); // 🚨 쿠키(세션) 공유 허용을 위해 필수!
+	            return config;
+	        }))
+	        
             // 1. CSRF 방어 기능 비활성화 (Postman이나 curl로 POST 테스트를 하기 위해 필수)
             .csrf(AbstractHttpConfigurer::disable)
             
