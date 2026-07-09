@@ -2,12 +2,9 @@ package com.kiosk.customer.product.service;
 
 import java.util.List;
 
-<<<<<<< Updated upstream
-import com.kiosk.customer.flavor.category.dto.CategoryResponse;
-=======
 import com.kiosk.customer.category.dto.CategoryResponse;
 import com.kiosk.customer.product.dto.OrderCreateRequest;
->>>>>>> Stashed changes
+import com.kiosk.customer.category.dto.CategoryResponse;
 import com.kiosk.customer.product.dto.ProductCreateRequest;
 import com.kiosk.customer.product.dto.ProductDetailResponse;
 import com.kiosk.customer.product.dto.ProductListResponse;

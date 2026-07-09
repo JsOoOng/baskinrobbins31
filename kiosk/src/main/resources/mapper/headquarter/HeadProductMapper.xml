@@ -118,4 +118,56 @@
         ORDER BY store_id ASC
 
     </select>
+    
+    <select id="selectProductList"
+        resultType="com.kiosk.headquarter.dto.product.HeadProductListResponseDTO">
+	
+	    SELECT
+	        product_id,
+	        product_name,
+	        product_price,
+	        product_category,
+	        product_status
+	    FROM head_product
+	    WHERE product_status != 'DELETED'
+	    ORDER BY product_id DESC
+	
+	</select>
+	
+	<select id="selectProductDetail"
+	        parameterType="int"
+	        resultType="com.kiosk.headquarter.dto.product.HeadProductDetailResponseDTO">
+	
+	    SELECT
+	        product_id,
+	        product_name,
+	        product_price,
+	        product_category,
+	        product_status,
+	        product_description
+	    FROM head_product
+	    WHERE product_id = #{productId}
+	      AND product_status != 'DELETED'
+	
+	</select>
+		
+	<update id="updateProduct">
+	    UPDATE head_product
+	    SET
+	        product_name = #{updateDTO.productName},
+	        product_price = #{updateDTO.productPrice},
+	        product_category = #{updateDTO.productCategory},
+	        product_status = #{updateDTO.productStatus},
+	        product_description = #{updateDTO.productDescription},
+	        updated_at = NOW()
+	    WHERE product_id = #{productId}
+	</update>
+		
+		<update id="deleteProduct" parameterType="int">
+		    UPDATE head_product
+		    SET
+		        product_status = 'DELETED',
+		        updated_at = NOW()
+		    WHERE product_id = #{productId}
+		</update>
 </mapper>

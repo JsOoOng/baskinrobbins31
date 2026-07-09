@@ -1,10 +1,10 @@
-package com.kiosk.customer.flavor.category.service;
+package com.kiosk.customer.category.service;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.kiosk.customer.flavor.category.dto.CategoryResponse;
+import com.kiosk.customer.category.dto.CategoryResponse;
 
 import lombok.RequiredArgsConstructor;
 
