@@ -1,4 +1,4 @@
-package com.kiosk.customer.flavor.category.repository;
+package com.kiosk.customer.category.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

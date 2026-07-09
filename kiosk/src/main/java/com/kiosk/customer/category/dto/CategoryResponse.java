@@ -1,4 +1,4 @@
-package com.kiosk.customer.flavor.category.dto;
+package com.kiosk.customer.category.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
