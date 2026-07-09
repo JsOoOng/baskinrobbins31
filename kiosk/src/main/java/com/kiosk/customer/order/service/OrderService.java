@@ -19,10 +19,10 @@ import com.kiosk.entity.Store;
 import com.kiosk.entity.User;
 import com.kiosk.entity.enums.OrderStatus;
 import com.kiosk.entity.enums.OrderType;
-import com.kiosk.customer.order.repository.OrderRepository;
-import com.kiosk.customer.order.repository.OrderItemRepository;
-import com.kiosk.customer.order.repository.OrderItemFlavorRepository;
-import com.kiosk.customer.order.repository.OrderItemOptionRepository;
+import com.kiosk.customer.order.repository.OrderMapper;
+import com.kiosk.customer.order.repository.OrderItemMapper;
+import com.kiosk.customer.order.repository.OrderItemFlavorMapper;
+import com.kiosk.customer.order.repository.OrderItemOptionMapper;
 
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpSession;
@@ -36,10 +36,10 @@ public class OrderService {
     private final EntityManager em; // 숫자 ID를 참조 객체로 변환하기 위해 사용
 
     // 주문 관련 4개의 Repository
-    private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
-    private final OrderItemFlavorRepository orderItemFlavorRepository;
-    private final OrderItemOptionRepository orderItemOptionRepository;
+    private final OrderMapper orderRepository;
+    private final OrderItemMapper orderItemRepository;
+    private final OrderItemFlavorMapper orderItemFlavorRepository;
+    private final OrderItemOptionMapper orderItemOptionRepository;
 
     @Transactional
     public void createOrder(OrderCreateRequest request, HttpSession session) {

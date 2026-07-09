@@ -1,10 +1,9 @@
 package com.kiosk.customer.order.repository;
 
+import com.kiosk.entity.OrderItemFlavor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.kiosk.entity.OrderItem;
-
 @Repository
-public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
+public interface OrderItemFlavorMapper extends JpaRepository<OrderItemFlavor, Integer> {
 }

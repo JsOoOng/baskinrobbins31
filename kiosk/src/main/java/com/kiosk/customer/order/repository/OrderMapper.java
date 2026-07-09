@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 import com.kiosk.entity.Order;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, Integer> {
+public interface OrderMapper extends JpaRepository<Order, Integer> {
 }
