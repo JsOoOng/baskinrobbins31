@@ -10,7 +10,7 @@
      3. feature/사용자_기능 : 팀원별 기능 구현 - 예시) feature/headquarter_login, feature/kiosk_menu 등    
           @ 사용자 분류 @
           1. 키오스크 기능 : Kiosk
-          2. 사용자 기능 : User
+          2. 사용자 기능 : Customer
           3. 지점 기능 : Branch
           4. 본사 기능 : Headquarter
      4. fix/사용자_기능 : 버그 수정
