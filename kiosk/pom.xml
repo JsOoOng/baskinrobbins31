@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -50,6 +51,7 @@
 
     <!-- ===================================================== -->
     <!-- 4. MyBatis : Mapper Interface + XML SQL 사용 -->
+    <!-- MyBatis : 당장은 남겨둠. 나중에 JPA 전환 끝나면 제거 -->
     <!-- ===================================================== -->
     <dependency>
         <groupId>org.mybatis.spring.boot</groupId>
@@ -122,19 +124,45 @@
         <artifactId>spring-security-test</artifactId>
         <scope>test</scope>
     </dependency>
-
-	<!-- Jakarta Persistence API : @Entity, @Id, @Table, @Column 사용용 -->
+	
+	<!-- Spring Data JPA : Entity, Repository, Hibernate 사용 -->
 	<dependency>
-	    <groupId>jakarta.persistence</groupId>
-	    <artifactId>jakarta.persistence-api</artifactId>
+	    <groupId>org.springframework.boot</groupId>
+	    <artifactId>spring-boot-starter-data-jpa</artifactId>
 	</dependency>
-
-	<!-- Hibernate Core : @CreationTimestamp 같은 Hibernate 전용 어노테이션 사용 -->
+	
+	<!--spring-boot-starter-data-jpa 의존성-->
 	<dependency>
-	    <groupId>org.hibernate.orm</groupId>
-	    <artifactId>hibernate-core</artifactId>
+	    <groupId>org.springframework.boot</groupId>
+	    <artifactId>spring-boot-starter-data-jpa</artifactId>
 	</dependency>
+	
+	    <dependency>
+		    <groupId>io.jsonwebtoken</groupId>
+		    <artifactId>jjwt-api</artifactId>
+		    <version>0.12.6</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>io.jsonwebtoken</groupId>
+		    <artifactId>jjwt-impl</artifactId>
+		    <version>0.12.6</version>
+		    <scope>runtime</scope>
+		</dependency>
+		
+		<dependency>
+		    <groupId>io.jsonwebtoken</groupId>
+		    <artifactId>jjwt-jackson</artifactId>
+		    <version>0.12.6</version>
+		    <scope>runtime</scope>
+		</dependency>
 
+
+
+	<dependency>
+	    <groupId>org.springframework.boot</groupId>
+	    <artifactId>spring-boot-starter-data-jpa</artifactId>
+	</dependency>
 </dependencies>
 
 <build>

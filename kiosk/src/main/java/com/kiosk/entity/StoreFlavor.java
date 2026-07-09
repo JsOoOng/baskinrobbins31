@@ -27,4 +27,8 @@ public class StoreFlavor {
     @Column(name = "is_sold_out")
     @Builder.Default
     private Boolean isSoldOut = false;
+    
+    public void changeSoldOut(Boolean isSoldOut) {
+    	this.isSoldOut = isSoldOut;
+    }
 }
