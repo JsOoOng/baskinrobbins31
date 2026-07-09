@@ -33,7 +33,7 @@ public class BranchOrderService {
 
         List<Order> orders =
                 orderMapper
-                .findByStoreStoreIdOrderByCreatedAtDesc(storeId);
+                .findByIdOrderByCreatedAtDesc(storeId);
 
 
 
@@ -48,7 +48,7 @@ public class BranchOrderService {
 
 
         Order order =
-            orderMapper.findWithItemsByOrderId(orderId)
+            orderMapper.findWithItemsById(orderId)
             .orElseThrow(
                 () -> new RuntimeException("주문 없음")
             );

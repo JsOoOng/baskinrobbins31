@@ -3,6 +3,8 @@ package com.kiosk.customer.product.service;
 import java.util.List;
 
 import com.kiosk.customer.category.dto.CategoryResponse;
+import com.kiosk.customer.product.dto.OrderCreateRequest;
+import com.kiosk.customer.category.dto.CategoryResponse;
 import com.kiosk.customer.product.dto.ProductCreateRequest;
 import com.kiosk.customer.product.dto.ProductDetailResponse;
 import com.kiosk.customer.product.dto.ProductListResponse;
@@ -18,4 +20,6 @@ public interface ProductService {
     ProductDetailResponse getProductDetail(Long storeId, Long productId);
 
 	void addProduct(ProductCreateRequest request);
+
+	void createOrder(OrderCreateRequest request);
 }

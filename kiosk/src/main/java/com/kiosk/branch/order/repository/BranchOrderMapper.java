@@ -16,9 +16,9 @@ public interface BranchOrderMapper extends JpaRepository<Order, Integer> {
         "orderItems",
         "orderItems.product"
     })
-    Optional<Order> findWithItemsByOrderId(Integer orderId);
+    Optional<Order> findWithItemsById(Integer id);
     
  // 특정 지점 주문 조회
-    List<Order> findByStoreStoreIdOrderByCreatedAtDesc(Integer storeId);
+    List<Order> findByIdOrderByCreatedAtDesc(Integer id);
     
 }
