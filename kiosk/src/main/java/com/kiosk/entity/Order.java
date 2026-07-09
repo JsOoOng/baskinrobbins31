@@ -27,12 +27,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "ORDERS")
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -70,6 +68,10 @@ public class Order {
     @Column(name = "order_status", nullable = false)
     @Builder.Default
     private OrderStatus orderStatus = OrderStatus.WAITING;
+    
+    public void changeOrderStatus(OrderStatus orderStatus) {
+    	this.orderStatus = orderStatus;
+    }
 
     @Column(name = "total_price", nullable = false)
     private Integer totalPrice;

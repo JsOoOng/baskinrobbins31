@@ -36,7 +36,7 @@ public class StatusService {
                 );
 
 
-        storeProduct.setIsSoldOut(soldOut);
+        storeProduct.changeSoldOut(soldOut);
 
 
         return StoreProductStatusResponse

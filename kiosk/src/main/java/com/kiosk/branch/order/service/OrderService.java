@@ -108,7 +108,7 @@ public class OrderService {
             OrderStatus.valueOf(status);
 
 
-        order.setOrderStatus(newStatus);
+        order.changeOrderStatus(newStatus);
 
 
         OrderStatusHistory history =

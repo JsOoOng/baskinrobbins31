@@ -6,7 +6,6 @@ import lombok.*;
 @Entity
 @Table(name = "STORE_PRODUCTS")
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -28,4 +27,8 @@ public class StoreProduct {
     @Column(name = "is_sold_out")
     @Builder.Default
     private Boolean isSoldOut = false;
+    
+    public void changeSoldOut(Boolean isSoldOut) {
+    	this.isSoldOut = isSoldOut;
+    }
 }
