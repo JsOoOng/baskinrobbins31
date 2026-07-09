@@ -3,7 +3,7 @@ package com.kiosk.headquarter.service;
 import com.kiosk.headquarter.dto.employee.HeadEmployeeCreateRequest;
 import com.kiosk.headquarter.dto.employee.HeadEmployeeCreateResponse;
 import com.kiosk.headquarter.dto.employee.HeadEmployeeInsertDTO;
-import com.kiosk.headquarter.mapper.HeadEmployeeMapper;
+import com.kiosk.headquarter.repository.HeadEmployeeMapper;
 
 import org.springframework.stereotype.Service;
 

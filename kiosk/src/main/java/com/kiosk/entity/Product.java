@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Product {
-
+	// 본사 상품 원본 메뉴
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_id")
@@ -44,4 +44,24 @@ public class Product {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+    
+    public void updateProduct(
+        Category category,
+        String productName,
+        String description,
+        Integer basePrice,
+        BigDecimal discountRate,
+        Boolean isDisplay) {
+
+    this.category = category;
+    this.productName = productName;
+    this.description = description;
+    this.basePrice = basePrice;
+    this.discountRate = discountRate;
+    this.isDisplay = isDisplay;
+    }
+
+    public void hideProduct() {
+    this.isDisplay = false;
+    }
 }
