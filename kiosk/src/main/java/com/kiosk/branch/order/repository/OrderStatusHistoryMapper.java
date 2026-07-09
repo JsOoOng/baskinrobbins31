@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.kiosk.entity.OrderStatusHistory;
 
 
-public interface OrderStatusHistoryRepository 
+public interface OrderStatusHistoryMapper 
         extends JpaRepository<OrderStatusHistory, Integer> {
 
 }

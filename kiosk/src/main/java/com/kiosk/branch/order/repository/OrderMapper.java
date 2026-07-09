@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.kiosk.entity.Order;
 
 
-public interface OrderRepository extends JpaRepository<Order, Integer> {
+public interface OrderMapper extends JpaRepository<Order, Integer> {
 
 
     @EntityGraph(attributePaths = {

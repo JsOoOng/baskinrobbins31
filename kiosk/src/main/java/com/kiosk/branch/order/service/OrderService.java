@@ -8,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.branch.order.dto.OrderDetailResponse;
 import com.kiosk.branch.order.dto.OrderListResponse;
-import com.kiosk.branch.order.repository.OrderRepository;
-import com.kiosk.branch.order.repository.OrderStatusHistoryRepository;
+import com.kiosk.branch.order.repository.OrderMapper;
+import com.kiosk.branch.order.repository.OrderStatusHistoryMapper;
 import com.kiosk.entity.Order;
 import com.kiosk.entity.OrderStatusHistory;
 import com.kiosk.entity.enums.OrderStatus;
@@ -23,8 +23,8 @@ import lombok.RequiredArgsConstructor;
 public class OrderService {
 
 
-    private final OrderRepository orderRepository;
-    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
+    private final OrderMapper orderMapper;
+    private final OrderStatusHistoryMapper orderStatusHistoryMapper;
 
 
 
@@ -32,7 +32,7 @@ public class OrderService {
 
 
         List<Order> orders =
-                orderRepository
+                orderMapper
                 .findByStoreStoreIdOrderByCreatedAtDesc(storeId);
 
 
@@ -48,7 +48,7 @@ public class OrderService {
 
 
         Order order =
-            orderRepository.findWithItemsByOrderId(orderId)
+            orderMapper.findWithItemsByOrderId(orderId)
             .orElseThrow(
                 () -> new RuntimeException("주문 없음")
             );
@@ -98,7 +98,7 @@ public class OrderService {
     ){
 
         Order order =
-            orderRepository.findById(orderId)
+            orderMapper.findById(orderId)
             .orElseThrow(
                 () -> new RuntimeException("주문 없음")
             );
@@ -119,7 +119,7 @@ public class OrderService {
             .build();
 
 
-        orderStatusHistoryRepository.save(history);
+        orderStatusHistoryMapper.save(history);
 
     }
     

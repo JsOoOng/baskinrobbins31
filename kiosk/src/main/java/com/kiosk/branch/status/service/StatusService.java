@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.branch.status.dto.StoreProductStatusResponse;
-import com.kiosk.branch.status.reopsitory.StoreProductRepository;
+import com.kiosk.branch.status.reopsitory.StoreProductMapper;
 import com.kiosk.entity.StoreProduct;
 
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class StatusService {
 
 
-    private final StoreProductRepository storeProductRepository;
+    private final StoreProductMapper storeProductMapper;
 
 
 
@@ -30,7 +30,7 @@ public class StatusService {
     ){
 
         StoreProduct storeProduct =
-                storeProductRepository.findById(storeProductId)
+        		storeProductMapper.findById(storeProductId)
                 .orElseThrow(() -> 
                     new IllegalArgumentException("상품 없음")
                 );
@@ -51,7 +51,7 @@ public class StatusService {
             Integer storeId
     ){
 
-        return storeProductRepository
+        return storeProductMapper
                 .findByStoreStoreId(storeId)
                 .stream()
                 .map(StoreProductStatusResponse::from)

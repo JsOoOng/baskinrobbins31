@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.kiosk.entity.StoreProduct;
 
 
-public interface StoreProductRepository 
+public interface StoreProductMapper 
         extends JpaRepository<StoreProduct, Integer> {
 
 

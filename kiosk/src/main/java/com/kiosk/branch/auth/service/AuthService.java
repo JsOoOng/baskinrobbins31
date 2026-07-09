@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.branch.auth.dto.AuthRequest;
 import com.kiosk.branch.auth.dto.AuthResponse;
-import com.kiosk.branch.auth.repository.EmployeeRepository;
+import com.kiosk.branch.auth.repository.EmployeeMapper;
 import com.kiosk.entity.Employee;
 
 import lombok.RequiredArgsConstructor;
@@ -17,13 +17,13 @@ import lombok.RequiredArgsConstructor;
 public class AuthService {
 
 
-    private final EmployeeRepository employeeRepository;
+    private final EmployeeMapper employeeMapper;
 
 
     public AuthResponse login(AuthRequest request) {
 
 
-        Employee employee = employeeRepository
+        Employee employee = employeeMapper
                 .findByLoginId(request.getLoginId())
                 .orElseThrow(() -> 
                     new IllegalArgumentException("아이디가 존재하지 않습니다.")
