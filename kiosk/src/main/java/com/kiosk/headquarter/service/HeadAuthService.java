@@ -3,7 +3,7 @@ package com.kiosk.headquarter.service;
 import com.kiosk.headquarter.dto.auth.HeadLoginEmployeeDTO;
 import com.kiosk.headquarter.dto.auth.HeadLoginRequest;
 import com.kiosk.headquarter.dto.auth.HeadLoginResponse;
-import com.kiosk.headquarter.mapper.HeadAuthMapper;
+import com.kiosk.headquarter.repository.HeadAuthMapper;
 
 import org.springframework.stereotype.Service;
 
