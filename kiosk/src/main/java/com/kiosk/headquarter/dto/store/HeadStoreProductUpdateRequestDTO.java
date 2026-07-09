@@ -7,6 +7,5 @@ import lombok.Setter;
 @Setter
 public class HeadStoreProductUpdateRequestDTO {
 
-    private Integer storeProductPrice;
-    private String storeProductStatus;
+    private Boolean isSoldOut;
 }

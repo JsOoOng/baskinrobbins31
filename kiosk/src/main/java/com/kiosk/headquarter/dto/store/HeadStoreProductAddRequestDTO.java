@@ -8,6 +8,5 @@ import lombok.Setter;
 public class HeadStoreProductAddRequestDTO {
 
     private Integer productId;
-    private Integer storeProductPrice;
-    private String storeProductStatus;
+    private Boolean isSoldOut;
 }

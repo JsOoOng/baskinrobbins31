@@ -60,5 +60,30 @@
 	    WHERE store_id = #{storeId}
 	      AND store_product_id = #{storeProductId}
 	</update>
+	
+	<select id="selectStoreProductDetail"
+        resultType="com.kiosk.headquarter.dto.store.HeadStoreProductDetailResponseDTO">
+
+	    SELECT
+	        sp.store_product_id,
+	        sp.store_id,
+	        sp.product_id,
+	
+	        hp.product_name,
+	        hp.product_category,
+	        hp.product_description,
+	        hp.product_price,
+	        hp.product_status,
+	
+	        sp.store_product_price,
+	        sp.store_product_status
+	    FROM store_product sp
+	    JOIN head_product hp
+	        ON sp.product_id = hp.product_id
+	    WHERE sp.store_id = #{storeId}
+	      AND sp.store_product_id = #{storeProductId}
+	      AND sp.store_product_status != 'DELETED'
+	
+	</select>
 
 </mapper>

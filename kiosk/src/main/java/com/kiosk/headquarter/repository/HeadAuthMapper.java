@@ -1,4 +1,4 @@
-package com.kiosk.headquarter.mapper;
+package com.kiosk.headquarter.repository;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

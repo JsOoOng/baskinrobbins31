@@ -1,155 +1,118 @@
 package com.kiosk.headquarter.service;
 
-import java.util.ArrayList;
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.kiosk.headquarter.dto.product.HeadProductCreateRequest;
-import com.kiosk.headquarter.dto.product.HeadProductCreateResponse;
-import com.kiosk.headquarter.dto.product.HeadProductInsertDTO;
-import com.kiosk.headquarter.dto.product.HeadProductListResponseDTO;
-import com.kiosk.headquarter.dto.product.HeadProductDetailResponseDTO;
-import com.kiosk.headquarter.dto.product.HeadProductUpdateRequestDTO;
-import com.kiosk.headquarter.dto.product.HeadProductOptionInsertDTO;
-import com.kiosk.headquarter.dto.product.HeadProductOptionCreateRequest;
-import com.kiosk.headquarter.dto.product.HeadProductOptionResponse;
-import com.kiosk.headquarter.mapper.HeadProductMapper;
+import com.kiosk.entity.Category;
+import com.kiosk.entity.Product;
+import com.kiosk.headquarter.dto.product.HeadProductCreateRequestDTO;
+import com.kiosk.headquarter.dto.product.HeadProductResponseDTO;
+import com.kiosk.headquarter.repository.HeadCategoryMapper;
+import com.kiosk.headquarter.repository.HeadProductMapper;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class HeadProductService {
 
     private final HeadProductMapper headProductMapper;
-    
-    public List<HeadProductListResponseDTO> getProductList() {
-        return headProductMapper.selectProductList();
-    }
-    
-    public HeadProductDetailResponseDTO getProductDetail(Integer productId) {
-        return headProductMapper.selectProductDetail(productId);
-    }
-    
-    public boolean updateProduct(Integer productId, HeadProductUpdateRequestDTO updateDTO) {
-        int result = headProductMapper.updateProduct(productId, updateDTO);
-        return result > 0;
-    }
-    
-    public boolean deleteProduct(Integer productId) {
-        int result = headProductMapper.deleteProduct(productId);
-        return result > 0;
-    }
+    private final HeadCategoryMapper headCategoryMapper;
 
-    public HeadProductCreateResponse createProduct(HeadProductCreateRequest request) {
+    // 본사 상품 등록
+    @Transactional
+    public HeadProductResponseDTO createProduct(HeadProductCreateRequestDTO requestDTO) {
 
-        validateProductRequest(request);
+        Category category = headCategoryMapper.findById(requestDTO.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
 
-        int categoryCount = headProductMapper.countCategoryById(request.getCategoryId());
+        Product product = Product.builder()
+                .category(category)
+                .productName(requestDTO.getProductName())
+                .description(requestDTO.getDescription())
+                .basePrice(requestDTO.getBasePrice())
+                .discountRate(
+                        requestDTO.getDiscountRate() != null
+                                ? requestDTO.getDiscountRate()
+                                : BigDecimal.ZERO
+                )
+                .isDisplay(
+                        requestDTO.getIsDisplay() != null
+                                ? requestDTO.getIsDisplay()
+                                : true
+                )
+                .build();
 
-        if (categoryCount == 0) {
-            throw new IllegalArgumentException("존재하지 않는 카테고리입니다.");
-        }
+        Product savedProduct = headProductMapper.save(product);
 
-        if (request.getStoreIds() != null) {
-            for (Integer storeId : request.getStoreIds()) {
-                int storeCount = headProductMapper.countStoreById(storeId);
-
-                if (storeCount == 0) {
-                    throw new IllegalArgumentException("존재하지 않는 지점 ID입니다. storeId=" + storeId);
-                }
-            }
-        }
-
-        HeadProductInsertDTO product = new HeadProductInsertDTO();
-
-        product.setCategoryId(request.getCategoryId());
-        product.setProductName(request.getProductName());
-        product.setDescription(request.getDescription());
-        product.setBasePrice(request.getBasePrice());
-        product.setDiscountRate(request.getDiscountRate() == null ? 0 : request.getDiscountRate());
-        product.setIsDisplay(request.getIsDisplay() == null ? true : request.getIsDisplay());
-
-        headProductMapper.insertProduct(product);
-
-        Integer productId = product.getProductId();
-
-        if (request.getOptions() != null) {
-            for (HeadProductOptionCreateRequest optionRequest : request.getOptions()) {
-                validateOptionRequest(optionRequest);
-
-                HeadProductOptionInsertDTO option = new HeadProductOptionInsertDTO();
-
-                option.setProductId(productId);
-                option.setOptionType(optionRequest.getOptionType());
-                option.setOptionName(optionRequest.getOptionName());
-                option.setExtraPrice(optionRequest.getExtraPrice() == null ? 0 : optionRequest.getExtraPrice());
-                option.setMaxFlavorCount(optionRequest.getMaxFlavorCount());
-
-                headProductMapper.insertProductOption(option);
-            }
-        }
-
-        if (request.getStoreIds() != null) {
-            for (Integer storeId : request.getStoreIds()) {
-                headProductMapper.insertStoreProduct(productId, storeId);
-            }
-        }
-
-        HeadProductCreateResponse response = headProductMapper.findProductById(productId);
-
-        List<HeadProductOptionResponse> options =
-                headProductMapper.findOptionsByProductId(productId);
-
-        List<Integer> storeIds =
-                headProductMapper.findStoreIdsByProductId(productId);
-
-        response.setOptions(options == null ? new ArrayList<>() : options);
-        response.setStoreIds(storeIds == null ? new ArrayList<>() : storeIds);
-
-        return response;
+        return toResponseDTO(savedProduct);
     }
 
-    private void validateProductRequest(HeadProductCreateRequest request) {
-        if (request.getCategoryId() == null) {
-            throw new IllegalArgumentException("카테고리 ID를 입력해야 합니다.");
-        }
-
-        if (request.getProductName() == null || request.getProductName().isBlank()) {
-            throw new IllegalArgumentException("상품명을 입력해야 합니다.");
-        }
-
-        if (request.getBasePrice() == null) {
-            throw new IllegalArgumentException("기본 가격을 입력해야 합니다.");
-        }
-
-        if (request.getBasePrice() < 0) {
-            throw new IllegalArgumentException("기본 가격은 0원 이상이어야 합니다.");
-        }
-
-        if (request.getDiscountRate() != null) {
-            if (request.getDiscountRate() < 0 || request.getDiscountRate() > 100) {
-                throw new IllegalArgumentException("할인율은 0부터 100 사이여야 합니다.");
-            }
-        }
+    // 본사 상품 목록 조회
+    public List<HeadProductResponseDTO> getProductList() {
+        return headProductMapper.findByIsDisplayTrueOrderByIdDesc()
+                .stream()
+                .map(this::toResponseDTO)
+                .toList();
     }
 
-    private void validateOptionRequest(HeadProductOptionCreateRequest optionRequest) {
-        if (optionRequest.getOptionType() == null || optionRequest.getOptionType().isBlank()) {
-            throw new IllegalArgumentException("옵션 타입을 입력해야 합니다.");
-        }
+    // 본사 상품 상세 조회
+    public HeadProductResponseDTO getProductDetail(Integer productId) {
+        Product product = headProductMapper.findByIdAndIsDisplayTrue(productId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다."));
 
-        if (optionRequest.getOptionName() == null || optionRequest.getOptionName().isBlank()) {
-            throw new IllegalArgumentException("옵션명을 입력해야 합니다.");
-        }
+        return toResponseDTO(product);
+    }
 
-        if (optionRequest.getExtraPrice() != null && optionRequest.getExtraPrice() < 0) {
-            throw new IllegalArgumentException("추가 금액은 0원 이상이어야 합니다.");
-        }
+    // 본사 상품 수정
+    @Transactional
+    public HeadProductResponseDTO updateProduct(
+            Integer productId,
+            HeadProductCreateRequestDTO requestDTO) {
 
-        if (optionRequest.getMaxFlavorCount() != null && optionRequest.getMaxFlavorCount() < 0) {
-            throw new IllegalArgumentException("최대 맛 선택 개수는 0 이상이어야 합니다.");
-        }
+        Product product = headProductMapper.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다."));
+
+        Category category = headCategoryMapper.findById(requestDTO.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+
+        product.updateProduct(
+                category,
+                requestDTO.getProductName(),
+                requestDTO.getDescription(),
+                requestDTO.getBasePrice(),
+                requestDTO.getDiscountRate() != null ? requestDTO.getDiscountRate() : BigDecimal.ZERO,
+                requestDTO.getIsDisplay() != null ? requestDTO.getIsDisplay() : true
+        );
+
+        return toResponseDTO(product);
+    }
+
+    // 본사 상품 삭제 처리
+    @Transactional
+    public void deleteProduct(Integer productId) {
+        Product product = headProductMapper.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다."));
+
+        product.hideProduct();
+    }
+
+    // Entity → DTO 변환
+    private HeadProductResponseDTO toResponseDTO(Product product) {
+        return HeadProductResponseDTO.builder()
+                .productId(product.getId())
+                .categoryId(product.getCategory().getId())
+                .categoryName(product.getCategory().getCategoryName())
+                .productName(product.getProductName())
+                .description(product.getDescription())
+                .basePrice(product.getBasePrice())
+                .discountRate(product.getDiscountRate())
+                .isDisplay(product.getIsDisplay())
+                .createdAt(product.getCreatedAt())
+                .build();
     }
 }
