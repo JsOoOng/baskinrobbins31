@@ -7,7 +7,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class OrderDetailResponse {
+public class BranchOrderDetailResponse {
 
     private Integer orderId;
 

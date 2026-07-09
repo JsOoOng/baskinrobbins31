@@ -6,10 +6,10 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kiosk.branch.order.dto.OrderDetailResponse;
-import com.kiosk.branch.order.dto.OrderListResponse;
-import com.kiosk.branch.order.repository.OrderMapper;
-import com.kiosk.branch.order.repository.OrderStatusHistoryMapper;
+import com.kiosk.branch.order.dto.BranchOrderDetailResponse;
+import com.kiosk.branch.order.dto.BranchOrderListResponse;
+import com.kiosk.branch.order.repository.BranchOrderMapper;
+import com.kiosk.branch.order.repository.BranchOrderStatusHistoryMapper;
 import com.kiosk.entity.Order;
 import com.kiosk.entity.OrderStatusHistory;
 import com.kiosk.entity.enums.OrderStatus;
@@ -20,15 +20,15 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class OrderService {
+public class BranchOrderService {
 
 
-    private final OrderMapper orderMapper;
-    private final OrderStatusHistoryMapper orderStatusHistoryMapper;
+    private final BranchOrderMapper orderMapper;
+    private final BranchOrderStatusHistoryMapper orderStatusHistoryMapper;
 
 
 
-    public List<OrderListResponse> getOrders(Integer storeId){
+    public List<BranchOrderListResponse> getOrders(Integer storeId){
 
 
         List<Order> orders =
@@ -38,13 +38,13 @@ public class OrderService {
 
 
         return orders.stream()
-                .map(OrderListResponse::from)
+                .map(BranchOrderListResponse::from)
                 .toList();
 
     }
     
     @Transactional(readOnly = true)
-    public OrderDetailResponse getOrderDetail(Integer orderId) {
+    public BranchOrderDetailResponse getOrderDetail(Integer orderId) {
 
 
         Order order =
@@ -54,11 +54,11 @@ public class OrderService {
             );
 
 
-        List<OrderDetailResponse.ItemResponse> items =
+        List<BranchOrderDetailResponse.ItemResponse> items =
             order.getOrderItems()
             .stream()
             .map(item ->
-                OrderDetailResponse.ItemResponse.builder()
+            BranchOrderDetailResponse.ItemResponse.builder()
                 .productName(
                     item.getProduct().getProductName()
                 )
@@ -74,7 +74,7 @@ public class OrderService {
 
 
 
-        return OrderDetailResponse.builder()
+        return BranchOrderDetailResponse.builder()
                 .orderId(order.getId())
                 .orderNumber(order.getOrderNumber())
                 .orderType(

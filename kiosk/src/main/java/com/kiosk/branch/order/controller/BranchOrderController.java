@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kiosk.branch.order.dto.OrderDetailResponse;
-import com.kiosk.branch.order.dto.OrderListResponse;
-import com.kiosk.branch.order.dto.OrderStatusRequest;
-import com.kiosk.branch.order.service.OrderService;
+import com.kiosk.branch.order.dto.BranchOrderDetailResponse;
+import com.kiosk.branch.order.dto.BranchOrderListResponse;
+import com.kiosk.branch.order.dto.BranchOrderStatusRequest;
+import com.kiosk.branch.order.service.BranchOrderService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,11 +21,11 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/branch/order")
 @RequiredArgsConstructor
-public class OrderController {
+public class BranchOrderController {
 
 
 
-    private final OrderService orderService;
+    private final BranchOrderService orderService;
 
 
 
@@ -33,7 +33,7 @@ public class OrderController {
      * 지점 주문 목록 조회
      */
     @GetMapping("/{storeId}")
-    public List<OrderListResponse> getOrders(
+    public List<BranchOrderListResponse> getOrders(
             @PathVariable Integer storeId
     ){
 
@@ -42,7 +42,7 @@ public class OrderController {
     }
     
     @GetMapping("/detail/{orderId}")
-    public OrderDetailResponse detail(
+    public BranchOrderDetailResponse detail(
             @PathVariable Integer orderId
     ){
 
@@ -53,7 +53,7 @@ public class OrderController {
     @PatchMapping("/{orderId}/status")
     public String changeStatus(
             @PathVariable Integer orderId,
-            @RequestBody OrderStatusRequest request
+            @RequestBody BranchOrderStatusRequest request
     ){
 
         orderService.changeStatus(

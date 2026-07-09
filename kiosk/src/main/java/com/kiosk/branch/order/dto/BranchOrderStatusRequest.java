@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class OrderStatusRequest {
+public class BranchOrderStatusRequest {
 
     private String status;
 

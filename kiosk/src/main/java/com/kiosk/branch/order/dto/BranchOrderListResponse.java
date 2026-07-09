@@ -12,7 +12,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class OrderListResponse {
+public class BranchOrderListResponse {
 
 
     private Integer orderId;
@@ -28,9 +28,9 @@ public class OrderListResponse {
     private LocalDateTime createdAt;
 
 
-    public static OrderListResponse from(Order order){
+    public static BranchOrderListResponse from(Order order){
 
-        return OrderListResponse.builder()
+        return BranchOrderListResponse.builder()
                 .orderId(order.getId())
                 .orderNumber(order.getOrderNumber())
                 .orderType(order.getOrderType())
