@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.kiosk.headquarter.mapper.HeadProductMapper">
+<mapper namespace="com.kiosk.headquarter.repository.HeadProductMapper">
 
     <select id="countCategoryById" resultType="int">
         SELECT COUNT(*)
@@ -76,7 +76,7 @@
     </insert>
 
     <select id="findProductById"
-            resultType="com.kiosk.headquarter.dto.product.HeadProductCreateResponse">
+            resultType="com.kiosk.headquarter.dto.product.HeadProductCreateRequestDTO">
 
         SELECT
             p.product_id AS productId,

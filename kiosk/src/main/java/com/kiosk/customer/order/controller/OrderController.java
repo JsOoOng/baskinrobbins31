@@ -9,18 +9,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.kiosk.customer.order.dto.OrderCreateRequest;
-import com.kiosk.customer.order.service.OrderService;
-import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
-import com.kiosk.customer.order.dto.OrderItem;
+import com.kiosk.customer.order.dto.OrderCreateRequest;
 import com.kiosk.customer.order.dto.OrderResponse;
 import com.kiosk.customer.order.repository.OrderMapper;
 import com.kiosk.customer.order.service.OrderService;
+import com.kiosk.entity.OrderItem;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @RestController

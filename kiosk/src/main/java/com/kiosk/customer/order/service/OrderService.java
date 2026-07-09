@@ -1,12 +1,6 @@
 package com.kiosk.customer.order.service;
 
 import java.util.List;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.kiosk.customer.order.dto.OrderItem;
-import com.kiosk.customer.order.dto.OrderResponse;
-import com.kiosk.customer.order.repository.OrderMapper;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +9,12 @@ import com.kiosk.customer.basket.dto.BasketAddRequest;
 import com.kiosk.customer.basket.dto.BasketResponse;
 import com.kiosk.customer.basket.service.BasketService;
 import com.kiosk.customer.order.dto.OrderCreateRequest;
+import com.kiosk.customer.order.dto.OrderResponse;
+import com.kiosk.customer.order.repository.OrderItemFlavorMapper;
+import com.kiosk.customer.order.repository.OrderItemMapper;
+import com.kiosk.customer.order.repository.OrderItemOptionMapper;
+import com.kiosk.customer.order.repository.OrderMapper;
+import com.kiosk.customer.order.repository.OrderRepository;
 import com.kiosk.entity.IcecreamFlavor;
 import com.kiosk.entity.Kiosk;
 import com.kiosk.entity.Order;
@@ -27,10 +27,6 @@ import com.kiosk.entity.Store;
 import com.kiosk.entity.User;
 import com.kiosk.entity.enums.OrderStatus;
 import com.kiosk.entity.enums.OrderType;
-import com.kiosk.customer.order.repository.OrderMapper;
-import com.kiosk.customer.order.repository.OrderItemMapper;
-import com.kiosk.customer.order.repository.OrderItemFlavorMapper;
-import com.kiosk.customer.order.repository.OrderItemOptionMapper;
 
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpSession;
@@ -47,10 +43,11 @@ public class OrderService {
 
 
     // 주문 관련 4개의 Repository
-    private final OrderMapper orderRepository;
     private final OrderItemMapper orderItemRepository;
     private final OrderItemFlavorMapper orderItemFlavorRepository;
     private final OrderItemOptionMapper orderItemOptionRepository;
+    private final OrderRepository orderRepository;
+    
     /**
      * 1. 주문 내역 및 총금액 조회
      */
@@ -74,14 +71,14 @@ public class OrderService {
     public void processPayment(int orderId, List<OrderItem> orderItems) {
         // A. 주문 항목 순회하며 재고 차감
         for (OrderItem item : orderItems) {
-            orderMapper.decreaseProductStock(item.getProductId(), item.getQuantity());
+            orderMapper.decreaseProductStock(item.getId(), item.getQuantity());
         }
         
         // B. 주문 상태를 'COMPLETED'로 업데이트
         orderMapper.updateOrderStatus(orderId, "COMPLETED");
         
         // C. (필요 시) 결제 테이블 기록 로직 추가 가능
-    
+    }
     
 
     @Transactional

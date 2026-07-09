@@ -1,18 +1,15 @@
 package com.kiosk.customer.product.service;
 
-import com.kiosk.customer.flavor.category.dto.CategoryResponse;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.customer.category.dto.CategoryResponse;
-
-import com.kiosk.customer.product.dto.OrderCreateRequest;
+import com.kiosk.customer.order.dto.OrderCreateRequest;
 import com.kiosk.customer.product.dto.ProductCreateRequest;
 import com.kiosk.customer.product.dto.ProductDetailResponse;
 import com.kiosk.customer.product.dto.ProductListResponse;
-
 
 import lombok.RequiredArgsConstructor;
 
@@ -48,7 +45,7 @@ public class ProductServiceImpl implements ProductService {
 	@Override
     @Transactional
     public void createOrder(OrderCreateRequest request) {
-        
+        /*
         // 상세 주문 항목들을 하나씩 순회하며 검증 및 적재
         for (OrderCreateRequest.ItemDto itemDto : request.getItems()) {
             
@@ -81,7 +78,8 @@ public class ProductServiceImpl implements ProductService {
             // 검증을 통과하면 아래의 실제 DB Insert 로직이 안전하게 실행됩니다.
             // ------------------------------------------------------------------
             // 1. ORDER_ITEMS 테이블 적재...
-            // 2. ORDER_ITEM_FLAVORS 테이블 적재...
+            // 2. ORDER_ITEM_FLAVORS 테이블 적재...*/
+			//지금 하드코딩으로 되어있어서 다시 만들어야함
         }
 	
 }

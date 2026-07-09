@@ -9,7 +9,8 @@
         WHERE order_id = #{orderId}
     </select>
 
-    <select id="selectOrderItemsByOrderId" resultType="com.kiosk.customer.order.dto.OrderItem">
+    <select id="selectOrderItemsByOrderId"
+        resultType="com.kiosk.entity.OrderItem">
         SELECT order_item_id, order_id, product_id, quantity 
         FROM ORDER_ITEMS 
         WHERE order_id = #{orderId}
