@@ -1,0 +1,11 @@
+package com.kiosk.branch.order.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.kiosk.entity.OrderStatusHistory;
+
+
+public interface OrderStatusHistoryMapper 
+        extends JpaRepository<OrderStatusHistory, Integer> {
+
+}
