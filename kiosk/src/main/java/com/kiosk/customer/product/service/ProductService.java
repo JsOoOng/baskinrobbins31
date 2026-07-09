@@ -10,7 +10,7 @@ import com.kiosk.customer.product.dto.ProductListResponse;
 
 public interface ProductService {
     // 카테고리 전체 목록 조회
-    List<CategoryResponse> getAllCategories();
+    List<com.kiosk.customer.category.dto.CategoryResponse> getAllCategories();
     
     // 특정 지점의 특정 카테고리 상품 목록 조회 (STORE_PRODUCTS 테이블 조인하여 품절 필터링/표시)
     List<ProductListResponse> getProductsByCategory(Long storeId, Long categoryId);
