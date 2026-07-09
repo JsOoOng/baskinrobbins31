@@ -5,32 +5,37 @@
 
     <select id="selectOrderById" resultType="com.kiosk.customer.order.dto.OrderResponse">
         SELECT order_id, total_price 
-        FROM ORDERS 
+        FROM orders 
         WHERE order_id = #{orderId}
     </select>
 
-    <select id="selectOrderItemsByOrderId" resultType="com.kiosk.customer.order.dto.OrderItem">
-        SELECT order_item_id, order_id, product_id, quantity 
-        FROM ORDER_ITEMS 
-        WHERE order_id = #{orderId}
-    </select>
+   <select id="selectOrderItemsByOrderId" resultType="com.kiosk.customer.order.dto.OrderItemDTO">
+    SELECT 
+        oi.order_item_id AS id,
+        oi.product_id AS productId,
+        p.product_name AS productName,
+        oi.quantity,
+        oi.unit_price AS unitPrice
+    FROM order_items oi
+    JOIN products p ON oi.product_id = p.product_id
+    WHERE oi.order_id = #{orderId}
+</select>
     
     <select id="getOrderDetails" resultType="map" parameterType="int">
         SELECT p.product_name, oi.quantity, p.base_price
-        FROM ORDER_ITEMS oi
-        JOIN PRODUCTS p ON oi.product_id = p.product_id
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.product_id
         WHERE oi.order_id = #{orderId}
     </select>
 
     <update id="decreaseProductStock">
-        UPDATE STORE_INVENTORY
-        SET current_stock = current_stock - #{quantity}
-        WHERE product_id = #{productId}
-        AND current_stock >= #{quantity}
-    </update>
+	    UPDATE store_inventory
+	    SET current_stock = current_stock - #{quantity}
+	    WHERE item_id = #{productId}  AND current_stock >= #{quantity}
+	</update>
 
     <update id="updateOrderStatus">
-        UPDATE ORDERS
+        UPDATE orders
         SET order_status = #{status}
         WHERE order_id = #{orderId}
     </update>
