@@ -1,6 +1,7 @@
 package com.kiosk.customer.order.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,6 +10,7 @@ import com.kiosk.customer.basket.dto.BasketAddRequest;
 import com.kiosk.customer.basket.dto.BasketResponse;
 import com.kiosk.customer.basket.service.BasketService;
 import com.kiosk.customer.order.dto.OrderCreateRequest;
+import com.kiosk.customer.order.dto.OrderItemDTO;
 import com.kiosk.customer.order.dto.OrderResponse;
 import com.kiosk.customer.order.repository.OrderItemFlavorMapper;
 import com.kiosk.customer.order.repository.OrderItemMapper;
@@ -52,32 +54,27 @@ public class OrderService {
      * 1. 주문 내역 및 총금액 조회
      */
     public OrderResponse getOrderDetails(int orderId) {
-        // 주문 기본 정보(총금액 포함) 조회
+        // 1. 주문 기본 정보 조회
         OrderResponse response = orderMapper.selectOrderById(orderId);
         
-        // 주문에 포함된 상품 항목들 조회
+        // 2. 주문에 포함된 상품 항목들 조회 (이미 DTO로 반환되므로 바로 받습니다)
         if (response != null) {
-            List<OrderItem> items = orderMapper.selectOrderItemsByOrderId(orderId);
-            response.setOrderItems(items);
+            // List<OrderItem> 이 아니라 List<OrderItemDTO> 로 받아야 합니다.
+            List<OrderItemDTO> itemDtos = orderMapper.selectOrderItemsByOrderId(orderId);
+            response.setOrderItems(itemDtos);
         }
         
         return response;
     }
-
-    /**
-     * 2. 결제 완료 및 재고 차감 처리
-     */
+ // OrderService.java 내의 수정할 메서드
     @Transactional
-    public void processPayment(int orderId, List<OrderItem> orderItems) {
-        // A. 주문 항목 순회하며 재고 차감
-        for (OrderItem item : orderItems) {
-            orderMapper.decreaseProductStock(item.getId(), item.getQuantity());
+    public void processPayment(int orderId, List<OrderItemDTO> orderItems) {
+        System.out.println("결제 처리 시작: 주문번호=" + orderId + ", 항목수=" + orderItems.size());
+        for (OrderItemDTO item : orderItems) {
+            System.out.println("재고 차감 시도: 상품ID=" + item.getProductId() + ", 수량=" + item.getQuantity());
+            orderMapper.decreaseProductStock(item.getProductId(), item.getQuantity());
         }
-        
-        // B. 주문 상태를 'COMPLETED'로 업데이트
         orderMapper.updateOrderStatus(orderId, "COMPLETED");
-        
-        // C. (필요 시) 결제 테이블 기록 로직 추가 가능
     }
     
 

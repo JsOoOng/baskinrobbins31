@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.kiosk.customer.order.dto.OrderItemDTO;
 import com.kiosk.customer.order.dto.OrderResponse;
 import com.kiosk.entity.OrderItem;
 
@@ -15,7 +16,7 @@ public interface OrderMapper {
     OrderResponse selectOrderById(@Param("orderId") int orderId);
 
     // 주문 상품 목록
-    List<OrderItem> selectOrderItemsByOrderId(@Param("orderId") int orderId);
+    List<OrderItemDTO> selectOrderItemsByOrderId(@Param("orderId") int orderId);
 
     // 재고 차감
     void decreaseProductStock(

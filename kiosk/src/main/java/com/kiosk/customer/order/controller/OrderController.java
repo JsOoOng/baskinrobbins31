@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kiosk.customer.order.dto.OrderCreateRequest;
+import com.kiosk.customer.order.dto.OrderItemDTO;
 import com.kiosk.customer.order.dto.OrderResponse;
 import com.kiosk.customer.order.repository.OrderMapper;
 import com.kiosk.customer.order.service.OrderService;
@@ -39,13 +40,12 @@ public class OrderController {
         return ResponseEntity.ok(response); // 주문이 있으면 데이터와 함께 200 반환
     }
 
-    // 2. 결제 완료 처리
     @PostMapping("/{orderId}/pay")
     public ResponseEntity<String> completePayment(@PathVariable int orderId, @RequestBody String paymentMethod) {
-        // 1. 주문 ID를 통해 현재 주문된 상품 목록을 다시 DB에서 가져옵니다.
-        List<OrderItem> orderItems = orderMapper.selectOrderItemsByOrderId(orderId);
+        // 1. 주문 항목을 DTO 리스트로 가져옵니다.
+        List<OrderItemDTO> orderItems = orderMapper.selectOrderItemsByOrderId(orderId);
         
-        // 2. 서비스에 적절한 파라미터를 넘겨 호출합니다.
+        // 2. 서비스 호출 (서비스의 processPayment 파라미터도 DTO로 변경해야 합니다)
         orderService.processPayment(orderId, orderItems);
         
         return ResponseEntity.ok("결제 및 재고 차감 완료");
