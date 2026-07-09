@@ -1,5 +1,11 @@
 package com.kiosk.customer.product.repository;
 
+<<<<<<< Updated upstream
+=======
+import java.util.List;
+import java.util.Optional;
+
+>>>>>>> Stashed changes
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,5 +21,9 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
            "WHERE sp.storeId = :storeId AND p.categoryId = :categoryId AND p.isDisplay = true")
     List<Object[]> findProductsWithSoldOutStatus(@Param("storeId") Long storeId, @Param("categoryId") Long categoryId);
 
+<<<<<<< Updated upstream
 	Object findById(Long valueOf);
+=======
+	Optional<Product> findById(Long valueOf);
+>>>>>>> Stashed changes
 }
