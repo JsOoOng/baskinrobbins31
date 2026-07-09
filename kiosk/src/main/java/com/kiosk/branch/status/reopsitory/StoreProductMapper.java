@@ -11,7 +11,7 @@ public interface StoreProductMapper
         extends JpaRepository<StoreProduct, Integer> {
 
 
-    List<StoreProduct> findByStoreStoreId(Integer storeId);
+    List<StoreProduct> findByStoreId(Integer storeId);
     
 
 }

@@ -11,7 +11,7 @@ public interface StoreFlavorMapper
         extends JpaRepository<StoreFlavor, Integer> {
 
 
-    List<StoreFlavor> findByStoreStoreId(Integer storeId);
+    List<StoreFlavor> findByStoreId(Integer storeId);
     
 
 }

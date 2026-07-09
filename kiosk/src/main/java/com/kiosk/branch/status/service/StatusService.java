@@ -56,7 +56,7 @@ public class StatusService {
     ){
 
         return storeProductMapper
-                .findByStoreStoreId(storeId)
+                .findByStoreId(storeId)
                 .stream()
                 .map(StoreProductStatusResponse::from)
                 .toList();
