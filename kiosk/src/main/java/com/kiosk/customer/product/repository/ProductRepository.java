@@ -14,4 +14,6 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query("SELECT p, sp.isSoldOut FROM Product p JOIN StoreProduct sp ON p.productId = sp.productId " +
            "WHERE sp.storeId = :storeId AND p.categoryId = :categoryId AND p.isDisplay = true")
     List<Object[]> findProductsWithSoldOutStatus(@Param("storeId") Long storeId, @Param("categoryId") Long categoryId);
+
+	Object findById(Long valueOf);
 }

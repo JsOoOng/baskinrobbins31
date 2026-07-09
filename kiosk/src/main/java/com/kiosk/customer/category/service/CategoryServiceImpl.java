@@ -1,4 +1,4 @@
-package com.kiosk.customer.flavor.category.service;
+package com.kiosk.customer.category.service;
 
 import java.util.List;
 

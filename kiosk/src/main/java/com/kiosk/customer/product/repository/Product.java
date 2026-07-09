@@ -41,4 +41,9 @@ public class Product {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt; // 상품 등록 일시 [cite: 11]
+
+	public Object getMaxFlavorCount() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
