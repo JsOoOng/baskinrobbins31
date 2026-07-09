@@ -1,31 +1,19 @@
 package com.kiosk.customer.product.service;
 
-<<<<<<< Updated upstream
-=======
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.customer.category.dto.CategoryResponse;
->>>>>>> Stashed changes
 import com.kiosk.customer.product.dto.OrderCreateRequest;
-import com.kiosk.customer.product.entity.Product;
-import com.kiosk.customer.product.repository.ProductRepository; // 레포지토리 import
-import com.kiosk.customer.category.dto.CategoryResponse;
 import com.kiosk.customer.product.dto.ProductCreateRequest;
 import com.kiosk.customer.product.dto.ProductDetailResponse;
 import com.kiosk.customer.product.dto.ProductListResponse;
-<<<<<<< Updated upstream
-=======
 import com.kiosk.customer.product.repository.Product;
 import com.kiosk.customer.product.repository.ProductRepository; // 레포지토리 import
->>>>>>> Stashed changes
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor // 💡 의존성 자동 주입을 위해 필수
