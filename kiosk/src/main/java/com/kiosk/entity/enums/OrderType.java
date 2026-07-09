@@ -1,5 +1,5 @@
 package com.kiosk.entity.enums;
 
-public enum OrderStatus {
+public enum OrderType {
     WAITING, PREPARING, COMPLETED, CANCELED
 }
