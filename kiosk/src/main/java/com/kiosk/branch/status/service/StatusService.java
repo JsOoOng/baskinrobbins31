@@ -6,8 +6,11 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kiosk.branch.status.dto.StoreFlavorStatusResponse;
 import com.kiosk.branch.status.dto.StoreProductStatusResponse;
+import com.kiosk.branch.status.reopsitory.StoreFlavorMapper;
 import com.kiosk.branch.status.reopsitory.StoreProductMapper;
+import com.kiosk.entity.StoreFlavor;
 import com.kiosk.entity.StoreProduct;
 
 import lombok.RequiredArgsConstructor;
@@ -20,11 +23,12 @@ public class StatusService {
 
 
     private final StoreProductMapper storeProductMapper;
+    private final StoreFlavorMapper storeFlavorMapper;
 
 
 
     // 지점 메뉴 품절 상태 변경
-    public StoreProductStatusResponse updateSoldOut(
+    public StoreProductStatusResponse updateProductSoldOut(
             Integer storeProductId,
             Boolean soldOut
     ){
@@ -58,5 +62,22 @@ public class StatusService {
                 .toList();
 
     }
+
+
+
+	public StoreFlavorStatusResponse updateFlavorSoldOut(Integer storeFlavorId, Boolean soldOut) {
+		    StoreFlavor storeFlavor =
+		    		storeFlavorMapper.findById(storeFlavorId)
+		            .orElseThrow(() -> 
+		                new IllegalArgumentException("맛 없음")
+		            );
+		
+		    storeFlavor.changeSoldOut(soldOut);
+		
+		
+		    return StoreFlavorStatusResponse
+		            .from(storeFlavor);
+		}
+	
 
 }

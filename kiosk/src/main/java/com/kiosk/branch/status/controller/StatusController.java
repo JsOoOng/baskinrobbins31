@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kiosk.branch.status.dto.SoldOutRequest;
+import com.kiosk.branch.status.dto.StoreFlavorStatusResponse;
 import com.kiosk.branch.status.dto.StoreProductStatusResponse;
 import com.kiosk.branch.status.service.StatusService;
 
@@ -29,13 +30,26 @@ public class StatusController {
 
     // 품절 처리
     @PatchMapping("/product/{storeProductId}")
-    public StoreProductStatusResponse updateSoldOut(
+    public StoreProductStatusResponse updateProductSoldOut(
             @PathVariable Integer storeProductId,
             @RequestBody SoldOutRequest request
     ){
 
-        return statusService.updateSoldOut(
+        return statusService.updateProductSoldOut(
                 storeProductId,
+                request.getSoldOut()
+        );
+
+    }
+    
+    @PatchMapping("/flavor/{storeFlavorId}")
+    public StoreFlavorStatusResponse updateFlavorSoldOut(
+            @PathVariable Integer storeFlavorId,
+            @RequestBody SoldOutRequest request
+    ){
+
+        return statusService.updateFlavorSoldOut(
+        		storeFlavorId,
                 request.getSoldOut()
         );
 

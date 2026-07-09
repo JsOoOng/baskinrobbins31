@@ -12,7 +12,7 @@ public class StoreProductStatusResponse {
 
 
     private Integer storeProductId;
-
+    
     private Integer productId;
 
     private String productName;
