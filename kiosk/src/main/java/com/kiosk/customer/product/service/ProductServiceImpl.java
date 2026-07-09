@@ -1,14 +1,16 @@
 package com.kiosk.customer.product.service;
 
-import com.kiosk.customer.flavor.category.dto.CategoryResponse;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.kiosk.customer.category.dto.CategoryResponse;
 import com.kiosk.customer.product.dto.ProductCreateRequest;
 import com.kiosk.customer.product.dto.ProductDetailResponse;
 import com.kiosk.customer.product.dto.ProductListResponse;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
