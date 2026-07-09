@@ -1,4 +1,4 @@
-package com.kiosk.branch.security;
+package com.kiosk.common.config;
 
 
 import java.util.Date;

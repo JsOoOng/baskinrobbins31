@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kiosk.branch.auth.dto.AuthRequest;
 import com.kiosk.branch.auth.dto.AuthResponse;
 import com.kiosk.branch.auth.service.AuthService;
-import com.kiosk.branch.security.JwtUtil;
+import com.kiosk.common.config.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 
