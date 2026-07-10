@@ -10,6 +10,7 @@ import com.kiosk.customer.order.dto.OrderCreateRequest;
 import com.kiosk.customer.product.dto.ProductCreateRequest;
 import com.kiosk.customer.product.dto.ProductDetailResponse;
 import com.kiosk.customer.product.dto.ProductListResponse;
+import com.kiosk.customer.product.repository.ProductOptionRepository;
 import com.kiosk.customer.product.repository.ProductRepository; // 레포지토리 import
 
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class ProductServiceImpl implements ProductService {
 
     // 💡 DB에서 상품 정보를 조회하기 위해 레포지토리를 선언합니다.
     private final ProductRepository productRepository;
-
+    private final ProductOptionRepository productOptionRepository;
     @Override
     public List<ProductListResponse> getProductsByCategory(Long storeId, Long categoryId) {
         // TODO: STORE_PRODUCTS와 PRODUCTS 조인하여 해당 카테고리 상품 리스트 조회
@@ -78,5 +79,18 @@ public class ProductServiceImpl implements ProductService {
             // 1. ORDER_ITEMS 테이블 적재...
             // 2. ORDER_ITEM_FLAVORS 테이블 적재...*/
 			//지금 하드코딩으로 되어있어서 다시 만들어야함
+    	for (OrderCreateRequest.ItemDto itemDto : request.getItems()) {
+            int selectedFlavorCount = itemDto.getFlavors() != null ? itemDto.getFlavors().size() : 0;
+            
+            // 🚀 JPA 레포지토리를 통해 DB에서 동적으로 최대 맛 개수 제약 조건 가져오기
+            Integer maxFlavors = productOptionRepository.findMaxFlavorCountByProductId(itemDto.getProductId());
+
+            if (maxFlavors != null && maxFlavors > 0) {
+                if (selectedFlavorCount > maxFlavors) {
+                    throw new IllegalArgumentException("최대 선택 가능 맛 개수를 초과했습니다.");
+                }
+            }
+            // 이후 주문 생성 MyBatis 처리 혹은 JPA 처리...
+        }
         }
     }
