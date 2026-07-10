@@ -24,11 +24,20 @@ public class StoreFlavor {
     @JoinColumn(name = "flavor_id", nullable = false)
     private IcecreamFlavor flavor;
 
+    @Column(name = "container")
+    @Builder.Default
+    private Integer container = 0;
+
     @Column(name = "is_sold_out")
     @Builder.Default
     private Boolean isSoldOut = false;
-    
+
     public void changeSoldOut(Boolean isSoldOut) {
-    	this.isSoldOut = isSoldOut;
+        this.isSoldOut = isSoldOut;
+    }
+
+    public void updateStoreFlavor(Boolean isSoldOut, Integer container) {
+        this.isSoldOut = isSoldOut;
+        this.container = container;
     }
 }
