@@ -1,69 +1,31 @@
-/*import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     // ----------------------------------------------------
-    // 📱 1. CUSTOMER (키오스크 손님용 주소)
+    // 📱 CUSTOMER (키오스크 손님용 주소)
     // ----------------------------------------------------
     {
       path: '/',
       name: 'customer-home',
-      component: () => import('../views/customer/HomeView.vue') // 👈 나중에 이 위치에 파일 만드시면 됩니다!
+      // 💡 여기서 customer 폴더 안으로 제대로 찾아가도록 경로를 수정했습니다!
+      component: () => import('../views/customer/HomeView.vue') 
     },
     {
       path: '/menu',
       name: 'customer-menu',
+      // MenuView.vue 파일이 아직 없다면, 나중에 만들면 됩니다. (에러가 나면 일단 이 블록은 주석 처리하세요)
       component: () => import('../views/customer/MenuView.vue')
     },
-
+    { path: '/order-confirm', 
+      name: 'orderConfirm', 
+      component: () => import('../views/customer/OrderConfirmView.vue') },
+      
     // ----------------------------------------------------
-    // 🏢 2. BRANCH (지점 관리자용 주소)
+    // 📱 BRANCH (지점용 주소)
     // ----------------------------------------------------
-    {
-      path: '/branch/login',
-      name: 'branch-login',
-      component: () => import('../views/branch/BranchLogin.vue')
-    },
-    {
-      path: '/branch/main',
-      name: 'branch-main',
-      component: () => import('../views/branch/BranchMain.vue')
-    },
-
-    // ----------------------------------------------------
-    // 👑 3. HEADQUARTER (본사 관리자용 주소)
-    // ----------------------------------------------------
-    {
-      path: '/head/login',
-      name: 'head-login',
-      component: () => import('../views/headquarter/HeadLogin.vue')
-    },
-    {
-      path: '/head/main',
-      name: 'head-main',
-      component: () => import('../views/headquarter/HeadMain.vue')
-    }
-  ]
-})
-
-export default router*/
-
-
-import { createRouter, createWebHistory } from 'vue-router'
-
-const router = createRouter({
-  history: createWebHistory(),
-
-  routes: [
-    // 기본 접속 시 로그인 화면으로 이동
-    {
-      path: '/',
-      redirect: '/branch/login'
-    },
-
-    // 지점 로그인
+     // 지점 로그인
     {
       path: '/branch/login',
       name: 'branch-login',

@@ -12,6 +12,5 @@ public interface StoreProductMapper
 
 
     List<StoreProduct> findByStoreId(Integer storeId);
-    
 
 }
