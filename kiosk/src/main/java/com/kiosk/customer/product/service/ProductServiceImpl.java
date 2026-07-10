@@ -6,11 +6,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.customer.category.dto.CategoryResponse;
-import com.kiosk.customer.product.dto.OrderCreateRequest;
+import com.kiosk.customer.order.dto.OrderCreateRequest;
 import com.kiosk.customer.product.dto.ProductCreateRequest;
 import com.kiosk.customer.product.dto.ProductDetailResponse;
 import com.kiosk.customer.product.dto.ProductListResponse;
-import com.kiosk.customer.product.repository.Product;
 import com.kiosk.customer.product.repository.ProductRepository; // 레포지토리 import
 
 import lombok.RequiredArgsConstructor;
@@ -81,4 +80,3 @@ public class ProductServiceImpl implements ProductService {
 			//지금 하드코딩으로 되어있어서 다시 만들어야함
         }
     }
-}
