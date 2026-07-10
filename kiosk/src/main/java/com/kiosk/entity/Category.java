@@ -22,4 +22,9 @@ public class Category {
     @Column(name = "display_order", nullable = false)
     @Builder.Default
     private Integer displayOrder = 0;
+    
+    public void updateCategory(String categoryName, Integer displayOrder) {
+        this.categoryName = categoryName;
+        this.displayOrder = displayOrder;
+    }
 }

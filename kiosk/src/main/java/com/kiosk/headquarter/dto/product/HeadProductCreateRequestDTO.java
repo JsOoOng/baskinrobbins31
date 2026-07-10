@@ -15,4 +15,5 @@ public class HeadProductCreateRequestDTO {
     private Integer basePrice;
     private BigDecimal discountRate;
     private Boolean isDisplay;
+    private String imageUrl;
 }
