@@ -22,4 +22,6 @@ public class FlavorController {
     public ResponseEntity<Object> getAvailableFlavors(@PathVariable Long storeId) {
         return ResponseEntity.ok(flavorService.getAvailableFlavorsByStore(storeId));
     }
+    
+    
 }

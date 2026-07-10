@@ -3,16 +3,25 @@
     <h2>STEP 01. 주문 내역을 확인해주세요</h2>
     
     <div class="order-list">
-      <div v-for="(item, index) in basketStore.items" :key="index" class="order-item">
-        <div class="item-info">
-          <h4>{{ item.productName }}</h4>
-          <p>옵션 등 상세 내역...</p>
+        <div v-for="(item, index) in basketStore.items" :key="index" class="order-item">
+            <div class="item-info">
+            <h4>{{ item.productName }}</h4>
+            
+            <div v-if="item.flavors && item.flavors.length > 0" class="flavor-list" style="font-size: 0.9rem; color: #666;">
+                선택한 맛: 
+                <span v-for="(f, fIndex) in item.flavors" :key="fIndex">
+                {{ f.flavorName || '맛ID:' + f.flavorId }}
+                {{ f.quantity > 1 ? '(' + f.quantity + ')' : '' }}
+                {{ fIndex < item.flavors.length - 1 ? ', ' : '' }}
+                </span>
+            </div>
+            
+            </div>
+            <div class="item-actions">
+            <span>{{ item.quantity }}개</span>
+            <button @click="removeItem(index)">❌</button>
+            </div>
         </div>
-        <div class="item-actions">
-          <span>{{ item.quantity }}개</span>
-          <button @click="removeItem(item)">❌</button>
-        </div>
-      </div>
     </div>
 
     <div class="payment-section">
@@ -30,6 +39,8 @@ import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useBasketStore } from '@/stores/customer/basket';
 
+import axios from '@/api/axios';
+
 const router = useRouter();
 const basketStore = useBasketStore();
 
@@ -41,22 +52,46 @@ onMounted(() => {
 });
 
 const handlePayment = async (method) => {
-  // 실제로는 모달 등에서 매장/포장 여부(orderType)를 선택하게 해야 함
   const orderInfo = {
     storeId: 1,
-    kioskId: 1, // 또는 2
-    userId: null, // 비회원 가정
+    kioskId: 1, 
+    userId: null, 
     orderType: 'TOGO', 
     dryIceMins: 30
   };
 
   try {
-    await basketStore.submitOrder(orderInfo); // POST /api/orders 호출
-    alert(`${method} 결제가 완료되었습니다! 영수증 번호를 확인해주세요.`);
-    await basketStore.clearBasket(); // 쿠키 및 스토어 비우기
-    router.push('/'); // 첫 화면으로 복귀
+    // 🌟 1단계: 주문서 생성 (POST /api/orders)
+    // 백엔드에서 방금 추가한 컨트롤러를 호출해서 orderId(PK)를 받아와!
+    const response = await axios.post('/api/orders', orderInfo);
+    const orderId = response.data; 
+
+    // 🌟 2단계: 방금 만든 주문서로 결제 및 재고 차감 진행 (POST /api/orders/{orderId}/pay)
+    await axios.post(`/api/orders/${orderId}/pay`, { paymentMethod: method });
+
+    alert(`${method === 'CARD' ? '신용카드' : '현금'} 결제가 완료되었습니다! 영수증 번호를 확인해주세요.`);
+    
+    // 3단계: 장바구니 초기화 및 메인 이동
+    await basketStore.fetchBasket(); // 서버에서 세션이 비워졌으니 화면 갱신
+    router.push('/'); 
   } catch (error) {
+    console.error(error);
     alert('결제 처리 중 오류가 발생했습니다.');
+  }
+};
+
+// 💡 삭제 로직도 index를 받도록 추가해 줘 (아까 에러 났던 부분 방지)
+const removeItem = async (index) => {
+  if (!confirm('이 메뉴를 장바구니에서 삭제하시겠습니까?')) return;
+  try {
+    await axios.delete(`/api/customer/basket/${index}`);
+    await basketStore.fetchBasket();
+    if (basketStore.items.length === 0) {
+        alert('장바구니가 비어있어 메인으로 돌아갑니다.');
+        router.push('/');
+    }
+  } catch (error) {
+    alert('삭제 실패');
   }
 };
 </script>

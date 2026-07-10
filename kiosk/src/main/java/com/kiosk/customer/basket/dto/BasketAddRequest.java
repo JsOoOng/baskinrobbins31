@@ -7,7 +7,8 @@ import java.util.List;
 @Getter
 @Setter
 public class BasketAddRequest {
-    private Integer productId;        // 상품 ID (예: 하프갤런)
+    private Integer productId;        // 상품 ID (예: 1)
+    private String productName;       // 상품 이름 (예: "파인트")
     private Integer quantity;         // 수량
     private Integer unitPrice;        // 단가
     private List<FlavorDto> flavors;  // 선택한 맛 목록
@@ -16,7 +17,8 @@ public class BasketAddRequest {
     @Getter
     @Setter
     public static class FlavorDto {
-        private Integer flavorId;
-        private Integer quantity;
+        private Integer flavorId;     // 맛 ID
+        private String flavorName;    // 추가: 맛 이름 (예: "엄마는 외계인")
+        private Integer quantity;     // 수량
     }
 }

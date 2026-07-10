@@ -10,10 +10,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kiosk.customer.order.dto.OrderCreateRequest;
 import com.kiosk.customer.order.dto.OrderResponse;
 import com.kiosk.customer.order.repository.OrderMapper;
 import com.kiosk.customer.order.service.OrderService;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -55,5 +57,16 @@ public class OrderController {
         return ResponseEntity.ok("주문 취소 완료");
     }
   
+    @PostMapping
+    public ResponseEntity<Integer> createOrder(
+            @RequestBody OrderCreateRequest request, 
+            HttpSession session) {
+        
+        // 💡 프론트엔드에서 보낸 매장/포장 정보(request)와 세션(장바구니)을 이용해 주문 생성
+        int orderId = orderService.createOrder(request, session);
+        
+        // 생성된 주문 번호(PK)를 프론트엔드로 반환
+        return ResponseEntity.ok(orderId);
+    }
 }
 
