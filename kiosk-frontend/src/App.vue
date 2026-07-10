@@ -1,17 +1,17 @@
 <template>
-  <RouterView />
+  <router-view />
 </template>
 
 <script setup>
-import { RouterView } from 'vue-router'
+// App.vue는 가장 큰 껍데기이므로 특별한 로직 없이 비워둡니다.
 </script>
 
 <style>
-/* 여기에 앱 전체에 적용될 간단한 리셋 스타일을 두거나, 
-  지금은 비워두고 assets/main.css에서 관리해도 괜찮아.
-*/
+/* 폰트, 배경색 등 프로젝트 전체에 적용될 공통 CSS만 여기에 작성합니다 */
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  padding: 0;
+  font-family: 'Pretendard', sans-serif;
+  background-color: #f4f4f4; /* 키오스크 기본 배경색 예시 */
 }
 </style>

@@ -23,5 +23,5 @@ public class ProductController {
             @PathVariable Long categoryId) {
         
         return ResponseEntity.ok(productService.getProductsByCategory(storeId, categoryId));
-    }
+    }	
 }
