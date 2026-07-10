@@ -14,6 +14,7 @@
           3. 지점 기능 : Branch
           4. 본사 기능 : Headquarter
      4. fix/사용자_기능 : 버그 수정
+     5. vue/사용자_기능 : vue 기능 및 수정 - 예시) vue/headquarter_login, vue/kiosk_basket
      
 **4. 개발 혹은 버그 수정 후 commit할 때 summary는 아래의 예시 방식으로 정의**
      1. feat: 키오스크 상품 목록 조회 기능 추가
