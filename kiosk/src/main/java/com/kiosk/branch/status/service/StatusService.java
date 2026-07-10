@@ -104,7 +104,7 @@ public class StatusService {
 
 
 	    return icecreamFlavorMapper
-	            .findAll()
+	            .findByIsActiveTrue() //.findAll()
 	            .stream()
 	            .map(FlavorResponse::from)
 	            .toList();
