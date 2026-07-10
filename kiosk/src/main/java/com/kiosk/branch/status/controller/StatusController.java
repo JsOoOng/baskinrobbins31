@@ -66,5 +66,15 @@ public class StatusController {
         return statusService.getProducts(storeId);
 
     }
+    
+ // 지점 맛 조회
+    @GetMapping("/flavor/{storeId}")
+    public List<StoreFlavorStatusResponse> getFlavors(
+            @PathVariable Integer storeId
+    ){
+
+        return statusService.getFlavors(storeId);
+
+    }
 
 }
