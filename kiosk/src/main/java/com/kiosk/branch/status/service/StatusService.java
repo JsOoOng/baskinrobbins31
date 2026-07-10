@@ -178,5 +178,26 @@ public class StatusService {
 	    storeFlavorMapper.delete(storeFlavor);
 
 	}
+	
+	public StoreFlavorStatusResponse updateContainer(
+	        Integer storeFlavorId,
+	        Integer amount
+	){
+
+
+	    StoreFlavor storeFlavor =
+	            storeFlavorMapper.findById(storeFlavorId)
+	            .orElseThrow(() ->
+	                new IllegalArgumentException("맛 없음")
+	            );
+
+
+	    storeFlavor.changeContainer(amount);
+
+
+	    return StoreFlavorStatusResponse
+	            .from(storeFlavor);
+
+	}
 
 }

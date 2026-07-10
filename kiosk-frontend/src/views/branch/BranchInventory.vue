@@ -92,6 +92,8 @@
 
                 <th>맛</th>
 
+                <th>통 수</th>
+
                 <th>상태</th>
 
                 <th>변경</th>
@@ -115,6 +117,32 @@
                     {{ flavor.flavorName }}
                 </td>
 
+
+                <td class="container-count">
+
+
+                    <button
+                        class="count-btn"
+                        @click="changeContainer(flavor, -1)"
+                    >
+                        -
+                    </button>
+
+
+                    <span>
+                        {{ flavor.container }}
+                    </span>
+
+
+                    <button
+                        class="count-btn"
+                        @click="changeContainer(flavor, 1)"
+                    >
+                        +
+                    </button>
+
+
+                </td>
 
 
                 <td>
@@ -412,6 +440,40 @@ onUnmounted(() => {
 
 })
 
+
+const changeContainer = async (flavor, amount) => {
+
+
+    try {
+
+
+        const response =
+            await api.patch(
+                `/branch/status/flavor/${flavor.storeFlavorId}/container`,
+                {
+                    amount: amount
+                }
+            )
+
+
+        // 화면 즉시 변경
+        flavor.container = response.data.container
+
+
+
+    } catch(e){
+
+        console.error(
+            '재고 변경 실패',
+            e
+        )
+
+        alert('재고 변경 실패')
+
+    }
+
+}
+
 </script>
 
 <style scoped>
@@ -694,6 +756,78 @@ hr {
 
     }
 
+
+}
+
+.container-count{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+
+
+.container-count span{
+
+    min-width:30px;
+
+    text-align:center;
+
+    font-weight:bold;
+
+}
+
+
+.count-btn{
+
+    width:32px;
+
+    height:32px;
+
+    padding:0;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+
+    border:none;
+
+    border-radius:50%;
+
+
+    background:#333;
+
+    color:white;
+
+
+    font-size:18px;
+
+    font-weight:bold;
+
+
+    line-height:1;
+
+    cursor:pointer;
+
+
+    transition:0.2s;
+
+}
+
+
+
+.count-btn:hover{
+
+    background:#555;
 
 }
 

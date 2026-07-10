@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kiosk.branch.status.dto.AddFlavorRequest;
+import com.kiosk.branch.status.dto.ContainerUpdateRequest;
 import com.kiosk.branch.status.dto.FlavorResponse;
 import com.kiosk.branch.status.dto.SoldOutRequest;
 import com.kiosk.branch.status.dto.StoreFlavorStatusResponse;
@@ -109,6 +110,23 @@ public class StatusController {
     ){
 
         statusService.deleteFlavor(storeFlavorId);
+
+    }
+    
+    @PatchMapping("/flavor/{storeFlavorId}/container")
+    public StoreFlavorStatusResponse updateContainer(
+
+            @PathVariable Integer storeFlavorId,
+
+            @RequestBody ContainerUpdateRequest request
+
+    ){
+
+
+        return statusService.updateContainer(
+                storeFlavorId,
+                request.getAmount()
+        );
 
     }
 

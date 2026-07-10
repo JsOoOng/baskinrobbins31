@@ -17,6 +17,9 @@ public class StoreFlavorStatusResponse {
 
     private Boolean soldOut;
 
+    private Integer container;
+
+
     public static StoreFlavorStatusResponse from(StoreFlavor sf) {
 
         return StoreFlavorStatusResponse.builder()
@@ -24,6 +27,8 @@ public class StoreFlavorStatusResponse {
                 .flavorId(sf.getFlavor().getId())
                 .flavorName(sf.getFlavor().getFlavorName())
                 .soldOut(sf.getIsSoldOut())
+                .container(sf.getContainer())
                 .build();
     }
+
 }
