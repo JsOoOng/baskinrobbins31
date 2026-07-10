@@ -183,18 +183,27 @@ onMounted(async()=>{
 <div class="container">
 
 
-    <div class="header">
+    
 
-        <h2>
-            메뉴 관리
-        </h2>
-
-
-        <button @click="goBack">
-            뒤로가기
+        <button 
+            class="back-button"
+            @click="goBack"
+        >
+            ← 메인으로 돌아가기
         </button>
 
-    </div>
+
+        <div class="menu-box">
+
+
+            <h2>
+                메뉴 관리
+            </h2>
+
+
+            <!-- 기존 메뉴 테이블 -->
+
+        </div>
 
 
 
@@ -291,74 +300,110 @@ onMounted(async()=>{
 </template>
 
 
-
 <style scoped>
 
+
+/* 전체 */
 
 .container{
 
     padding:30px;
 
+    background:#f8f9fa;
+
+    min-height:100vh;
+
+    box-sizing:border-box;
+
 }
 
 
-.header{
 
-    display:flex;
+/* 뒤로가기 버튼 */
 
-    justify-content:space-between;
-
-    align-items:center;
+.back-button{
 
     margin-bottom:20px;
 
-}
-
-
-
-table{
-
-    width:100%;
-
-    border-collapse:collapse;
-
-}
-
-
-
-th,td{
-
-    border:1px solid #ddd;
-
-    padding:12px;
-
-    text-align:center;
-
-}
-
-
-
-.toggle{
-
-    width:70px;
-
-    padding:8px;
+    padding:10px 18px;
 
     border:none;
 
-    border-radius:20px;
+    border-radius:8px;
+
+    background:#222;
+
+    color:white;
 
     font-weight:bold;
 
     cursor:pointer;
 
+    transition:0.2s;
+
+}
+
+
+.back-button:hover{
+
+    background:#555;
+
 }
 
 
 
-.on{
+/* 제목 */
 
-    background:#198754;
+h2{
+
+    margin-bottom:25px;
+
+    color:#333;
+
+}
+
+
+
+/* 메뉴 카드 */
+
+.menu-box{
+
+    background:white;
+
+    padding:30px;
+
+    border-radius:15px;
+
+    box-shadow:
+    0 4px 12px rgba(0,0,0,0.08);
+
+}
+
+
+
+/* 테이블 */
+
+table{
+
+    width:100%;
+
+    border-collapse:separate;
+
+    border-spacing:0;
+
+    overflow:hidden;
+
+    border-radius:12px;
+
+    table-layout:fixed;
+
+}
+
+
+
+thead{
+
+    background:#333;
 
     color:white;
 
@@ -366,25 +411,137 @@ th,td{
 
 
 
-.off{
+th{
 
-    background:#ddd;
+    padding:18px;
 
-    color:#555;
+    font-size:15px;
 
 }
 
 
 
-button{
+td{
+
+    padding:16px;
+
+    text-align:center;
+
+    font-size:15px;
+
+    border-bottom:1px solid #eee;
+
+}
+
+
+
+tbody tr{
+
+    cursor:pointer;
+
+    transition:0.2s;
+
+}
+
+
+
+tbody tr:hover{
+
+    background:#f7f7f7;
+
+}
+
+
+
+tbody tr:last-child td{
+
+    border-bottom:none;
+
+}
+
+
+
+/* 맛 이름 */
+
+.flavor-name{
+
+    text-align:left;
+
+    padding-left:30px;
+
+    font-weight:500;
+
+}
+
+
+
+/* ON/OFF 버튼 */
+
+.toggle{
+
+    width:80px;
 
     padding:8px 15px;
 
     border:none;
 
-    border-radius:8px;
+    border-radius:20px;
+
+    font-size:14px;
+
+    font-weight:bold;
 
     cursor:pointer;
+
+    transition:0.2s;
+
+}
+
+
+
+/* 사용중 */
+
+.on{
+
+    background:#d1e7dd;
+
+    color:#0f5132;
+
+}
+
+
+
+/* 미사용 */
+
+.off{
+
+    background:#f8d7da;
+
+    color:#842029;
+
+}
+
+
+
+.toggle:hover{
+
+    transform:translateY(-2px);
+
+}
+
+
+
+/* 검색창 추가 예정 대비 */
+
+input{
+
+    padding:10px 14px;
+
+    border-radius:8px;
+
+    border:1px solid #ccc;
+
+    font-size:14px;
 
 }
 
