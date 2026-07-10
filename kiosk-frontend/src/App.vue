@@ -3,33 +3,69 @@ import { RouterLink, RouterView } from 'vue-router'
 import Header from '@/components/common/Header.vue';
 </script>
 
+
 <template>
 
-  <router-view />
+  <div class="app-container">
+
+    <main class="main-content">
+
+      <router-view />
+
+    </main>
+
+  </div>
 
 </template>
 
 
-
 <style>
-/* 기본 마진 없애기 */
-body, html {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
+
+/* 기본 초기화 */
+html,
+body,
+#app {
+
+  margin:0;
+
+  padding:0;
+
+  width:100%;
+
+  min-height:100%;
+
 }
 
+
+/* 전체 레이아웃 */
 .app-container {
-  display: flex;
-  flex-direction: column;
-  width: 100vw; /* 가로 꽉 채우기 */
-  height: 100vh; /* 세로 꽉 채우기 */
+
+  width:100%;
+
+  min-height:100vh;
+
+  display:flex;
+
+  justify-content:center;
+
+  align-items:flex-start;
+
 }
 
+
+/* router-view 영역 */
 .main-content {
-  flex: 1; /* 헤더 빼고 남은 공간 다 먹기 */
-  overflow-y: auto;
-  width: 100%;
+
+  width:100%;
+
+  max-width:1400px;
+
+  min-height:100vh;
+
+  padding:20px;
+
+  box-sizing:border-box;
+
 }
+
 </style>

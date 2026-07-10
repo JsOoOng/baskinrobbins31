@@ -480,15 +480,41 @@ const changeContainer = async (flavor, amount) => {
 
 .menu-page {
 
+    height:100vh;
+
+    overflow-y:auto;
+
     padding:30px;
 
-    background:#f8f9fa;
-
-    min-height:100vh;
+    box-sizing:border-box;
 
 }
 
+table {
 
+    width:100%;
+
+    background:white;
+
+    border-collapse:separate;
+
+    border-spacing:0;
+
+    border-radius:15px;
+
+    overflow:hidden;
+
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+
+    margin-bottom:20px;
+
+}
+
+.menu-page table{
+
+    margin-bottom:30px;
+
+}
 
 /* 뒤로가기 버튼 */
 
@@ -521,7 +547,13 @@ const changeContainer = async (flavor, amount) => {
 
 }
 
+.menu-page > button:first-child {
 
+    margin-top:10px;
+
+    margin-bottom:25px;
+
+}
 
 
 
@@ -719,14 +751,13 @@ td button:hover {
 
 hr {
 
-    margin:40px 0;
+    margin:30px 0;
 
     border:none;
 
     border-top:1px solid #ddd;
 
 }
-
 
 
 

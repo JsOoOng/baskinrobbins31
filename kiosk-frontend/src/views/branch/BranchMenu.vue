@@ -179,133 +179,147 @@ onMounted(async()=>{
 
 <template>
 
-
-<div class="container">
-
-
-    
-
-        <button 
-            class="back-button"
-            @click="goBack"
-        >
-            ← 메인으로 돌아가기
-        </button>
+<div class="menu-page">
 
 
-        <div class="menu-box">
-
-
-            <h2>
-                메뉴 관리
-            </h2>
-
-
-            <!-- 기존 메뉴 테이블 -->
-
-        </div>
+    <button 
+        class="back-button"
+        @click="goBack"
+    >
+        ← 메인으로 돌아가기
+    </button>
 
 
 
-    <table>
+    <div class="menu-box">
 
 
-        <thead>
-
-            <tr>
-
-                <th>
-                    맛 번호
-                </th>
-
-
-                <th>
-                    맛 이름
-                </th>
-
-
-                <th>
-                    사용 여부
-                </th>
-
-
-            </tr>
-
-        </thead>
+        <h2>
+            메뉴 관리
+        </h2>
 
 
 
-        <tbody>
+        <table>
 
 
-            <tr
-                v-for="flavor in allFlavors"
-                :key="flavor.flavorId"
-            >
+            <thead>
+
+                <tr>
+
+                    <th>
+                        맛 번호
+                    </th>
 
 
-                <td>
-                    {{ flavor.flavorId }}
-                </td>
+                    <th>
+                        맛 이름
+                    </th>
 
 
-                <td>
-                    {{ flavor.flavorName }}
-                </td>
+                    <th>
+                        사용 여부
+                    </th>
 
 
-                <td>
+                </tr>
+
+            </thead>
 
 
-                    <button
-                        class="toggle"
-                        :class="
-                        isActive(flavor.flavorId)
-                        ?
-                        'on'
-                        :
-                        'off'
-                        "
-                        @click="toggleFlavor(flavor)"
-                    >
+
+            <tbody>
 
 
-                        {{
+                <tr
+                    v-for="flavor in allFlavors"
+                    :key="flavor.flavorId"
+                >
+
+
+                    <td>
+                        {{ flavor.flavorId }}
+                    </td>
+
+
+                    <td class="flavor-name">
+                        {{ flavor.flavorName }}
+                    </td>
+
+
+                    <td>
+
+
+                        <button
+                            class="toggle"
+                            :class="
                             isActive(flavor.flavorId)
                             ?
-                            'ON'
+                            'on'
                             :
-                            'OFF'
-                        }}
+                            'off'
+                            "
+                            @click="toggleFlavor(flavor)"
+                        >
 
+                            {{
+                                isActive(flavor.flavorId)
+                                ?
+                                'ON'
+                                :
+                                'OFF'
+                            }}
 
-                    </button>
+                        </button>
 
 
                     </td>
 
 
-            </tr>
+                </tr>
 
 
-        </tbody>
+            </tbody>
 
 
-    </table>
+        </table>
+
+
+    </div>
 
 
 </div>
 
 
 </template>
-
-
 <style scoped>
 
+.order-number{
+    width:120px;
+}
 
-/* 전체 */
 
+th:first-child,
+td:first-child{
+    width:90px;
+    white-space:nowrap;
+}
+
+
+.status-waiting,
+.status-preparing,
+.status-completed,
+.status-canceled{
+    white-space:nowrap;
+}
+
+
+/* 전체 페이지 */
 .container{
+
+    display:flex;
+
+    gap:30px;
 
     padding:30px;
 
@@ -315,58 +329,52 @@ onMounted(async()=>{
 
     box-sizing:border-box;
 
+    align-items:flex-start;
+
+    overflow-y:auto;   /* 전체 스크롤 */
 }
 
 
 
-/* 뒤로가기 버튼 */
+/* 왼쪽 영역 */
+.left{
 
-.back-button{
+    flex:0 0 45%;
 
-    margin-bottom:20px;
-
-    padding:10px 18px;
-
-    border:none;
-
-    border-radius:8px;
-
-    background:#222;
-
-    color:white;
-
-    font-weight:bold;
-
-    cursor:pointer;
-
-    transition:0.2s;
-
-}
+    min-width:450px;
 
 
-.back-button:hover{
-
-    background:#555;
-
-}
+    /* 제거 */
+    /* max-height:calc(100vh - 60px); */
+    /* overflow-y:auto; */
 
 
+    background:white;
 
-/* 제목 */
+    padding:25px;
 
-h2{
+    border-radius:15px;
 
-    margin-bottom:25px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
 
-    color:#333;
+    box-sizing:border-box;
 
 }
 
 
 
-/* 메뉴 카드 */
+/* 오른쪽 영역 */
+.right{
 
-.menu-box{
+    flex:1;
+
+    min-width:500px;
+
+
+    /* 제거 */
+    /* max-height:calc(100vh - 60px); */
+    /* overflow-y:auto; */
+
 
     background:white;
 
@@ -374,8 +382,20 @@ h2{
 
     border-radius:15px;
 
-    box-shadow:
-    0 4px 12px rgba(0,0,0,0.08);
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+
+    box-sizing:border-box;
+
+}
+
+
+
+
+h2{
+
+    margin-bottom:20px;
+
+    color:#333;
 
 }
 
@@ -387,6 +407,10 @@ table{
 
     width:100%;
 
+    min-width:400px;
+
+    table-layout:fixed;
+
     border-collapse:separate;
 
     border-spacing:0;
@@ -394,8 +418,6 @@ table{
     overflow:hidden;
 
     border-radius:12px;
-
-    table-layout:fixed;
 
 }
 
@@ -423,13 +445,11 @@ th{
 
 td{
 
-    padding:16px;
+    padding:18px;
 
     text-align:center;
 
     font-size:15px;
-
-    border-bottom:1px solid #eee;
 
 }
 
@@ -442,7 +462,6 @@ tbody tr{
     transition:0.2s;
 
 }
-
 
 
 tbody tr:hover{
@@ -461,47 +480,53 @@ tbody tr:last-child td{
 
 
 
-/* 맛 이름 */
+/* 상태 배지 */
 
-.flavor-name{
-
-    text-align:left;
-
-    padding-left:30px;
-
-    font-weight:500;
-
-}
+.status-waiting,
+.status-preparing,
+.status-completed,
+.status-canceled{
 
 
+    display:inline-block;
 
-/* ON/OFF 버튼 */
+    min-width:80px;
 
-.toggle{
-
-    width:80px;
-
-    padding:8px 15px;
-
-    border:none;
+    padding:6px 14px;
 
     border-radius:20px;
 
-    font-size:14px;
+    font-size:13px;
 
     font-weight:bold;
 
-    cursor:pointer;
-
-    transition:0.2s;
+    text-align:center;
 
 }
 
 
 
-/* 사용중 */
+.status-waiting{
 
-.on{
+    background:#fff3cd;
+
+    color:#856404;
+
+}
+
+
+
+.status-preparing{
+
+    background:#cfe2ff;
+
+    color:#084298;
+
+}
+
+
+
+.status-completed{
 
     background:#d1e7dd;
 
@@ -511,9 +536,7 @@ tbody tr:last-child td{
 
 
 
-/* 미사용 */
-
-.off{
+.status-canceled{
 
     background:#f8d7da;
 
@@ -523,25 +546,67 @@ tbody tr:last-child td{
 
 
 
-.toggle:hover{
+/* 상세 정보 */
 
-    transform:translateY(-2px);
+.right p{
+
+    font-size:16px;
+
+    margin:12px 0;
 
 }
 
 
 
-/* 검색창 추가 예정 대비 */
+hr{
 
-input{
+    margin:20px 0;
 
-    padding:10px 14px;
+    border:none;
+
+    border-top:1px solid #eee;
+
+}
+
+
+
+select{
+
+    padding:8px 12px;
 
     border-radius:8px;
 
     border:1px solid #ccc;
 
-    font-size:14px;
+    margin-right:10px;
+
+}
+
+
+
+button{
+
+    padding:9px 16px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#222;
+
+    color:white;
+
+    cursor:pointer;
+
+    transition:0.2s;
+
+}
+
+
+
+button:hover{
+
+    background:#555;
 
 }
 
