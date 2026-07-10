@@ -285,6 +285,8 @@ const getStatusText = (status) => {
 </div>
 
 </template>
+
+
 <style scoped>
 
 .order-number{
@@ -325,14 +327,20 @@ td:first-child{
 
     box-sizing:border-box;
 
-}
+    align-items:flex-start;
 
+}
 
 .left{
 
     flex:0 0 45%;
 
     min-width:450px;
+
+    max-height:calc(100vh - 60px);
+
+    overflow-y:auto;
+
 
     background:white;
 
@@ -344,13 +352,16 @@ td:first-child{
 
 }
 
-
-
 .right{
 
     flex:1;
 
     min-width:500px;
+
+    max-height:calc(100vh - 60px);
+
+    overflow-y:auto;
+
 
     background:white;
 
@@ -361,7 +372,6 @@ td:first-child{
     box-shadow:0 4px 12px rgba(0,0,0,0.08);
 
 }
-
 
 
 
