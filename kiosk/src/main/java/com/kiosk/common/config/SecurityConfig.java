@@ -7,7 +7,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
+import org.springframework.http.HttpMethod;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -19,7 +19,16 @@ public class SecurityConfig {
 	        .cors(cors -> cors.configurationSource(request -> {
 	            var config = new org.springframework.web.cors.CorsConfiguration();
 	            config.setAllowedOrigins(java.util.List.of("http://localhost:5173")); // 프론트 주소
-	            config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+	            config.setAllowedMethods(
+	            	    java.util.List.of(
+	            	        "GET",
+	            	        "POST",
+	            	        "PUT",
+	            	        "PATCH",
+	            	        "DELETE",
+	            	        "OPTIONS"
+	            	    )
+	            	);
 	            config.setAllowedHeaders(java.util.List.of("*"));
 	            config.setAllowCredentials(true); // 🚨 쿠키(세션) 공유 허용을 위해 필수!
 	            return config;
@@ -38,6 +47,7 @@ public class SecurityConfig {
             // 3. URL 접근 권한 설정 (두 코드의 조건 완벽 통합)
             .authorizeHttpRequests(auth -> auth
                 // 🔓 로그인 없이 누구나 접근 가능한 URL 목록
+            	.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/customer/**").permitAll() // 고객용 장바구니/주문 API
                 .requestMatchers("/head/**").permitAll()         // 본사 관련 테스트 API
                 .requestMatchers("/actuator/**").permitAll()     // 서버 상태 체크용 API

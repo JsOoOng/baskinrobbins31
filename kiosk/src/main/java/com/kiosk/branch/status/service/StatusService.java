@@ -25,7 +25,7 @@ public class StatusService {
     private final StoreProductMapper storeProductMapper;
     private final StoreFlavorMapper storeFlavorMapper;
 
-
+    
 
     // 지점 메뉴 품절 상태 변경
     public StoreProductStatusResponse updateProductSoldOut(
@@ -78,6 +78,20 @@ public class StatusService {
 		    return StoreFlavorStatusResponse
 		            .from(storeFlavor);
 		}
+	
+	// 지점 맛 상태 조회
+	@Transactional(readOnly = true)
+	public List<StoreFlavorStatusResponse> getFlavors(
+	        Integer storeId
+	){
+
+	    return storeFlavorMapper
+	            .findByStoreId(storeId)
+	            .stream()
+	            .map(StoreFlavorStatusResponse::from)
+	            .toList();
+
+	}
 	
 
 }

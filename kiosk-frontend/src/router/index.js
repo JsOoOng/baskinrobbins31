@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+/*import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
@@ -44,6 +44,49 @@ const router = createRouter({
       path: '/head/main',
       name: 'head-main',
       component: () => import('../views/headquarter/HeadMain.vue')
+    }
+  ]
+})
+
+export default router*/
+
+
+import { createRouter, createWebHistory } from 'vue-router'
+
+const router = createRouter({
+  history: createWebHistory(),
+
+  routes: [
+    // 기본 접속 시 로그인 화면으로 이동
+    {
+      path: '/',
+      redirect: '/branch/login'
+    },
+
+    // 지점 로그인
+    {
+      path: '/branch/login',
+      name: 'branch-login',
+      component: () => import('../views/branch/BranchLogin.vue')
+    },
+
+    // 지점 메인
+    {
+      path: '/branch/main',
+      name: 'branch-main',
+      component: () => import('../views/branch/BranchMain.vue')
+    },
+    // 주문 관리
+    {
+      path: '/branch/order',
+      name: 'branch-order',
+      component: () => import('../views/branch/OrderView.vue')
+    },
+    
+    {
+      path: '/branch/menu',
+      name: 'branch-menu',
+      component: () => import('../views/branch/BranchMenu.vue')
     }
   ]
 })
