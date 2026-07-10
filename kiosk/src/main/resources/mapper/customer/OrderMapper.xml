@@ -3,41 +3,68 @@
 
 <mapper namespace="com.kiosk.customer.order.repository.OrderMapper">
 
-    <select id="selectOrderById" resultType="com.kiosk.customer.order.dto.OrderResponse">
-        SELECT order_id, total_price 
-        FROM orders 
-        WHERE order_id = #{orderId}
-    </select>
+    <resultMap id="orderDetailMap" type="com.kiosk.customer.order.dto.OrderResponse">
+        <id property="orderId" column="order_id" />
+        <result property="totalPrice" column="total_price" />
+        
+        <collection property="orderItems" ofType="com.kiosk.customer.order.dto.OrderItemDTO">
+            <id property="id" column="order_item_id" />
+            <result property="productId" column="product_id" />
+            <result property="productName" column="product_name" />
+            <result property="quantity" column="quantity" />
+            <result property="unitPrice" column="unit_price" />
+            
+            <collection property="flavors" ofType="string" javaType="list">
+                <result column="flavor_name" />
+            </collection>
+        </collection>
+    </resultMap>
 
-   <select id="selectOrderItemsByOrderId" resultType="com.kiosk.customer.order.dto.OrderItemDTO">
-    SELECT 
-        oi.order_item_id AS id,
-        oi.product_id AS productId,
-        p.product_name AS productName,
-        oi.quantity,
-        oi.unit_price AS unitPrice
-    FROM order_items oi
-    JOIN products p ON oi.product_id = p.product_id
-    WHERE oi.order_id = #{orderId}
-</select>
-    
-    <select id="getOrderDetails" resultType="map" parameterType="int">
-        SELECT p.product_name, oi.quantity, p.base_price
-        FROM order_items oi
-        JOIN products p ON oi.product_id = p.product_id
-        WHERE oi.order_id = #{orderId}
+    <select id="selectOrderWithDetails" resultMap="orderDetailMap">
+        SELECT 
+            o.order_id, 
+            o.total_price,
+            oi.order_item_id, 
+            oi.product_id,
+            p.product_name, 
+            oi.quantity, 
+            oi.unit_price,
+            f.flavor_name
+        FROM orders o
+        LEFT JOIN order_items oi ON o.order_id = oi.order_id
+        LEFT JOIN products p ON oi.product_id = p.product_id
+        LEFT JOIN order_item_flavors oif ON oi.order_item_id = oif.order_item_id
+        LEFT JOIN icecream_flavors f ON oif.flavor_id = f.flavor_id
+        WHERE o.order_id = #{orderId}
     </select>
 
     <update id="decreaseProductStock">
-	    UPDATE store_inventory
-	    SET current_stock = current_stock - #{quantity}
-	    WHERE item_id = #{productId}  AND current_stock >= #{quantity}
-	</update>
+        UPDATE store_inventory 
+        SET current_stock = current_stock - #{quantity}
+        WHERE item_id = #{productId} 
+        AND current_stock >= #{quantity}
+    </update>
 
     <update id="updateOrderStatus">
         UPDATE orders
         SET order_status = #{status}
         WHERE order_id = #{orderId}
     </update>
-
-</mapper>
+    
+ <insert id="insertPayment" parameterType="com.kiosk.customer.order.dto.Payment">
+    INSERT INTO payments (
+        order_id, 
+        payment_method, 
+        base_amount, 
+        final_amount, 
+        payment_status
+    ) VALUES (
+        #{orderId}, 
+        #{paymentMethod}, 
+        #{baseAmount}, 
+        #{finalAmount}, 
+        #{paymentStatus}
+    )
+</insert>
+    
+    </mapper>
