@@ -22,7 +22,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "HEADQUARTER_ADMINS")
+@Table(name = "headquarter_admins")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -61,5 +61,21 @@ public class HeadquarterAdmin {
 
     public boolean isActiveAdmin() {
         return this.status == AdminStatus.ACTIVE;
+    }
+
+    public boolean isSuperAdmin() {
+        return this.role == AdminRole.SUPER_ADMIN;
+    }
+
+    public void changeRole(AdminRole role) {
+        this.role = role;
+    }
+
+    public void changeStatus(AdminStatus status) {
+        this.status = status;
+    }
+
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
     }
 }

@@ -3,21 +3,27 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.kiosk.headquarter.mapper.HeadAuthMapper">
+<mapper namespace="com.kiosk.headquarter.repository.HeadAuthMapper">
 
     <select id="findEmployeeByLoginId"
             resultType="com.kiosk.headquarter.dto.auth.HeadLoginEmployeeDTO">
         SELECT
-            employee_id AS employeeId,
-            store_id AS storeId,
+            admin_id AS employeeId,
+            NULL AS storeId,
             login_id AS loginId,
             password AS password,
             name AS name,
             role AS role,
             status AS status
-        FROM employees
+        FROM headquarter_admins
         WHERE login_id = #{loginId}
         LIMIT 1
     </select>
+
+    <update id="updatePassword">
+        UPDATE headquarter_admins
+        SET password = #{password}
+        WHERE admin_id = #{employeeId}
+    </update>
 
 </mapper>

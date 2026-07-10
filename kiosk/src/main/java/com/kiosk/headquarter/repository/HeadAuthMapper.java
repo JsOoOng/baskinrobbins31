@@ -8,5 +8,10 @@ import com.kiosk.headquarter.dto.auth.HeadLoginEmployeeDTO;
 @Mapper
 public interface HeadAuthMapper {
 
-    HeadLoginEmployeeDTO findEmployeeByLoginId(@Param("loginId") String loginId);
+    HeadLoginEmployeeDTO findEmployeeByLoginId(String loginId);
+
+    void updatePassword(
+            @Param("employeeId") Integer employeeId,
+            @Param("password") String password
+    );
 }

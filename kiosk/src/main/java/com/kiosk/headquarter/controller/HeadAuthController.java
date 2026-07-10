@@ -5,14 +5,20 @@ import com.kiosk.headquarter.dto.auth.HeadLoginResponse;
 import com.kiosk.headquarter.dto.common.HeadApiResponse;
 import com.kiosk.headquarter.service.HeadAuthService;
 
-import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/head/auth")
 public class HeadAuthController {
-	
-	@GetMapping("/")
+
+    private final HeadAuthService headAuthService;
+
+    public HeadAuthController(HeadAuthService headAuthService) {
+        this.headAuthService = headAuthService;
+    }
+
+    @GetMapping("/")
     public String home() {
         return "kiosk server running";
     }
@@ -22,41 +28,29 @@ public class HeadAuthController {
         return "headquarter api running";
     }
 
-    private final HeadAuthService headAuthService;
-
-    public HeadAuthController(HeadAuthService headAuthService) {
-        this.headAuthService = headAuthService;
-    }
-
     @PostMapping("/login")
     public HeadApiResponse<HeadLoginResponse> login(
-            @RequestBody HeadLoginRequest request,
-            HttpSession session
+            @RequestBody HeadLoginRequest request
     ) {
         HeadLoginResponse loginUser = headAuthService.login(request);
-
-        // 세션에 본사 관리자 정보 저장
-        session.setAttribute("HEAD_EMPLOYEE_ID", loginUser.getEmployeeId());
-        session.setAttribute("HEAD_LOGIN_ID", loginUser.getLoginId());
-        session.setAttribute("HEAD_ROLE", loginUser.getRole());
 
         return HeadApiResponse.ok("본사 관리자 로그인 성공", loginUser);
     }
 
     @GetMapping("/me")
-    public HeadApiResponse<String> me(HttpSession session) {
-        Object loginId = session.getAttribute("HEAD_LOGIN_ID");
-
-        if (loginId == null) {
+    public HeadApiResponse<String> me(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             return HeadApiResponse.fail("로그인 상태가 아닙니다.");
         }
 
-        return HeadApiResponse.ok("현재 로그인 중인 본사 관리자", loginId.toString());
+        return HeadApiResponse.ok(
+                "현재 로그인 중인 본사 관리자",
+                authentication.getName()
+        );
     }
 
     @PostMapping("/logout")
-    public HeadApiResponse<Void> logout(HttpSession session) {
-        session.invalidate();
-        return HeadApiResponse.ok("본사 관리자 로그아웃 성공", null);
+    public HeadApiResponse<Void> logout() {
+        return HeadApiResponse.ok("프론트에서 JWT 토큰을 삭제해주세요.", null);
     }
 }
