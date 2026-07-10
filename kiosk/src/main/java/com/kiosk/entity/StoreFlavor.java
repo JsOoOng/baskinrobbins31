@@ -40,4 +40,17 @@ public class StoreFlavor {
         this.isSoldOut = isSoldOut;
         this.container = container;
     }
+    
+    public void changeContainer(Integer amount) {
+
+        this.container += amount;
+
+
+        if(this.container < 0){
+
+            this.container = 0;
+
+        }
+
+    }
 }

@@ -9,9 +9,14 @@ const moveOrder = () => {
   router.push('/branch/order')
 }
 
+const goInventory = () => {
+    router.push('/branch/inventory')
+}
+
 const goMenu = () => {
     router.push('/branch/menu')
 }
+
 
 const logout = () => {
   localStorage.removeItem('token')
@@ -40,7 +45,7 @@ const logout = () => {
       메뉴 관리
     </button>
 
-    <button>
+    <button @click="goInventory">
       재고 관리
     </button>
 

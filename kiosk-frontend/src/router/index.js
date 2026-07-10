@@ -84,6 +84,12 @@ const router = createRouter({
     },
     
     {
+      path: '/branch/inventory',
+      name: 'branch-inventory',
+      component: () => import('../views/branch/BranchInventory.vue')
+    },
+
+    {
       path: '/branch/menu',
       name: 'branch-menu',
       component: () => import('../views/branch/BranchMenu.vue')
