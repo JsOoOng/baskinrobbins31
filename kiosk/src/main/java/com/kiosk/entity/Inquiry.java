@@ -44,7 +44,7 @@ public class Inquiry {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_id")
     private HeadquarterAdmin admin;
@@ -66,4 +66,10 @@ public class Inquiry {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    public void writeAnswer(String answer, HeadquarterAdmin admin) {
+        this.answer = answer;
+        this.admin = admin;
+        this.status = InquiryStatus.ANSWERED;
+    }
 }

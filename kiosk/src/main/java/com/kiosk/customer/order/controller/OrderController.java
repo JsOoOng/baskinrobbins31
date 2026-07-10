@@ -1,6 +1,6 @@
 package com.kiosk.customer.order.controller;
 
-import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,14 +10,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kiosk.customer.order.dto.OrderCreateRequest;
-import com.kiosk.customer.order.dto.OrderItemDTO;
 import com.kiosk.customer.order.dto.OrderResponse;
 import com.kiosk.customer.order.repository.OrderMapper;
 import com.kiosk.customer.order.service.OrderService;
-import com.kiosk.entity.OrderItem;
 
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -41,23 +37,23 @@ public class OrderController {
     }
 
     @PostMapping("/{orderId}/pay")
-    public ResponseEntity<String> completePayment(@PathVariable int orderId, @RequestBody String paymentMethod) {
-        // 1. 주문 항목을 DTO 리스트로 가져옵니다.
-        List<OrderItemDTO> orderItems = orderMapper.selectOrderItemsByOrderId(orderId);
+    public ResponseEntity<String> completePayment(
+            @PathVariable int orderId, 
+            @RequestBody Map<String, String> request) { // Map으로 변경
         
-        // 2. 서비스 호출 (서비스의 processPayment 파라미터도 DTO로 변경해야 합니다)
-        orderService.processPayment(orderId, orderItems);
+        String paymentMethod = request.get("paymentMethod"); // 키 값으로 추출
+        orderService.processPayment(orderId, paymentMethod);
         
         return ResponseEntity.ok("결제 및 재고 차감 완료");
     }
-  
-    @PostMapping
-    public ResponseEntity<String> createOrder(@RequestBody OrderCreateRequest request, HttpSession session) {
+    
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<String> cancelOrder(@PathVariable int orderId) {
+        // 주문 상태를 CANCELED로 변경하는 서비스 호출
+        orderService.cancelOrder(orderId);
         
-        // 서비스로 결제 정보와 세션(장바구니)을 넘김
-        orderService.createOrder(request, session);
-        
-        return ResponseEntity.ok("주문이 성공적으로 접수되었습니다.");
+        return ResponseEntity.ok("주문 취소 완료");
     }
+  
 }
 

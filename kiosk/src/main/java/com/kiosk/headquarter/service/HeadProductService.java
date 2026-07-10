@@ -45,6 +45,7 @@ public class HeadProductService {
                                 ? requestDTO.getIsDisplay()
                                 : true
                 )
+                .imageUrl(requestDTO.getImageUrl())
                 .build();
 
         Product savedProduct = headProductMapper.save(product);
@@ -54,6 +55,7 @@ public class HeadProductService {
 
     // 본사 상품 목록 조회
     public List<HeadProductResponseDTO> getProductList() {
+
         return headProductMapper.findByIsDisplayTrueOrderByIdDesc()
                 .stream()
                 .map(this::toResponseDTO)
@@ -62,6 +64,7 @@ public class HeadProductService {
 
     // 본사 상품 상세 조회
     public HeadProductResponseDTO getProductDetail(Integer productId) {
+
         Product product = headProductMapper.findByIdAndIsDisplayTrue(productId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다."));
 
@@ -85,8 +88,13 @@ public class HeadProductService {
                 requestDTO.getProductName(),
                 requestDTO.getDescription(),
                 requestDTO.getBasePrice(),
-                requestDTO.getDiscountRate() != null ? requestDTO.getDiscountRate() : BigDecimal.ZERO,
-                requestDTO.getIsDisplay() != null ? requestDTO.getIsDisplay() : true
+                requestDTO.getDiscountRate() != null
+                        ? requestDTO.getDiscountRate()
+                        : BigDecimal.ZERO,
+                requestDTO.getIsDisplay() != null
+                        ? requestDTO.getIsDisplay()
+                        : true,
+                requestDTO.getImageUrl()
         );
 
         return toResponseDTO(product);
@@ -95,14 +103,15 @@ public class HeadProductService {
     // 본사 상품 삭제 처리
     @Transactional
     public void deleteProduct(Integer productId) {
+
         Product product = headProductMapper.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다."));
 
         product.hideProduct();
     }
 
-    // Entity → DTO 변환
     private HeadProductResponseDTO toResponseDTO(Product product) {
+
         return HeadProductResponseDTO.builder()
                 .productId(product.getId())
                 .categoryId(product.getCategory().getId())
@@ -112,6 +121,7 @@ public class HeadProductService {
                 .basePrice(product.getBasePrice())
                 .discountRate(product.getDiscountRate())
                 .isDisplay(product.getIsDisplay())
+                .imageUrl(product.getImageUrl())
                 .createdAt(product.getCreatedAt())
                 .build();
     }

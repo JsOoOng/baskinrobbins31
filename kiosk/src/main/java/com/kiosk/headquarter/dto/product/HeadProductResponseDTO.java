@@ -18,5 +18,6 @@ public class HeadProductResponseDTO {
     private Integer basePrice;
     private BigDecimal discountRate;
     private Boolean isDisplay;
+    private String imageUrl;
     private LocalDateTime createdAt;
 }

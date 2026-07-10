@@ -12,7 +12,19 @@ const instance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   }
-});
+})
 
-// 3. 만든 인스턴스를 기본으로 내보내기
-export default instance;
+instance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token')
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
+export default instance

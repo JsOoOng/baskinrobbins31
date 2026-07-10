@@ -20,7 +20,42 @@ const router = createRouter({
     },
     { path: '/order-confirm', 
       name: 'orderConfirm', 
-      component: () => import('../views/customer/OrderConfirmView.vue') }
+      component: () => import('../views/customer/OrderConfirmView.vue') },
+      
+    // ----------------------------------------------------
+    // 📱 BRANCH (지점용 주소)
+    // ----------------------------------------------------
+     // 지점 로그인
+    {
+      path: '/branch/login',
+      name: 'branch-login',
+      component: () => import('../views/branch/BranchLogin.vue')
+    },
+
+    // 지점 메인
+    {
+      path: '/branch/main',
+      name: 'branch-main',
+      component: () => import('../views/branch/BranchMain.vue')
+    },
+    // 주문 관리
+    {
+      path: '/branch/order',
+      name: 'branch-order',
+      component: () => import('../views/branch/OrderView.vue')
+    },
+    
+    {
+      path: '/branch/inventory',
+      name: 'branch-inventory',
+      component: () => import('../views/branch/BranchInventory.vue')
+    },
+
+    {
+      path: '/branch/menu',
+      name: 'branch-menu',
+      component: () => import('../views/branch/BranchMenu.vue')
+    }
   ]
 })
 

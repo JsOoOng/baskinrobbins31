@@ -58,4 +58,8 @@ public class HeadquarterAdmin {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    public boolean isActiveAdmin() {
+        return this.status == AdminStatus.ACTIVE;
+    }
 }

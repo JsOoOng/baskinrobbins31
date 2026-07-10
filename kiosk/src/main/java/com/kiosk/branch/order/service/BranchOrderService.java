@@ -31,9 +31,8 @@ public class BranchOrderService {
     public List<BranchOrderListResponse> getOrders(Integer storeId){
 
 
-        List<Order> orders =
-                orderMapper
-                .findByIdOrderByCreatedAtDesc(storeId);
+    	List<Order> orders =
+    		    orderMapper.findByStore_IdOrderByCreatedAtDesc(storeId);
 
 
 

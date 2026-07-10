@@ -41,7 +41,7 @@ public class Product {
     @Builder.Default
     private Boolean isDisplay = true;
 
-    @Column(name = "image_url", length = 255) // 🌟 이미지 경로 필드 추가
+    @Column(name = "image_url", length = 255)
     private String imageUrl;
 
     @CreationTimestamp
@@ -64,7 +64,7 @@ public class Product {
         this.basePrice = basePrice;
         this.discountRate = discountRate;
         this.isDisplay = isDisplay;
-        this.imageUrl = imageUrl; // 🌟 이미지 주소 업데이트 추가
+        this.imageUrl = imageUrl;
     }
 
     public void hideProduct() {
