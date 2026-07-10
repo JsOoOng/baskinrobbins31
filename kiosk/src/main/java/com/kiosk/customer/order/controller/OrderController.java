@@ -1,6 +1,6 @@
 package com.kiosk.customer.order.controller;
 
-import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,14 +10,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kiosk.customer.order.dto.OrderCreateRequest;
-import com.kiosk.customer.order.dto.OrderItemDTO;
 import com.kiosk.customer.order.dto.OrderResponse;
 import com.kiosk.customer.order.repository.OrderMapper;
 import com.kiosk.customer.order.service.OrderService;
-import com.kiosk.entity.OrderItem;
 
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -41,20 +37,15 @@ public class OrderController {
     }
 
     @PostMapping("/{orderId}/pay")
-    public ResponseEntity<String> completePayment(@PathVariable int orderId, @RequestBody String paymentMethod) {
-        // 1. 상세 항목 조회를 서비스 내부로 넘기고, 서비스가 결제 전체를 담당하게 합니다.
-        orderService.processPayment(orderId);
+    public ResponseEntity<String> completePayment(
+            @PathVariable int orderId, 
+            @RequestBody Map<String, String> request) { // Map으로 변경
+        
+        String paymentMethod = request.get("paymentMethod"); // 키 값으로 추출
+        orderService.processPayment(orderId, paymentMethod);
         
         return ResponseEntity.ok("결제 및 재고 차감 완료");
     }
   
-    @PostMapping
-    public ResponseEntity<Integer> createOrder(@RequestBody OrderCreateRequest request, HttpSession session) {
-        // 주문을 생성하고 생성된 주문 객체를 반환하도록 서비스 수정
-        int orderNumber = orderService.createOrder(request, session);
-        
-        // 프론트엔드에게 주문번호(Integer)를 전달
-        return ResponseEntity.ok(orderNumber);
-    }
 }
 
