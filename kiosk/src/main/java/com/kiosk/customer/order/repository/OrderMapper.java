@@ -1,32 +1,30 @@
 package com.kiosk.customer.order.repository;
 
-import java.util.List;
-
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.kiosk.customer.order.dto.OrderItemDTO;
 import com.kiosk.customer.order.dto.OrderResponse;
-import com.kiosk.entity.OrderItem;
 
 @Mapper
 public interface OrderMapper {
-
-    // 주문 상세 조회
-    OrderResponse selectOrderById(@Param("orderId") int orderId);
-
-    // 주문 상품 목록
-    List<OrderItemDTO> selectOrderItemsByOrderId(@Param("orderId") int orderId);
-
-    // 재고 차감
-    void decreaseProductStock(
-        @Param("productId") int productId,
+    
+    // 오늘의 마지막 주문번호 조회
+    Integer selectLastOrderNumberForToday();
+    
+    // 통합: 주문 정보 + 상품 목록 + 맛 정보를 한 번에 조회
+    OrderResponse selectOrderWithDetails(int orderId);
+    
+    // 재고 차감 (필요)
+    int decreaseProductStock(
+        @Param("productId") int productId, 
         @Param("quantity") int quantity
     );
 
-    // 주문 상태 변경
+    // 주문 상태 변경 (필수)
     void updateOrderStatus(
-        @Param("orderId") int orderId,
+        @Param("orderId") int orderId, 
         @Param("status") String status
     );
 }
+
+

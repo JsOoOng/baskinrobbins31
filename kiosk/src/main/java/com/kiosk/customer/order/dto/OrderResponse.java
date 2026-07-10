@@ -13,3 +13,4 @@ public class OrderResponse {
     // 엔티티 대신 전용 DTO 리스트 사용
     private List<OrderItemDTO> orderItems; 
 }
+
