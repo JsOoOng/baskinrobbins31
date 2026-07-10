@@ -292,108 +292,68 @@ onMounted(async()=>{
 
 
 </template>
+
 <style scoped>
 
-.order-number{
-    width:120px;
-}
+/* 메뉴 페이지 */
 
-
-th:first-child,
-td:first-child{
-    width:90px;
-    white-space:nowrap;
-}
-
-
-.status-waiting,
-.status-preparing,
-.status-completed,
-.status-canceled{
-    white-space:nowrap;
-}
-
-
-/* 전체 페이지 */
-.container{
-
-    display:flex;
-
-    gap:30px;
-
-    padding:30px;
-
-    background:#f8f9fa;
+.menu-page {
 
     min-height:100vh;
 
-    box-sizing:border-box;
-
-    align-items:flex-start;
-
-    overflow-y:auto;   /* 전체 스크롤 */
-}
-
-
-
-/* 왼쪽 영역 */
-.left{
-
-    flex:0 0 45%;
-
-    min-width:450px;
-
-
-    /* 제거 */
-    /* max-height:calc(100vh - 60px); */
-    /* overflow-y:auto; */
-
-
-    background:white;
-
-    padding:25px;
-
-    border-radius:15px;
-
-    box-shadow:0 4px 12px rgba(0,0,0,0.08);
-
-    box-sizing:border-box;
-
-}
-
-
-
-/* 오른쪽 영역 */
-.right{
-
-    flex:1;
-
-    min-width:500px;
-
-
-    /* 제거 */
-    /* max-height:calc(100vh - 60px); */
-    /* overflow-y:auto; */
-
-
-    background:white;
-
     padding:30px;
 
-    border-radius:15px;
-
-    box-shadow:0 4px 12px rgba(0,0,0,0.08);
-
     box-sizing:border-box;
+
+    background:#f8f9fa;
+
+}
+
+
+
+/* 뒤로가기 버튼 */
+
+.menu-page > button {
+
+    margin-bottom:25px;
+
+    padding:10px 18px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#222;
+
+    color:white;
+
+    font-size:14px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    transition:0.2s;
+
+}
+
+
+
+.menu-page > button:hover {
+
+    background:#555;
 
 }
 
 
 
 
-h2{
 
-    margin-bottom:20px;
+/* 제목 */
+
+h2 {
+
+    margin:30px 0 20px;
 
     color:#333;
 
@@ -401,29 +361,37 @@ h2{
 
 
 
-/* 테이블 */
 
-table{
+
+/* 메뉴 테이블 */
+
+table {
 
     width:100%;
 
-    min-width:400px;
-
-    table-layout:fixed;
+    background:white;
 
     border-collapse:separate;
 
     border-spacing:0;
 
+    border-radius:15px;
+
     overflow:hidden;
 
-    border-radius:12px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+
+    margin-bottom:30px;
 
 }
 
 
 
-thead{
+
+
+/* 테이블 헤더 */
+
+thead {
 
     background:#333;
 
@@ -433,29 +401,97 @@ thead{
 
 
 
-th{
 
-    padding:18px;
 
-    font-size:15px;
+th {
+
+    padding:15px;
+
+    font-size:14px;
 
 }
 
 
 
-td{
 
-    padding:18px;
+
+td {
+
+    padding:15px;
 
     text-align:center;
 
-    font-size:15px;
+    border-bottom:1px solid #eee;
+
+    color:#444;
 
 }
 
 
 
-tbody tr{
+
+
+tbody tr {
+
+    transition:0.2s;
+
+}
+
+
+
+
+
+tbody tr:hover {
+
+    background:#f7f7f7;
+
+}
+
+
+
+
+
+tbody tr:last-child td {
+
+    border-bottom:none;
+
+}
+
+
+
+
+
+/* 맛 이름 왼쪽 정렬 */
+
+.flavor-name {
+
+    text-align:left;
+
+    padding-left:30px;
+
+    font-weight:500;
+
+}
+
+
+
+
+
+/* ON/OFF 버튼 */
+
+.toggle {
+
+    width:80px;
+
+    padding:8px 15px;
+
+    border:none;
+
+    border-radius:20px;
+
+    font-size:13px;
+
+    font-weight:bold;
 
     cursor:pointer;
 
@@ -464,69 +500,22 @@ tbody tr{
 }
 
 
-tbody tr:hover{
-
-    background:#f7f7f7;
-
-}
 
 
 
-tbody tr:last-child td{
+.toggle:hover {
 
-    border-bottom:none;
+    transform:translateY(-2px);
 
 }
 
 
 
-/* 상태 배지 */
-
-.status-waiting,
-.status-preparing,
-.status-completed,
-.status-canceled{
 
 
-    display:inline-block;
+/* 사용중 */
 
-    min-width:80px;
-
-    padding:6px 14px;
-
-    border-radius:20px;
-
-    font-size:13px;
-
-    font-weight:bold;
-
-    text-align:center;
-
-}
-
-
-
-.status-waiting{
-
-    background:#fff3cd;
-
-    color:#856404;
-
-}
-
-
-
-.status-preparing{
-
-    background:#cfe2ff;
-
-    color:#084298;
-
-}
-
-
-
-.status-completed{
+.on {
 
     background:#d1e7dd;
 
@@ -536,7 +525,11 @@ tbody tr:last-child td{
 
 
 
-.status-canceled{
+
+
+/* 미사용 */
+
+.off {
 
     background:#f8d7da;
 
@@ -546,70 +539,52 @@ tbody tr:last-child td{
 
 
 
-/* 상세 정보 */
-
-.right p{
-
-    font-size:16px;
-
-    margin:12px 0;
-
-}
 
 
+/* 검색 input */
 
-hr{
+input {
 
-    margin:20px 0;
-
-    border:none;
-
-    border-top:1px solid #eee;
-
-}
-
-
-
-select{
-
-    padding:8px 12px;
+    padding:10px 14px;
 
     border-radius:8px;
 
     border:1px solid #ccc;
 
-    margin-right:10px;
+    font-size:14px;
 
 }
 
 
 
-button{
 
-    padding:9px 16px;
 
-    border:none;
+/* 반응형 */
 
-    border-radius:8px;
+@media(max-width:900px){
 
-    background:#222;
 
-    color:white;
+    .menu-page{
 
-    cursor:pointer;
+        padding:15px;
 
-    transition:0.2s;
+    }
+
+
+    table{
+
+        font-size:13px;
+
+    }
+
+
+    th,
+    td{
+
+        padding:10px;
+
+    }
 
 }
-
-
-
-button:hover{
-
-    background:#555;
-
-}
-
-
 
 </style>
