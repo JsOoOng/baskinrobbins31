@@ -1,6 +1,7 @@
 // src/api/axios.js
-import axios from 'axios';
+import axios from 'axios'; // 1. 라이브러리 로드
 
+// 2. 변수 이름을 axios가 아니라 'instance'로 명확히 분리!
 const instance = axios.create({
   // 백엔드 스프링 부트 서버 주소
   baseURL: 'http://localhost:8888', 
@@ -13,4 +14,5 @@ const instance = axios.create({
   }
 });
 
+// 3. 만든 인스턴스를 기본으로 내보내기
 export default instance;

@@ -1,61 +1,93 @@
 <template>
-  <div class="menu-container">
-    <h1>아이스크림 메뉴판</h1>
-    
-    <div v-if="menuStore.isLoading">메뉴를 불러오는 중이야... 🍦</div>
+  <div class="menu-view-wrapper">
+    <div class="menu-container">
+      <h1>아이스크림 메뉴판</h1>
+      
+      <div v-if="menuStore.isLoading">메뉴를 불러오는 중</div>
 
-    <div class="product-grid" v-else>
-      <div 
-        v-for="product in menuStore.products" 
-        :key="product.productId" 
-        class="product-card"
-        @click="openOptionModal(product)" 
-      >
-        <h3>{{ product.productName }}</h3>
-        <p>{{ product.basePrice }}원</p>
+      <div class="product-grid" v-else>
+        <div 
+          v-for="product in menuStore.products" 
+          :key="product.productId" 
+          class="product-card"
+          @click="openOptionModal(product)" 
+        >
+          <h3>{{ product.productName }}</h3>
+          <p>{{ product.basePrice }}원</p>
+        </div>
       </div>
+
+      <OptionModal 
+        :isOpen="isModalOpen" 
+        :product="selectedProduct"
+        @close="isModalOpen = false"
+        @add-to-cart="handleAddToCart"
+      />
     </div>
 
-    <OptionModal 
-      :isOpen="isModalOpen" 
-      :product="selectedProduct"
-      @close="isModalOpen = false"
-      @add-to-cart="handleAddToCart"
-    />
-
+    <CartBottomBar />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useMenuStore } from '@/stores/customer/menu';
-import OptionModal from '@/components/customer/OptionModal.vue'; // 모달 부품 가져오기!
+import { useBasketStore } from '@/stores/customer/basket'; // 💡 장바구니 데이터 갱신용 스토어 추가
+import OptionModal from '@/components/customer/OptionModal.vue';
+import CartBottomBar from '@/components/customer/CartBottomBar.vue';
+
+import axios from '@/api/axios';
 
 const menuStore = useMenuStore();
+const basketStore = useBasketStore(); // 💡 스토어 인스턴스 생성
 
-// 💡 모달창 상태를 관리하는 변수들
-const isModalOpen = ref(false);       // 모달이 열려있는지 여부 (처음엔 닫힘)
-const selectedProduct = ref(null);    // 내가 클릭한 아이스크림 정보 보관
+const isModalOpen = ref(false);       
+const selectedProduct = ref(null);    
 
 onMounted(() => {
   menuStore.fetchMenus();
+  basketStore.fetchBasket(); // 💡 메뉴판 화면에 진입하자마자 기존 장바구니 내역(수량/금액)을 백엔드에서 긁어옵니다.
 });
 
-// 상품을 클릭했을 때 실행되는 함수
 const openOptionModal = (product) => {
-  selectedProduct.value = product; // 클릭한 아이스크림 정보를 변수에 담고
-  isModalOpen.value = true;        // 모달창을 엽니다!
+  selectedProduct.value = product; 
+  isModalOpen.value = true;        
 };
 
-// 모달에서 '장바구니 담기'를 눌렀을 때 실행되는 함수
-const handleAddToCart = (product) => {
-  alert(`${product.productName} 상품이 장바구니에 담겼습니다. (콘솔창 확인)`);
-  console.log('장바구니에 담을 데이터:', product);
-  // 나중에 여기에 우리가 처음에 만든 basketStore.addToCart()를 연결할 거예요!
+const handleAddToCart = async (product) => {
+  // 🌟 여기서 unitPrice를 확실하게 넣어주자!
+  // product 객체를 console.log(product) 해서 실제 가격 키 이름이 뭔지 확인해봐.
+  // 아마 basePrice 혹은 price일 거야.
+  
+  const requestData = {
+    productId: product.productId,
+    quantity: 1, 
+    unitPrice: product.basePrice || product.price || 0, // 💡 basePrice가 없으면 price를 쓰고, 그것도 없으면 0으로!
+    flavors: [], 
+    options: []  
+  };
+
+  console.log('최종 전송 데이터:', requestData); // 확인용
+
+  try {
+    await axios.post('/api/customer/basket', requestData);
+    await basketStore.fetchBasket();
+    
+    alert(`${product.productName} 상품이 장바구니에 담겼어!`);
+    isModalOpen.value = false; 
+  } catch (error) {
+    alert('장바구니에 담는데 실패했어.');
+  }
 };
 </script>
 
 <style scoped>
+.menu-view-wrapper {
+  position: relative;
+  height: 100%;
+  /* 하단 바가 메뉴 카드를 가리지 않도록 넉넉하게 여백 주기 */
+  padding-bottom: 120px; 
+}
 .menu-container { padding: 20px; }
 .product-grid { display: flex; gap: 15px; flex-wrap: wrap; }
 .product-card { 

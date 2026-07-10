@@ -17,7 +17,10 @@ const router = createRouter({
       name: 'customer-menu',
       // MenuView.vue 파일이 아직 없다면, 나중에 만들면 됩니다. (에러가 나면 일단 이 블록은 주석 처리하세요)
       component: () => import('../views/customer/MenuView.vue')
-    }
+    },
+    { path: '/order-confirm', 
+      name: 'orderConfirm', 
+      component: () => import('../views/customer/OrderConfirmView.vue') }
   ]
 })
 

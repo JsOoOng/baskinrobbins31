@@ -19,7 +19,7 @@ public class SecurityConfig {
 	        .cors(cors -> cors.configurationSource(request -> {
 	            var config = new org.springframework.web.cors.CorsConfiguration();
 	            config.setAllowedOrigins(java.util.List.of("http://localhost:5173")); // 프론트 주소
-	            config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+	            config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 	            config.setAllowedHeaders(java.util.List.of("*"));
 	            config.setAllowCredentials(true); // 🚨 쿠키(세션) 공유 허용을 위해 필수!
 	            return config;

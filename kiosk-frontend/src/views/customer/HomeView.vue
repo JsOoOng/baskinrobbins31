@@ -1,41 +1,52 @@
 <template>
   <div class="home-container" @click="goToMenu">
-    <h1>Baskin Robbins</h1>
-    <p>주문하시려면 화면을 터치해 주세요 🍦</p>
+    <div class="touch-area">
+      <h1 class="brand-name">Baskin Robbins</h1>
+      <p class="touch-text">주문하시려면 화면을 터치해 주세요 👆</p>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { useRouter } from 'vue-router';
 
-// 화면 이동을 도와주는 라우터 함수 꺼내기
-const router = useRouter()
+const router = useRouter();
 
-// 화면을 터치(클릭)했을 때 메뉴판 화면으로 이동하는 함수
 const goToMenu = () => {
-  router.push('/menu')
-}
+  router.push('/menu'); // 터치 시 메뉴 화면으로 이동!
+};
 </script>
 
 <style scoped>
 .home-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background-color: #ffcce6; /* 배스킨라빈스 느낌의 핑크색 배경 */
+  justify-content: center; /* 가로 중앙 정렬 */
+  align-items: center;     /* 세로 중앙 정렬 */
+  height: 100%;            /* main-content의 높이를 100% 꽉 채움 */
+  width: 100%;
+  background-color: #ff66b2; /* 베라 핑크색 */
+  color: white;
   cursor: pointer;
 }
 
-h1 {
-  font-size: 3rem;
-  color: #004080;
-  margin-bottom: 20px;
+.touch-area {
+  text-align: center;
 }
 
-p {
-  font-size: 1.5rem;
-  color: #333;
+.brand-name {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.touch-text {
+  font-size: 2rem;
+  /* 글씨가 깜빡거리는 애니메이션 효과 (키오스크 국룰!) */
+  animation: blink 1.5s infinite; 
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 </style>
