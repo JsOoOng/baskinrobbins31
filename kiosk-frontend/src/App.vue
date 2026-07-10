@@ -1,5 +1,6 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
+import Header from '@/components/common/Header.vue';
 </script>
 
 <template>
@@ -8,9 +9,7 @@ import { RouterLink, RouterView } from 'vue-router'
 
 </template>
 
-<script setup>
-import Header from '@/components/common/Header.vue';
-</script>
+
 
 <style>
 /* 기본 마진 없애기 */
