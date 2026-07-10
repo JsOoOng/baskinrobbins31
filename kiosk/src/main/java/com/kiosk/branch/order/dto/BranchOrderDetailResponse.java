@@ -31,5 +31,18 @@ public class BranchOrderDetailResponse {
         private Integer quantity;
 
         private Integer unitPrice;
+
+        private List<FlavorResponse> flavors;
+    }
+
+    @Getter
+    @Builder
+    public static class FlavorResponse {
+
+        private String flavorName;
+
+        private Integer quantity;
     }
 }
+
+

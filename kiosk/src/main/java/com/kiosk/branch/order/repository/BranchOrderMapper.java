@@ -12,11 +12,11 @@ import com.kiosk.entity.Order;
 public interface BranchOrderMapper extends JpaRepository<Order, Integer> {
 
 
-    @EntityGraph(attributePaths = {
-        "orderItems",
-        "orderItems.product"
-    })
-    Optional<Order> findWithItemsById(Integer id);
+	@EntityGraph(attributePaths = {
+	        "orderItems",
+	        "orderItems.product"
+	    })
+	    Optional<Order> findWithItemsById(Integer id);
     
  // 특정 지점 주문 조회
     List<Order> findByIdOrderByCreatedAtDesc(Integer id);
