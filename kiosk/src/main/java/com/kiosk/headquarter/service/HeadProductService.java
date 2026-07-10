@@ -86,7 +86,8 @@ public class HeadProductService {
                 requestDTO.getDescription(),
                 requestDTO.getBasePrice(),
                 requestDTO.getDiscountRate() != null ? requestDTO.getDiscountRate() : BigDecimal.ZERO,
-                requestDTO.getIsDisplay() != null ? requestDTO.getIsDisplay() : true
+                requestDTO.getIsDisplay() != null ? requestDTO.getIsDisplay() : true,
+                product.getImageUrl() // 🌟 기존 이미지 URL 유지
         );
 
         return toResponseDTO(product);

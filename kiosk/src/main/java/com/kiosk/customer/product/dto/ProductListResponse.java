@@ -4,9 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Builder
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductListResponse {
@@ -18,5 +20,5 @@ public class ProductListResponse {
     private Integer basePrice;     // 상품 기본 가격
     private Double discountRate;   // 상품 자체 할인율 (%)
     private Boolean isSoldOut;     // 지점 내 해당 상품 품절 여부 (STORE_PRODUCTS.is_sold_out)
-    
+    private String imageUrl;	   // 상품 이미지 파일 경로/URL (PRODUCTS.image_url)
 }

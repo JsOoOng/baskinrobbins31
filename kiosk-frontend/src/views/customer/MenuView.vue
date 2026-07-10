@@ -112,9 +112,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import axios from '@/api/axios'
+
+import { useBasketStore } from '@/stores/customer/basket'
 
 const router = useRouter()
+const basketStore = useBasketStore()
 
 // === [DB 연동용 반응형 변수] ===
 const categories = ref([])
@@ -130,13 +133,15 @@ const isLoadingProducts = ref(false)
 
 const selectedFlavors = ref([])
 const spoonCount = ref(1)
-const cartList = ref([])
+
+const cartCount = computed(() => basketStore.totalCount)
+const totalPrice = computed(() => basketStore.totalPrice)
 
 // [API 통신 1]: 카테고리 리스트와 지점 맛 리스트 조회
 onMounted(async () => {
   // 1. 카테고리 목록 조회
   try {
-    const catRes = await axios.get('/api/v1/categories')
+    const catRes = await axios.get('/api/v1/kiosk/categories')
     categories.value = catRes.data
     
     if (categories.value.length > 0) {
@@ -161,7 +166,7 @@ const selectCategory = async (id) => {
   isLoadingProducts.value = true
   
   try {
-    const prodRes = await axios.get(`/api/v1/products?categoryId=${id}`)
+    const prodRes = await axios.get(`/api/v1/kiosk/stores/${currentStoreId.value}/categories/${id}/products`)
     dbProducts.value = prodRes.data
   } catch (error) {
     console.error('상품 목록 조회 실패:', error)
@@ -177,10 +182,15 @@ const openOptionModal = async (product) => {
   spoonCount.value = 1
   
   try {
-    const optRes = await axios.get(`/api/v1/products/${product.productId}/options`)
-    dbOptions.value = optRes.data
+    const detailRes = await axios.get(`/api/v1/kiosk/stores/${currentStoreId.value}/products/${product.productId}/detail`)
+    
+    dbOptions.value = detailRes.data.options || [] 
+    
+    // 만약 이 API에서 맛 목록도 같이 묶어서 보내준다면, 여기서 한 번에 처리할 수도 있어!
+    // dbFlavors.value = detailRes.data.flavors || [] 
+
   } catch (error) {
-    console.error('상품 옵션 조회 실패:', error)
+    console.error('상품 상세(옵션) 조회 실패:', error)
   }
 
   isModalOpen.value = true
@@ -209,9 +219,6 @@ const calculatedItemPrice = computed(() => {
   return selectedProduct.value.basePrice + extraSpoonPrice
 })
 
-const cartCount = computed(() => cartList.value.length)
-const totalPrice = computed(() => cartList.value.reduce((sum, item) => sum + item.itemTotalPrice, 0))
-
 const formatPrice = (val) => val?.toLocaleString()
 const closeModal = () => { isModalOpen.value = false }
 
@@ -220,24 +227,45 @@ const changeSpoon = (amount) => {
   if (next >= 0 && next <= 10) spoonCount.value = next
 }
 
-const addCurrentItemToCart = () => {
+const addCurrentItemToCart = async () => { // 💡 백엔드 통신을 위해 async 추가
   if (currentMaxFlavors.value > 0 && selectedFlavors.value.length !== currentMaxFlavors.value) {
     alert(`맛을 ${currentMaxFlavors.value}가지 모두 선택해주세요!`)
     return
   }
 
-  const cartItem = {
+  // 🌟 1. ID만 있던 맛 데이터에 '이름(flavorName)'까지 찾아서 붙여주기!
+  const flavorData = selectedFlavors.value.map(fId => {
+    // dbFlavors 배열에서 현재 선택된 맛 ID와 일치하는 객체 찾기
+    const foundFlavor = dbFlavors.value.find(f => f.flavorId === fId);
+    return { 
+      flavorId: fId, 
+      flavorName: foundFlavor ? foundFlavor.flavorName : '알 수 없는 맛', 
+      quantity: 1 
+    };
+  });
+
+  const requestData = {
     productId: selectedProduct.value.productId,
     productName: selectedProduct.value.productName,
     quantity: 1,
     unitPrice: calculatedItemPrice.value,
-    itemTotalPrice: calculatedItemPrice.value,
-    flavors: selectedFlavors.value.map(fId => ({ flavorId: fId, quantity: 1 })),
+    flavors: flavorData, // 💡 이름이 포함된 맛 데이터 배열을 넣음!
     options: spoonCount.value > 4 ? [999] : [] 
   }
 
-  cartList.value.push(cartItem)
-  closeModal()
+  try {
+    // 🌟 2. 백엔드 세션 장바구니에 데이터 전송 (아까 잘 만들어둔 컨트롤러 호출!)
+    await axios.post('/api/customer/basket', requestData);
+    
+    // 🌟 3. 백엔드에 잘 담겼으니 Pinia 스토어 갱신 (화면 UI 실시간 반영)
+    await basketStore.fetchBasket();
+    
+    alert(`${selectedProduct.value.productName} 상품이 장바구니에 담겼습니다!`);
+    closeModal();
+  } catch (error) {
+    console.error('장바구니 담기 실패:', error);
+    alert('장바구니에 담는데 실패했습니다.');
+  }
 }
 
 const goHome = () => { router.push('/') }

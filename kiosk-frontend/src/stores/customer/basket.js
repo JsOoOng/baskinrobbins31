@@ -1,6 +1,6 @@
 // src/stores/basket.js
 import { defineStore } from 'pinia';
-import axios from '../api/axios'; // 방금 만든 axios 가져오기
+import axios from '@/api/axios'; // 방금 만든 axios 가져오기
 
 export const useBasketStore = defineStore('basket', {
   // 1. 상태 (State): 장바구니 데이터 배열
@@ -20,6 +20,20 @@ export const useBasketStore = defineStore('basket', {
 
   // 3. 기능 (Actions): 장바구니 조작 및 서버 통신
   actions: {
+    // 🔄 서버로부터 장바구니 데이터를 동기화
+    async fetchBasket() {
+      try {
+        const res = await axios.get('/api/customer/basket');
+        if (res.data && res.data.items) {
+          this.cartItems = res.data.items;
+        } else {
+          this.cartItems = [];
+        }
+      } catch (error) {
+        console.error('서버 장바구니 조회 실패:', error);
+      }
+    },
+
     // ➕ 장바구니에 아이템 추가
     async addToCart(product) {
       // 프론트엔드 메모리(Pinia)에 먼저 추가
