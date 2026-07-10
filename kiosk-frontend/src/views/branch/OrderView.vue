@@ -179,7 +179,7 @@ const getStatusText = (status) => {
             <thead>
 
             <tr>
-                <th>주문번호</th>
+                <th class="order-number">주문번호</th>
                 <th>상태</th>
             </tr>
 
@@ -287,6 +287,30 @@ const getStatusText = (status) => {
 </template>
 <style scoped>
 
+.order-number{
+
+    width:120px;
+
+}
+
+th:first-child,
+td:first-child{
+
+    width:90px;
+
+    white-space:nowrap;
+
+}
+
+.status-waiting,
+.status-preparing,
+.status-completed,
+.status-canceled{
+
+    white-space:nowrap;
+
+}
+
 .container{
 
     display:flex;
@@ -299,18 +323,20 @@ const getStatusText = (status) => {
 
     min-height:100vh;
 
+    box-sizing:border-box;
+
 }
 
 
-/* 왼쪽 주문 목록 */
-
 .left{
 
-    width:40%;
+    flex:0 0 45%;
+
+    min-width:450px;
 
     background:white;
 
-    padding:20px;
+    padding:25px;
 
     border-radius:15px;
 
@@ -320,15 +346,15 @@ const getStatusText = (status) => {
 
 
 
-/* 오른쪽 상세 */
-
 .right{
 
-    width:60%;
+    flex:1;
+
+    min-width:500px;
 
     background:white;
 
-    padding:25px;
+    padding:30px;
 
     border-radius:15px;
 
@@ -356,6 +382,10 @@ table{
 
     width:100%;
 
+    min-width:400px;
+
+    table-layout:fixed;
+
     border-collapse:separate;
 
     border-spacing:0;
@@ -364,8 +394,9 @@ table{
 
     border-radius:12px;
 
-}
+    table-layout:fixed;
 
+}
 
 
 thead{
@@ -377,26 +408,20 @@ thead{
 }
 
 
-
 th{
 
-    padding:14px;
+    padding:18px;
 
-    font-size:14px;
+    font-size:15px;
 
 }
 
 
-
 td{
 
-    padding:14px;
-
-    border-bottom:1px solid #eee;
-
+    padding:18px;
     text-align:center;
-
-    color:#444;
+    font-size:15px;
 
 }
 
