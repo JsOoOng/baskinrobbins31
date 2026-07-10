@@ -16,6 +16,6 @@ public interface ProductOptionRepository extends JpaRepository<ProductOption, In
     List<ProductOption> findByProductId(Integer productId);
 
     // 🚀 [하드코딩 제로 핵심 쿼리] 상품 ID와 옵션 타입을 조건으로 maxFlavorCount만 쏙 뽑아옵니다.
-    @Query("SELECT po.maxFlavorCount FROM ProductOption po WHERE po.productId = :productId AND po.optionType = 'SIZE'")
+    @Query("SELECT po.maxFlavorCount FROM ProductOption po WHERE po.product.Id = :productId AND po.optionType = 'SIZE'")
     Integer findMaxFlavorCountByProductId(@Param("productId") Integer productId);
 }
