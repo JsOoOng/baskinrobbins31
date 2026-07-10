@@ -19,10 +19,11 @@ public interface OrderMapper {
     );
 
     // 주문 상태 변경 (필수)
-    void updateOrderStatus(
-        @Param("orderId") int orderId, 
-        @Param("status") String status
+    int updateOrderStatus(
+    		@Param("orderId") int orderId, 
+    		@Param("status") String status
     );
+    
     
 	 // 결제 정보 저장
 	 void insertPayment(Payment payment);

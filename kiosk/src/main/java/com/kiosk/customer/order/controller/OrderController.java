@@ -46,6 +46,14 @@ public class OrderController {
         
         return ResponseEntity.ok("결제 및 재고 차감 완료");
     }
+    
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<String> cancelOrder(@PathVariable int orderId) {
+        // 주문 상태를 CANCELED로 변경하는 서비스 호출
+        orderService.cancelOrder(orderId);
+        
+        return ResponseEntity.ok("주문 취소 완료");
+    }
   
 }
 

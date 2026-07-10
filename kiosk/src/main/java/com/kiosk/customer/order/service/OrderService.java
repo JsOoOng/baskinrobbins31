@@ -146,4 +146,14 @@ public class OrderService {
         // 4. 주문 상태 업데이트
         orderMapper.updateOrderStatus(orderId, "COMPLETED");
     }
+    
+    @Transactional
+    public void cancelOrder(int orderId) {
+        // 1. 주문 상태를 CANCELED로 업데이트
+        int updatedRows = orderMapper.updateOrderStatus(orderId, "CANCELED");
+        
+        if (updatedRows == 0) {
+            throw new RuntimeException("주문을 찾을 수 없거나 취소할 수 없는 상태입니다.");
+        }
+    }
 }
