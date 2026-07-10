@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Product {
-	// 본사 상품 원본 메뉴
+    // 본사 상품 원본 메뉴
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_id")
@@ -41,27 +41,33 @@ public class Product {
     @Builder.Default
     private Boolean isDisplay = true;
 
+    @Column(name = "image_url", length = 255) // 🌟 이미지 경로 필드 추가
+    private String imageUrl;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     
+    // 💡 수정 메서드에 imageUrl 파라미터도 추가!
     public void updateProduct(
         Category category,
         String productName,
         String description,
         Integer basePrice,
         BigDecimal discountRate,
-        Boolean isDisplay) {
+        Boolean isDisplay,
+        String imageUrl) {
 
-    this.category = category;
-    this.productName = productName;
-    this.description = description;
-    this.basePrice = basePrice;
-    this.discountRate = discountRate;
-    this.isDisplay = isDisplay;
+        this.category = category;
+        this.productName = productName;
+        this.description = description;
+        this.basePrice = basePrice;
+        this.discountRate = discountRate;
+        this.isDisplay = isDisplay;
+        this.imageUrl = imageUrl; // 🌟 이미지 주소 업데이트 추가
     }
 
     public void hideProduct() {
-    this.isDisplay = false;
+        this.isDisplay = false;
     }
 }
