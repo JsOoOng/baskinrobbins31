@@ -102,6 +102,64 @@ onMounted(() => {
 onUnmounted(() => {
   clearInterval(intervalId)
 })
+
+
+const getStatusClass = (status) => {
+
+    switch(status){
+
+        case 'WAITING':
+            return 'status-waiting'
+
+
+        case 'PREPARING':
+            return 'status-preparing'
+
+
+        case 'COMPLETED':
+            return 'status-completed'
+
+
+        case 'CANCELED':
+            return 'status-canceled'
+
+
+        default:
+            return ''
+
+    }
+
+}
+
+
+
+const getStatusText = (status) => {
+
+    switch(status){
+
+        case 'WAITING':
+            return '대기중'
+
+
+        case 'PREPARING':
+            return '준비중'
+
+
+        case 'COMPLETED':
+            return '완료'
+
+
+        case 'CANCELED':
+            return '취소'
+
+
+        default:
+            return status
+
+    }
+
+}
+
 </script>
 
 <template>
@@ -135,7 +193,13 @@ onUnmounted(() => {
                 @click="selectOrder(order.orderId)"
             >
                 <td>{{ order.orderNumber }}</td>
-                <td>{{ order.orderStatus }}</td>
+                <td>
+                    <span
+                        :class="getStatusClass(order.orderStatus)"
+                    >
+                        {{ getStatusText(order.orderStatus) }}
+                    </span>
+                </td>
             </tr>
 
             </tbody>
@@ -221,38 +285,298 @@ onUnmounted(() => {
 </div>
 
 </template>
-
 <style scoped>
+
 .container{
+
     display:flex;
+
     gap:30px;
-    padding:20px;
+
+    padding:30px;
+
+    background:#f8f9fa;
+
+    min-height:100vh;
+
 }
+
+
+/* 왼쪽 주문 목록 */
 
 .left{
+
     width:40%;
+
+    background:white;
+
+    padding:20px;
+
+    border-radius:15px;
+
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+
 }
+
+
+
+/* 오른쪽 상세 */
 
 .right{
+
     width:60%;
+
+    background:white;
+
+    padding:25px;
+
+    border-radius:15px;
+
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+
 }
+
+
+
+
+h2{
+
+    margin-bottom:20px;
+
+    color:#333;
+
+}
+
+
+
+
+/* 테이블 */
 
 table{
+
     width:100%;
-    border-collapse:collapse;
+
+    border-collapse:separate;
+
+    border-spacing:0;
+
+    overflow:hidden;
+
+    border-radius:12px;
+
 }
 
-th,td{
-    border:1px solid #ddd;
-    padding:10px;
-    text-align:center;
+
+
+thead{
+
+    background:#333;
+
+    color:white;
+
 }
+
+
+
+th{
+
+    padding:14px;
+
+    font-size:14px;
+
+}
+
+
+
+td{
+
+    padding:14px;
+
+    border-bottom:1px solid #eee;
+
+    text-align:center;
+
+    color:#444;
+
+}
+
+
+
 
 tbody tr{
+
     cursor:pointer;
+
+    transition:0.2s;
+
 }
 
+
+
 tbody tr:hover{
-    background:#f5f5f5;
+
+    background:#f7f7f7;
+
 }
+
+
+
+tbody tr:last-child td{
+
+    border-bottom:none;
+
+}
+
+
+
+
+/* 상태 배지 공통 */
+
+.status-waiting,
+.status-preparing,
+.status-completed,
+.status-canceled{
+
+
+    display:inline-block;
+
+    min-width:80px;
+
+    padding:6px 14px;
+
+    border-radius:20px;
+
+    font-size:13px;
+
+    font-weight:bold;
+
+    text-align:center;
+
+}
+
+
+
+
+
+/* 대기 */
+
+.status-waiting{
+
+
+    background:#fff3cd;
+
+    color:#856404;
+
+}
+
+
+
+/* 준비중 */
+
+.status-preparing{
+
+
+    background:#cfe2ff;
+
+    color:#084298;
+
+}
+
+
+
+/* 완료 */
+
+.status-completed{
+
+
+    background:#d1e7dd;
+
+    color:#0f5132;
+
+}
+
+
+
+/* 취소 */
+
+.status-canceled{
+
+
+    background:#f8d7da;
+
+    color:#842029;
+
+}
+
+
+
+
+/* 상세 정보 */
+
+.right p{
+
+    font-size:16px;
+
+    margin:12px 0;
+
+}
+
+
+
+
+hr{
+
+    margin:20px 0;
+
+    border:none;
+
+    border-top:1px solid #eee;
+
+}
+
+
+
+
+select{
+
+    padding:8px 12px;
+
+    border-radius:8px;
+
+    border:1px solid #ccc;
+
+    margin-right:10px;
+
+}
+
+
+
+button{
+
+    padding:9px 16px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#222;
+
+    color:white;
+
+    cursor:pointer;
+
+    transition:0.2s;
+
+}
+
+
+
+button:hover{
+
+    background:#555;
+
+}
+
+
+
 </style>

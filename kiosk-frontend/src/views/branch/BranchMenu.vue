@@ -386,3 +386,288 @@ onMounted(()=>{
 
 
 </script>
+
+<style scoped>
+
+.menu-page {
+
+    padding:30px;
+
+    background:#f8f9fa;
+
+    min-height:100vh;
+
+}
+
+
+
+/* 뒤로가기 버튼 */
+
+.menu-page > button {
+
+    margin-bottom:25px;
+
+    padding:10px 18px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#222;
+
+    color:white;
+
+    font-size:14px;
+
+    cursor:pointer;
+
+    transition:0.2s;
+
+}
+
+
+.menu-page > button:hover {
+
+    background:#555;
+
+}
+
+
+
+
+
+h2 {
+
+    margin:30px 0 20px;
+
+    color:#333;
+
+}
+
+
+
+
+
+/* 테이블 영역 */
+
+table {
+
+    width:100%;
+
+    background:white;
+
+    border-collapse:separate;
+
+    border-spacing:0;
+
+    border-radius:15px;
+
+    overflow:hidden;
+
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+
+}
+
+
+
+
+
+thead {
+
+    background:#333;
+
+    color:white;
+
+}
+
+
+
+
+
+th {
+
+    padding:15px;
+
+    font-size:14px;
+
+}
+
+
+
+
+
+td {
+
+    padding:15px;
+
+    text-align:center;
+
+    border-bottom:1px solid #eee;
+
+    color:#444;
+
+}
+
+
+
+
+
+tbody tr {
+
+    transition:0.2s;
+
+}
+
+
+
+
+
+tbody tr:hover {
+
+    background:#f7f7f7;
+
+}
+
+
+
+
+
+tbody tr:last-child td {
+
+    border-bottom:none;
+
+}
+
+
+
+
+
+/* 상태 표시 */
+
+.status {
+
+    display:inline-block;
+
+    min-width:80px;
+
+    padding:6px 15px;
+
+    border-radius:20px;
+
+    font-size:13px;
+
+    font-weight:bold;
+
+}
+
+
+
+
+
+/* 판매중 */
+
+.sold-on {
+
+    background:#d1e7dd;
+
+    color:#0f5132;
+
+}
+
+
+
+
+
+/* 품절 */
+
+.sold-out {
+
+    background:#f8d7da;
+
+    color:#842029;
+
+}
+
+
+
+
+
+/* 변경 버튼 */
+
+td button {
+
+    padding:8px 15px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#222;
+
+    color:white;
+
+    cursor:pointer;
+
+    transition:0.2s;
+
+}
+
+
+
+
+
+td button:hover {
+
+    background:#555;
+
+}
+
+
+
+
+
+/* 상품/맛 구분 */
+
+hr {
+
+    margin:40px 0;
+
+    border:none;
+
+    border-top:1px solid #ddd;
+
+}
+
+
+
+
+
+/* 반응형 */
+
+@media(max-width:900px){
+
+
+    .menu-page{
+
+        padding:15px;
+
+    }
+
+
+    table{
+
+        font-size:13px;
+
+    }
+
+
+    th,td{
+
+        padding:10px;
+
+    }
+
+
+}
+
+</style>
