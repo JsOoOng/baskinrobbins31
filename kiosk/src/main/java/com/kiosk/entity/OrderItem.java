@@ -1,7 +1,24 @@
 package com.kiosk.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "ORDER_ITEMS")
@@ -30,4 +47,14 @@ public class OrderItem {
 
     @Column(name = "unit_price", nullable = false)
     private Integer unitPrice;
+    
+    //추가한 부분입니다. 혹시 수정이 있으시 다시 반영
+    @OneToMany(
+    	    mappedBy = "orderItem",
+    	    fetch = FetchType.LAZY,
+    	    cascade = CascadeType.ALL
+    	)
+    	@Builder.Default
+    	private List<OrderItemFlavor> orderItemFlavors = new ArrayList<>();
+    
 }

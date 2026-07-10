@@ -55,22 +55,29 @@ public class BranchOrderService {
 
 
         List<BranchOrderDetailResponse.ItemResponse> items =
-            order.getOrderItems()
-            .stream()
-            .map(item ->
-            BranchOrderDetailResponse.ItemResponse.builder()
-                .productName(
-                    item.getProduct().getProductName()
-                )
-                .quantity(
-                    item.getQuantity()
-                )
-                .unitPrice(
-                    item.getUnitPrice()
-                )
-                .build()
-            )
-            .toList();
+        	    order.getOrderItems()
+        	    .stream()
+        	    .map(item -> {
+
+        	        List<BranchOrderDetailResponse.FlavorResponse> flavors =
+        	            item.getOrderItemFlavors()
+        	                .stream()
+        	                .map(flavor ->
+        	                    BranchOrderDetailResponse.FlavorResponse.builder()
+        	                        .flavorName(flavor.getFlavor().getFlavorName())
+        	                        .quantity(flavor.getQuantity())
+        	                        .build()
+        	                )
+        	                .toList();
+
+        	        return BranchOrderDetailResponse.ItemResponse.builder()
+        	                .productName(item.getProduct().getProductName())
+        	                .quantity(item.getQuantity())
+        	                .unitPrice(item.getUnitPrice())
+        	                .flavors(flavors)
+        	                .build();
+        	    })
+        	    .toList();
 
 
 
