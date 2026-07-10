@@ -173,15 +173,13 @@
 
 <script setup>
 
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/api/axios'
 
-
-
 const router = useRouter()
 
-
+let intervalId = null
 
 const user =
 JSON.parse(
@@ -370,7 +368,26 @@ const changeFlavorSoldOut = async(flavor)=>{
 
 }
 
+const loadProducts = async () => {
 
+    try {
+        
+
+        const response =
+            await api.get(
+                `/branch/status/product/${user.storeId}`
+            )
+
+        menus.value = response.data
+
+
+    } catch(e){
+
+        console.error(e)
+
+    }
+
+}
 
 
 
@@ -381,9 +398,19 @@ onMounted(()=>{
 
     loadFlavors()
 
+    intervalId = setInterval(() => {
+
+        loadProducts()
+
+    }, 5000)
 
 })
 
+onUnmounted(() => {
+
+    clearInterval(intervalId)
+
+})
 
 </script>
 

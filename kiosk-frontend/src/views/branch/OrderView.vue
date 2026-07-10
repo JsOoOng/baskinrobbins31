@@ -91,12 +91,12 @@ onMounted(() => {
 
   // 최초 조회
   loadOrders()
-
+ 
   // 5초마다 자동 새로고침
   intervalId = setInterval(() => {
     loadOrders()
   }, 5000)
-
+   
 })
 
 onUnmounted(() => {
