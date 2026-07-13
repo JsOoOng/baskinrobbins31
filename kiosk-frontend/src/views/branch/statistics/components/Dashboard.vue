@@ -324,7 +324,7 @@ function formatMoney(value){
 
 
             <h2>
-                오늘 시간대별 매출
+                기간 시간대별 매출
             </h2>
 
 
