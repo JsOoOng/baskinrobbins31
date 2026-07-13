@@ -72,7 +72,8 @@ const handlePayment = async (method) => {
     router.push('/'); 
   } catch (error) {
     console.error(error);
-    alert('결제 처리 중 오류가 발생했습니다.');
+    const errorMsg = error.response?.data?.error || '결제 처리 중 오류가 발생했습니다.';
+    alert(errorMsg);
   }
 };
 

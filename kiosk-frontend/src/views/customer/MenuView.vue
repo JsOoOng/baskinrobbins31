@@ -176,7 +176,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/api/axios'
 
@@ -197,6 +197,8 @@ const isModalOpen = ref(false)
 const isCartModalOpen = ref(false)
 const selectedProduct = ref(null)
 const isLoadingProducts = ref(false)
+
+let intervalId = null
 
 const selectedFlavors = ref([])
 const spoonCount = ref(1)
@@ -227,6 +229,33 @@ onMounted(async () => {
     dbFlavors.value = flavorRes.data
   } catch (error) {
     console.error('맛 리스트 로드 실패:', error)
+  }
+
+  // 🌟 실시간 갱신을 위한 주기적(5초마다) 폴링 설정
+  intervalId = setInterval(async () => {
+    // 1. 조용히 맛 리스트 업데이트
+    try {
+      const flavorRes = await axios.get(`/api/v1/stores/${currentStoreId.value}/flavors`)
+      dbFlavors.value = flavorRes.data
+    } catch (error) {
+      console.error('맛 리스트 실시간 동기화 실패:', error)
+    }
+
+    // 2. 조용히 현재 선택된 카테고리 상품 리스트 업데이트
+    if (currentCategoryId.value) {
+      try {
+        const prodRes = await axios.get(`/api/v1/kiosk/stores/${currentStoreId.value}/categories/${currentCategoryId.value}/products`)
+        dbProducts.value = prodRes.data
+      } catch (error) {
+        console.error('상품 목록 실시간 동기화 실패:', error)
+      }
+    }
+  }, 5000)
+})
+
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId)
   }
 })
 

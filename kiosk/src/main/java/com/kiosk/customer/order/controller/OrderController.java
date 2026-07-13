@@ -32,15 +32,16 @@ public class OrderController {
         if (request.getKioskId() == null) request.setKioskId(1);
         if (request.getStoreId() == null) request.setStoreId(1);
         if (request.getDryIceCount() == null) request.setDryIceCount(0);
+        if (request.getDryIceMins() == null) request.setDryIceMins(0);
         if (request.getOrderType() == null) request.setOrderType("TOGO");
         
         int orderId = orderService.createOrder(request, session);
         return ResponseEntity.ok(orderId);
     }
     
-	// 1. 주문 내역 및 총금액 조회
+    // 1. 주문 내역 및 총금액 조회
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderResponse> getOrderDetails(@PathVariable int orderId) {
+    public ResponseEntity<OrderResponse> getOrderDetails(@PathVariable("orderId") int orderId) {
         OrderResponse response = orderService.getOrderDetails(orderId);
         
         if (response == null) {
@@ -52,7 +53,7 @@ public class OrderController {
 
     @PostMapping("/{orderId}/pay")
     public ResponseEntity<String> completePayment(
-            @PathVariable int orderId, 
+            @PathVariable("orderId") int orderId, 
             @RequestBody Map<String, String> request) { // Map으로 변경
         
         String paymentMethod = request.get("paymentMethod"); // 키 값으로 추출
@@ -62,7 +63,7 @@ public class OrderController {
     }
     
     @PostMapping("/{orderId}/cancel")
-    public ResponseEntity<String> cancelOrder(@PathVariable int orderId) {
+    public ResponseEntity<String> cancelOrder(@PathVariable("orderId") int orderId) {
         // 주문 상태를 CANCELED로 변경하는 서비스 호출
         orderService.cancelOrder(orderId);
         

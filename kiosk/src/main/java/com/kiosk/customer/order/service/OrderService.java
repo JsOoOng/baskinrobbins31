@@ -75,6 +75,7 @@ public class OrderService {
                 .orderNumber(nextOrderNumber)
                 .orderType(OrderType.valueOf(request.getOrderType()))
                 .dryIceCount(request.getDryIceCount())
+                .dryIceMins(request.getDryIceMins())
                 .orderStatus(OrderStatus.WAITING)
                 .totalPrice(basket.getTotalPrice())
                 .build();
@@ -133,7 +134,8 @@ public class OrderService {
         for (OrderItemDTO item : orderRes.getOrderItems()) {
             int updatedRows = orderMapper.decreaseProductStock(item.getProductId(), item.getQuantity());
             if (updatedRows == 0) {
-                throw new RuntimeException("상품 [" + item.getProductName() + "] 재고 부족");
+                // throw new RuntimeException("상품 [" + item.getProductName() + "] 재고 부족");
+                System.out.println("Warning: 상품 [" + item.getProductName() + "] 재고가 부족하거나 인벤토리에 없습니다. (결제는 진행됩니다)");
             }
         }
 
@@ -147,8 +149,8 @@ public class OrderService {
 
         orderMapper.insertPayment(payment);
 
-        // 4. 주문 상태 업데이트
-        orderMapper.updateOrderStatus(orderId, "COMPLETED");
+        // 4. 주문 상태는 WAITING으로 유지하여 지점이 수락(PREPARING)할 수 있도록 함
+        // orderMapper.updateOrderStatus(orderId, "COMPLETED");
     }
     
     @Transactional
