@@ -66,3 +66,12 @@ Thumbs.db
 # application-secret.yml
 # application-local.yml
 /.metadata/
+
+# ==========================================
+# 6. Node & Vue (Frontend)
+# ==========================================
+node_modules/
+dist/
+dist-ssr/
+*.local
+.npm/
