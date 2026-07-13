@@ -6,22 +6,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import com.kiosk.entity.enums.RestockStatus;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "RESTOCK_REQUESTS")
@@ -43,10 +29,6 @@ public class RestockRequest {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id", nullable = false)
     private InventoryItem item;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "admin_id")
-    private HeadquarterAdmin admin;
 
     @Column(name = "request_quantity", nullable = false)
     private Integer requestQuantity;
@@ -56,7 +38,38 @@ public class RestockRequest {
     @Builder.Default
     private RestockStatus status = RestockStatus.WAITING;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admin_id")
+    private HeadquarterAdmin admin;
+
     @CreationTimestamp
     @Column(name = "requested_at", updatable = false)
     private LocalDateTime requestedAt;
+
+    public void approve(HeadquarterAdmin admin) {
+        if (this.status != RestockStatus.WAITING) {
+            throw new IllegalStateException("대기 중인 발주 요청만 승인할 수 있습니다.");
+        }
+
+        this.status = RestockStatus.APPROVED;
+        this.admin = admin;
+    }
+
+    public void startShipping(HeadquarterAdmin admin) {
+        if (this.status != RestockStatus.APPROVED) {
+            throw new IllegalStateException("승인된 발주 요청만 배송 처리할 수 있습니다.");
+        }
+
+        this.status = RestockStatus.SHIPPING;
+        this.admin = admin;
+    }
+
+    public void complete(HeadquarterAdmin admin) {
+        if (this.status != RestockStatus.SHIPPING) {
+            throw new IllegalStateException("배송 중인 발주 요청만 완료 처리할 수 있습니다.");
+        }
+
+        this.status = RestockStatus.COMPLETED;
+        this.admin = admin;
+    }
 }

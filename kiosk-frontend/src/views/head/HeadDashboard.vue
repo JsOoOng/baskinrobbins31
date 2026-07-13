@@ -1,0 +1,1458 @@
+<script setup>
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+import P2ComingSoonModal from '../../components/head/P2ComingSoonModal.vue'
+
+const router = useRouter()
+
+/*
+ * 현재 대시보드 수치는 화면 디자인 확인용 예시입니다.
+ * Dashboard API가 완성되면 응답값으로 교체합니다.
+ */
+const comparisonPeriod = ref('전주 대비')
+const searchKeyword = ref('')
+
+const p2Modal = ref({
+  open: false,
+  title: '',
+  description: ''
+})
+
+const statistics = ref([
+  {
+    key: 'stores',
+    label: '전체 지점 수',
+    value: '12',
+    subText: '이번 달 2개 신규',
+    trend: 'up',
+    icon: '⌂'
+  },
+  {
+    key: 'activeStores',
+    label: '운영 중인 지점 수',
+    value: '10',
+    subText: '정상 운영 중',
+    trend: 'success',
+    icon: '✓'
+  },
+  {
+    key: 'products',
+    label: '전체 상품 수',
+    value: '248',
+    subText: '지난주보다 12개 증가',
+    trend: 'up',
+    icon: '▣'
+  },
+  {
+    key: 'pendingInventory',
+    label: '처리 대기 재고 신청',
+    value: '18',
+    subText: '즉시 확인 필요',
+    trend: 'warning',
+    icon: '◷',
+    phase: 'P2'
+  },
+  {
+    key: 'discounts',
+    label: '진행 중인 할인 수',
+    value: '4',
+    subText: '지난주와 동일',
+    trend: 'same',
+    icon: '%'
+  },
+  {
+    key: 'banners',
+    label: '노출 중인 배너 수',
+    value: '3',
+    subText: '이번 달 1개 추가',
+    trend: 'up',
+    icon: '▤'
+  },
+  {
+    key: 'sales',
+    label: '오늘 전체 매출',
+    value: '3,250,000원',
+    subText: '전주 대비 12.4%',
+    trend: 'up',
+    icon: '₩'
+  },
+  {
+    key: 'orders',
+    label: '오늘 전체 주문 수',
+    value: '318건',
+    subText: '전주 대비 3.2% 감소',
+    trend: 'down',
+    icon: '▧'
+  }
+])
+
+const inventoryRequests = ref([
+  {
+    requestNumber: 'REQ-2024',
+    storeName: '강남점',
+    productName: '딸기 아이스크림 외 3종',
+    quantity: '150개',
+    requestDate: '2026.07.15',
+    status: '대기 중',
+    statusType: 'waiting'
+  },
+  {
+    requestNumber: 'REQ-2023',
+    storeName: '홍대점',
+    productName: '초코 아이스크림 외 5종',
+    quantity: '230개',
+    requestDate: '2026.07.14',
+    status: '배송 중',
+    statusType: 'shipping'
+  },
+  {
+    requestNumber: 'REQ-2022',
+    storeName: '신촌점',
+    productName: '바닐라 소프트콘 외 2종',
+    quantity: '80개',
+    requestDate: '2026.07.13',
+    status: '완료',
+    statusType: 'complete'
+  },
+  {
+    requestNumber: 'REQ-2021',
+    storeName: '수원점',
+    productName: '망고 샤베트 외 1종',
+    quantity: '60개',
+    requestDate: '2026.07.12',
+    status: '대기 중',
+    statusType: 'waiting'
+  },
+  {
+    requestNumber: 'REQ-2020',
+    storeName: '부산점',
+    productName: '레드벨벳 외 4종',
+    quantity: '120개',
+    requestDate: '2026.07.11',
+    status: '반려',
+    statusType: 'rejected'
+  }
+])
+
+const storeSummary = ref([
+  {
+    label: '정상 운영',
+    value: 10,
+    total: 12,
+    type: 'normal'
+  },
+  {
+    label: '승인 대기',
+    value: 2,
+    total: 12,
+    type: 'waiting'
+  },
+  {
+    label: '운영 중단',
+    value: 2,
+    total: 12,
+    type: 'stopped'
+  }
+])
+
+const recentActions = ref([
+  {
+    administrator: '관리자',
+    action: '딸기 아이스크림 상품 정보 수정',
+    time: '오늘 오전 09:30',
+    type: '상품'
+  },
+  {
+    administrator: '관리자',
+    action: '강남점 지점 정보 수정',
+    time: '어제 오후 16:42',
+    type: '지점'
+  },
+  {
+    administrator: '최고 관리자',
+    action: '여름 시즌 카테고리 등록',
+    time: '2026.07.13 오후 14:10',
+    type: '카테고리'
+  }
+])
+
+const filteredInventoryRequests = computed(() => {
+  const keyword = searchKeyword.value.trim().toLowerCase()
+
+  if (!keyword) {
+    return inventoryRequests.value
+  }
+
+  return inventoryRequests.value.filter((request) => {
+    return [
+      request.requestNumber,
+      request.storeName,
+      request.productName,
+      request.status
+    ].some((value) =>
+      String(value).toLowerCase().includes(keyword)
+    )
+  })
+})
+
+const getTrendIcon = (trend) => {
+  if (trend === 'up') return '↗'
+  if (trend === 'down') return '↘'
+  if (trend === 'success') return '✓'
+  if (trend === 'warning') return '!'
+  return '→'
+}
+
+const getProgressWidth = (item) => {
+  if (!item.total) {
+    return '0%'
+  }
+
+  return `${Math.min((item.value / item.total) * 100, 100)}%`
+}
+
+const openP2 = (title, description) => {
+  p2Modal.value = {
+    open: true,
+    title,
+    description
+  }
+}
+
+const closeP2 = () => {
+  p2Modal.value.open = false
+}
+
+const handleStatisticClick = (statistic) => {
+  if (statistic.phase === 'P2') {
+    openP2(
+      statistic.label,
+      '재고 신청 조회와 승인·반려 기능을 제공할 예정입니다.'
+    )
+
+    return
+  }
+
+  const paths = {
+    stores: '/head/stores',
+    activeStores: '/head/stores',
+    products: '/head/products',
+    discounts: '/head/discounts',
+    banners: '/head/banners',
+    sales: '/head/statistics',
+    orders: '/head/statistics'
+  }
+
+  const path = paths[statistic.key]
+
+  if (path) {
+    router.push(path)
+  }
+}
+
+const goTo = (path) => {
+  router.push(path)
+}
+</script>
+
+<template>
+  <section class="dashboard-page">
+    <!-- 예시 데이터 알림 -->
+    <div class="demo-notice">
+      <span class="demo-badge">
+        UI 예시
+      </span>
+
+      <p>
+        현재 표시된 수치는 화면 구성 확인용입니다.
+        대시보드 API 연결 후 실제 DB 수치로 교체됩니다.
+      </p>
+
+      <label class="comparison-select">
+        <span>비교 기준</span>
+
+        <select v-model="comparisonPeriod">
+          <option>전일 대비</option>
+          <option>전주 대비</option>
+          <option>전월 대비</option>
+          <option>전년 동기 대비</option>
+        </select>
+      </label>
+    </div>
+
+    <!-- 통계 카드 8개 -->
+    <div class="statistics-grid">
+      <button
+        v-for="statistic in statistics"
+        :key="statistic.key"
+        type="button"
+        class="statistic-card"
+        @click="handleStatisticClick(statistic)"
+      >
+        <div class="statistic-card-top">
+          <span class="statistic-label">
+            {{ statistic.label }}
+          </span>
+
+          <span
+            class="statistic-icon"
+            :class="`icon-${statistic.trend}`"
+          >
+            {{ statistic.icon }}
+          </span>
+        </div>
+
+        <strong class="statistic-value">
+          {{ statistic.value }}
+        </strong>
+
+        <div
+          class="trend-text"
+          :class="`trend-${statistic.trend}`"
+        >
+          <span class="trend-icon">
+            {{ getTrendIcon(statistic.trend) }}
+          </span>
+
+          <span>
+            {{ statistic.subText }}
+          </span>
+
+          <small v-if="statistic.phase">
+            {{ statistic.phase }}
+          </small>
+        </div>
+      </button>
+    </div>
+
+    <!-- 재고 신청 현황 -->
+    <section class="dashboard-panel inventory-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title-line">
+            <h2>재고 신청 현황</h2>
+
+            <span class="phase-label">
+              P2
+            </span>
+          </div>
+
+          <p>
+            최근 지점의 신청 내역을 확인하고 승인·반려 처리합니다.
+          </p>
+        </div>
+
+        <div class="panel-tools">
+          <div class="search-box">
+            <span>⌕</span>
+
+            <input
+              v-model="searchKeyword"
+              type="search"
+              placeholder="지점명 또는 신청번호 검색"
+            />
+          </div>
+
+          <button
+            type="button"
+            class="secondary-button"
+            @click="
+              openP2(
+                '재고 신청 필터',
+                '지점, 상태, 신청 기간별 상세 필터 기능입니다.'
+              )
+            "
+          >
+            필터
+          </button>
+
+          <button
+            type="button"
+            class="primary-button"
+            @click="
+              openP2(
+                '재고 신청 등록',
+                '본사에서 직접 재고 출고 요청을 등록하는 기능입니다.'
+              )
+            "
+          >
+            ＋ 신청 등록
+          </button>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="request-table">
+          <thead>
+            <tr>
+              <th>신청 번호</th>
+              <th>지점명</th>
+              <th>신청 메뉴</th>
+              <th>수량</th>
+              <th>신청일</th>
+              <th>상태</th>
+              <th>처리</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr
+              v-for="request in filteredInventoryRequests"
+              :key="request.requestNumber"
+            >
+              <td class="request-number">
+                #{{ request.requestNumber }}
+              </td>
+
+              <td>
+                <div class="store-name">
+                  <span
+                    class="store-dot"
+                    :class="`store-dot-${request.statusType}`"
+                  />
+
+                  {{ request.storeName }}
+                </div>
+              </td>
+
+              <td>
+                {{ request.productName }}
+              </td>
+
+              <td>
+                {{ request.quantity }}
+              </td>
+
+              <td class="muted-cell">
+                {{ request.requestDate }}
+              </td>
+
+              <td>
+                <span
+                  class="status-badge"
+                  :class="`status-${request.statusType}`"
+                >
+                  {{ request.status }}
+                </span>
+              </td>
+
+              <td>
+                <div class="action-buttons">
+                  <template v-if="request.statusType === 'waiting'">
+                    <button
+                      type="button"
+                      class="approve-button"
+                      @click="
+                        openP2(
+                          '재고 신청 승인',
+                          `${request.storeName} 신청 건 승인 기능입니다.`
+                        )
+                      "
+                    >
+                      승인
+                    </button>
+
+                    <button
+                      type="button"
+                      class="reject-button"
+                      @click="
+                        openP2(
+                          '재고 신청 반려',
+                          `${request.storeName} 신청 건 반려 기능입니다.`
+                        )
+                      "
+                    >
+                      반려
+                    </button>
+                  </template>
+
+                  <button
+                    v-else
+                    type="button"
+                    class="detail-button"
+                    @click="
+                      openP2(
+                        '재고 신청 상세',
+                        `${request.requestNumber} 상세 조회 기능입니다.`
+                      )
+                    "
+                  >
+                    상세 보기
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <tr v-if="filteredInventoryRequests.length === 0">
+              <td
+                colspan="7"
+                class="empty-table"
+              >
+                검색 결과가 없습니다.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-footer">
+        <span>
+          전체 {{ filteredInventoryRequests.length }}건 표시
+        </span>
+
+        <div class="pagination">
+          <button type="button" disabled>
+            ‹
+          </button>
+
+          <button
+            type="button"
+            class="active-page"
+          >
+            1
+          </button>
+
+          <button
+            type="button"
+            @click="
+              openP2(
+                '재고 신청 페이지 이동',
+                '전체 신청 내역 페이지 기능입니다.'
+              )
+            "
+          >
+            2
+          </button>
+
+          <button
+            type="button"
+            @click="
+              openP2(
+                '재고 신청 페이지 이동',
+                '전체 신청 내역 페이지 기능입니다.'
+              )
+            "
+          >
+            ›
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 하단 정보 -->
+    <div class="bottom-grid">
+      <!-- 지점 운영 현황 -->
+      <section class="dashboard-panel summary-panel">
+        <div class="panel-header compact-header">
+          <div>
+            <h2>지점 운영 현황</h2>
+
+            <p>
+              전체 지점의 현재 운영 상태입니다.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="text-button"
+            @click="goTo('/head/stores')"
+          >
+            지점 관리 →
+          </button>
+        </div>
+
+        <div class="store-summary-list">
+          <div
+            v-for="item in storeSummary"
+            :key="item.label"
+            class="summary-item"
+          >
+            <div class="summary-item-header">
+              <span>
+                {{ item.label }}
+              </span>
+
+              <strong>
+                {{ item.value }}곳
+              </strong>
+            </div>
+
+            <div class="progress-track">
+              <span
+                class="progress-value"
+                :class="`progress-${item.type}`"
+                :style="{
+                  width: getProgressWidth(item)
+                }"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 최근 관리자 작업 -->
+      <section class="dashboard-panel action-panel">
+        <div class="panel-header compact-header">
+          <div>
+            <h2>최근 관리자 작업</h2>
+
+            <p>
+              최근 본사 관리자 작업 기록입니다.
+            </p>
+          </div>
+
+          <span class="api-ready-badge">
+            API 연동 전
+          </span>
+        </div>
+
+        <div class="recent-action-list">
+          <div
+            v-for="action in recentActions"
+            :key="`${action.action}-${action.time}`"
+            class="recent-action-item"
+          >
+            <span class="action-type-icon">
+              {{ action.type.charAt(0) }}
+            </span>
+
+            <div class="action-information">
+              <strong>
+                {{ action.action }}
+              </strong>
+
+              <p>
+                {{ action.administrator }}
+                ·
+                {{ action.time }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 빠른 관리 -->
+    <section class="dashboard-panel quick-panel">
+      <div class="panel-header compact-header">
+        <div>
+          <h2>빠른 관리</h2>
+
+          <p>
+            자주 사용하는 본사 관리 화면으로 이동합니다.
+          </p>
+        </div>
+      </div>
+
+      <div class="quick-action-grid">
+        <button
+          type="button"
+          @click="goTo('/head/categories')"
+        >
+          <span>◫</span>
+          카테고리 관리
+        </button>
+
+        <button
+          type="button"
+          @click="goTo('/head/products')"
+        >
+          <span>▣</span>
+          본사 메뉴 관리
+        </button>
+
+        <button
+          type="button"
+          @click="goTo('/head/discounts')"
+        >
+          <span>%</span>
+          할인 관리
+        </button>
+
+        <button
+          type="button"
+          @click="goTo('/head/banners')"
+        >
+          <span>▤</span>
+          배너 관리
+        </button>
+
+        <button
+          type="button"
+          @click="goTo('/head/statistics')"
+        >
+          <span>↗</span>
+          매출 통계
+        </button>
+
+        <button
+          type="button"
+          @click="
+            openP2(
+              '이벤트 관리',
+              '이벤트 대상과 기간을 관리하는 기능입니다.'
+            )
+          "
+        >
+          <span>★</span>
+          이벤트 관리
+          <small>P2</small>
+        </button>
+      </div>
+    </section>
+
+    <P2ComingSoonModal
+      :open="p2Modal.open"
+      :title="p2Modal.title"
+      :description="p2Modal.description"
+      @close="closeP2"
+    />
+  </section>
+</template>
+
+<style scoped>
+.dashboard-page {
+  display: grid;
+  gap: 20px;
+}
+
+.demo-notice {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+
+  padding: 13px 16px;
+
+  border: 1px solid #e2defe;
+  border-radius: 12px;
+
+  color: #6f678f;
+  background: #f8f6ff;
+}
+
+.demo-notice p {
+  flex: 1;
+  margin: 0;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.demo-badge,
+.api-ready-badge,
+.phase-label {
+  padding: 4px 7px;
+
+  border-radius: 6px;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.demo-badge {
+  color: #6854df;
+  background: #eae6ff;
+}
+
+.comparison-select {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.comparison-select select {
+  height: 34px;
+  padding: 0 9px;
+
+  border: 1px solid #dcd8f5;
+  border-radius: 8px;
+  outline: none;
+
+  color: #5f5878;
+  background: #ffffff;
+}
+
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.statistic-card {
+  min-width: 0;
+  min-height: 138px;
+  padding: 18px;
+
+  border: 1px solid #e4e7ed;
+  border-radius: 15px;
+  cursor: pointer;
+
+  font-family: inherit;
+  text-align: left;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 18px
+    rgba(43, 49, 68, 0.04);
+
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.statistic-card:hover {
+  transform: translateY(-2px);
+  border-color: #cdc6f8;
+
+  box-shadow:
+    0 11px 25px
+    rgba(72, 61, 135, 0.09);
+}
+
+.statistic-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statistic-label {
+  color: #777f8f;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.statistic-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  border-radius: 10px;
+
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.icon-up,
+.icon-success {
+  color: #15a76f;
+  background: #dcfaec;
+}
+
+.icon-down {
+  color: #e35168;
+  background: #ffe5e9;
+}
+
+.icon-warning {
+  color: #e69016;
+  background: #fff0c9;
+}
+
+.icon-same {
+  color: #6b5ce6;
+  background: #ece9ff;
+}
+
+.statistic-value {
+  display: block;
+  overflow: hidden;
+
+  margin-top: 13px;
+
+  color: #242936;
+  font-size: 25px;
+  font-weight: 850;
+  letter-spacing: -0.8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trend-text {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+
+  margin-top: 10px;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.trend-up,
+.trend-success {
+  color: #15a76f;
+}
+
+.trend-down {
+  color: #df4f65;
+}
+
+.trend-warning {
+  color: #e28b10;
+}
+
+.trend-same {
+  color: #858c9a;
+}
+
+.trend-icon {
+  font-size: 14px;
+}
+
+.trend-text small {
+  margin-left: auto;
+  padding: 3px 5px;
+
+  border-radius: 5px;
+
+  color: #e37720;
+  font-size: 8px;
+
+  background: #fff0dc;
+}
+
+.dashboard-panel {
+  overflow: hidden;
+
+  border: 1px solid #e2e6ed;
+  border-radius: 15px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 5px 18px
+    rgba(43, 49, 68, 0.035);
+}
+
+.panel-header {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 17px 18px;
+
+  border-bottom: 1px solid #e9ebf0;
+}
+
+.panel-header h2 {
+  margin: 0;
+
+  color: #2b303d;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.panel-header p {
+  margin: 5px 0 0;
+
+  color: #9299a8;
+  font-size: 10px;
+}
+
+.panel-title-line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.phase-label {
+  color: #e47c24;
+  background: #fff0dc;
+}
+
+.panel-tools {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+
+  height: 36px;
+  min-width: 220px;
+  padding: 0 11px;
+
+  border: 1px solid #dfe3ea;
+  border-radius: 9px;
+
+  color: #969dab;
+  background: #ffffff;
+}
+
+.search-box input {
+  width: 100%;
+  margin-left: 7px;
+
+  border: 0;
+  outline: 0;
+
+  color: #3d4350;
+  font-size: 11px;
+  background: transparent;
+}
+
+.primary-button,
+.secondary-button {
+  height: 36px;
+  padding: 0 13px;
+
+  border-radius: 9px;
+  cursor: pointer;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.primary-button {
+  border: 1px solid #755fe9;
+
+  color: #ffffff;
+  background: #755fe9;
+}
+
+.secondary-button {
+  border: 1px solid #dfe3ea;
+
+  color: #646c7b;
+  background: #ffffff;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.request-table {
+  width: 100%;
+  min-width: 850px;
+
+  border-collapse: collapse;
+}
+
+.request-table th {
+  padding: 11px 15px;
+
+  color: #7f8797;
+  font-size: 10px;
+  font-weight: 750;
+  text-align: left;
+
+  background: #fafbfc;
+}
+
+.request-table td {
+  padding: 12px 15px;
+
+  border-top: 1px solid #eef0f4;
+
+  color: #4b5261;
+  font-size: 10px;
+}
+
+.request-number {
+  color: #343a49 !important;
+  font-weight: 800;
+}
+
+.store-name {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+
+  font-weight: 700;
+}
+
+.store-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+}
+
+.store-dot-waiting {
+  background: #f1a51d;
+}
+
+.store-dot-shipping {
+  background: #4d8cf4;
+}
+
+.store-dot-complete {
+  background: #24b87b;
+}
+
+.store-dot-rejected {
+  background: #ea586b;
+}
+
+.muted-cell {
+  color: #8f96a4 !important;
+}
+
+.status-badge {
+  display: inline-flex;
+  padding: 5px 8px;
+
+  border-radius: 7px;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.status-waiting {
+  color: #d8830f;
+  background: #fff0c7;
+}
+
+.status-shipping {
+  color: #3978df;
+  background: #e1edff;
+}
+
+.status-complete {
+  color: #169966;
+  background: #dff8ec;
+}
+
+.status-rejected {
+  color: #df4056;
+  background: #ffe4e8;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.action-buttons button {
+  height: 27px;
+  padding: 0 9px;
+
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.approve-button {
+  color: #179962;
+  background: #def8ea;
+}
+
+.reject-button {
+  color: #df4056;
+  background: #ffe8eb;
+}
+
+.detail-button {
+  color: #626a78;
+  background: #f0f2f5;
+}
+
+.empty-table {
+  height: 100px;
+
+  color: #969dab !important;
+  text-align: center;
+}
+
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px 15px;
+
+  border-top: 1px solid #e9ebf0;
+
+  color: #858d9d;
+  font-size: 10px;
+}
+
+.pagination {
+  display: flex;
+  gap: 4px;
+}
+
+.pagination button {
+  min-width: 29px;
+  height: 29px;
+
+  border: 1px solid #e0e4eb;
+  border-radius: 7px;
+  cursor: pointer;
+
+  color: #6b7281;
+  background: #ffffff;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.pagination .active-page {
+  border-color: #705fe8;
+
+  color: #ffffff;
+  background: #705fe8;
+}
+
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 17px;
+}
+
+.compact-header {
+  padding: 16px 18px;
+}
+
+.text-button {
+  border: 0;
+  cursor: pointer;
+
+  color: #6d5ce3;
+  font-size: 10px;
+  font-weight: 800;
+  background: transparent;
+}
+
+.store-summary-list {
+  display: grid;
+  gap: 19px;
+
+  padding: 20px;
+}
+
+.summary-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 8px;
+
+  color: #626a78;
+  font-size: 11px;
+}
+
+.summary-item-header strong {
+  color: #353b48;
+}
+
+.progress-track {
+  overflow: hidden;
+
+  height: 7px;
+
+  border-radius: 20px;
+  background: #edf0f4;
+}
+
+.progress-value {
+  display: block;
+  height: 100%;
+
+  border-radius: 20px;
+}
+
+.progress-normal {
+  background: #30bc81;
+}
+
+.progress-waiting {
+  background: #f2ac2a;
+}
+
+.progress-stopped {
+  background: #ee6074;
+}
+
+.api-ready-badge {
+  color: #6e61d9;
+  background: #ece9ff;
+}
+
+.recent-action-list {
+  display: grid;
+}
+
+.recent-action-item {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+
+  padding: 14px 18px;
+
+  border-top: 1px solid #eef0f4;
+}
+
+.recent-action-item:first-child {
+  border-top: 0;
+}
+
+.action-type-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  border-radius: 10px;
+
+  color: #6959dd;
+  font-size: 11px;
+  font-weight: 850;
+
+  background: #eeebff;
+}
+
+.action-information {
+  min-width: 0;
+}
+
+.action-information strong {
+  display: block;
+  overflow: hidden;
+
+  color: #414754;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.action-information p {
+  margin: 5px 0 0;
+
+  color: #9aa1af;
+  font-size: 9px;
+}
+
+.quick-action-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+
+  padding: 17px;
+}
+
+.quick-action-grid button {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 86px;
+
+  border: 1px solid #e5e7ed;
+  border-radius: 12px;
+  cursor: pointer;
+
+  color: #5b6271;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 750;
+
+  background: #fafbfc;
+}
+
+.quick-action-grid button:hover {
+  border-color: #cfc8f7;
+
+  color: #6656da;
+  background: #f7f5ff;
+}
+
+.quick-action-grid button span {
+  font-size: 19px;
+}
+
+.quick-action-grid button small {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+
+  padding: 3px 5px;
+
+  border-radius: 5px;
+
+  color: #e07a22;
+  font-size: 8px;
+
+  background: #fff0dc;
+}
+
+@media (max-width: 1250px) {
+  .statistics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quick-action-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .demo-notice {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .comparison-select {
+    width: 100%;
+  }
+
+  .panel-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .panel-tools {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 190px;
+  }
+
+  .bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .statistics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statistic-card {
+    min-height: 125px;
+  }
+}
+</style>

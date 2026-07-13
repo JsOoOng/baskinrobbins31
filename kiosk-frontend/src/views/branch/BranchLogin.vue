@@ -8,33 +8,58 @@ const router = useRouter()
 const loginId = ref('')
 const password = ref('')
 
+
 const login = async () => {
+
   try {
-    const response = await api.post('/branch/login', {
-      loginId: loginId.value,
-      password: password.value
-    })
+
+    const response =
+      await api.post('/branch/login', {
+
+        loginId: loginId.value,
+        password: password.value
+
+      })
+
 
     // JWT 저장
-    localStorage.setItem('token', response.data.token)
+    localStorage.setItem(
+      'token',
+      response.data.token
+    )
 
-    // 로그인 사용자 정보 저장
-    localStorage.setItem('user', JSON.stringify(response.data.user))
+
+    // 로그인 정보 저장
+    localStorage.setItem(
+    'branchUser',
+    JSON.stringify(response.data.user)
+    )
+
 
     alert('로그인 성공')
 
-    // 메인 페이지 이동
+
     router.push('/branch/main')
 
-  } catch (error) {
+
+  } catch(error) {
+
+
     console.error(error)
 
-    if (error.response) {
+
+    if(error.response){
+
       alert(error.response.data)
-    } else {
+
+    }else{
+
       alert('서버와 연결할 수 없습니다.')
+
     }
+
   }
+
 }
 </script>
 

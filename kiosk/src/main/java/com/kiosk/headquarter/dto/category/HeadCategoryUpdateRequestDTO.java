@@ -9,4 +9,5 @@ public class HeadCategoryUpdateRequestDTO {
 
     private String categoryName;
     private Integer displayOrder;
+    private Boolean active;
 }

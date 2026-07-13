@@ -9,6 +9,9 @@ public class HeadLoginResponse {
     private String role;
     private String status;
 
+    // JWT 토큰 추가
+    private String token;
+
     public Integer getEmployeeId() {
         return employeeId;
     }
@@ -55,5 +58,13 @@ public class HeadLoginResponse {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

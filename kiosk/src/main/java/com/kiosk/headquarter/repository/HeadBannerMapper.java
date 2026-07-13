@@ -8,9 +8,11 @@ import org.springframework.stereotype.Repository;
 import com.kiosk.entity.Banner;
 
 @Repository
-public interface HeadBannerMapper extends JpaRepository<Banner, Integer> {
+public interface HeadBannerMapper
+        extends JpaRepository<Banner, Integer> {
 
+    /*
+     * 최근 등록한 배너부터 조회
+     */
     List<Banner> findAllByOrderByIdDesc();
-
-    List<Banner> findByIsActiveTrueOrderByIdDesc();
 }

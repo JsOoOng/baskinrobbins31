@@ -9,14 +9,31 @@ import org.springframework.stereotype.Repository;
 import com.kiosk.entity.StoreProduct;
 
 @Repository
-public interface HeadStoreProductMapper extends JpaRepository<StoreProduct, Integer> {
+public interface HeadStoreProductMapper
+        extends JpaRepository<StoreProduct, Integer> {
 
-    // 특정 지점의 판매 상품 목록 조회
-    List<StoreProduct> findByStore_IdOrderByIdDesc(Integer storeId);
+    /*
+     * 삭제되지 않은 동일 상품 존재 여부
+     */
+    boolean existsByStore_IdAndProduct_IdAndIsDeletedFalse(
+            Integer storeId,
+            Integer productId
+    );
 
-    // 특정 지점의 특정 판매 상품 상세 조회
-    Optional<StoreProduct> findByStore_IdAndId(Integer storeId, Integer storeProductId);
+    /*
+     * 지점 판매 상품 목록
+     */
+    List<StoreProduct>
+            findByStore_IdAndIsDeletedFalseOrderByIdDesc(
+                    Integer storeId
+            );
 
-    // 특정 지점에 특정 본사 상품이 이미 등록되어 있는지 확인
-    boolean existsByStore_IdAndProduct_Id(Integer storeId, Integer productId);
+    /*
+     * 지점 판매 상품 상세 조회
+     */
+    Optional<StoreProduct>
+            findByStore_IdAndIdAndIsDeletedFalse(
+                    Integer storeId,
+                    Integer storeProductId
+            );
 }
