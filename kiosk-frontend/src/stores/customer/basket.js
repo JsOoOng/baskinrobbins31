@@ -7,14 +7,20 @@ export const useBasketStore = defineStore('basket', {
   state: () => ({
     cartItems: [],
     orderType: 'TOGO',
-    dryIceCount: 0
+    dryIceCount: 0,
+    dryIceMins: 0
   }),
 
   getters: {
     // 🌟 장바구니 뱃지에 띄울 총 수량 계산
     totalCount: (state) => {
-      if (!state.items) return 0;
-      return state.items.reduce((sum, item) => sum + item.quantity, 0);
+      if (!state.cartItems) return 0;
+      return state.cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    },
+    // 🌟 장바구니 총 결제 금액 계산
+    totalPrice: (state) => {
+      if (!state.cartItems) return 0;
+      return state.cartItems.reduce((sum, item) => sum + ((item.unitPrice || 0) * (item.quantity || 1)), 0);
     }
   },
 
@@ -24,6 +30,9 @@ export const useBasketStore = defineStore('basket', {
     },
     setDryIceCount(count) {
       this.dryIceCount = count;
+    },
+    setDryIceMins(mins) {
+      this.dryIceMins = mins;
     },
 
     // 🔄 서버로부터 장바구니 데이터를 동기화

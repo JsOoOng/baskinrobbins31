@@ -38,6 +38,9 @@ const router = createRouter({
       name: 'HeadLogin',
       component: HeadLogin
     },
+    { path: '/payment', 
+      name: 'payment', 
+      component: () => import('../views/customer/OrderConfirmView.vue') },
     { path: '/order-confirm', 
       name: 'orderConfirm', 
       component: () => import('../views/customer/OrderConfirmView.vue') },

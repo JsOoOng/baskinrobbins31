@@ -87,35 +87,5 @@ public class BasketService {
     }
     
 
-    public void updateQuantity(HttpSession session, int index, int quantity) {
-        BasketResponse basket = getBasket(session); // 세션에서 장바구니 꺼내기
-        if (basket != null && index >= 0 && index < basket.getItems().size()) {
-            BasketAddRequest item = basket.getItems().get(index);
-            item.setQuantity(quantity); // 수량 업데이트
-            recalculateTotalPrice(basket);
-        }
-    }
 
-    public void removeItem(HttpSession session, int index) {
-        BasketResponse basket = getBasket(session);
-        if (basket != null && index >= 0 && index < basket.getItems().size()) {
-            basket.getItems().remove(index); // 리스트에서 제거
-            recalculateTotalPrice(basket);
-        }
-    }
-    
-    private void recalculateTotalPrice(BasketResponse basket) {
-        int total = basket.getItems().stream()
-                .mapToInt(item -> {
-                    // 💡 누가 범인인지 범인 색출!
-                    if (item.getUnitPrice() == null) {
-                        System.out.println("🚨 범인 발견: productId가 " + item.getProductId() + "인 상품의 unitPrice가 null입니다!");
-                        return 0;
-                    }
-                    int qty = (item.getQuantity() != null) ? item.getQuantity() : 0;
-                    return item.getUnitPrice() * qty;
-                })
-                .sum();
-        basket.setTotalPrice(total);
-    }
 }

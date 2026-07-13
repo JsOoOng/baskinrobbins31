@@ -24,15 +24,15 @@
         <p class="modal-subtitle">이동 시간에 맞춰 드라이아이스를 준비해 드립니다.</p>
         
         <div class="packing-options">
-          <button class="packing-btn" @click="selectPackingTime(1)">
+          <button class="packing-btn" @click="selectPackingTime(10, 1)">
             <span class="time-text">10분 이하</span>
             <span class="dry-ice-text">(드라이아이스 1개)</span>
           </button>
-          <button class="packing-btn" @click="selectPackingTime(2)">
+          <button class="packing-btn" @click="selectPackingTime(30, 2)">
             <span class="time-text">30분 이하</span>
             <span class="dry-ice-text">(드라이아이스 2개)</span>
           </button>
-          <button class="packing-btn" @click="selectPackingTime(3)">
+          <button class="packing-btn" @click="selectPackingTime(60, 3)">
             <span class="time-text">30분 초과</span>
             <span class="dry-ice-text">(드라이아이스 3개)</span>
           </button>
@@ -62,11 +62,13 @@ const handleOrderType = (type) => {
   } else {
     // 먹고가기일 경우 드라이아이스 0개
     basketStore.setDryIceCount(0)
+    basketStore.setDryIceMins(0)
     router.push('/menu')
   }
 }
 
-const selectPackingTime = (dryIceCount) => {
+const selectPackingTime = (mins, dryIceCount) => {
+  basketStore.setDryIceMins(mins)
   basketStore.setDryIceCount(dryIceCount)
   isPackingModalOpen.value = false
   router.push('/menu')
@@ -114,6 +116,7 @@ button.btn-here:hover, button.btn-togo:hover {
 
 .icon {
   font-size: 80px;
+}
 .touch-area {
   text-align: center;
 }

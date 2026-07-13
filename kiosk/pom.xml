@@ -183,6 +183,21 @@
                 </excludes>
             </configuration>
         </plugin>
+        
+        <!-- Lombok 애노테이션 처리를 위한 컴파일러 플러그인 추가 -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+                <annotationProcessorPaths>
+                    <path>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                        <version>${lombok.version}</version>
+                    </path>
+                </annotationProcessorPaths>
+            </configuration>
+        </plugin>
 
     </plugins>
 </build>

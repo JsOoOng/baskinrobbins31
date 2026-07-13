@@ -3,7 +3,7 @@
     <h2>STEP 01. 주문 내역을 확인해주세요</h2>
     
     <div class="order-list">
-        <div v-for="(item, index) in basketStore.items" :key="index" class="order-item">
+        <div v-for="(item, index) in basketStore.cartItems" :key="index" class="order-item">
             <div class="item-info">
             <h4>{{ item.productName }}</h4>
             
@@ -36,36 +36,32 @@
 
 <script setup>
 import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useBasketStore } from '@/stores/customer/basket';
 
 import axios from '@/api/axios';
 
 const router = useRouter();
+const route = useRoute();
 const basketStore = useBasketStore();
 
 onMounted(() => {
-  if (basketStore.items.length === 0) {
+  if (basketStore.cartItems.length === 0) {
     alert('장바구니가 비어있어 메인으로 돌아갑니다.');
     router.push('/');
   }
 });
 
 const handlePayment = async (method) => {
-  const orderInfo = {
-    storeId: 1,
-    kioskId: 1, 
-    userId: null, 
-    orderType: 'TOGO', 
-    dryIceMins: 30
-  };
+  const orderId = route.query.orderId;
+  
+  if (!orderId) {
+    alert('주문 번호를 찾을 수 없습니다. 처음부터 다시 시도해주세요.');
+    router.push('/');
+    return;
+  }
 
   try {
-    // 🌟 1단계: 주문서 생성 (POST /api/orders)
-    // 백엔드에서 방금 추가한 컨트롤러를 호출해서 orderId(PK)를 받아와!
-    const response = await axios.post('/api/orders', orderInfo);
-    const orderId = response.data; 
-
     // 🌟 2단계: 방금 만든 주문서로 결제 및 재고 차감 진행 (POST /api/orders/{orderId}/pay)
     await axios.post(`/api/orders/${orderId}/pay`, { paymentMethod: method });
 
@@ -86,7 +82,7 @@ const removeItem = async (index) => {
   try {
     await axios.delete(`/api/customer/basket/${index}`);
     await basketStore.fetchBasket();
-    if (basketStore.items.length === 0) {
+    if (basketStore.cartItems.length === 0) {
         alert('장바구니가 비어있어 메인으로 돌아갑니다.');
         router.push('/');
     }

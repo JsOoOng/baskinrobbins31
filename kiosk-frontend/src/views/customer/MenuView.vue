@@ -121,6 +121,7 @@
           <button class="btn-add-cart" @click="addCurrentItemToCart">장바구니 담기 🛒</button>
         </footer>
       </div>
+    </div>
 
     <!-- 6. 장바구니 확인 모달 -->
     <div v-if="isCartModalOpen" class="modal-overlay">
@@ -417,6 +418,7 @@ const goPayment = async () => {
     const res = await axios.post('/api/orders', {
       orderType: basketStore.orderType || 'TOGO',
       dryIceCount: basketStore.dryIceCount || 0,
+      dryIceMins: basketStore.dryIceMins || 0,
       kioskId: 1,
       storeId: 1
     });
