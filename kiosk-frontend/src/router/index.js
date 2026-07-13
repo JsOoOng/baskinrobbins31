@@ -38,12 +38,31 @@ const router = createRouter({
       name: 'HeadLogin',
       component: HeadLogin
     },
-    { path: '/payment', 
-      name: 'payment', 
-      component: () => import('../views/customer/OrderConfirmView.vue') },
-    { path: '/order-confirm', 
-      name: 'orderConfirm', 
-      component: () => import('../views/customer/OrderConfirmView.vue') },
+    {
+      path: '/payment',
+      name: 'payment',
+      component: () => import('@/views/customer/OrderConfirmView.vue')
+    },
+    {
+      path: '/toss/success',
+      name: 'toss-success',
+      component: () => import('@/views/customer/TossSuccessView.vue')
+    },
+    {
+      path: '/toss/fail',
+      name: 'toss-fail',
+      component: () => import('@/views/customer/TossFailView.vue')
+    },
+    {
+      path: '/order-complete',
+      name: 'order-complete',
+      component: () => import('@/views/customer/OrderCompleteView.vue')
+    },
+    {
+      path: '/order-confirm', 
+      name: 'order-confirm', 
+      component: () => import('@/views/customer/OrderConfirmView.vue') 
+    },
       
     // ----------------------------------------------------
     // 📱 BRANCH (지점용 주소)

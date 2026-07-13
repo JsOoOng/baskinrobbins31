@@ -117,7 +117,7 @@ public class OrderService {
             }
         }
 
-        basketService.clearBasket(session);
+        // 장바구니 초기화는 결제 성공 시점(processPayment)으로 이동
         return order.getId(); // 생성된 PK(orderId)를 반환
     }
 
@@ -125,7 +125,7 @@ public class OrderService {
      * 결제 처리 및 재고 차감 (통합 로직)
      */
     @Transactional
-    public void processPayment(int orderId, String paymentMethod) {
+    public void processPayment(int orderId, String paymentMethod, HttpSession session) {
         // 1. 주문 조회
         OrderResponse orderRes = orderMapper.selectOrderWithDetails(orderId);
         if (orderRes == null) throw new RuntimeException("주문을 찾을 수 없습니다.");
@@ -134,8 +134,8 @@ public class OrderService {
         for (OrderItemDTO item : orderRes.getOrderItems()) {
             int updatedRows = orderMapper.decreaseProductStock(item.getProductId(), item.getQuantity());
             if (updatedRows == 0) {
-                // throw new RuntimeException("상품 [" + item.getProductName() + "] 재고 부족");
-                System.out.println("Warning: 상품 [" + item.getProductName() + "] 재고가 부족하거나 인벤토리에 없습니다. (결제는 진행됩니다)");
+                throw new RuntimeException("상품 [" + item.getProductName() + "] 재고 부족");
+                // System.out.println("Warning: 상품 [" + item.getProductName() + "] 재고가 부족하거나 인벤토리에 없습니다. (결제는 진행됩니다)");
             }
         }
 
@@ -149,8 +149,10 @@ public class OrderService {
 
         orderMapper.insertPayment(payment);
 
-        // 4. 주문 상태는 WAITING으로 유지하여 지점이 수락(PREPARING)할 수 있도록 함
-        // orderMapper.updateOrderStatus(orderId, "COMPLETED");
+        // 4. 장바구니 비우기 (결제와 재고 차감이 모두 성공한 직후에만 실행)
+        if (session != null) {
+            basketService.clearBasket(session);
+        }
     }
     
     @Transactional

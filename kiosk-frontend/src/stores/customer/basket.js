@@ -99,6 +99,16 @@ export const useBasketStore = defineStore('basket', {
       }
     },
 
+    // 🗑️ 장바구니 전체 비우기
+    async clearCart() {
+      this.cartItems = [];
+      try {
+        await axios.delete('/api/customer/basket');
+      } catch (error) {
+        console.error('서버 장바구니 초기화 실패:', error);
+      }
+    },
+
     // 3. 결제 최종 주문 API (POST)
     async submitOrder(orderInfo) {
       try {
@@ -109,7 +119,7 @@ export const useBasketStore = defineStore('basket', {
           orderType: orderInfo.orderType,
           dryIceMins: orderInfo.dryIceMins,
           totalPrice: this.totalPrice,
-          items: this.items.map(item => ({
+          items: this.cartItems.map(item => ({
             productId: item.productId,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
@@ -118,7 +128,8 @@ export const useBasketStore = defineStore('basket', {
           }))
         };
 
-        const res = await axios.post('http://localhost:8888/api/orders', payload);
+        // 서버에 주문 요청
+        const res = await axios.post('/api/orders', payload);
         return res.data; 
       } catch (error) {
         console.error('주문 실패:', error);

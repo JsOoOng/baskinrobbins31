@@ -12,10 +12,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kiosk.customer.order.dto.OrderCreateRequest;
 import com.kiosk.customer.order.dto.OrderResponse;
+import com.kiosk.customer.order.dto.TossConfirmRequest;
 import com.kiosk.customer.order.repository.OrderMapper;
 import com.kiosk.customer.order.service.OrderService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.MediaType;
+import java.util.Base64;
 
 @RestController
 @RequiredArgsConstructor
@@ -54,10 +60,11 @@ public class OrderController {
     @PostMapping("/{orderId}/pay")
     public ResponseEntity<String> completePayment(
             @PathVariable("orderId") int orderId, 
-            @RequestBody Map<String, String> request) { // Map으로 변경
+            @RequestBody Map<String, String> request,
+            HttpSession session) { // session 파라미터 추가
         
         String paymentMethod = request.get("paymentMethod"); // 키 값으로 추출
-        orderService.processPayment(orderId, paymentMethod);
+        orderService.processPayment(orderId, paymentMethod, session); // session 전달
         
         return ResponseEntity.ok("결제 및 재고 차감 완료");
     }
@@ -69,6 +76,83 @@ public class OrderController {
         
         return ResponseEntity.ok("주문 취소 완료");
     }
-  
+
+    @org.springframework.beans.factory.annotation.Value("${toss.secret-key}")
+    private String tossSecretKey;
+
+    @org.springframework.beans.factory.annotation.Value("${server.port:8889}")
+    private String serverPort;
+    
+    @org.springframework.beans.factory.annotation.Value("${server.printPort:8888}")
+    private String printServerPort;
+
+    @PostMapping("/toss/confirm")
+    public ResponseEntity<String> confirmTossPayment(@RequestBody TossConfirmRequest tossReq, HttpSession session) {
+        String tossUrl = "https://api.tosspayments.com/v1/payments/confirm";
+        
+        RestTemplate restTemplate = new RestTemplate();
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String encodedAuth = Base64.getEncoder().encodeToString((tossSecretKey + ":").getBytes());
+        headers.set("Authorization", "Basic " + encodedAuth);
+        
+        HttpEntity<TossConfirmRequest> entity = new HttpEntity<>(tossReq, headers);
+        
+        try {
+            // 토스 페이먼츠 승인 서버로 실결제 요청 전송
+            ResponseEntity<String> response = restTemplate.postForEntity(tossUrl, entity, String.class);
+            
+            // 승인이 완료되면 자체 비즈니스 로직(재고 차감, 주문 완료) 처리
+            String realOrderIdStr = tossReq.getOrderId().replace("kiosk_order_", "");
+            int orderId = Integer.parseInt(realOrderIdStr);
+            orderService.processPayment(orderId, "TOSS", session);
+            
+            // 영수증 데이터 생성 및 로컬 /receipt API 호출
+            try {
+                OrderResponse orderRes = orderService.getOrderDetails(orderId);
+                String orderNo = String.format("%03d", orderRes.getOrderNumber());
+                String orderItem = orderRes.getOrderItems().isEmpty() ? "상품없음" : orderRes.getOrderItems().get(0).getProductName();
+                if (orderRes.getOrderItems().size() > 1) {
+                    orderItem += " 외 " + (orderRes.getOrderItems().size() - 1) + "건";
+                }
+                String price = orderRes.getTotalPrice() + "원";
+                String orderDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy년MM월dd일"));
+
+                HttpHeaders receiptHeaders = new HttpHeaders();
+                receiptHeaders.setContentType(MediaType.APPLICATION_JSON);
+                String receiptJson = String.format("{\"orderNo\":\"%s\",\"orderItem\":\"%s\",\"price\":\"%s\",\"orderDate\":\"%s\"}", 
+                        orderNo, orderItem, price, orderDate);
+                HttpEntity<String> receiptEntity = new HttpEntity<>(receiptJson, receiptHeaders);
+                
+                // 포트 동적 참조
+                restTemplate.postForEntity("http://localhost:" + this.printServerPort + "/receipt", receiptEntity, String.class);
+            } catch (Exception ex) {
+                System.err.println("영수증 출력 요청 중 오류 (결제는 성공): " + ex.getMessage());
+            }
+
+            return ResponseEntity.ok("토스 결제 승인 및 주문 처리 완료");
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            System.err.println("토스 승인 실패 (HTTP 상태 코드): " + e.getStatusCode());
+            System.err.println("토스 에러 응답: " + e.getResponseBodyAsString());
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            System.err.println("토스 승인 중 서버 내부 오류: " + e.getMessage());
+            return ResponseEntity.status(500).body("{\"error\": \"서버 내부 오류: " + e.getMessage() + "\"}");
+        }
+    }
+
+    @PostMapping("/receipt")
+    public ResponseEntity<String> printReceipt(@RequestBody java.util.Map<String, String> receiptData) {
+        System.out.println("===============================================");
+        System.out.println("                영수증 출력 완료                 ");
+        System.out.println("===============================================");
+        System.out.println("주문번호: " + receiptData.get("orderNo"));
+        System.out.println("주문상품: " + receiptData.get("orderItem"));
+        System.out.println("결제금액: " + receiptData.get("price"));
+        System.out.println("주문일자: " + receiptData.get("orderDate"));
+        System.out.println("===============================================");
+        return ResponseEntity.ok("영수증 출력 성공");
+    }
 }
 

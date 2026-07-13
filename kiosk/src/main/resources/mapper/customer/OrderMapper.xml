@@ -5,6 +5,7 @@
 
     <resultMap id="orderDetailMap" type="com.kiosk.customer.order.dto.OrderResponse">
         <id property="orderId" column="order_id" />
+        <result property="orderNumber" column="order_number" />
         <result property="totalPrice" column="total_price" />
         
         <collection property="orderItems" ofType="com.kiosk.customer.order.dto.OrderItemDTO">
@@ -23,6 +24,7 @@
     <select id="selectOrderWithDetails" resultMap="orderDetailMap">
         SELECT 
             o.order_id, 
+            o.order_number,
             o.total_price,
             oi.order_item_id, 
             oi.product_id,
