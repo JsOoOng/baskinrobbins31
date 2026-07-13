@@ -289,7 +289,7 @@ function formatMoney(value){
 
 
             <h3>
-                오늘 주문 건수
+                기간별 주문 건수
             </h3>
 
 
