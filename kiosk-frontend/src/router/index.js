@@ -115,6 +115,11 @@ const router = createRouter({
       name: 'branch-inventory',
       component: () => import('../views/branch/BranchInventory.vue')
     },
+    {
+      path: '/branch/statistics',
+      name: 'branch-statistics',
+      component: () => import('../views/branch/statistics/BranchStatistics.vue')
+    },
 
     // ====================================================
     // 본사 관리자 로그인 및 예외 처리

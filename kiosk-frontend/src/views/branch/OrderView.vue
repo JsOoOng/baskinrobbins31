@@ -23,7 +23,7 @@ const selectedOrder = ref(null)
 const selectedStatus = ref('')
 
 // 로그인한 사용자 정보
-const user = JSON.parse(localStorage.getItem('user'))
+const user = JSON.parse(localStorage.getItem('branchUser'))
 
 // 주문 목록 조회
 const loadOrders = async () => {
@@ -250,28 +250,28 @@ const getStatusText = (status) => {
 
                 <b class="option-title">옵션</b>
 
-                <ul class="option-list">
+    <ul class="option-list">
 
-                    <li
-                        v-for="option in item.options"
-                        :key="option.optionType + option.optionName"
-                    >
+        <li
+            v-for="option in item.options"
+            :key="option.optionType + option.optionName"
+        >
 
-                        <span class="option-type">
-                            {{ option.optionType }}
-                        </span>
+            <span class="option-type">
+                {{ option.optionType }}
+            </span>
 
-                        <span class="option-name">
-                            {{ option.optionName }}
-                        </span>
+            <span class="option-name">
+                {{ option.optionName }}
+            </span>
 
-                        <span class="option-price">
-                            +{{ option.extraPrice.toLocaleString() }}원
-                        </span>
+            <span class="option-price">
+                +{{ option.extraPrice.toLocaleString() }}원
+            </span>
 
-                    </li>
+        </li>
 
-                </ul>
+    </ul>
 
                 <p>
                     <strong>맛</strong>
