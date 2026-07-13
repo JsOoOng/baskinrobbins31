@@ -70,8 +70,32 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDetailResponse getProductDetail(Long storeId, Long productId) {
-        // TODO: PRODUCT_OPTIONS 조회하여 OptionGroupDto로 묶고, FlavorService를 통해 맛 목록을 가져와 병합
-        return null;
+        Product product = productRepository.findById(productId.intValue())
+            .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+            
+        List<com.kiosk.entity.ProductOption> options = productOptionRepository.findByProductId(productId.intValue());
+        List<com.kiosk.customer.product.dto.ProductOptionDto> optionDtos = new ArrayList<>();
+        
+        for (com.kiosk.entity.ProductOption opt : options) {
+            com.kiosk.customer.product.dto.ProductOptionDto dto = new com.kiosk.customer.product.dto.ProductOptionDto();
+            dto.setOptionId(opt.getId());
+            dto.setProductId(product.getId());
+            dto.setOptionType(opt.getOptionType().name());
+            dto.setOptionName(opt.getOptionName());
+            dto.setExtraPrice(opt.getExtraPrice());
+            dto.setMaxFlavorCount(opt.getMaxFlavorCount());
+            optionDtos.add(dto);
+        }
+        
+        return new ProductDetailResponse(
+            product.getId(),
+            product.getProductName(),
+            product.getDescription(),
+            product.getBasePrice(),
+            new ArrayList<>(), // optionGroups
+            new ArrayList<>(), // availableFlavors
+            optionDtos         // options
+        );
     }
 
     @Override

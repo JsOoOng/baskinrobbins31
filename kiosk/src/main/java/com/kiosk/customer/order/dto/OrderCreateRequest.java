@@ -11,7 +11,7 @@ public class OrderCreateRequest {
     private Integer kioskId;       // 키오스크 기기 ID
     private Integer userId;        // 적립 회원 ID
     private String orderType;      // "HERE" 또는 "TOGO"
-    private Integer dryIceMins;    // 드라이아이스 시간
+    private Integer dryIceCount;   // 드라이아이스 개수
 
     // =========================================================
     // 🚀 [여기에 추가!] 장바구니 상세 내역을 받을 리스트 변수 추가

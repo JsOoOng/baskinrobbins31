@@ -36,7 +36,27 @@ public class BasketService {
                 .build();
     }
 
-    // 3. 장바구니 초기화 (결제 완료 후 또는 전체 삭제 시)
+    // 3. 장바구니 특정 상품 삭제
+    public void removeItem(HttpSession session, int index) {
+        List<BasketAddRequest> basket = getBasketFromSession(session);
+        if (index >= 0 && index < basket.size()) {
+            basket.remove(index);
+            session.setAttribute(BASKET_SESSION_KEY, basket);
+        }
+    }
+
+    // 4. 장바구니 특정 상품 수량 변경
+    public void updateItemQuantity(HttpSession session, int index, int quantity) {
+        List<BasketAddRequest> basket = getBasketFromSession(session);
+        if (index >= 0 && index < basket.size()) {
+            if (quantity >= 1) {
+                basket.get(index).setQuantity(quantity);
+                session.setAttribute(BASKET_SESSION_KEY, basket);
+            }
+        }
+    }
+
+    // 5. 장바구니 초기화 (결제 완료 후 또는 전체 삭제 시)
     public void clearBasket(HttpSession session) {
         session.removeAttribute(BASKET_SESSION_KEY);
     }

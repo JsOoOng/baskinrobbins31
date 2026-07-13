@@ -52,9 +52,14 @@
         <div>선택한 상품: <strong>{{ cartCount }}</strong>개</div>
         <div>총 결제금액: <strong class="total-price">{{ formatPrice(totalPrice) }}원</strong></div>
       </div>
-      <button class="btn-pay" :disabled="cartCount === 0" @click="goPayment">
-        결제하기 💳
-      </button>
+      <div class="cart-buttons">
+        <button class="btn-view-cart" :disabled="cartCount === 0" @click="openCartModal">
+          장바구니 확인 🛒
+        </button>
+        <button class="btn-pay" :disabled="cartCount === 0" @click="goPayment">
+          결제하기 💳
+        </button>
+      </div>
     </footer>
 
     <!-- 5. 상품 상세 옵션 모달 팝업 -->
@@ -69,22 +74,33 @@
           <!-- 아이스크림 맛 선택 제약 조건 화면 -->
           <div v-if="currentMaxFlavors > 0" class="option-section">
             <h4>🍦 아이스크림 맛 선택 (최대 {{ currentMaxFlavors }}가지)</h4>
-            <p class="flavor-counter">선택된 맛: {{ selectedFlavors.length }} / {{ currentMaxFlavors }}</p>
+            <div class="flavor-counter-header">
+              <p class="flavor-counter">선택된 맛: <strong>{{ selectedFlavors.length }} / {{ currentMaxFlavors }}</strong></p>
+            </div>
             
-            <div class="flavor-selection-grid">
-              <label 
-                v-for="flavor in dbFlavors" 
+            <div class="selected-flavor-badges" v-if="selectedFlavors.length > 0">
+              <span v-for="(fId, idx) in selectedFlavors" :key="idx" class="flavor-badge" @click="removeFlavorSlot(idx)">
+                {{ getFlavorName(fId) }} <span class="badge-remove">✖</span>
+              </span>
+            </div>
+            
+            <div class="flavor-selection-grid-with-images">
+              <div 
+                v-for="flavor in paginatedFlavors" 
                 :key="flavor.flavorId" 
-                :class="['flavor-label', { selected: selectedFlavors.includes(flavor.flavorId) }]"
+                :class="['flavor-card', { selected: selectedFlavors.includes(flavor.flavorId) }, { disabled: isFlavorMax }]"
+                @click="addFlavorSlot(flavor.flavorId)"
               >
-                <input 
-                  type="checkbox" 
-                  :value="flavor.flavorId" 
-                  v-model="selectedFlavors"
-                  :disabled="isFlavorMax && !selectedFlavors.includes(flavor.flavorId)"
-                />
-                {{ flavor.flavorName }}
-              </label>
+                <img v-if="flavor.imageUrl" :src="flavor.imageUrl" :alt="flavor.flavorName" class="flavor-image"/>
+                <div v-else class="flavor-image-placeholder">🍦</div>
+                <div class="flavor-name">{{ flavor.flavorName }}</div>
+              </div>
+            </div>
+
+            <div class="pagination-controls">
+              <button class="btn-page" :disabled="currentPage === 1" @click="currentPage--">이전</button>
+              <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+              <button class="btn-page" :disabled="currentPage === totalPages" @click="currentPage++">다음</button>
             </div>
           </div>
 
@@ -103,6 +119,56 @@
         <footer class="modal-footer">
           <div class="realtime-price">금액: {{ formatPrice(calculatedItemPrice) }}원</div>
           <button class="btn-add-cart" @click="addCurrentItemToCart">장바구니 담기 🛒</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- 6. 장바구니 확인 모달 -->
+    <div v-if="isCartModalOpen" class="modal-overlay">
+      <div class="modal-content cart-modal">
+        <header class="modal-header">
+          <h3>장바구니 확인</h3>
+          <button class="btn-close" @click="closeCartModal">❌</button>
+        </header>
+
+        <main class="modal-body">
+          <div v-if="basketStore.cartItems.length === 0" class="empty-cart-message">
+            장바구니가 비어 있습니다.
+          </div>
+          <div v-else class="cart-item-list">
+            <div v-for="(item, index) in basketStore.cartItems" :key="index" class="cart-item-card">
+              <div class="cart-item-info">
+                <div class="cart-item-name">{{ item.productName }}</div>
+                <div class="cart-item-options">
+                  <span v-for="(flavor, fIdx) in item.flavors" :key="fIdx">
+                    {{ flavor.flavorName }}{{ flavor.quantity > 1 ? '(' + flavor.quantity + ')' : '' }}{{ fIdx < item.flavors.length - 1 ? ', ' : '' }}
+                  </span>
+                  <span v-if="item.extraSpoons">
+                    (스푼 추가)
+                  </span>
+                </div>
+                <div class="cart-item-price">{{ formatPrice(item.unitPrice * item.quantity) }}원</div>
+              </div>
+              <div class="cart-item-actions">
+                <div class="qty-control">
+                  <button class="btn-qty" @click="decreaseCartQty(index, item.quantity)">-</button>
+                  <span class="qty-text">{{ item.quantity }}</span>
+                  <button class="btn-qty" @click="increaseCartQty(index, item.quantity)">+</button>
+                </div>
+                <button class="btn-delete" @click="deleteCartItem(index)">삭제 🗑️</button>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <footer class="modal-footer cart-modal-footer">
+          <div class="cart-modal-summary">
+            총 결제금액: <strong class="total-price">{{ formatPrice(totalPrice) }}원</strong>
+          </div>
+          <div class="cart-modal-buttons">
+            <button class="btn-add-more" @click="closeCartModal">메뉴 더 담기 ➕</button>
+            <button class="btn-pay-now" :disabled="cartCount === 0" @click="goPayment">결제하기 💳</button>
+          </div>
         </footer>
       </div>
     </div>
@@ -128,11 +194,15 @@ const dbFlavors = ref([])
 const currentStoreId = ref(1) // 지점 식별을 위한 기본 storeId 설정 (기본값 1)
 const currentCategoryId = ref(null)
 const isModalOpen = ref(false)
+const isCartModalOpen = ref(false)
 const selectedProduct = ref(null)
 const isLoadingProducts = ref(false)
 
 const selectedFlavors = ref([])
 const spoonCount = ref(1)
+
+const currentPage = ref(1)
+const itemsPerPage = 10
 
 const cartCount = computed(() => basketStore.totalCount)
 const totalPrice = computed(() => basketStore.totalPrice)
@@ -180,6 +250,7 @@ const openOptionModal = async (product) => {
   selectedProduct.value = product
   selectedFlavors.value = []
   spoonCount.value = 1
+  currentPage.value = 1
   
   try {
     const detailRes = await axios.get(`/api/v1/kiosk/stores/${currentStoreId.value}/products/${product.productId}/detail`)
@@ -210,6 +281,31 @@ const isFlavorMax = computed(() => {
   return selectedFlavors.value.length >= currentMaxFlavors.value
 })
 
+const totalPages = computed(() => {
+  return Math.max(1, Math.ceil(dbFlavors.value.length / itemsPerPage))
+})
+
+const paginatedFlavors = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return dbFlavors.value.slice(start, end)
+})
+
+const getFlavorName = (fId) => {
+  const f = dbFlavors.value.find(x => x.flavorId === fId);
+  return f ? f.flavorName : '알 수 없는 맛';
+}
+
+const addFlavorSlot = (id) => {
+  if (!isFlavorMax.value) {
+    selectedFlavors.value.push(id)
+  }
+}
+
+const removeFlavorSlot = (idx) => {
+  selectedFlavors.value.splice(idx, 1)
+}
+
 const calculatedItemPrice = computed(() => {
   if (!selectedProduct.value) return 0
   let extraSpoonPrice = 0
@@ -228,21 +324,31 @@ const changeSpoon = (amount) => {
 }
 
 const addCurrentItemToCart = async () => { // 💡 백엔드 통신을 위해 async 추가
-  if (currentMaxFlavors.value > 0 && selectedFlavors.value.length !== currentMaxFlavors.value) {
-    alert(`맛을 ${currentMaxFlavors.value}가지 모두 선택해주세요!`)
-    return
+  if (currentMaxFlavors.value > 0 && selectedFlavors.value.length < currentMaxFlavors.value) {
+    alert(`아이스크림 맛을 ${currentMaxFlavors.value}가지 선택해주세요. (현재 ${selectedFlavors.value.length}개)`);
+    return;
   }
 
-  // 🌟 1. ID만 있던 맛 데이터에 '이름(flavorName)'까지 찾아서 붙여주기!
-  const flavorData = selectedFlavors.value.map(fId => {
-    // dbFlavors 배열에서 현재 선택된 맛 ID와 일치하는 객체 찾기
+  // 🌟 1. ID 목록을 그룹화해서 수량(quantity)까지 구하기!
+  const flavorCounts = selectedFlavors.value.reduce((acc, fId) => {
+    acc[fId] = (acc[fId] || 0) + 1;
+    return acc;
+  }, {});
+
+  const flavorData = Object.keys(flavorCounts).map(fIdStr => {
+    const fId = parseInt(fIdStr);
     const foundFlavor = dbFlavors.value.find(f => f.flavorId === fId);
     return { 
       flavorId: fId, 
       flavorName: foundFlavor ? foundFlavor.flavorName : '알 수 없는 맛', 
-      quantity: 1 
+      quantity: flavorCounts[fId]
     };
   });
+
+  const validOptions = [];
+  if (dbOptions.value && dbOptions.value.length > 0) {
+    validOptions.push(dbOptions.value[0].optionId);
+  }
 
   const requestData = {
     productId: selectedProduct.value.productId,
@@ -250,7 +356,8 @@ const addCurrentItemToCart = async () => { // 💡 백엔드 통신을 위해 as
     quantity: 1,
     unitPrice: calculatedItemPrice.value,
     flavors: flavorData, // 💡 이름이 포함된 맛 데이터 배열을 넣음!
-    options: spoonCount.value > 4 ? [999] : [] 
+    options: validOptions, // 실제 DB에 존재하는 첫 번째 옵션을 넘김 (용기/사이즈 등)
+    extraSpoons: spoonCount.value > 4 // 999 대신 별도 필드로 스푼 추가 여부 전달
   }
 
   try {
@@ -268,8 +375,60 @@ const addCurrentItemToCart = async () => { // 💡 백엔드 통신을 위해 as
   }
 }
 
-const goHome = () => { router.push('/') }
-const goPayment = () => { router.push('/payment') }
+const openCartModal = async () => {
+  await basketStore.fetchBasket();
+  isCartModalOpen.value = true;
+}
+
+const closeCartModal = () => {
+  isCartModalOpen.value = false;
+}
+
+const increaseCartQty = (index, currentQty) => {
+  basketStore.updateQuantity(index, currentQty + 1);
+}
+
+const decreaseCartQty = (index, currentQty) => {
+  if (currentQty > 1) {
+    basketStore.updateQuantity(index, currentQty - 1);
+  }
+}
+
+const deleteCartItem = (index) => {
+  if (confirm("이 상품을 장바구니에서 삭제하시겠습니까?")) {
+    basketStore.removeFromCart(index);
+    if (basketStore.cartItems.length === 0) {
+      closeCartModal();
+    }
+  }
+}
+
+const goHome = async () => { 
+  if (basketStore.cartItems.length > 0) {
+    if (confirm('처음으로 돌아가시면 장바구니가 모두 지워집니다. 진행하시겠습니까?')) {
+      await basketStore.clearCart();
+      router.push('/');
+    }
+  } else {
+    router.push('/');
+  }
+}
+const goPayment = async () => { 
+  try {
+    const res = await axios.post('/api/orders', {
+      orderType: basketStore.orderType || 'TOGO',
+      dryIceCount: basketStore.dryIceCount || 0,
+      kioskId: 1,
+      storeId: 1
+    });
+    const orderId = res.data;
+    // 주문 번호를 가지고 결제 화면으로 넘어갑니다.
+    router.push(`/payment?orderId=${orderId}`);
+  } catch (error) {
+    console.error('주문 생성 에러:', error);
+    alert('결제를 진행할 수 없습니다. (장바구니가 비어있는지 확인해주세요)');
+  }
+}
 </script>
 
 <style scoped>
@@ -427,8 +586,8 @@ const goPayment = () => { router.push('/payment') }
 
 .modal-content {
   background: white;
-  width: 90%;
-  max-width: 500px;
+  width: 95%;
+  max-width: 800px;
   border-radius: 20px;
   overflow: hidden;
 }
@@ -471,26 +630,127 @@ const goPayment = () => { router.push('/payment') }
   margin-bottom: 15px;
 }
 
-.flavor-selection-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+.flavor-counter-header {
+  margin-bottom: 10px;
 }
 
-.flavor-label {
+.flavor-counter {
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.selected-flavor-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px dashed #ccc;
+  min-height: 44px;
+}
+
+.flavor-badge {
+  background: #ff7c98;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  cursor: pointer;
+  gap: 8px;
+  transition: background 0.2s;
 }
 
-.flavor-label.selected {
+.flavor-badge:hover {
+  background: #e66a85;
+}
+
+.badge-remove {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.flavor-selection-grid-with-images {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.flavor-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 5px;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+  min-height: 140px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.flavor-card.selected {
   background-color: #fff0f3;
   border-color: #ff7c98;
   color: #ff7c98;
   font-weight: bold;
+}
+
+.flavor-card.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.flavor-image {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.flavor-image-placeholder {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.flavor-name {
+  font-size: 0.85rem;
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  line-height: 1.3;
+  width: 100%;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.btn-page {
+  background: #ff7c98;
+  color: white;
+  border: none;
+  padding: 5px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-page:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }
 
 .spoon-counter {
@@ -536,6 +796,166 @@ const goPayment = () => { router.push('/payment') }
   width: 100%;
   padding: 15px;
   background-color: #ff7c98;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.cart-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.btn-view-cart {
+  background-color: #fff;
+  color: #ff7c98;
+  border: 2px solid #ff7c98;
+  padding: 15px 30px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btn-view-cart:disabled {
+  border-color: #ccc;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.cart-modal {
+  max-width: 600px;
+}
+
+.empty-cart-message {
+  text-align: center;
+  padding: 40px;
+  color: #888;
+  font-size: 1.2rem;
+}
+
+.cart-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.cart-item-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+.cart-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.cart-item-name {
+  font-size: 1.5rem;
+  color: #000;
+  font-weight: bold;
+}
+
+.cart-item-options {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.cart-item-price {
+  font-size: 1.1rem;
+  color: #ff7c98;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+.cart-item-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 5px;
+}
+
+.btn-qty {
+  width: 30px;
+  height: 30px;
+  background: #eee;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qty-text {
+  font-size: 1.1rem;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+}
+
+.btn-delete {
+  background: transparent;
+  color: #ff4d4f;
+  border: 1px solid #ff4d4f;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.cart-modal-footer {
+  background: white;
+}
+
+.cart-modal-summary {
+  font-size: 1.2rem;
+  text-align: right;
+  margin-bottom: 15px;
+}
+
+.cart-modal-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-add-more {
+  flex: 1;
+  padding: 15px;
+  background: #fff;
+  color: #333;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-pay-now {
+  flex: 1;
+  padding: 15px;
+  background: #ff7c98;
   color: white;
   border: none;
   border-radius: 10px;

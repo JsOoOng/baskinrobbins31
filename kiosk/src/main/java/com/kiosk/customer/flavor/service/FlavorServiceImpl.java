@@ -11,12 +11,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FlavorServiceImpl implements FlavorService {
 
-    // private final StoreFlavorRepository storeFlavorRepository; // 추후 주입 예정
+    private final com.kiosk.customer.flavor.repository.FlavorRepository flavorRepository;
 
     @Override
     public List<FlavorResponse> getAvailableFlavorsByStore(Long storeId) {
-        // TODO: STORE_FLAVORS 테이블과 ICECREAM_FLAVORS 테이블을 조인하여 
-        // 해당 지점의 품절 여부(is_sold_out)가 반영된 맛 리스트를 리턴
-        return null;
+        List<com.kiosk.entity.IcecreamFlavor> flavors = flavorRepository.findAvailableFlavorsByStoreId(storeId);
+        List<FlavorResponse> responses = new java.util.ArrayList<>();
+        for (com.kiosk.entity.IcecreamFlavor flavor : flavors) {
+            responses.add(new FlavorResponse(flavor.getId(), flavor.getFlavorName(), false, flavor.getImageUrl()));
+        }
+        return responses;
     }
 }
