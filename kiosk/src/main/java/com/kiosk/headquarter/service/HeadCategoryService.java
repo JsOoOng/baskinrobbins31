@@ -43,6 +43,11 @@ public class HeadCategoryService {
                                 ? requestDTO.getDisplayOrder()
                                 : 0
                 )
+                .active(
+                        requestDTO.getActive() != null
+                                ? requestDTO.getActive()
+                                : true
+                )
                 .build();
 
         Category savedCategory = headCategoryMapper.save(category);
@@ -92,9 +97,12 @@ public class HeadCategoryService {
 
         category.updateCategory(
                 requestDTO.getCategoryName(),
+
                 requestDTO.getDisplayOrder() != null
                         ? requestDTO.getDisplayOrder()
-                        : 0
+                        : 0,
+
+                requestDTO.getActive()
         );
 
         return toResponseDTO(category);
@@ -118,11 +126,14 @@ public class HeadCategoryService {
         return "카테고리 삭제 성공";
     }
 
-    private HeadCategoryResponseDTO toResponseDTO(Category category) {
+    private HeadCategoryResponseDTO toResponseDTO(
+            Category category
+    ) {
         return HeadCategoryResponseDTO.builder()
                 .categoryId(category.getId())
                 .categoryName(category.getCategoryName())
                 .displayOrder(category.getDisplayOrder())
+                .active(category.getActive())
                 .build();
     }
 }
