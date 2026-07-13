@@ -2,17 +2,17 @@
   <div class="kiosk-menu-container">
     <!-- 1. 상단 헤더 바 -->
     <header class="menu-header">
-      <button class="btn-home" @click="goHome">🏠 처음으로</button>
-      <div class="kiosk-title">주문하기</div>
-      <div class="header-spacer">
-        <span class="timer-text">남은 시간: {{ timeoutStore.timeLeft }}초</span>
+      <div class="header-left">
+        <img src="@/assets/images/logo.png" alt="Baskin Robbins" class="logo" />
+        <button class="btn-home" @click="goHome">🏠 처음으로</button>
       </div>
-    <!-- 1. 상단 헤더 -->
-    <header class="menu-header">
-      <img src="@/assets/images/logo.png" alt="Baskin Robbins" class="logo" />
-      <button class="btn-close-app" @click="goHome">
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
+      <div class="kiosk-title">주문하기</div>
+      <div class="header-right">
+        <span class="timer-text" v-if="timeoutStore && timeoutStore.timeLeft !== undefined">남은 시간: {{ timeoutStore.timeLeft }}초</span>
+        <button class="btn-close-app" @click="goHome">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
     </header>
 
     <!-- 2. 카테고리 탭 메뉴 -->
@@ -37,19 +37,6 @@
         이 카테고리에 등록된 상품이 없습니다.
       </div>
 
-      <div 
-        v-else
-        v-for="product in filteredProducts" 
-        :key="product.productId" 
-        class="product-card"
-        @click="openOptionModal(product)"
-      >
-        <div class="product-img-wrapper">
-          <span class="placeholder-icon">🍦</span>
-        </div>
-        <div class="product-info">
-          <div class="product-name">{{ product.productName }}</div>
-          <div class="product-price">{{ formatPrice(product.basePrice) }}원</div>
       <div v-else class="product-grid">
         <div 
           v-for="product in filteredProducts" 
@@ -61,8 +48,10 @@
             <img :src="product.imageUrl || `/images/products/${product.productName}.png`" @error="handleProductImgError" alt="product" class="placeholder-img" />
             <div class="emoji-placeholder fallback-emoji" style="display:none;">🍦</div>
           </div>
-          <div class="product-name">{{ product.productName }}</div>
-          <div class="product-price">₩{{ formatPrice(product.basePrice) }}</div>
+          <div class="product-info">
+            <div class="product-name">{{ product.productName }}</div>
+            <div class="product-price">₩{{ formatPrice(product.basePrice) }}</div>
+          </div>
         </div>
       </div>
     </main>
@@ -146,8 +135,6 @@
       </div>
     </div>
 
-    <!-- 6. 장바구니 확인 모달 -->
-    <div v-if="isCartModalOpen" class="modal-overlay">
     <!-- 4. 플로팅 장바구니 바 -->
     <footer class="floating-cart-bar">
       <button class="cart-icon-btn" @click="openCartModal">
@@ -308,17 +295,7 @@
         </footer>
       </div>
     </div>
-                </div>
-                <div class="cart-item-price">₩{{ formatPrice(item.unitPrice * item.quantity) }}</div>
-              </div>
-              <div class="cart-item-actions">
-                <button class="btn-delete" @click="deleteCartItem(index)">삭제</button>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
+
 
   </div>
 </template>
@@ -334,14 +311,7 @@ const router = useRouter()
 const basketStore = useBasketStore()
 const timeoutStore = useTimeoutStore()
 
-const currentStoreId = ref(1) // 지점 식별을 위한 반응형 변수
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import axios from '@/api/axios'
-import { useBasketStore } from '@/stores/customer/basket'
 
-const router = useRouter()
-const basketStore = useBasketStore()
 
 // === [DB 연동용 반응형 변수] ===
 const categories = ref([])
@@ -358,17 +328,12 @@ const isLoadingProducts = ref(false)
 
 let intervalId = null
 
-const selectedFlavors = ref([])
-const spoonCount = ref(1)
 const editingCartIndex = ref(null)
 
 const currentPage = ref(1)
-const itemsPerPage = 10
+const itemsPerPage = 12
 const selectedFlavors = ref([])
 const spoonCount = ref(1)
-
-const currentPage = ref(1)
-const itemsPerPage = 12
 
 // 새로운 UI 전용 상태
 const currentModalTab = ref('INFO') // 'INFO' | 'FLAVOR'
@@ -376,18 +341,6 @@ const selectedContainer = ref('CUP')
 
 const cartCount = computed(() => basketStore.totalCount)
 const totalPrice = computed(() => basketStore.totalPrice)
-
-// [API 통신 1]: 카테고리 리스트와 지점 맛 리스트 조회
-onMounted(async () => {
-  // 1. 카테고리 목록 조회
-  try {
-    const catRes = await axios.get('/api/v1/kiosk/categories')
-    categories.value = catRes.data
-    
-
-const handleImageError = (e) => {
-  e.target.style.display = 'none';
-}
 
 const handleProductImgError = (e) => {
   e.target.style.display = 'none';
@@ -405,11 +358,7 @@ onMounted(async () => {
       selectCategory(categories.value[0].categoryId)
     }
   } catch (error) {
-    console.error('카테고리 목록 로드 실패:', error)
-  }
-
-  // 2. 특정 지점의 맛 리스트 조회
-    console.error('카테고리 로드 실패', error)
+    console.error('카테고리 로드 실패:', error)
   }
 
   try {
@@ -451,20 +400,11 @@ onUnmounted(() => {
 const selectCategory = async (id) => { 
   currentCategoryId.value = id 
   isLoadingProducts.value = true
-  
-    console.error('맛 로드 실패', error)
-  }
-})
-
-const selectCategory = async (id) => { 
-  currentCategoryId.value = id 
-  isLoadingProducts.value = true
   try {
     const prodRes = await axios.get(`/api/v1/kiosk/stores/${currentStoreId.value}/categories/${id}/products`)
     dbProducts.value = prodRes.data
   } catch (error) {
     console.error('상품 목록 조회 실패:', error)
-    console.error('상품 로드 실패', error)
   } finally {
     isLoadingProducts.value = false
   }
@@ -473,24 +413,6 @@ const selectCategory = async (id) => {
 // [API 통신 3]: 상품을 클릭했을 때 해당 상품의 사이즈 및 최대 선택 맛 수(옵션) 조회
 const openOptionModal = async (product) => {
   editingCartIndex.value = null
-  selectedProduct.value = product
-  selectedFlavors.value = []
-  spoonCount.value = 1
-  currentPage.value = 1
-  
-  try {
-    const detailRes = await axios.get(`/api/v1/kiosk/stores/${currentStoreId.value}/products/${product.productId}/detail`)
-    
-    dbOptions.value = detailRes.data.options || [] 
-    
-    // 만약 이 API에서 맛 목록도 같이 묶어서 보내준다면, 여기서 한 번에 처리할 수도 있어!
-    // dbFlavors.value = detailRes.data.flavors || [] 
-
-  } catch (error) {
-    console.error('상품 상세(옵션) 조회 실패:', error)
-  }
-
-const openOptionModal = async (product) => {
   selectedProduct.value = product
   selectedFlavors.value = []
   currentModalTab.value = 'INFO'
@@ -502,7 +424,7 @@ const openOptionModal = async (product) => {
     const detailRes = await axios.get(`/api/v1/kiosk/stores/${currentStoreId.value}/products/${product.productId}/detail`)
     dbOptions.value = detailRes.data.options || [] 
   } catch (error) {
-    console.error('옵션 로드 실패', error)
+    console.error('옵션 로드 실패:', error)
   }
   isModalOpen.value = true
 }
@@ -514,7 +436,6 @@ const filteredProducts = computed(() => {
 const currentMaxFlavors = computed(() => {
   if (!selectedProduct.value) return 0
   const opt = dbOptions.value.find(o => o.productId === selectedProduct.value.productId)
-  return opt ? opt.maxFlavorCount : 0
   // 강제로 1 이상으로 설정하여 UI가 표시되게 함 (옵션 데이터가 없을 경우 방어)
   return opt ? opt.maxFlavorCount : 1
 })
@@ -603,13 +524,6 @@ const changeSpoon = (amount) => {
   if (next >= 0 && next <= 10) spoonCount.value = next
 }
 
-const addCurrentItemToCart = async () => { // 💡 백엔드 통신을 위해 async 추가
-  if (currentMaxFlavors.value > 0 && selectedFlavors.value.length < currentMaxFlavors.value) {
-    alert(`아이스크림 맛을 ${currentMaxFlavors.value}가지 선택해주세요. (현재 ${selectedFlavors.value.length}개)`);
-    return;
-  }
-
-  // 🌟 1. ID 목록을 그룹화해서 수량(quantity)까지 구하기!
 const toggleFlavorSlot = (id) => {
   const idx = selectedFlavors.value.indexOf(id);
   if (idx > -1) {
@@ -619,13 +533,7 @@ const toggleFlavorSlot = (id) => {
   }
 }
 
-const calculatedItemPrice = computed(() => {
-  if (!selectedProduct.value) return 0
-  return selectedProduct.value.basePrice
-})
 
-const formatPrice = (val) => val?.toLocaleString()
-const closeModal = () => { isModalOpen.value = false }
 
 const addCurrentItemToCart = async () => { 
   if (currentMaxFlavors.value > 0 && selectedFlavors.value.length < currentMaxFlavors.value) {
@@ -655,7 +563,7 @@ const addCurrentItemToCart = async () => {
 
   const requestData = {
     productId: selectedProduct.value.productId,
-    productName: selectedProduct.value.productName,
+    productName: selectedProduct.value.productName + (selectedContainer.value ? ` (${selectedContainer.value})` : ''),
     quantity: editingCartIndex.value !== null ? basketStore.cartItems[editingCartIndex.value].quantity : 1, // 기존 수량 유지
     unitPrice: calculatedItemPrice.value,
     flavors: flavorData,
@@ -675,29 +583,11 @@ const addCurrentItemToCart = async () => {
     await basketStore.fetchBasket();
     closeModal();
     if (editingCartIndex.value !== null) {
-      isCartModalOpen.value = true; // 수정이었으면 장바구니 창을 다시 열어줌
+      isCartModalOpen.value = true;
     }
   } catch (error) {
     console.error('장바구니 로직 실패:', error);
     alert('작업을 완료하는데 실패했습니다.');
-  const validOptions = dbOptions.value.length > 0 ? [dbOptions.value[0].optionId] : [];
-
-  const requestData = {
-    productId: selectedProduct.value.productId,
-    productName: selectedProduct.value.productName + ` (${selectedContainer.value})`,
-    quantity: 1,
-    unitPrice: calculatedItemPrice.value,
-    flavors: flavorData, 
-    options: validOptions,
-    extraSpoons: false
-  }
-
-  try {
-    await axios.post('/api/customer/basket', requestData);
-    await basketStore.fetchBasket();
-    closeModal();
-  } catch (error) {
-    alert('장바구니 담기에 실패했습니다.');
   }
 }
 
@@ -726,19 +616,12 @@ const deleteCartItem = (index) => {
     if (basketStore.cartItems.length === 0) {
       closeCartModal();
     }
-const closeCartModal = () => { isCartModalOpen.value = false; }
-
-const deleteCartItem = (index) => {
-  if (confirm("삭제하시겠습니까?")) {
-    basketStore.removeFromCart(index);
-    if (basketStore.cartItems.length === 0) closeCartModal();
   }
 }
 
 const goHome = async () => { 
   if (basketStore.cartItems.length > 0) {
     if (confirm('처음으로 돌아가시면 장바구니가 모두 지워집니다. 진행하시겠습니까?')) {
-    if (confirm('장바구니가 비워집니다. 진행하시겠습니까?')) {
       await basketStore.clearCart();
       router.push('/');
     }
@@ -762,12 +645,6 @@ const goPayment = async () => {
   } catch (error) {
     console.error('주문 생성 에러:', error);
     alert('결제를 진행할 수 없습니다. (장바구니가 비어있는지 확인해주세요)');
-      kioskId: 1, storeId: 1
-    });
-    const orderId = res.data;
-    router.push(`/payment?orderId=${orderId}`);
-  } catch (error) {
-    alert('주문 생성 에러가 발생했습니다.');
   }
 }
 </script>
@@ -777,12 +654,7 @@ const goPayment = async () => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #f8f9fa;
-  font-family: 'Pretendard', sans-serif;
-  position: relative;
-}
-
-  background-color: #fff; /* White background */
+  background-color: #fff;
   font-family: 'Pretendard', sans-serif;
   position: relative;
   overflow: hidden;
@@ -1040,9 +912,6 @@ const goPayment = async () => {
   margin-bottom: 15px;
 }
 
-  padding: 15px 30px;
-  background-color: #fff;
-}
 .logo {
   height: 40px;
 }
@@ -1567,10 +1436,7 @@ const goPayment = async () => {
   font-weight: bold;
   cursor: pointer;
 }
-  text-align: center;
-  cursor: pointer;
-  padding: 10px;
-}
+
 .flavor-card.selected .flavor-image { border: 3px solid #e91e63; border-radius: 50%; }
 .flavor-card.disabled { opacity: 0.4; pointer-events: none; }
 .flavor-image { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
