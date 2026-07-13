@@ -60,9 +60,9 @@ public class Order {
     @Column(name = "order_type", nullable = false)
     private OrderType orderType;
 
-    @Column(name = "dry_ice_mins")
+    @Column(name = "dry_ice_count")
     @Builder.Default
-    private Integer dryIceMins = 0;
+    private Integer dryIceCount = 0;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status", nullable = false)

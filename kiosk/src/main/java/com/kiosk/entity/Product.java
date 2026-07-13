@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Product {
-
+    // 본사 상품 원본 메뉴
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_id")
@@ -47,15 +47,16 @@ public class Product {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
+    
+    // 💡 수정 메서드에 imageUrl 파라미터도 추가!
     public void updateProduct(
-            Category category,
-            String productName,
-            String description,
-            Integer basePrice,
-            BigDecimal discountRate,
-            Boolean isDisplay,
-            String imageUrl) {
+        Category category,
+        String productName,
+        String description,
+        Integer basePrice,
+        BigDecimal discountRate,
+        Boolean isDisplay,
+        String imageUrl) {
 
         this.category = category;
         this.productName = productName;

@@ -64,13 +64,17 @@ public class OrderService {
         Kiosk kiosk = (request.getKioskId() != null) ? em.getReference(Kiosk.class, request.getKioskId()) : null;
         User user = (request.getUserId() != null) ? em.getReference(User.class, request.getUserId()) : null;
 
-        // DB가 orderNumber를 자동으로 처리하도록 orderNumber 설정 제거
+        // 데이터베이스에서 가장 높은 주문 번호를 가져와서 1을 더함 (없으면 1부터 시작)
+        int maxOrderNumber = orderRepository.findMaxOrderNumber();
+        int nextOrderNumber = maxOrderNumber + 1;
+
         Order order = Order.builder()
                 .store(store)
                 .kiosk(kiosk)
                 .user(user)
+                .orderNumber(nextOrderNumber)
                 .orderType(OrderType.valueOf(request.getOrderType()))
-                .dryIceMins(request.getDryIceMins())
+                .dryIceCount(request.getDryIceCount())
                 .orderStatus(OrderStatus.WAITING)
                 .totalPrice(basket.getTotalPrice())
                 .build();

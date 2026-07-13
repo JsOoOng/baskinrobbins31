@@ -21,4 +21,6 @@ public class ProductDetailResponse {
     
     // 선택 가능한 맛 목록 (지점 품절 여부 반영)
     private List<FlavorResponse> availableFlavors; 
+
+    private List<ProductOptionDto> options;
 }

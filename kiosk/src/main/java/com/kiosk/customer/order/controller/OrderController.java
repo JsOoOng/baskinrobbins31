@@ -10,10 +10,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kiosk.customer.order.dto.OrderCreateRequest;
 import com.kiosk.customer.order.dto.OrderResponse;
 import com.kiosk.customer.order.repository.OrderMapper;
 import com.kiosk.customer.order.service.OrderService;
-
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -23,6 +24,19 @@ public class OrderController {
 	
 	private final OrderService orderService;
 	private final OrderMapper orderMapper;
+
+    // 0. 결제 버튼 클릭 시 장바구니 데이터를 실제 주문 DB에 저장
+    @PostMapping
+    public ResponseEntity<Integer> createOrder(@RequestBody OrderCreateRequest request, HttpSession session) {
+        // 프론트엔드에서 넘어오지 않은 값이 있다면 기본값 세팅
+        if (request.getKioskId() == null) request.setKioskId(1);
+        if (request.getStoreId() == null) request.setStoreId(1);
+        if (request.getDryIceCount() == null) request.setDryIceCount(0);
+        if (request.getOrderType() == null) request.setOrderType("TOGO");
+        
+        int orderId = orderService.createOrder(request, session);
+        return ResponseEntity.ok(orderId);
+    }
     
 	// 1. 주문 내역 및 총금액 조회
     @GetMapping("/{orderId}")

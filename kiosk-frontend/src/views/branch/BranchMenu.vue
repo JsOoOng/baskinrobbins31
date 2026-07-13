@@ -1,206 +1,28 @@
-<template>
-
-<div class="menu-page">
-
-
-    <button @click="goBack">
-        ← 메인으로 돌아가기
-    </button>
-
-
-    <h2>상품 품절 관리</h2>
-
-
-    <table>
-
-        <thead>
-
-            <tr>
-                <th>상품명</th>
-                <th>상태</th>
-                <th>변경</th>
-            </tr>
-
-        </thead>
-
-
-        <tbody>
-
-            <tr
-                v-for="menu in menus"
-                :key="menu.storeProductId"
-            >
-
-                <td>
-                    {{ menu.productName }}
-                </td>
-
-
-                <td>
-
-                    <span v-if="menu.soldOut">
-                        품절
-                    </span>
-
-                    <span v-else>
-                        판매중
-                    </span>
-
-                </td>
-
-
-                <td>
-
-                    <button
-                        @click="changeProductSoldOut(menu)"
-                    >
-
-                        {{
-                            menu.soldOut
-                            ? '판매 재개'
-                            : '품절 처리'
-                        }}
-
-                    </button>
-
-                </td>
-
-
-            </tr>
-
-
-        </tbody>
-
-
-    </table>
-
-
-
-    <hr>
-
-
-
-    <h2>맛 품절 관리</h2>
-
-
-
-    <table>
-
-        <thead>
-
-            <tr>
-
-                <th>맛</th>
-
-                <th>상태</th>
-
-                <th>변경</th>
-
-            </tr>
-
-        </thead>
-
-
-
-        <tbody>
-
-
-            <tr
-                v-for="flavor in flavors"
-                :key="flavor.storeFlavorId"
-            >
-
-
-                <td>
-                    {{ flavor.flavorName }}
-                </td>
-
-
-
-                <td>
-
-                    <span v-if="flavor.soldOut">
-                        품절
-                    </span>
-
-
-                    <span v-else>
-                        판매중
-                    </span>
-
-
-                </td>
-
-
-
-                <td>
-
-
-                    <button
-                        @click="changeFlavorSoldOut(flavor)"
-                    >
-
-                        {{
-                            flavor.soldOut
-                            ? '판매 재개'
-                            : '품절 처리'
-                        }}
-
-
-                    </button>
-
-
-                </td>
-
-
-            </tr>
-
-
-        </tbody>
-
-
-    </table>
-
-
-
-</div>
-
-
-</template>
-
-
-
-
 <script setup>
 
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
 import api from '@/api/axios'
+import { useRouter } from 'vue-router'
+
 
 const router = useRouter()
 
-let intervalId = null
 
-const user =
-JSON.parse(
+const user = JSON.parse(
     localStorage.getItem('user')
 )
 
 
-
-// 상품 목록
-const menus = ref([])
-
+// 본사 전체 맛
+const allFlavors = ref([])
 
 
-// 맛 목록
-const flavors = ref([])
+// 우리 지점 등록 맛
+const storeFlavors = ref([])
 
 
 
-
-
-// 메인 이동
+// 뒤로가기
 const goBack = () => {
 
     router.push('/branch/main')
@@ -209,181 +31,26 @@ const goBack = () => {
 
 
 
-
-
-// 상품 조회
-const loadMenus = async()=>{
-
-
-    try{
-
-
-        const response =
-        await api.get(
-            `/branch/status/product/${user.storeId}`
-        )
-
-
-        menus.value =
-        response.data
-
-
-
-    }catch(e){
-
-        console.error(
-            '상품 조회 실패',
-            e
-        )
-
-    }
-
-
-}
-
-
-
-
-
-// 맛 조회
-const loadFlavors = async()=>{
-
-
-    try{
-
-
-        const response =
-        await api.get(
-            `/branch/status/flavor/${user.storeId}`
-        )
-
-
-        flavors.value =
-        response.data
-
-
-
-    }catch(e){
-
-
-        console.error(
-            '맛 조회 실패',
-            e
-        )
-
-
-    }
-
-
-}
-
-
-
-
-
-// 상품 품절 변경
-const changeProductSoldOut = async(menu)=>{
-
-
-    try{
-
-
-        await api.patch(
-
-            `/branch/status/product/${menu.storeProductId}`,
-
-            {
-
-                soldOut:
-                !menu.soldOut
-
-            }
-
-        )
-
-
-        await loadMenus()
-
-
-
-    }catch(e){
-
-
-        console.error(e)
-
-
-        alert(
-            '상품 상태 변경 실패'
-        )
-
-
-    }
-
-
-}
-
-
-
-
-
-// 맛 품절 변경
-const changeFlavorSoldOut = async(flavor)=>{
-
-
-    try{
-
-
-        await api.patch(
-
-            `/branch/status/flavor/${flavor.storeFlavorId}`,
-
-            {
-
-                soldOut:
-                !flavor.soldOut
-
-            }
-
-        )
-
-
-
-        await loadFlavors()
-
-
-
-    }catch(e){
-
-
-        console.error(e)
-
-
-        alert(
-            '맛 상태 변경 실패'
-        )
-
-
-    }
-
-
-}
-
-const loadProducts = async () => {
+// 전체 맛 조회
+const loadAllFlavors = async () => {
 
     try {
-        
 
         const response =
             await api.get(
-                `/branch/status/product/${user.storeId}`
+                '/branch/status/all-flavors'
             )
 
-        menus.value = response.data
+
+        allFlavors.value = response.data
 
 
     } catch(e){
 
-        console.error(e)
+        console.error(
+            '전체 맛 조회 실패',
+            e
+        )
 
     }
 
@@ -391,38 +58,254 @@ const loadProducts = async () => {
 
 
 
-onMounted(()=>{
+// 지점 등록 맛 조회
+const loadStoreFlavors = async () => {
+
+    try {
+
+        const response =
+            await api.get(
+                `/branch/status/flavor/${user.storeId}`
+            )
 
 
-    loadMenus()
+        storeFlavors.value = response.data
 
-    loadFlavors()
 
-    intervalId = setInterval(() => {
+    } catch(e){
 
-        loadProducts()
+        console.error(
+            '지점 맛 조회 실패',
+            e
+        )
 
-    }, 5000)
+    }
+
+}
+
+
+
+// 현재 지점 사용 여부 확인
+const isActive = (flavorId) => {
+
+
+    return storeFlavors.value.some(
+        item =>
+        item.flavorId === flavorId
+    )
+
+
+}
+
+
+
+// 맛 활성화 / 비활성화 변경
+const toggleFlavor = async (flavor) => {
+
+
+    const target =
+        storeFlavors.value.find(
+            item =>
+            item.flavorId === flavor.flavorId
+        )
+
+
+    try {
+
+
+        // 현재 미사용 -> 추가
+        if(!target){
+
+
+            await api.post(
+                `/branch/status/flavor/${user.storeId}`,
+                {
+                    flavorId: flavor.flavorId
+                }
+            )
+
+
+        }
+
+
+        // 현재 사용중 -> 삭제
+        else{
+
+
+            await api.delete(
+                `/branch/status/flavor/${target.storeFlavorId}`
+            )
+
+
+        }
+
+
+
+        // 변경 후 다시 조회
+        await loadStoreFlavors()
+
+
+
+    } catch(e){
+
+
+        console.error(
+            '맛 상태 변경 실패',
+            e
+        )
+
+
+    }
+
+}
+
+
+
+
+onMounted(async()=>{
+
+
+    await loadAllFlavors()
+
+    await loadStoreFlavors()
+
 
 })
 
-onUnmounted(() => {
-
-    clearInterval(intervalId)
-
-})
 
 </script>
 
+
+
+<template>
+
+<div class="menu-page">
+
+
+    <button 
+        class="back-button"
+        @click="goBack"
+    >
+        ← 메인으로 돌아가기
+    </button>
+
+
+
+    <div class="menu-box">
+
+
+        <h2>
+            메뉴 관리
+        </h2>
+
+
+
+        <table>
+
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        맛 번호
+                    </th>
+
+
+                    <th>
+                        맛 이름
+                    </th>
+
+
+                    <th>
+                        사용 여부
+                    </th>
+
+
+                </tr>
+
+            </thead>
+
+
+
+            <tbody>
+
+
+                <tr
+                    v-for="flavor in allFlavors"
+                    :key="flavor.flavorId"
+                >
+
+
+                    <td>
+                        {{ flavor.flavorId }}
+                    </td>
+
+
+                    <td class="flavor-name">
+                        {{ flavor.flavorName }}
+                    </td>
+
+
+                    <td>
+
+
+                        <button
+                            class="toggle"
+                            :class="
+                            isActive(flavor.flavorId)
+                            ?
+                            'on'
+                            :
+                            'off'
+                            "
+                            @click="toggleFlavor(flavor)"
+                        >
+
+                            {{
+                                isActive(flavor.flavorId)
+                                ?
+                                'ON'
+                                :
+                                'OFF'
+                            }}
+
+                        </button>
+
+
+                    </td>
+
+
+                </tr>
+
+
+            </tbody>
+
+
+        </table>
+
+
+    </div>
+
+
+</div>
+
+
+</template>
+
 <style scoped>
+
+/* 메뉴 페이지 */
 
 .menu-page {
 
+    min-height:100vh;
+
     padding:30px;
 
-    background:#f8f9fa;
+    box-sizing:border-box;
 
-    min-height:100vh;
+    background:#f8f9fa;
 
 }
 
@@ -446,11 +329,14 @@ onUnmounted(() => {
 
     font-size:14px;
 
+    font-weight:bold;
+
     cursor:pointer;
 
     transition:0.2s;
 
 }
+
 
 
 .menu-page > button:hover {
@@ -462,6 +348,8 @@ onUnmounted(() => {
 
 
 
+
+/* 제목 */
 
 h2 {
 
@@ -475,7 +363,7 @@ h2 {
 
 
 
-/* 테이블 영역 */
+/* 메뉴 테이블 */
 
 table {
 
@@ -493,11 +381,15 @@ table {
 
     box-shadow:0 4px 12px rgba(0,0,0,0.08);
 
+    margin-bottom:30px;
+
 }
 
 
 
 
+
+/* 테이블 헤더 */
 
 thead {
 
@@ -569,69 +461,37 @@ tbody tr:last-child td {
 
 
 
-/* 상태 표시 */
+/* 맛 이름 왼쪽 정렬 */
 
-.status {
+.flavor-name {
 
-    display:inline-block;
+    text-align:left;
 
-    min-width:80px;
+    padding-left:30px;
 
-    padding:6px 15px;
+    font-weight:500;
+
+}
+
+
+
+
+
+/* ON/OFF 버튼 */
+
+.toggle {
+
+    width:80px;
+
+    padding:8px 15px;
+
+    border:none;
 
     border-radius:20px;
 
     font-size:13px;
 
     font-weight:bold;
-
-}
-
-
-
-
-
-/* 판매중 */
-
-.sold-on {
-
-    background:#d1e7dd;
-
-    color:#0f5132;
-
-}
-
-
-
-
-
-/* 품절 */
-
-.sold-out {
-
-    background:#f8d7da;
-
-    color:#842029;
-
-}
-
-
-
-
-
-/* 변경 버튼 */
-
-td button {
-
-    padding:8px 15px;
-
-    border:none;
-
-    border-radius:8px;
-
-    background:#222;
-
-    color:white;
 
     cursor:pointer;
 
@@ -643,9 +503,9 @@ td button {
 
 
 
-td button:hover {
+.toggle:hover {
 
-    background:#555;
+    transform:translateY(-2px);
 
 }
 
@@ -653,15 +513,45 @@ td button:hover {
 
 
 
-/* 상품/맛 구분 */
+/* 사용중 */
 
-hr {
+.on {
 
-    margin:40px 0;
+    background:#d1e7dd;
 
-    border:none;
+    color:#0f5132;
 
-    border-top:1px solid #ddd;
+}
+
+
+
+
+
+/* 미사용 */
+
+.off {
+
+    background:#f8d7da;
+
+    color:#842029;
+
+}
+
+
+
+
+
+/* 검색 input */
+
+input {
+
+    padding:10px 14px;
+
+    border-radius:8px;
+
+    border:1px solid #ccc;
+
+    font-size:14px;
 
 }
 
@@ -688,12 +578,12 @@ hr {
     }
 
 
-    th,td{
+    th,
+    td{
 
         padding:10px;
 
     }
-
 
 }
 

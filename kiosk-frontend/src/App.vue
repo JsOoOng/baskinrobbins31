@@ -1,73 +1,47 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView } from 'vue-router';
+import Header from '@/components/common/Header.vue';
+
+// App.vue는 가장 큰 껍데기이므로 특별한 로직 없이 비워둡니다.
 </script>
 
 <template>
-
-  <router-view />
-
+  <div class="app-container">
+    <main class="main-content">
+      <router-view />
+    </main>
+  </div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
+<style>
+/* 폰트, 배경색 등 프로젝트 전체에 적용될 공통 CSS만 여기에 작성합니다 */
+/* 기본 초기화 */
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
   width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
+  min-height: 100%;
+  font-family: 'Pretendard', sans-serif;
+  background-color: #f4f4f4; /* 키오스크 기본 배경색 예시 */
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
+/* 전체 레이아웃 */
+.app-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+/* router-view 영역 */
+.main-content {
+  width: 100%;
+  max-width: 1400px;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
 }
 </style>

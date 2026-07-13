@@ -15,9 +15,24 @@ public class BasketService {
 
     // 1. 장바구니에 상품 추가
     public void addItem(HttpSession session, BasketAddRequest request) {
+        // 1. 세션에서 리스트를 꺼내되, 만약 없으면 새 리스트(ArrayList)를 생성해서 가져옴
         List<BasketAddRequest> basket = getBasketFromSession(session);
-        // TODO: 이미 있는 상품인지 체크하고 수량만 늘리는 로직 추가 가능
+        if (basket == null) {
+            basket = new ArrayList<>();
+        }
+
+        // 2. 단가(unitPrice)가 null인지 체크해서 0으로 보정 (에러 방지)
+        if (request.getUnitPrice() == null) {
+            request.setUnitPrice(0); 
+        }
+        if (request.getQuantity() == null) {
+            request.setQuantity(1);
+        }
+
+        // 3. 상품 추가
         basket.add(request);
+
+        // 4. 세션에 다시 저장
         session.setAttribute(BASKET_SESSION_KEY, basket);
     }
 
@@ -36,7 +51,27 @@ public class BasketService {
                 .build();
     }
 
-    // 3. 장바구니 초기화 (결제 완료 후 또는 전체 삭제 시)
+    // 3. 장바구니 특정 상품 삭제
+    public void removeItem(HttpSession session, int index) {
+        List<BasketAddRequest> basket = getBasketFromSession(session);
+        if (index >= 0 && index < basket.size()) {
+            basket.remove(index);
+            session.setAttribute(BASKET_SESSION_KEY, basket);
+        }
+    }
+
+    // 4. 장바구니 특정 상품 수량 변경
+    public void updateItemQuantity(HttpSession session, int index, int quantity) {
+        List<BasketAddRequest> basket = getBasketFromSession(session);
+        if (index >= 0 && index < basket.size()) {
+            if (quantity >= 1) {
+                basket.get(index).setQuantity(quantity);
+                session.setAttribute(BASKET_SESSION_KEY, basket);
+            }
+        }
+    }
+
+    // 5. 장바구니 초기화 (결제 완료 후 또는 전체 삭제 시)
     public void clearBasket(HttpSession session) {
         session.removeAttribute(BASKET_SESSION_KEY);
     }
@@ -50,4 +85,7 @@ public class BasketService {
         }
         return basket;
     }
+    
+
+
 }
