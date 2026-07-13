@@ -57,4 +57,11 @@ public class OrderItem {
     	@Builder.Default
     	private List<OrderItemFlavor> orderItemFlavors = new ArrayList<>();
     
+    @OneToMany(
+            mappedBy = "orderItem",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL
+    )
+    @Builder.Default
+    private List<OrderItemOption> orderItemOptions = new ArrayList<>();
 }

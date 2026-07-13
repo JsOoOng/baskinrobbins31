@@ -51,6 +51,11 @@ public class BranchOrderService {
             .orElseThrow(
                 () -> new RuntimeException("주문 없음")
             );
+        
+        order.getOrderItems().forEach(item -> {
+            item.getOrderItemFlavors().size();
+            item.getOrderItemOptions().size();
+        });
 
 
         List<BranchOrderDetailResponse.ItemResponse> items =
@@ -58,6 +63,19 @@ public class BranchOrderService {
         	    .stream()
         	    .map(item -> {
 
+        	    	List<BranchOrderDetailResponse.OptionResponse> options =
+        	    		    item.getOrderItemOptions()
+        	    		        .stream()
+        	    		        .map(option ->
+        	    		            BranchOrderDetailResponse.OptionResponse.builder()
+        	    		                .optionType(option.getOption().getOptionType().name())
+        	    		                .optionName(option.getOption().getOptionName())
+        	    		                .extraPrice(option.getOption().getExtraPrice())
+        	    		                .build()
+        	    		        )
+        	    		        .toList();
+        	    	
+        	    	
         	        List<BranchOrderDetailResponse.FlavorResponse> flavors =
         	            item.getOrderItemFlavors()
         	                .stream()
@@ -73,6 +91,7 @@ public class BranchOrderService {
         	                .productName(item.getProduct().getProductName())
         	                .quantity(item.getQuantity())
         	                .unitPrice(item.getUnitPrice())
+        	                .options(options)
         	                .flavors(flavors)
         	                .build();
         	    })

@@ -32,7 +32,20 @@ public class BranchOrderDetailResponse {
 
         private Integer unitPrice;
 
+        private List<OptionResponse> options;
+
         private List<FlavorResponse> flavors;
+    }
+    
+    @Getter
+    @Builder
+    public static class OptionResponse {
+
+        private String optionType;
+
+        private String optionName;
+
+        private Integer extraPrice;
     }
 
     @Getter
