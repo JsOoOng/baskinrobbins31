@@ -14,6 +14,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -56,7 +57,11 @@ public class HeadquarterAdmin {
     private AdminStatus status = AdminStatus.ACTIVE;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(
+            name = "created_at",
+            nullable = false,
+            updatable = false
+    )
     private LocalDateTime createdAt;
 
     public boolean isActiveAdmin() {
@@ -77,5 +82,34 @@ public class HeadquarterAdmin {
 
     public void changePassword(String encodedPassword) {
         this.password = encodedPassword;
+    }
+    
+    /*
+     * 관리자 기본 정보 수정
+     *
+     * 로그인 ID는 변경하지 않습니다.
+     */
+    public void updateAdmin(
+            String name,
+            String department,
+            AdminRole role
+    ) {
+        this.name = name;
+        this.department = department;
+        this.role = role;
+    }
+
+    @PrePersist
+    private void prePersist() {
+
+        if (this.createdAt == null) {
+            this.createdAt =
+                    LocalDateTime.now();
+        }
+
+        if (this.status == null) {
+            this.status =
+                    AdminStatus.ACTIVE;
+        }
     }
 }
