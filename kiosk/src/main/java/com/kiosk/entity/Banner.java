@@ -1,7 +1,17 @@
 package com.kiosk.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "BANNERS")
@@ -12,27 +22,52 @@ import lombok.*;
 public class Banner {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(
+            strategy = GenerationType.IDENTITY
+    )
     @Column(name = "banner_id")
     private Integer id;
 
-    @Column(name = "title", length = 100)
+    @Column(
+            name = "title",
+            length = 100
+    )
     private String title;
 
-    @Column(name = "image_url", length = 255, nullable = false)
+    @Column(
+            name = "image_url",
+            length = 255,
+            nullable = false
+    )
     private String imageUrl;
 
-    @Column(name = "is_active")
     @Builder.Default
+    @Column(
+            name = "is_active",
+            nullable = false
+    )
     private Boolean isActive = true;
 
-    public void updateBanner(String title, String imageUrl, Boolean isActive) {
+    /*
+     * 배너 기본 정보 수정
+     */
+    public void updateBanner(
+            String title,
+            String imageUrl,
+            Boolean isActive
+    ) {
         this.title = title;
         this.imageUrl = imageUrl;
         this.isActive = isActive;
     }
 
-    public void deactivate() {
-        this.isActive = false;
+    /*
+     * 배너 노출 상태 변경
+     */
+    public void changeActive(
+            Boolean isActive
+    ) {
+        this.isActive =
+                Boolean.TRUE.equals(isActive);
     }
 }
