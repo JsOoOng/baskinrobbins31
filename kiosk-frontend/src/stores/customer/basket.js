@@ -1,14 +1,13 @@
 // src/stores/customer/basket.js
 import { defineStore } from 'pinia';
-import axios from 'axios'; // 전역 설정된 axios 인스턴스를 가져오는 것이 좋음
-
-// 💡 세션(쿠키) 유지를 위한 필수 설정! (전역 설정 파일에 있다면 생략 가능)
-axios.defaults.withCredentials = true; 
+import axios from '@/api/axios'; // 방금 만든 axios 가져오기
 
 export const useBasketStore = defineStore('basket', {
+  // 1. 상태 (State): 장바구니 데이터 배열 및 주문 유형
   state: () => ({
-    items: [], 
-    totalPrice: 0,
+    cartItems: [],
+    orderType: 'TOGO',
+    dryIceCount: 0
   }),
 
   getters: {
@@ -20,25 +19,74 @@ export const useBasketStore = defineStore('basket', {
   },
 
   actions: {
-    // 1. 장바구니 조회 (GET)
+    setOrderType(type) {
+      this.orderType = type;
+    },
+    setDryIceCount(count) {
+      this.dryIceCount = count;
+    },
+
+    // 🔄 서버로부터 장바구니 데이터를 동기화
     async fetchBasket() {
       try {
-        const res = await axios.get('http://localhost:8888/api/customer/basket');
-        this.items = res.data.items || [];
-        this.totalPrice = res.data.totalPrice || 0;
+        const res = await axios.get('/api/customer/basket');
+        if (res.data && res.data.items) {
+          this.cartItems = res.data.items;
+        } else {
+          this.cartItems = [];
+        }
+      } catch (error) {
+        console.error('서버 장바구니 조회 실패:', error);
+      }
+    },
+
+    // ➕ 장바구니에 아이템 추가
+    async addToCart(product) {
+      // 프론트엔드 메모리(Pinia)에 먼저 추가
+      this.cartItems.push({
+        productId: product.productId,
+        quantity: product.quantity || 1,
+        unitPrice: product.unitPrice,
+        flavors: product.flavors || [], // [{ flavorId: 1, quantity: 1 }] 모양
+        options: product.options || [],  // [101, 201] 모양 (옵션 ID 숫자 배열)
+        extraSpoons: product.extraSpoons || false
+      });
+
+      // 백엔드 세션 서버에 장바구니 저장 요청
+      try {
+        await axios.post('/api/customer/basket', {
+          productId: product.productId,
+          productName: product.productName,
+          quantity: product.quantity || 1,
+          unitPrice: product.unitPrice,
+          flavors: product.flavors || [],
+          options: product.options || [],
+          extraSpoons: product.extraSpoons || false
+        });
+        console.log('서버 장바구니 동기화 완료');
       } catch (error) {
         console.error('장바구니 조회 실패:', error);
       }
     },
 
-    // 2. 장바구니 전체 비우기 (DELETE) - 헤더 X 버튼용
-    async clearBasket() {
+    // ❌ 장바구니 특정 인덱스 아이템 삭제
+    async removeFromCart(index) {
+      this.cartItems.splice(index, 1);
       try {
-        await axios.delete('http://localhost:8888/api/customer/basket');
-        this.items = [];
-        this.totalPrice = 0;
+        await axios.delete(`/api/customer/basket/${index}`);
       } catch (error) {
-        console.error('장바구니 비우기 실패:', error);
+        console.error('서버 장바구니 삭제 실패:', error);
+      }
+    },
+
+    // 🔄 장바구니 특정 아이템 수량 변경
+    async updateQuantity(index, quantity) {
+      if (quantity < 1) return;
+      this.cartItems[index].quantity = quantity;
+      try {
+        await axios.put(`/api/customer/basket/${index}?quantity=${quantity}`);
+      } catch (error) {
+        console.error('서버 장바구니 수량 변경 실패:', error);
       }
     },
 

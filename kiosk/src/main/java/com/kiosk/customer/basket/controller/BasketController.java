@@ -32,6 +32,20 @@ public class BasketController {
         return ResponseEntity.ok("장바구니에 담겼습니다.\n"); // \n을 붙이면 CMD에서 잘 보입니다.
     }
 
+    // 장바구니 특정 상품 삭제 API
+    @DeleteMapping("/{index}")
+    public ResponseEntity<String> removeItem(@PathVariable int index, HttpSession session) {
+        basketService.removeItem(session, index);
+        return ResponseEntity.ok("상품이 장바구니에서 삭제되었습니다.");
+    }
+
+    // 장바구니 특정 상품 수량 변경 API
+    @PutMapping("/{index}")
+    public ResponseEntity<String> updateItemQuantity(@PathVariable int index, @RequestParam int quantity, HttpSession session) {
+        basketService.updateItemQuantity(session, index, quantity);
+        return ResponseEntity.ok("상품 수량이 변경되었습니다.");
+    }
+
     // 장바구니 전체 비우기 API
     @DeleteMapping
     public ResponseEntity<String> clearBasket(HttpSession session) {

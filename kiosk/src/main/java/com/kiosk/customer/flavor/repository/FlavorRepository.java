@@ -14,13 +14,11 @@ public interface FlavorRepository extends JpaRepository<IcecreamFlavor, Integer>
 
     // 특정 지점에서 판매 가능한 맛 조회
     @Query("""
-        SELECT f
-        FROM IcecreamFlavor f
-        JOIN StoreFlavor sf
-            ON f.id = sf.flavor.id
+        SELECT sf.flavor
+        FROM StoreFlavor sf
         WHERE sf.store.id = :storeId
           AND sf.isSoldOut = false
-          AND f.isActive = true
+          AND sf.flavor.isActive = true
     """)
     List<IcecreamFlavor> findAvailableFlavorsByStoreId(
             @Param("storeId") Long storeId

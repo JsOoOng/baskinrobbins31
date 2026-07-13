@@ -1,8 +1,5 @@
 package com.kiosk.customer.order.service;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,22 +64,17 @@ public class OrderService {
         Kiosk kiosk = (request.getKioskId() != null) ? em.getReference(Kiosk.class, request.getKioskId()) : null;
         User user = (request.getUserId() != null) ? em.getReference(User.class, request.getUserId()) : null;
 
-        // 🌟 [추가된 부분] 당일 주문번호(영수증 번호) 생성 로직
-        LocalDateTime startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime endOfDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
-        
-        // DB에서 오늘 해당 지점의 주문 개수를 가져와서 + 1
-        int todayOrderCount = orderRepository.countTodayOrders(request.getStoreId(), startOfDay, endOfDay);
-        int nextOrderNumber = todayOrderCount + 1;
-        
-        // 3. 주문(Order) 마스터 생성 및 저장
+        // 데이터베이스에서 가장 높은 주문 번호를 가져와서 1을 더함 (없으면 1부터 시작)
+        int maxOrderNumber = orderRepository.findMaxOrderNumber();
+        int nextOrderNumber = maxOrderNumber + 1;
+
         Order order = Order.builder()
                 .store(store)
                 .kiosk(kiosk)
                 .user(user)
-                .orderNumber(nextOrderNumber) // TODO: 당일 영수증 번호 생성 로직 필요
+                .orderNumber(nextOrderNumber)
                 .orderType(OrderType.valueOf(request.getOrderType()))
-                .dryIceMins(request.getDryIceMins())
+                .dryIceCount(request.getDryIceCount())
                 .orderStatus(OrderStatus.WAITING)
                 .totalPrice(basket.getTotalPrice())
                 .build();
