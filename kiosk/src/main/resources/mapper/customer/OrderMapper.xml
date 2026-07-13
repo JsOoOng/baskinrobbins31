@@ -58,14 +58,20 @@
         order_id, 
         payment_method, 
         base_amount, 
+        coupon_discount,
+        point_used,
         final_amount, 
-        payment_status
+        payment_status,
+        payment_date
     ) VALUES (
         #{orderId}, 
         #{paymentMethod}, 
         #{baseAmount}, 
+        #{couponDiscount},
+        #{pointUsed},
         #{finalAmount}, 
-        #{paymentStatus}
+        #{paymentStatus},
+        #{paymentDate}
     )
 </insert>
     

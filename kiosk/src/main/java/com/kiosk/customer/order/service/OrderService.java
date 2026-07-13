@@ -144,8 +144,11 @@ public class OrderService {
         payment.setOrderId(orderId);
         payment.setPaymentMethod(paymentMethod); // 그대로 사용
         payment.setBaseAmount(orderRes.getTotalPrice());
+        payment.setCouponDiscount(0);
+        payment.setPointUsed(0);
         payment.setFinalAmount(orderRes.getTotalPrice());
         payment.setPaymentStatus("PAID"); // 명시적으로 설정
+        payment.setPaymentDate(java.time.LocalDateTime.now());
 
         orderMapper.insertPayment(payment);
 
