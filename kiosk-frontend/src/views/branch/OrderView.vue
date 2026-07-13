@@ -248,11 +248,34 @@ const getStatusText = (status) => {
 
                 <h3>{{ item.productName }}</h3>
 
-                <p>수량 : {{ item.quantity }}</p>
+                <b class="option-title">옵션</b>
 
-                <p>가격 : {{ item.unitPrice.toLocaleString() }}원</p>
+                <ul class="option-list">
 
-                <b>맛</b>
+                    <li
+                        v-for="option in item.options"
+                        :key="option.optionType + option.optionName"
+                    >
+
+                        <span class="option-type">
+                            {{ option.optionType }}
+                        </span>
+
+                        <span class="option-name">
+                            {{ option.optionName }}
+                        </span>
+
+                        <span class="option-price">
+                            +{{ option.extraPrice.toLocaleString() }}원
+                        </span>
+
+                    </li>
+
+                </ul>
+
+                <p>
+                    <strong>맛</strong>
+                </p>
 
                 <ul>
 
@@ -556,7 +579,47 @@ tbody tr:last-child td{
 
 }
 
+/* 옵션 */
 
+.option-title{
+    margin-top:12px;
+    margin-bottom:8px;
+    font-size:15px;
+    font-weight:bold;
+    color:#333;
+}
+
+.option-list{
+    list-style:none;
+    padding:0;
+    margin:0 0 15px 0;
+}
+
+.option-list li{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 12px;
+    margin-bottom:8px;
+    background:#f8f9fa;
+    border-radius:8px;
+    font-size:14px;
+}
+
+.option-type{
+    font-weight:bold;
+    color:#666;
+}
+
+.option-name{
+    flex:1;
+    margin-left:12px;
+}
+
+.option-price{
+    color:#ff6b00;
+    font-weight:bold;
+}
 
 
 hr{
