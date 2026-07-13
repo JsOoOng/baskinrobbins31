@@ -39,10 +39,17 @@ public class OrderController {
     @PostMapping("/{orderId}/pay")
     public ResponseEntity<String> completePayment(
             @PathVariable int orderId, 
-            @RequestBody Map<String, String> request) { // Map으로 변경
+            @RequestBody Map<String, Object> request) { // Object로 받아야 숫자/불리언 처리가 편함
+
+        // 1. 요청 데이터에서 값 추출
+        String paymentMethod = (String) request.get("paymentMethod");
         
-        String paymentMethod = request.get("paymentMethod"); // 키 값으로 추출
-        orderService.processPayment(orderId, paymentMethod);
+        // 2. 쿠폰 ID와 포인트 사용 여부도 요청에서 추출 (없을 경우 기본값 0, false)
+        int userCouponId = request.containsKey("userCouponId") ? (int) request.get("userCouponId") : 0;
+        boolean usePoints = request.containsKey("usePoints") && (boolean) request.get("usePoints");
+
+        // 3. 서비스로 전달
+        orderService.processPayment(orderId, paymentMethod, userCouponId, usePoints);
         
         return ResponseEntity.ok("결제 및 재고 차감 완료");
     }

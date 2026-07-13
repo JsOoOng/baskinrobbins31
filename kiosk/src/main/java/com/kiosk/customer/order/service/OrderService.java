@@ -1,7 +1,6 @@
 package com.kiosk.customer.order.service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +17,9 @@ import com.kiosk.customer.order.repository.OrderItemMapper;
 import com.kiosk.customer.order.repository.OrderItemOptionMapper;
 import com.kiosk.customer.order.repository.OrderMapper;
 import com.kiosk.customer.order.repository.OrderRepository;
+import com.kiosk.customer.order.repository.UserCouponRepository;
+import com.kiosk.customer.order.repository.UserRepository;
+import com.kiosk.entity.Coupon;
 import com.kiosk.entity.IcecreamFlavor;
 import com.kiosk.entity.Kiosk;
 import com.kiosk.entity.Order;
@@ -28,6 +30,7 @@ import com.kiosk.entity.Product;
 import com.kiosk.entity.ProductOption;
 import com.kiosk.entity.Store;
 import com.kiosk.entity.User;
+import com.kiosk.entity.UserCoupon;
 import com.kiosk.entity.enums.OrderStatus;
 import com.kiosk.entity.enums.OrderType;
 
@@ -47,6 +50,9 @@ public class OrderService {
     private final OrderItemFlavorMapper orderItemFlavorRepository;
     private final OrderItemOptionMapper orderItemOptionRepository;
     private final OrderRepository orderRepository;
+    
+    private final UserCouponRepository userCouponRepository;
+    
     
     // 주문 상세 조회
     public OrderResponse getOrderDetails(int orderId) {
@@ -132,32 +138,77 @@ public class OrderService {
      * 결제 처리 및 재고 차감 (통합 로직)
      */
     @Transactional
-    public void processPayment(int orderId, String paymentMethod) {
-        // 1. 주문 조회
-        OrderResponse orderRes = orderMapper.selectOrderWithDetails(orderId);
-        if (orderRes == null) throw new RuntimeException("주문을 찾을 수 없습니다.");
+    public void processPayment(int orderId, String paymentMethod, int userCouponId, boolean usePoints) {
+    	
+    	// 1. 주문 조회
+    	Order order = orderRepository.findById(orderId)
+    	        .orElseThrow(() -> new RuntimeException("주문을 찾을 수 없습니다."));
 
-        // 2. 재고 차감 로직
-        for (OrderItemDTO item : orderRes.getOrderItems()) {
-            int updatedRows = orderMapper.decreaseProductStock(item.getProductId(), item.getQuantity());
-            if (updatedRows == 0) {
-                throw new RuntimeException("상품 [" + item.getProductName() + "] 재고 부족");
-            }
+    	int finalAmount = order.getTotalPrice();
+
+    	// 2. 쿠폰 계산 (먼저 할인 적용)
+    	if (userCouponId > 0) {
+    	    UserCoupon uc = userCouponRepository.findById(userCouponId)
+    	        .orElseThrow(() -> new RuntimeException("쿠폰 없음"));
+    	    
+    	    int discount = calculateDiscount(finalAmount, uc.getCoupon());
+    	    System.out.println("쿠폰 할인액: " + discount); // <--- 이 로그를 찍어보세요!
+    	    finalAmount -= discount;
+    	    uc.useCoupon(); 
+    	}
+
+    	// 3. 포인트 로직 (쿠폰 할인 후 남은 금액만큼만 사용)
+    	int pointsToUse = 0;
+    	User user = order.getUser(); 
+    	if (user != null && usePoints) {
+    	    // 결제 금액보다 포인트가 많으면 결제 금액만큼만, 적으면 가진 포인트만큼만 사용
+    	    pointsToUse = Math.min(user.getPointBalance(), finalAmount); 
+    	    
+    	    finalAmount -= pointsToUse;
+    	    user.deductPoints(pointsToUse);
+    	}
+
+    	// 4. 포인트 적립 (0보다 클 때만)
+    	if (user != null && finalAmount > 0) {
+    	    user.addPoints((int)(finalAmount * 0.05));
+    	}
+
+        // 4. 재고 차감
+        for (OrderItem item : order.getOrderItems()) {
+            int updatedRows = orderMapper.decreaseProductStock(item.getProduct().getId(), item.getQuantity());
+            if (updatedRows == 0) throw new RuntimeException("재고 부족: " + item.getProduct().getProductName());
         }
 
-        // 3. 결제 내역 저장
+        // 5. 결제 정보 저장 (Payments 테이블에 INSERT)
         Payment payment = new Payment();
         payment.setOrderId(orderId);
-        payment.setPaymentMethod(paymentMethod); // 그대로 사용
-        payment.setBaseAmount(orderRes.getTotalPrice());
-        payment.setFinalAmount(orderRes.getTotalPrice());
-        payment.setPaymentStatus("PAID"); // 명시적으로 설정
-
+        payment.setBaseAmount(order.getTotalPrice());
+        payment.setFinalAmount(finalAmount);
+        payment.setPointUsed(usePoints ? pointsToUse : 0);
+        payment.setPaymentMethod(paymentMethod);
+        payment.setPaymentStatus("PAID");
         orderMapper.insertPayment(payment);
-
-        // 4. 주문 상태 업데이트
+        
+        // 6. 주문 상태 업데이트 (ORDERS 테이블에는 상태만 변경!)
+        // 기존의 updatePaymentStatus 대신 상태만 변경하는 메서드 사용
         orderMapper.updateOrderStatus(orderId, "COMPLETED");
     }
+    
+    // 결제 방법
+    private int calculateDiscount(int originalPrice, Coupon coupon) {
+        String discountType = coupon.getDiscountType(); 
+        int discountValue = coupon.getDiscountValue();  
+
+        if ("PERCENT".equals(discountType)) {
+            return (int) (originalPrice * (discountValue / 100.0));
+        } else if ("AMOUNT".equals(discountType)) { // AMOUNT만 처리
+            return discountValue;
+        }
+        
+        // 만약 정의되지 않은 타입이 들어올 경우를 대비해 0 반환
+        return 0;
+    }
+    
     
     @Transactional
     public void cancelOrder(int orderId) {

@@ -10,10 +10,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "USERS")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -34,4 +36,14 @@ public class User {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+    
+    // 포인트 더하기
+    public void addPoints(int amount) {
+        this.pointBalance += amount;
+    }
+
+    // 포인트 빼기
+    public void deductPoints(int amount) {
+        this.pointBalance -= amount;
+    }
 }

@@ -28,6 +28,9 @@ public interface OrderMapper {
 	 // 결제 정보 저장
 	 void insertPayment(Payment payment);
 	
+	 void updatePaymentStatus(@Param("orderId") int orderId, 
+             @Param("paymentMethod") String paymentMethod, 
+             @Param("finalAmount") int finalAmount);
 }
 
 
