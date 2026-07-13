@@ -1,165 +1,407 @@
 package com.kiosk.headquarter.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.kiosk.headquarter.dto.statistics.HeadDailySalesResponseDTO;
-import com.kiosk.headquarter.dto.statistics.HeadExpenseSummaryResponseDTO;
-import com.kiosk.headquarter.dto.statistics.HeadProductSalesResponseDTO;
-import com.kiosk.headquarter.dto.statistics.HeadSalesSummaryResponseDTO;
-import com.kiosk.headquarter.dto.statistics.HeadStoreSalesResponseDTO;
+import com.kiosk.headquarter.dto.statistics.HeadProductSalesResponse;
+import com.kiosk.headquarter.dto.statistics.HeadSalesTrendResponse;
+import com.kiosk.headquarter.dto.statistics.HeadStatisticsPeriod;
+import com.kiosk.headquarter.dto.statistics.HeadStatisticsSummaryResponse;
+import com.kiosk.headquarter.dto.statistics.HeadStoreSalesResponse;
+import com.kiosk.headquarter.repository.HeadStatisticsMapper;
+import com.kiosk.headquarter.repository.HeadStatisticsMapper.ProductSalesProjection;
+import com.kiosk.headquarter.repository.HeadStatisticsMapper.StoreSalesProjection;
+import com.kiosk.headquarter.repository.HeadStatisticsMapper.SummaryProjection;
+import com.kiosk.headquarter.repository.HeadStatisticsMapper.TrendProjection;
+import com.kiosk.headquarter.repository.HeadStoreMapper;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class HeadStatisticsService {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final HeadStatisticsMapper
+            headStatisticsMapper;
 
-    // 전체 매출 요약
-    public HeadSalesSummaryResponseDTO getSalesSummary() {
+    private final HeadStoreMapper
+            headStoreMapper;
 
-        String sql = """
-                SELECT
-                    COUNT(DISTINCT o.order_id) AS order_count,
-                    COALESCE(SUM(o.total_price), 0) AS total_order_amount,
-                    COALESCE(SUM(p.final_amount), 0) AS total_paid_amount,
-                    COALESCE(SUM(p.coupon_discount), 0) AS total_coupon_discount,
-                    COALESCE(SUM(p.point_used), 0) AS total_point_used,
-                    COALESCE((SELECT SUM(se.amount) FROM store_expenses se), 0) AS total_expense_amount
-                FROM orders o
-                LEFT JOIN payments p
-                    ON o.order_id = p.order_id
-                    AND p.payment_status = 'PAID'
-                WHERE o.order_status <> 'CANCELED'
-                """;
+    /*
+     * 통계 요약 조회
+     */
+    public HeadStatisticsSummaryResponse getSummary(
+            LocalDate startDate,
+            LocalDate endDate,
+            Integer storeId
+    ) {
 
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
-            long totalPaidAmount = rs.getLong("total_paid_amount");
-            long totalExpenseAmount = rs.getLong("total_expense_amount");
+        DateRange range =
+                createDateRange(
+                        startDate,
+                        endDate
+                );
 
-            return HeadSalesSummaryResponseDTO.builder()
-                    .orderCount(rs.getLong("order_count"))
-                    .totalOrderAmount(rs.getLong("total_order_amount"))
-                    .totalPaidAmount(totalPaidAmount)
-                    .totalCouponDiscount(rs.getLong("total_coupon_discount"))
-                    .totalPointUsed(rs.getLong("total_point_used"))
-                    .totalExpenseAmount(totalExpenseAmount)
-                    .netProfit(totalPaidAmount - totalExpenseAmount)
-                    .build();
-        });
+        validateStore(storeId);
+
+        SummaryProjection projection =
+                headStatisticsMapper.findSummary(
+                        range.startDateTime(),
+                        range.endDateTime(),
+                        storeId
+                );
+
+        long totalSales =
+                toLong(
+                        projection.getTotalSales()
+                );
+
+        long orderCount =
+                toLong(
+                        projection.getOrderCount()
+                );
+
+        long salesQuantity =
+                toLong(
+                        projection.getSalesQuantity()
+                );
+
+        long averageOrderAmount =
+                orderCount == 0
+                        ? 0
+                        : totalSales / orderCount;
+
+        return HeadStatisticsSummaryResponse
+                .builder()
+                .totalSales(totalSales)
+                .orderCount(orderCount)
+                .salesQuantity(salesQuantity)
+                .averageOrderAmount(
+                        averageOrderAmount
+                )
+                .build();
     }
 
-    // 지점별 매출 조회
-    public List<HeadStoreSalesResponseDTO> getStoreSalesList() {
+    /*
+     * 기간별 추이
+     */
+    public List<HeadSalesTrendResponse>
+            getSalesTrend(
+                    LocalDate startDate,
+                    LocalDate endDate,
+                    Integer storeId,
+                    HeadStatisticsPeriod period
+            ) {
 
-        String sql = """
-                SELECT
-                    s.store_id,
-                    s.store_name,
-                    COUNT(DISTINCT o.order_id) AS order_count,
-                    COALESCE(SUM(p.final_amount), 0) AS total_paid_amount
-                FROM stores s
-                LEFT JOIN orders o
-                    ON s.store_id = o.store_id
-                    AND o.order_status <> 'CANCELED'
-                LEFT JOIN payments p
-                    ON o.order_id = p.order_id
-                    AND p.payment_status = 'PAID'
-                GROUP BY s.store_id, s.store_name
-                ORDER BY total_paid_amount DESC
-                """;
+        DateRange range =
+                createDateRange(
+                        startDate,
+                        endDate
+                );
 
-        return jdbcTemplate.query(sql, (rs, rowNum) ->
-                HeadStoreSalesResponseDTO.builder()
-                        .storeId(rs.getInt("store_id"))
-                        .storeName(rs.getString("store_name"))
-                        .orderCount(rs.getLong("order_count"))
-                        .totalPaidAmount(rs.getLong("total_paid_amount"))
-                        .build()
+        validateStore(storeId);
+
+        HeadStatisticsPeriod normalizedPeriod =
+                period != null
+                        ? period
+                        : HeadStatisticsPeriod.DAILY;
+
+        List<TrendProjection> projections =
+                switch (normalizedPeriod) {
+
+                    case DAILY ->
+                            headStatisticsMapper
+                                    .findDailyTrend(
+                                            range.startDateTime(),
+                                            range.endDateTime(),
+                                            storeId
+                                    );
+
+                    case WEEKLY ->
+                            headStatisticsMapper
+                                    .findWeeklyTrend(
+                                            range.startDateTime(),
+                                            range.endDateTime(),
+                                            storeId
+                                    );
+
+                    case MONTHLY ->
+                            headStatisticsMapper
+                                    .findMonthlyTrend(
+                                            range.startDateTime(),
+                                            range.endDateTime(),
+                                            storeId
+                                    );
+
+                    case YEARLY ->
+                            headStatisticsMapper
+                                    .findYearlyTrend(
+                                            range.startDateTime(),
+                                            range.endDateTime(),
+                                            storeId
+                                    );
+                };
+
+        return projections
+                .stream()
+                .map(this::toTrendResponse)
+                .toList();
+    }
+
+    /*
+     * 지점별 매출 순위
+     */
+    public List<HeadStoreSalesResponse>
+            getStoreSalesRanking(
+                    LocalDate startDate,
+                    LocalDate endDate,
+                    Integer storeId,
+                    Integer limit
+            ) {
+
+        DateRange range =
+                createDateRange(
+                        startDate,
+                        endDate
+                );
+
+        validateStore(storeId);
+
+        int normalizedLimit =
+                normalizeLimit(limit);
+
+        List<StoreSalesProjection> projections =
+                headStatisticsMapper
+                        .findStoreSalesRanking(
+                                range.startDateTime(),
+                                range.endDateTime(),
+                                storeId,
+                                PageRequest.of(
+                                        0,
+                                        normalizedLimit
+                                )
+                        );
+
+        return projections
+                .stream()
+                .map(
+                        projection ->
+                                HeadStoreSalesResponse
+                                        .builder()
+                                        .storeId(
+                                                projection
+                                                        .getStoreId()
+                                        )
+                                        .storeName(
+                                                projection
+                                                        .getStoreName()
+                                        )
+                                        .totalSales(
+                                                toLong(
+                                                        projection
+                                                                .getTotalSales()
+                                                )
+                                        )
+                                        .orderCount(
+                                                toLong(
+                                                        projection
+                                                                .getOrderCount()
+                                                )
+                                        )
+                                        .salesQuantity(
+                                                toLong(
+                                                        projection
+                                                                .getSalesQuantity()
+                                                )
+                                        )
+                                        .build()
+                )
+                .toList();
+    }
+
+    /*
+     * 상품별 판매 순위
+     */
+    public List<HeadProductSalesResponse>
+            getProductSalesRanking(
+                    LocalDate startDate,
+                    LocalDate endDate,
+                    Integer storeId,
+                    Integer limit
+            ) {
+
+        DateRange range =
+                createDateRange(
+                        startDate,
+                        endDate
+                );
+
+        validateStore(storeId);
+
+        int normalizedLimit =
+                normalizeLimit(limit);
+
+        List<ProductSalesProjection> projections =
+                headStatisticsMapper
+                        .findProductSalesRanking(
+                                range.startDateTime(),
+                                range.endDateTime(),
+                                storeId,
+                                PageRequest.of(
+                                        0,
+                                        normalizedLimit
+                                )
+                        );
+
+        return projections
+                .stream()
+                .map(
+                        projection ->
+                                HeadProductSalesResponse
+                                        .builder()
+                                        .productId(
+                                                projection
+                                                        .getProductId()
+                                        )
+                                        .productName(
+                                                projection
+                                                        .getProductName()
+                                        )
+                                        .salesAmount(
+                                                toLong(
+                                                        projection
+                                                                .getSalesAmount()
+                                                )
+                                        )
+                                        .salesQuantity(
+                                                toLong(
+                                                        projection
+                                                                .getSalesQuantity()
+                                                )
+                                        )
+                                        .orderCount(
+                                                toLong(
+                                                        projection
+                                                                .getOrderCount()
+                                                )
+                                        )
+                                        .build()
+                )
+                .toList();
+    }
+
+    private HeadSalesTrendResponse toTrendResponse(
+            TrendProjection projection
+    ) {
+
+        return HeadSalesTrendResponse
+                .builder()
+                .periodLabel(
+                        projection.getPeriodLabel()
+                )
+                .totalSales(
+                        toLong(
+                                projection.getTotalSales()
+                        )
+                )
+                .orderCount(
+                        toLong(
+                                projection.getOrderCount()
+                        )
+                )
+                .salesQuantity(
+                        toLong(
+                                projection.getSalesQuantity()
+                        )
+                )
+                .build();
+    }
+
+    /*
+     * 시작일은 00:00 포함
+     * 종료일 다음 날 00:00 미만
+     *
+     * 예:
+     * 7월 1일 ~ 7월 31일
+     * →
+     * 7월 1일 00:00 이상
+     * 8월 1일 00:00 미만
+     */
+    private DateRange createDateRange(
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+
+        if (
+                startDate == null ||
+                endDate == null
+        ) {
+            throw new IllegalArgumentException(
+                    "조회 시작일과 종료일이 필요합니다."
+            );
+        }
+
+        if (endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException(
+                    "종료일은 시작일보다 빠를 수 없습니다."
+            );
+        }
+
+        return new DateRange(
+                startDate.atStartOfDay(),
+                endDate
+                        .plusDays(1)
+                        .atStartOfDay()
         );
     }
 
-    // 상품별 판매량 / 매출 조회
-    public List<HeadProductSalesResponseDTO> getProductSalesList() {
+    private void validateStore(
+            Integer storeId
+    ) {
 
-        String sql = """
-                SELECT
-                    p.product_id,
-                    p.product_name,
-                    COALESCE(SUM(oi.quantity), 0) AS total_quantity,
-                    COALESCE(SUM(oi.quantity * oi.unit_price), 0) AS total_sales_amount
-                FROM products p
-                JOIN order_items oi
-                    ON p.product_id = oi.product_id
-                JOIN orders o
-                    ON oi.order_id = o.order_id
-                WHERE o.order_status <> 'CANCELED'
-                GROUP BY p.product_id, p.product_name
-                ORDER BY total_quantity DESC
-                """;
+        if (storeId == null) {
+            return;
+        }
 
-        return jdbcTemplate.query(sql, (rs, rowNum) ->
-                HeadProductSalesResponseDTO.builder()
-                        .productId(rs.getInt("product_id"))
-                        .productName(rs.getString("product_name"))
-                        .totalQuantity(rs.getLong("total_quantity"))
-                        .totalSalesAmount(rs.getLong("total_sales_amount"))
-                        .build()
+        if (!headStoreMapper.existsById(storeId)) {
+            throw new IllegalArgumentException(
+                    "존재하지 않는 지점입니다."
+            );
+        }
+    }
+
+    private int normalizeLimit(
+            Integer limit
+    ) {
+
+        if (limit == null) {
+            return 10;
+        }
+
+        return Math.max(
+                1,
+                Math.min(limit, 50)
         );
     }
 
-	 // 일자별 매출 조회
-	    public List<HeadDailySalesResponseDTO> getDailySalesList() {
-	
-	        String sql = """
-	                SELECT
-	                    DATE(o.created_at) AS sales_date,
-	                    COUNT(DISTINCT o.order_id) AS order_count,
-	                    COALESCE(SUM(p.final_amount), 0) AS total_paid_amount
-	                FROM orders o
-	                LEFT JOIN payments p
-	                    ON o.order_id = p.order_id
-	                    AND p.payment_status = 'PAID'
-	                WHERE o.order_status <> 'CANCELED'
-	                  AND o.created_at IS NOT NULL
-	                GROUP BY DATE(o.created_at)
-	                ORDER BY sales_date DESC
-	                """;
-	
-	        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-	            java.sql.Date salesDate = rs.getDate("sales_date");
-	
-	            return HeadDailySalesResponseDTO.builder()
-	                    .salesDate(salesDate != null ? salesDate.toLocalDate() : null)
-	                    .orderCount(rs.getLong("order_count"))
-	                    .totalPaidAmount(rs.getLong("total_paid_amount"))
-	                    .build();
-	        });
-	    }
+    private long toLong(
+            Number number
+    ) {
 
-    // 지출 카테고리별 조회
-    public List<HeadExpenseSummaryResponseDTO> getExpenseSummaryList() {
+        return number == null
+                ? 0L
+                : number.longValue();
+    }
 
-        String sql = """
-                SELECT
-                    expense_category,
-                    COUNT(*) AS expense_count,
-                    COALESCE(SUM(amount), 0) AS total_expense_amount
-                FROM store_expenses
-                GROUP BY expense_category
-                ORDER BY total_expense_amount DESC
-                """;
-
-        return jdbcTemplate.query(sql, (rs, rowNum) ->
-                HeadExpenseSummaryResponseDTO.builder()
-                        .expenseCategory(rs.getString("expense_category"))
-                        .expenseCount(rs.getLong("expense_count"))
-                        .totalExpenseAmount(rs.getLong("total_expense_amount"))
-                        .build()
-        );
+    private record DateRange(
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    ) {
     }
 }

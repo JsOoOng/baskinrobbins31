@@ -69,8 +69,7 @@ const employeeForm = reactive({
   loginId: '',
   password: '',
   passwordConfirm: '',
-  name: '',
-  role: 'STORE_ADMIN'
+  name: ''
 })
 
 /*
@@ -549,7 +548,6 @@ const resetEmployeeForm = () => {
   employeeForm.password = ''
   employeeForm.passwordConfirm = ''
   employeeForm.name = ''
-  employeeForm.role = 'STORE_ADMIN'
 }
 
 const openEmployeeModal = (store) => {
@@ -637,10 +635,7 @@ const submitEmployee = async () => {
           employeeForm.password,
 
         name:
-          employeeForm.name.trim(),
-
-        role:
-          'STORE_ADMIN'
+          employeeForm.name.trim()
       }
     )
 
@@ -1188,9 +1183,9 @@ onMounted(() => {
             </label>
 
             <div class="role-box">
-              <span>발급 권한</span>
+              <span>STORE MANAGER ACCOUNT</span>
 
-              <strong>STORE_ADMIN</strong>
+              <strong>MANAGER</strong>
 
               <small>
                 해당 지점의 주문 및 판매 메뉴를 관리하는 계정입니다.

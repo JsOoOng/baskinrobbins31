@@ -34,7 +34,7 @@ public class HeadEmployeeService {
      * 지점 관리자 계정 생성
      */
     @Transactional
-    public HeadEmployeeCreateResponse createStoreAdmin(
+    public HeadEmployeeCreateResponse createStoreManager(
             HeadEmployeeCreateRequest request
     ) {
 
@@ -111,7 +111,7 @@ public class HeadEmployeeService {
                 )
 
                 .name(name)
-                .role(Role.STORE_ADMIN)
+                .role(Role.MANAGER)
                 .status(EmployeeStatus.EMPLOYED)
                 .build();
 

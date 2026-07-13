@@ -6,9 +6,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.entity.Banner;
-import com.kiosk.headquarter.dto.banner.HeadBannerCreateRequestDTO;
-import com.kiosk.headquarter.dto.banner.HeadBannerResponseDTO;
-import com.kiosk.headquarter.dto.banner.HeadBannerUpdateRequestDTO;
+import com.kiosk.headquarter.dto.banner.HeadBannerActiveRequest;
+import com.kiosk.headquarter.dto.banner.HeadBannerCreateRequest;
+import com.kiosk.headquarter.dto.banner.HeadBannerResponse;
+import com.kiosk.headquarter.dto.banner.HeadBannerUpdateRequest;
 import com.kiosk.headquarter.repository.HeadBannerMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -18,101 +19,176 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class HeadBannerService {
 
-    private final HeadBannerMapper headBannerMapper;
+    private final HeadBannerMapper
+            headBannerMapper;
 
-    // 배너 등록
-    @Transactional
-    public HeadBannerResponseDTO createBanner(HeadBannerCreateRequestDTO requestDTO) {
+    /*
+     * 배너 전체 목록
+     */
+    public List<HeadBannerResponse> getBanners() {
 
-        if (requestDTO.getImageUrl() == null || requestDTO.getImageUrl().isBlank()) {
-            throw new IllegalArgumentException("배너 이미지 URL을 입력해주세요.");
-        }
-
-        Banner banner = Banner.builder()
-                .title(requestDTO.getTitle())
-                .imageUrl(requestDTO.getImageUrl())
-                .isActive(
-                        requestDTO.getIsActive() != null
-                                ? requestDTO.getIsActive()
-                                : true
-                )
-                .build();
-
-        Banner savedBanner = headBannerMapper.save(banner);
-
-        return toResponseDTO(savedBanner);
-    }
-
-    // 배너 전체 목록 조회
-    public List<HeadBannerResponseDTO> getBannerList() {
-
-        return headBannerMapper.findAllByOrderByIdDesc()
+        return headBannerMapper
+                .findAllByOrderByIdDesc()
                 .stream()
-                .map(this::toResponseDTO)
+                .map(HeadBannerResponse::from)
                 .toList();
     }
 
-    // 활성 배너 목록 조회
-    public List<HeadBannerResponseDTO> getActiveBannerList() {
+    /*
+     * 배너 상세 조회
+     */
+    public HeadBannerResponse getBanner(
+            Integer bannerId
+    ) {
 
-        return headBannerMapper.findByIsActiveTrueOrderByIdDesc()
-                .stream()
-                .map(this::toResponseDTO)
-                .toList();
+        Banner banner =
+                findBanner(bannerId);
+
+        return HeadBannerResponse.from(
+                banner
+        );
     }
 
-    // 배너 상세 조회
-    public HeadBannerResponseDTO getBannerDetail(Integer bannerId) {
-
-        Banner banner = headBannerMapper.findById(bannerId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 배너입니다."));
-
-        return toResponseDTO(banner);
-    }
-
-    // 배너 수정
+    /*
+     * 배너 등록
+     */
     @Transactional
-    public HeadBannerResponseDTO updateBanner(
+    public HeadBannerResponse createBanner(
+            HeadBannerCreateRequest request
+    ) {
+
+        Boolean isActive =
+                request.getIsActive() != null
+                        ? request.getIsActive()
+                        : true;
+
+        Banner banner =
+                Banner.builder()
+                        .title(
+                                normalizeTitle(
+                                        request.getTitle()
+                                )
+                        )
+                        .imageUrl(
+                                request.getImageUrl()
+                                        .trim()
+                        )
+                        .isActive(isActive)
+                        .build();
+
+        Banner savedBanner =
+                headBannerMapper.save(banner);
+
+        return HeadBannerResponse.from(
+                savedBanner
+        );
+    }
+
+    /*
+     * 배너 수정
+     */
+    @Transactional
+    public HeadBannerResponse updateBanner(
             Integer bannerId,
-            HeadBannerUpdateRequestDTO requestDTO) {
+            HeadBannerUpdateRequest request
+    ) {
 
-        Banner banner = headBannerMapper.findById(bannerId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 배너입니다."));
+        Banner banner =
+                findBanner(bannerId);
 
-        if (requestDTO.getImageUrl() == null || requestDTO.getImageUrl().isBlank()) {
-            throw new IllegalArgumentException("배너 이미지 URL을 입력해주세요.");
-        }
+        Boolean isActive =
+                request.getIsActive() != null
+                        ? request.getIsActive()
+                        : banner.getIsActive();
 
         banner.updateBanner(
-                requestDTO.getTitle(),
-                requestDTO.getImageUrl(),
-                requestDTO.getIsActive() != null
-                        ? requestDTO.getIsActive()
-                        : banner.getIsActive()
+                normalizeTitle(
+                        request.getTitle()
+                ),
+                request.getImageUrl().trim(),
+                isActive
         );
 
-        return toResponseDTO(banner);
+        return HeadBannerResponse.from(
+                banner
+        );
     }
 
-    // 배너 비활성화
+    /*
+     * 노출 상태 변경
+     */
     @Transactional
-    public String deleteBanner(Integer bannerId) {
+    public HeadBannerResponse updateActive(
+            Integer bannerId,
+            HeadBannerActiveRequest request
+    ) {
 
-        Banner banner = headBannerMapper.findById(bannerId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 배너입니다."));
+        Banner banner =
+                findBanner(bannerId);
 
-        banner.deactivate();
+        banner.changeActive(
+                request.getIsActive()
+        );
 
-        return "배너 비활성화 성공";
+        return HeadBannerResponse.from(
+                banner
+        );
     }
 
-    private HeadBannerResponseDTO toResponseDTO(Banner banner) {
+    /*
+     * 배너 삭제
+     *
+     * 현재 테이블에는 삭제 상태 컬럼이 없으므로
+     * 실제 행을 삭제합니다.
+     */
+    @Transactional
+    public void deleteBanner(
+            Integer bannerId
+    ) {
 
-        return HeadBannerResponseDTO.builder()
-                .bannerId(banner.getId())
-                .title(banner.getTitle())
-                .imageUrl(banner.getImageUrl())
-                .isActive(banner.getIsActive())
-                .build();
+        Banner banner =
+                findBanner(bannerId);
+
+        headBannerMapper.delete(banner);
+    }
+
+    /*
+     * 배너 공통 조회
+     */
+    private Banner findBanner(
+            Integer bannerId
+    ) {
+
+        if (bannerId == null) {
+            throw new IllegalArgumentException(
+                    "배너 번호가 없습니다."
+            );
+        }
+
+        return headBannerMapper
+                .findById(bannerId)
+                .orElseThrow(
+                        () ->
+                                new IllegalArgumentException(
+                                        "존재하지 않는 배너입니다."
+                                )
+                );
+    }
+
+    /*
+     * 빈 제목은 null로 저장
+     */
+    private String normalizeTitle(
+            String title
+    ) {
+
+        if (
+                title == null ||
+                title.isBlank()
+        ) {
+            return null;
+        }
+
+        return title.trim();
     }
 }

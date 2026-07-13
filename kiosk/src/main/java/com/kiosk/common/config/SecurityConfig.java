@@ -107,6 +107,7 @@ public class SecurityConfig {
                     .requestMatchers(
                             "/head/**"
                     ).hasAnyRole(
+                            "ADMIN",
                             "HEAD_ADMIN",
                             "SUPER_ADMIN"
                     )
@@ -115,7 +116,7 @@ public class SecurityConfig {
                     .requestMatchers(
                             "/branch/**"
                     ).hasAnyRole(
-                            "STORE_ADMIN",
+                            "MANAGER",
                             "STAFF"
                     )
 
