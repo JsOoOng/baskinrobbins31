@@ -1,35 +1,50 @@
 @import './base.css';
 
+/* =========================================
+   애플리케이션 공통 설정
+========================================= */
+
+html,
+body,
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+  width: 100%;
+  min-height: 100%;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+/*
+ * 기본 스크롤바
+ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
+::-webkit-scrollbar-track {
+  background: #f1f3f6;
+}
 
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+  background: #c8cdd7;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #adb4c1;
+}
+
+/*
+ * 키보드 사용자의 포커스 표시
+ */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(113, 94, 230, 0.2);
+  outline-offset: 2px;
 }
