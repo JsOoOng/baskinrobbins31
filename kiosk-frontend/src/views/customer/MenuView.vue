@@ -4,7 +4,9 @@
     <header class="menu-header">
       <button class="btn-home" @click="goHome">🏠 처음으로</button>
       <div class="kiosk-title">주문하기</div>
-      <div class="header-spacer"></div>
+      <div class="header-spacer">
+        <span class="timer-text">남은 시간: {{ timeoutStore.timeLeft }}초</span>
+      </div>
     </header>
 
     <!-- 2. 카테고리 탭 메뉴 -->
@@ -118,7 +120,9 @@
 
         <footer class="modal-footer">
           <div class="realtime-price">금액: {{ formatPrice(calculatedItemPrice) }}원</div>
-          <button class="btn-add-cart" @click="addCurrentItemToCart">장바구니 담기 🛒</button>
+          <button class="btn-add-cart" @click="addCurrentItemToCart">
+            {{ editingCartIndex !== null ? '수정 완료 ✏️' : '장바구니 담기 🛒' }}
+          </button>
         </footer>
       </div>
     </div>
@@ -149,14 +153,15 @@
                 </div>
                 <div class="cart-item-price">{{ formatPrice(item.unitPrice * item.quantity) }}원</div>
               </div>
-              <div class="cart-item-actions">
-                <div class="qty-control">
-                  <button class="btn-qty" @click="decreaseCartQty(index, item.quantity)">-</button>
-                  <span class="qty-text">{{ item.quantity }}</span>
-                  <button class="btn-qty" @click="increaseCartQty(index, item.quantity)">+</button>
+                <div class="cart-item-actions">
+                  <button class="btn-edit-option" @click="openEditOptionModal(index, item)">옵션 변경 ⚙️</button>
+                  <div class="qty-control">
+                    <button class="btn-qty" @click="decreaseCartQty(index, item.quantity)">-</button>
+                    <span class="qty-text">{{ item.quantity }}</span>
+                    <button class="btn-qty" @click="increaseCartQty(index, item.quantity)">+</button>
+                  </div>
+                  <button class="btn-delete" @click="deleteCartItem(index)">삭제 🗑️</button>
                 </div>
-                <button class="btn-delete" @click="deleteCartItem(index)">삭제 🗑️</button>
-              </div>
             </div>
           </div>
         </main>
@@ -176,30 +181,32 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/api/axios'
-
 import { useBasketStore } from '@/stores/customer/basket'
+import { useTimeoutStore } from '@/stores/customer/timeout'
 
 const router = useRouter()
 const basketStore = useBasketStore()
+const timeoutStore = useTimeoutStore()
 
-// === [DB 연동용 반응형 변수] ===
+const currentStoreId = ref(1) // 지점 식별을 위한 반응형 변수
 const categories = ref([])
 const dbProducts = ref([])
 const dbOptions = ref([])
 const dbFlavors = ref([])
-
-const currentStoreId = ref(1) // 지점 식별을 위한 기본 storeId 설정 (기본값 1)
 const currentCategoryId = ref(null)
 const isModalOpen = ref(false)
 const isCartModalOpen = ref(false)
 const selectedProduct = ref(null)
 const isLoadingProducts = ref(false)
 
+let intervalId = null
+
 const selectedFlavors = ref([])
 const spoonCount = ref(1)
+const editingCartIndex = ref(null)
 
 const currentPage = ref(1)
 const itemsPerPage = 10
@@ -228,6 +235,33 @@ onMounted(async () => {
   } catch (error) {
     console.error('맛 리스트 로드 실패:', error)
   }
+
+  // 🌟 실시간 갱신을 위한 주기적(5초마다) 폴링 설정
+  intervalId = setInterval(async () => {
+    // 1. 조용히 맛 리스트 업데이트
+    try {
+      const flavorRes = await axios.get(`/api/v1/stores/${currentStoreId.value}/flavors`)
+      dbFlavors.value = flavorRes.data
+    } catch (error) {
+      console.error('맛 리스트 실시간 동기화 실패:', error)
+    }
+
+    // 2. 조용히 현재 선택된 카테고리 상품 리스트 업데이트
+    if (currentCategoryId.value) {
+      try {
+        const prodRes = await axios.get(`/api/v1/kiosk/stores/${currentStoreId.value}/categories/${currentCategoryId.value}/products`)
+        dbProducts.value = prodRes.data
+      } catch (error) {
+        console.error('상품 목록 실시간 동기화 실패:', error)
+      }
+    }
+  }, 5000)
+})
+
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId)
+  }
 })
 
 // [API 통신 2]: 카테고리 탭 선택 시 해당 카테고리의 상품 리스트 조회
@@ -247,6 +281,7 @@ const selectCategory = async (id) => {
 
 // [API 통신 3]: 상품을 클릭했을 때 해당 상품의 사이즈 및 최대 선택 맛 수(옵션) 조회
 const openOptionModal = async (product) => {
+  editingCartIndex.value = null
   selectedProduct.value = product
   selectedFlavors.value = []
   spoonCount.value = 1
@@ -316,7 +351,45 @@ const calculatedItemPrice = computed(() => {
 })
 
 const formatPrice = (val) => val?.toLocaleString()
-const closeModal = () => { isModalOpen.value = false }
+const closeModal = () => { 
+  isModalOpen.value = false 
+  editingCartIndex.value = null
+}
+
+const openEditOptionModal = async (index, cartItem) => {
+  editingCartIndex.value = index
+  
+  // 1. 선택 상품 객체 복원 (basePrice 계산: 스푼이 true면 일단 50원을 뺀 값으로 추정)
+  const basePrice = cartItem.extraSpoons ? cartItem.unitPrice - 50 : cartItem.unitPrice;
+  selectedProduct.value = { 
+    productId: cartItem.productId, 
+    productName: cartItem.productName, 
+    basePrice: basePrice 
+  };
+  
+  // 2. 맛 배열 복원
+  selectedFlavors.value = [];
+  if (cartItem.flavors) {
+    cartItem.flavors.forEach(f => {
+      for(let i=0; i<f.quantity; i++) selectedFlavors.value.push(f.flavorId);
+    });
+  }
+  
+  // 3. 스푼 카운트 복원
+  spoonCount.value = cartItem.extraSpoons ? 5 : 1;
+  currentPage.value = 1;
+  
+  // 4. 상품 상세(옵션) 정보 다시 조회
+  try {
+    const detailRes = await axios.get(`/api/v1/kiosk/stores/${currentStoreId.value}/products/${cartItem.productId}/detail`)
+    dbOptions.value = detailRes.data.options || [] 
+  } catch (error) {
+    console.error('상품 상세(옵션) 조회 실패:', error)
+  }
+
+  isCartModalOpen.value = false;
+  isModalOpen.value = true;
+}
 
 const changeSpoon = (amount) => {
   const next = spoonCount.value + amount
@@ -353,25 +426,30 @@ const addCurrentItemToCart = async () => { // 💡 백엔드 통신을 위해 as
   const requestData = {
     productId: selectedProduct.value.productId,
     productName: selectedProduct.value.productName,
-    quantity: 1,
+    quantity: editingCartIndex.value !== null ? basketStore.cartItems[editingCartIndex.value].quantity : 1, // 기존 수량 유지
     unitPrice: calculatedItemPrice.value,
-    flavors: flavorData, // 💡 이름이 포함된 맛 데이터 배열을 넣음!
-    options: validOptions, // 실제 DB에 존재하는 첫 번째 옵션을 넘김 (용기/사이즈 등)
-    extraSpoons: spoonCount.value > 4 // 999 대신 별도 필드로 스푼 추가 여부 전달
+    flavors: flavorData,
+    options: validOptions,
+    extraSpoons: spoonCount.value > 4
   }
 
   try {
-    // 🌟 2. 백엔드 세션 장바구니에 데이터 전송 (아까 잘 만들어둔 컨트롤러 호출!)
-    await axios.post('/api/customer/basket', requestData);
+    if (editingCartIndex.value !== null) {
+      await axios.put(`/api/customer/basket/item/${editingCartIndex.value}`, requestData);
+      alert(`${selectedProduct.value.productName} 상품 옵션이 수정되었습니다!`);
+    } else {
+      await axios.post('/api/customer/basket', requestData);
+      alert(`${selectedProduct.value.productName} 상품이 장바구니에 담겼습니다!`);
+    }
     
-    // 🌟 3. 백엔드에 잘 담겼으니 Pinia 스토어 갱신 (화면 UI 실시간 반영)
     await basketStore.fetchBasket();
-    
-    alert(`${selectedProduct.value.productName} 상품이 장바구니에 담겼습니다!`);
     closeModal();
+    if (editingCartIndex.value !== null) {
+      isCartModalOpen.value = true; // 수정이었으면 장바구니 창을 다시 열어줌
+    }
   } catch (error) {
-    console.error('장바구니 담기 실패:', error);
-    alert('장바구니에 담는데 실패했습니다.');
+    console.error('장바구니 로직 실패:', error);
+    alert('작업을 완료하는데 실패했습니다.');
   }
 }
 
@@ -464,7 +542,18 @@ const goPayment = async () => {
 }
 
 .header-spacer {
-  width: 80px; /* 좌측 처음으로 버튼과의 레이아웃 대칭 유지 */
+  width: 150px;
+  text-align: right;
+}
+
+.timer-text {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #ff6b6b;
+  background: #fff;
+  padding: 5px 15px;
+  border-radius: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .category-tabs {

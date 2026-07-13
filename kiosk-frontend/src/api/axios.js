@@ -3,25 +3,12 @@ import axios from 'axios'; // 1. 라이브러리 로드
 
 // 2. 변수 이름을 axios가 아니라 'instance'로 명확히 분리!
 const instance = axios.create({
-  /*
-   * Spring Boot 서버 주소
-   *
-   * 개발 환경:
-   * Vue        → http://localhost:5173
-   * Spring Boot → http://localhost:8888
-   */
-  baseURL: 'http://localhost:8888',
-
-  /*
-   * 서버가 일정 시간 동안 응답하지 않으면 요청 종료
-   * 단위: 밀리초
-   */
-  timeout: 10000,
-
-  // 세션 쿠키(JSESSIONID)를 공유하기 위한 핵심 설정
-  // 필요없다면 아래 한 줄은 제거.
-  withCredentials: true,
-
+  // 백엔드 스프링 부트 서버 주소
+  baseURL: '', 
+  
+  // 🚨 매우 중요: 백엔드와 세션 쿠키(JSESSIONID)를 공유하기 위한 핵심 설정
+  withCredentials: true, 
+  
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json'

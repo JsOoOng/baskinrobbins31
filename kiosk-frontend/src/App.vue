@@ -1,6 +1,7 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router';
 import Header from '@/components/common/Header.vue';
+import TimeoutModal from '@/components/common/TimeoutModal.vue';
 
 // App.vue는 가장 큰 껍데기이므로 특별한 로직 없이 비워둡니다.
 </script>
@@ -10,6 +11,7 @@ import Header from '@/components/common/Header.vue';
     <main class="main-content">
       <router-view />
     </main>
+    <TimeoutModal />
   </div>
 </template>
 

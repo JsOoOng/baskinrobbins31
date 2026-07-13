@@ -38,6 +38,11 @@ public class ProductServiceImpl implements ProductService {
             Product product = (Product) row[0];
             Boolean isSoldOut = (Boolean) row[1];
 
+            // 품절 처리된 상품은 키오스크 화면에 노출하지 않음
+            if (isSoldOut != null && isSoldOut) {
+                continue;
+            }
+
             // DB 데이터를 프론트엔드가 요구하는 DTO 형식으로 변환
             ProductListResponse dto = new ProductListResponse();
             dto.setProductId(product.getId()); // 엔티티의 ID 필드명 확인 필요 (id 혹은 productId)

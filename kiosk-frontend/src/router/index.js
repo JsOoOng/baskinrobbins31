@@ -71,12 +71,27 @@ const router = createRouter({
     { 
       path: '/payment', 
       name: 'payment', 
-      component: () => import('../views/customer/OrderConfirmView.vue') 
+      component: () => import('@/views/customer/OrderConfirmView.vue') 
     },
     { 
       path: '/order-confirm', 
-      name: 'orderConfirm', 
-      component: () => import('../views/customer/OrderConfirmView.vue') 
+      name: 'order-confirm', 
+      component: () => import('@/views/customer/OrderConfirmView.vue') 
+    },
+    {
+      path: '/toss/success',
+      name: 'toss-success',
+      component: () => import('@/views/customer/TossSuccessView.vue')
+    },
+    {
+      path: '/toss/fail',
+      name: 'toss-fail',
+      component: () => import('@/views/customer/TossFailView.vue')
+    },
+    {
+      path: '/order-complete',
+      name: 'order-complete',
+      component: () => import('@/views/customer/OrderCompleteView.vue')
     },
 
     // ====================================================
@@ -239,38 +254,14 @@ const router = createRouter({
         {
           path: 'banners',
           name: 'head-banners',
-        
-          component: () =>
-            import(
-              '../views/head/HeadBanner.vue'
-            ),
-        
-          meta: {
-            title: '배너 관리',
-        
-            description:
-              '고객 키오스크에 노출되는 광고 배너를 관리합니다.',
-        
-            phase: 'P1'
-          }
+          component: () => import('../views/head/HeadBanner.vue'),
+          meta: { title: '배너 관리', description: '고객 키오스크에 노출되는 광고 배너를 관리합니다.', phase: 'P1' }
         },
         {
           path: 'statistics',
           name: 'head-statistics',
-        
-          component: () =>
-            import(
-              '../views/head/HeadStatistics.vue'
-            ),
-        
-          meta: {
-            title: '통계 및 리포트',
-        
-            description:
-              '결제 매출과 지점 및 상품별 판매 실적을 분석합니다.',
-        
-            phase: 'P1'
-          }
+          component: () => import('../views/head/HeadStatistics.vue'),
+          meta: { title: '통계 및 리포트', description: '결제 매출과 지점 및 상품별 판매 실적을 분석합니다.', phase: 'P1' }
         },
         {
           path: 'security',

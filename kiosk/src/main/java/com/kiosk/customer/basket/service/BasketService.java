@@ -29,11 +29,49 @@ public class BasketService {
             request.setQuantity(1);
         }
 
-        // 3. 상품 추가
-        basket.add(request);
+        // 3. 기존 장바구니에 완벽히 동일한 상품(메뉴, 옵션, 맛, 스푼 등)이 있는지 확인
+        boolean found = false;
+        for (BasketAddRequest item : basket) {
+            if (isSameItem(item, request)) {
+                item.setQuantity(item.getQuantity() + request.getQuantity());
+                found = true;
+                break;
+            }
+        }
 
-        // 4. 세션에 다시 저장
+        // 4. 없으면 새로 추가
+        if (!found) {
+            basket.add(request);
+        }
+
+        // 5. 세션에 다시 저장
         session.setAttribute(BASKET_SESSION_KEY, basket);
+    }
+
+    // 동일한 메뉴 및 옵션인지 판별하는 헬퍼 메서드
+    private boolean isSameItem(BasketAddRequest a, BasketAddRequest b) {
+        if (!java.util.Objects.equals(a.getProductId(), b.getProductId())) return false;
+        if (!java.util.Objects.equals(a.getExtraSpoons(), b.getExtraSpoons())) return false;
+        
+        // options 비교 (null 안전 처리)
+        List<Integer> optsA = a.getOptions() == null ? java.util.Collections.emptyList() : a.getOptions();
+        List<Integer> optsB = b.getOptions() == null ? java.util.Collections.emptyList() : b.getOptions();
+        if (optsA.size() != optsB.size() || !optsA.containsAll(optsB)) return false;
+
+        // flavors 비교 (null 안전 처리)
+        List<BasketAddRequest.FlavorDto> fA = a.getFlavors() == null ? java.util.Collections.emptyList() : a.getFlavors();
+        List<BasketAddRequest.FlavorDto> fB = b.getFlavors() == null ? java.util.Collections.emptyList() : b.getFlavors();
+        if (fA.size() != fB.size()) return false;
+        
+        for (BasketAddRequest.FlavorDto faItem : fA) {
+            boolean match = fB.stream().anyMatch(fbItem -> 
+                java.util.Objects.equals(faItem.getFlavorId(), fbItem.getFlavorId()) &&
+                java.util.Objects.equals(faItem.getQuantity(), fbItem.getQuantity())
+            );
+            if (!match) return false;
+        }
+        
+        return true;
     }
 
     // 2. 현재 장바구니 조회
@@ -85,7 +123,35 @@ public class BasketService {
         }
         return basket;
     }
-    
 
+    // 6. 장바구니 특정 상품 옵션/맛 완전 변경
+    public void updateItemOptions(HttpSession session, int index, BasketAddRequest request) {
+        List<BasketAddRequest> basket = getBasketFromSession(session);
+        if (index >= 0 && index < basket.size()) {
+            if (request.getUnitPrice() == null) request.setUnitPrice(0); 
+            if (request.getQuantity() == null) request.setQuantity(1);
+
+            boolean merged = false;
+            for (int i = 0; i < basket.size(); i++) {
+                if (i == index) continue; // 자기 자신 제외
+
+                BasketAddRequest existingItem = basket.get(i);
+                if (isSameItem(existingItem, request)) {
+                    // 동일 구성 발견 시 수량 병합 후 원래 인덱스 삭제
+                    existingItem.setQuantity(existingItem.getQuantity() + request.getQuantity());
+                    basket.remove(index);
+                    merged = true;
+                    break;
+                }
+            }
+
+            if (!merged) {
+                // 병합 대상이 없으면 현재 인덱스의 항목을 새로운 구성으로 교체
+                basket.set(index, request);
+            }
+
+            session.setAttribute(BASKET_SESSION_KEY, basket);
+        }
+    }
 
 }

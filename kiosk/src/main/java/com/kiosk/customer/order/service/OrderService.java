@@ -75,6 +75,7 @@ public class OrderService {
                 .orderNumber(nextOrderNumber)
                 .orderType(OrderType.valueOf(request.getOrderType()))
                 .dryIceCount(request.getDryIceCount())
+                .dryIceMins(request.getDryIceMins())
                 .orderStatus(OrderStatus.WAITING)
                 .totalPrice(basket.getTotalPrice())
                 .build();
@@ -116,7 +117,7 @@ public class OrderService {
             }
         }
 
-        basketService.clearBasket(session);
+        // 장바구니 초기화는 결제 성공 시점(processPayment)으로 이동
         return order.getId(); // 생성된 PK(orderId)를 반환
     }
 
@@ -124,7 +125,7 @@ public class OrderService {
      * 결제 처리 및 재고 차감 (통합 로직)
      */
     @Transactional
-    public void processPayment(int orderId, String paymentMethod) {
+    public void processPayment(int orderId, String paymentMethod, HttpSession session) {
         // 1. 주문 조회
         OrderResponse orderRes = orderMapper.selectOrderWithDetails(orderId);
         if (orderRes == null) throw new RuntimeException("주문을 찾을 수 없습니다.");
@@ -134,6 +135,7 @@ public class OrderService {
             int updatedRows = orderMapper.decreaseProductStock(item.getProductId(), item.getQuantity());
             if (updatedRows == 0) {
                 throw new RuntimeException("상품 [" + item.getProductName() + "] 재고 부족");
+                // System.out.println("Warning: 상품 [" + item.getProductName() + "] 재고가 부족하거나 인벤토리에 없습니다. (결제는 진행됩니다)");
             }
         }
 
@@ -142,13 +144,18 @@ public class OrderService {
         payment.setOrderId(orderId);
         payment.setPaymentMethod(paymentMethod); // 그대로 사용
         payment.setBaseAmount(orderRes.getTotalPrice());
+        payment.setCouponDiscount(0);
+        payment.setPointUsed(0);
         payment.setFinalAmount(orderRes.getTotalPrice());
         payment.setPaymentStatus("PAID"); // 명시적으로 설정
+        payment.setPaymentDate(java.time.LocalDateTime.now());
 
         orderMapper.insertPayment(payment);
 
-        // 4. 주문 상태 업데이트
-        orderMapper.updateOrderStatus(orderId, "COMPLETED");
+        // 4. 장바구니 비우기 (결제와 재고 차감이 모두 성공한 직후에만 실행)
+        if (session != null) {
+            basketService.clearBasket(session);
+        }
     }
     
     @Transactional

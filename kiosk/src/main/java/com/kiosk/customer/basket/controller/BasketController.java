@@ -46,6 +46,13 @@ public class BasketController {
         return ResponseEntity.ok("상품 수량이 변경되었습니다.");
     }
 
+    // 장바구니 특정 상품 옵션/맛 전체 변경 API
+    @PutMapping("/item/{index}")
+    public ResponseEntity<String> updateItemOptions(@PathVariable int index, @RequestBody BasketAddRequest request, HttpSession session) {
+        basketService.updateItemOptions(session, index, request);
+        return ResponseEntity.ok("상품 옵션이 변경되었습니다.");
+    }
+
     // 장바구니 전체 비우기 API
     @DeleteMapping
     public ResponseEntity<String> clearBasket(HttpSession session) {

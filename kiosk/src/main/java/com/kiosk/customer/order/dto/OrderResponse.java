@@ -9,6 +9,7 @@ import lombok.Data;
 @Data
 public class OrderResponse {
     private int orderId;
+    private int orderNumber;
     private int totalPrice;
     // 엔티티 대신 전용 DTO 리스트 사용
     private List<OrderItemDTO> orderItems; 
