@@ -15,9 +15,24 @@ public class BasketService {
 
     // 1. 장바구니에 상품 추가
     public void addItem(HttpSession session, BasketAddRequest request) {
+        // 1. 세션에서 리스트를 꺼내되, 만약 없으면 새 리스트(ArrayList)를 생성해서 가져옴
         List<BasketAddRequest> basket = getBasketFromSession(session);
-        // TODO: 이미 있는 상품인지 체크하고 수량만 늘리는 로직 추가 가능
+        if (basket == null) {
+            basket = new ArrayList<>();
+        }
+
+        // 2. 단가(unitPrice)가 null인지 체크해서 0으로 보정 (에러 방지)
+        if (request.getUnitPrice() == null) {
+            request.setUnitPrice(0); 
+        }
+        if (request.getQuantity() == null) {
+            request.setQuantity(1);
+        }
+
+        // 3. 상품 추가
         basket.add(request);
+
+        // 4. 세션에 다시 저장
         session.setAttribute(BASKET_SESSION_KEY, basket);
     }
 
@@ -69,5 +84,38 @@ public class BasketService {
             basket = new ArrayList<>();
         }
         return basket;
+    }
+    
+
+    public void updateQuantity(HttpSession session, int index, int quantity) {
+        BasketResponse basket = getBasket(session); // 세션에서 장바구니 꺼내기
+        if (basket != null && index >= 0 && index < basket.getItems().size()) {
+            BasketAddRequest item = basket.getItems().get(index);
+            item.setQuantity(quantity); // 수량 업데이트
+            recalculateTotalPrice(basket);
+        }
+    }
+
+    public void removeItem(HttpSession session, int index) {
+        BasketResponse basket = getBasket(session);
+        if (basket != null && index >= 0 && index < basket.getItems().size()) {
+            basket.getItems().remove(index); // 리스트에서 제거
+            recalculateTotalPrice(basket);
+        }
+    }
+    
+    private void recalculateTotalPrice(BasketResponse basket) {
+        int total = basket.getItems().stream()
+                .mapToInt(item -> {
+                    // 💡 누가 범인인지 범인 색출!
+                    if (item.getUnitPrice() == null) {
+                        System.out.println("🚨 범인 발견: productId가 " + item.getProductId() + "인 상품의 unitPrice가 null입니다!");
+                        return 0;
+                    }
+                    int qty = (item.getQuantity() != null) ? item.getQuantity() : 0;
+                    return item.getUnitPrice() * qty;
+                })
+                .sum();
+        basket.setTotalPrice(total);
     }
 }

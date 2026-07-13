@@ -22,7 +22,17 @@ public class IcecreamFlavor {
     @Column(name = "is_active")
     @Builder.Default
     private Boolean isActive = true;
-    
+
     @Column(name = "image_url", length = 255)
     private String imageUrl;
+
+    public void updateFlavor(String flavorName, Boolean isActive, String imageUrl) {
+        this.flavorName = flavorName;
+        this.isActive = isActive;
+        this.imageUrl = imageUrl;
+    }
+
+    public void deactivate() {
+        this.isActive = false;
+    }
 }

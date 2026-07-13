@@ -41,6 +41,7 @@ public class BranchOrderController {
 
     }
     
+    
     @GetMapping("/detail/{orderId}")
     public BranchOrderDetailResponse detail(
             @PathVariable Integer orderId
@@ -49,6 +50,20 @@ public class BranchOrderController {
         return orderService.getOrderDetail(orderId);
 
     }
+    
+    
+    /*
+    
+    @GetMapping("/detail/{orderId}")
+    public BranchOrderDetailResponse detail(@PathVariable Integer orderId) {
+
+        try {
+            return orderService.getOrderDetail(orderId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }*/
     
     @PatchMapping("/{orderId}/status")
     public String changeStatus(

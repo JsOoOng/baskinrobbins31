@@ -121,7 +121,6 @@
           <button class="btn-add-cart" @click="addCurrentItemToCart">장바구니 담기 🛒</button>
         </footer>
       </div>
-    </div>
 
     <!-- 6. 장바구니 확인 모달 -->
     <div v-if="isCartModalOpen" class="modal-overlay">

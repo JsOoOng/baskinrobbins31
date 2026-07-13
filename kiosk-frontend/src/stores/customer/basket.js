@@ -1,4 +1,4 @@
-// src/stores/basket.js
+// src/stores/customer/basket.js
 import { defineStore } from 'pinia';
 import axios from '@/api/axios'; // 방금 만든 axios 가져오기
 
@@ -10,17 +10,14 @@ export const useBasketStore = defineStore('basket', {
     dryIceCount: 0
   }),
 
-  // 2. 계산된 상태 (Getters): 총 금액 및 총 수량 계산
   getters: {
-    totalPrice: (state) => {
-      return state.cartItems.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
-    },
-    totalQuantity: (state) => {
-      return state.cartItems.length;
+    // 🌟 장바구니 뱃지에 띄울 총 수량 계산
+    totalCount: (state) => {
+      if (!state.items) return 0;
+      return state.items.reduce((sum, item) => sum + item.quantity, 0);
     }
   },
 
-  // 3. 기능 (Actions): 장바구니 조작 및 서버 통신
   actions: {
     setOrderType(type) {
       this.orderType = type;
@@ -68,7 +65,7 @@ export const useBasketStore = defineStore('basket', {
         });
         console.log('서버 장바구니 동기화 완료');
       } catch (error) {
-        console.error('서버 장바구니 저장 실패:', error);
+        console.error('장바구니 조회 실패:', error);
       }
     },
 
@@ -93,14 +90,30 @@ export const useBasketStore = defineStore('basket', {
       }
     },
 
-    // 🔄 장바구니 전체 비우기
-    async clearCart() {
-      this.cartItems = [];
+    // 3. 결제 최종 주문 API (POST)
+    async submitOrder(orderInfo) {
       try {
-        await axios.delete('/api/customer/basket');
-        console.log('서버 장바구니 비우기 완료');
+        const payload = {
+          storeId: orderInfo.storeId,
+          kioskId: orderInfo.kioskId,
+          userId: orderInfo.userId, 
+          orderType: orderInfo.orderType,
+          dryIceMins: orderInfo.dryIceMins,
+          totalPrice: this.totalPrice,
+          items: this.items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            flavors: item.flavors.map(f => ({ flavorId: f.flavorId, quantity: f.quantity })),
+            options: item.options 
+          }))
+        };
+
+        const res = await axios.post('http://localhost:8888/api/orders', payload);
+        return res.data; 
       } catch (error) {
-        console.error('서버 장바구니 초기화 실패:', error);
+        console.error('주문 실패:', error);
+        throw error;
       }
     }
   }

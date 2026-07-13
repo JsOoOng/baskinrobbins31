@@ -12,6 +12,9 @@ public interface StoreFlavorMapper
 
 
     List<StoreFlavor> findByStoreId(Integer storeId);
-    
+    boolean existsByStoreIdAndFlavorId(
+            Integer storeId,
+            Integer flavorId
+    );
 
 }

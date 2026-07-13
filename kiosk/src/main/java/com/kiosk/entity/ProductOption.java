@@ -35,4 +35,16 @@ public class ProductOption {
     @Column(name = "max_flavor_count")
     @Builder.Default
     private Integer maxFlavorCount = 0;
+    
+    public void updateOption(
+            OptionType optionType,
+            String optionName,
+            Integer extraPrice,
+            Integer maxFlavorCount) {
+
+        this.optionType = optionType;
+        this.optionName = optionName;
+        this.extraPrice = extraPrice;
+        this.maxFlavorCount = maxFlavorCount;
+    }
 }

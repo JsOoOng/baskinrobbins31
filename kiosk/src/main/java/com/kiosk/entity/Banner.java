@@ -19,10 +19,20 @@ public class Banner {
     @Column(name = "title", length = 100)
     private String title;
 
-    @Column(name = "image_url", nullable = false)
+    @Column(name = "image_url", length = 255, nullable = false)
     private String imageUrl;
 
     @Column(name = "is_active")
     @Builder.Default
     private Boolean isActive = true;
+
+    public void updateBanner(String title, String imageUrl, Boolean isActive) {
+        this.title = title;
+        this.imageUrl = imageUrl;
+        this.isActive = isActive;
+    }
+
+    public void deactivate() {
+        this.isActive = false;
+    }
 }

@@ -52,4 +52,23 @@ public class BasketController {
         basketService.clearBasket(session);
         return ResponseEntity.ok("장바구니가 비워졌습니다.");
     }
+
+    // 특정 메뉴 수량 변경 API
+	 @PatchMapping("/{index}")
+	 public ResponseEntity<String> updateQuantity(
+	         @PathVariable int index, 
+	         @RequestParam int quantity, 
+	         HttpSession session) {
+	     basketService.updateQuantity(session, index, quantity);
+	     return ResponseEntity.ok("수량이 변경되었습니다.");
+	 }
+	
+	 // 특정 메뉴 삭제 API
+	 @DeleteMapping("/{index}")
+	 public ResponseEntity<String> removeItem(
+	         @PathVariable int index, 
+	         HttpSession session) {
+	     basketService.removeItem(session, index);
+	     return ResponseEntity.ok("메뉴가 삭제되었습니다.");
+	 }
 }

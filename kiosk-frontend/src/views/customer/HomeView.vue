@@ -114,7 +114,20 @@ button.btn-here:hover, button.btn-togo:hover {
 
 .icon {
   font-size: 80px;
+.touch-area {
+  text-align: center;
+}
+
+.brand-name {
+  font-size: 4rem;
   margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.touch-text {
+  font-size: 2rem;
+  /* 글씨가 깜빡거리는 애니메이션 효과 (키오스크 국룰!) */
+  animation: blink 1.5s infinite; 
 }
 
 .text {
