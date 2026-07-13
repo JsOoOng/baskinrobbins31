@@ -1,11 +1,13 @@
 package com.kiosk.branch.statistics.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import com.kiosk.branch.statistics.dto.BranchStatisticsResponse;
 import com.kiosk.branch.statistics.dto.CategorySalesDto;
+import com.kiosk.branch.statistics.dto.DashboardStatisticsDto;
 import com.kiosk.branch.statistics.dto.DaySalesDto;
 import com.kiosk.branch.statistics.dto.ExpenseCategoryDto;
 import com.kiosk.branch.statistics.dto.ExpensePaymentDto;
@@ -37,8 +39,10 @@ public class BranchStatisticsService {
 
 
     public BranchStatisticsResponse getStatistics(
-            Integer storeId
-    ){
+    	    Integer storeId,
+    	    LocalDate startDate,
+    	    LocalDate endDate
+    	){
 
 
         /*
@@ -50,26 +54,26 @@ public class BranchStatisticsService {
 
         Integer sales =
                 safeInteger(
-                    orderRepository.findTotalSales(storeId)
+                    orderRepository.findTotalSales(storeId, startDate, endDate)
                 );
 
 
         Integer orderCount =
                 safeInteger(
-                    orderRepository.countCompletedOrders(storeId)
+                    orderRepository.countCompletedOrders(storeId, startDate, endDate)
                 );
 
 
         Integer totalOrderCount =
                 safeInteger(
-                    orderRepository.countAllOrders(storeId)
+                    orderRepository.countAllOrders(storeId, startDate, endDate)
                 );
 
 
 
         Integer expense =
                 safeInteger(
-                    expenseRepository.findTotalExpense(storeId)
+                    expenseRepository.findTotalExpense(storeId, startDate, endDate)
                 );
 
 
@@ -89,7 +93,7 @@ public class BranchStatisticsService {
 
         Integer canceledOrders =
                 safeInteger(
-                    orderRepository.countCanceledOrders(storeId)
+                    orderRepository.countCanceledOrders(storeId, startDate, endDate)
                 );
 
 
@@ -119,7 +123,7 @@ public class BranchStatisticsService {
 
 
         List<SalesPeriodDto> dailySales =
-                orderRepository.findDailySales(storeId)
+                orderRepository.findDailySales(storeId, startDate, endDate)
                 .stream()
                 .map(row ->
                     new SalesPeriodDto(
@@ -134,7 +138,7 @@ public class BranchStatisticsService {
 
 
         List<SalesPeriodDto> monthlySales =
-                orderRepository.findMonthlySales(storeId)
+                orderRepository.findMonthlySales(storeId, startDate, endDate)
                 .stream()
                 .map(row ->
                     new SalesPeriodDto(
@@ -149,7 +153,7 @@ public class BranchStatisticsService {
 
 
         List<SalesPeriodDto> yearlySales =
-                orderRepository.findYearlySales(storeId)
+                orderRepository.findYearlySales(storeId, startDate, endDate)
                 .stream()
                 .map(row ->
                     new SalesPeriodDto(
@@ -174,7 +178,7 @@ public class BranchStatisticsService {
 
 
         List<TimeSalesDto> hourlySales =
-                orderRepository.findHourlySales(storeId)
+                orderRepository.findHourlySales(storeId, startDate, endDate)
                 .stream()
                 .map(row ->
                     new TimeSalesDto(
@@ -189,7 +193,7 @@ public class BranchStatisticsService {
 
 
         List<DaySalesDto> dayOfWeekSales =
-                orderRepository.findDayOfWeekSales(storeId)
+                orderRepository.findDayOfWeekSales(storeId, startDate, endDate)
                 .stream()
                 .map(row ->
                     new DaySalesDto(
@@ -204,7 +208,7 @@ public class BranchStatisticsService {
 
 
         List<TimeOrderDto> hourlyOrderCount =
-                orderRepository.findHourlyOrderCount(storeId)
+                orderRepository.findHourlyOrderCount(storeId, startDate, endDate)
                 .stream()
                 .map(row ->
                     new TimeOrderDto(
@@ -229,7 +233,7 @@ public class BranchStatisticsService {
 
 
         List<ProductRankDto> topProducts =
-                productRepository.findTopSellingProducts(storeId)
+                productRepository.findTopSellingProducts(storeId, startDate, endDate)
                 .stream()
                 .map(row ->
                     new ProductRankDto(
@@ -245,7 +249,7 @@ public class BranchStatisticsService {
 
 
         List<ProductSalesDto> productSales =
-                productRepository.findProductSales(storeId)
+                productRepository.findProductSales(storeId, startDate, endDate)
                 .stream()
                 .map(row ->
                     new ProductSalesDto(
@@ -261,7 +265,7 @@ public class BranchStatisticsService {
 
 
         List<CategorySalesDto> categorySales =
-                productRepository.findCategorySales(storeId)
+                productRepository.findCategorySales(storeId, startDate, endDate)
                 .stream()
                 .map(row ->
                     new CategorySalesDto(
@@ -287,7 +291,7 @@ public class BranchStatisticsService {
 
 
         List<ExpensePeriodDto> expensePeriod =
-                expenseRepository.findDailyExpense(storeId)
+                expenseRepository.findDailyExpense(storeId, startDate, endDate)
                 .stream()
                 .map(row ->
                     new ExpensePeriodDto(
@@ -303,7 +307,7 @@ public class BranchStatisticsService {
 
 
         List<ExpenseCategoryDto> expenseCategory =
-                expenseRepository.findExpenseByCategory(storeId)
+                expenseRepository.findExpenseByCategory(storeId, startDate, endDate)
                 .stream()
                 .map(row ->
                     new ExpenseCategoryDto(
@@ -319,7 +323,7 @@ public class BranchStatisticsService {
 
 
         List<ExpensePaymentDto> expensePayment =
-                expenseRepository.findExpenseByPaymentMethod(storeId)
+                expenseRepository.findExpenseByPaymentMethod(storeId, startDate, endDate)
                 .stream()
                 .map(row ->
                     new ExpensePaymentDto(
@@ -409,6 +413,64 @@ public class BranchStatisticsService {
     private Integer safeInteger(Integer value){
 
         return value == null ? 0 : value;
+
+    }
+    
+    public DashboardStatisticsDto getDashboard(
+            Integer storeId
+    ){
+
+
+        Integer todaySales =
+                safeInteger(
+                    orderRepository.findTodaySales(storeId)
+                );
+
+
+        Integer todayOrders =
+                safeInteger(
+                    orderRepository.countTodayOrders(storeId)
+                );
+
+
+
+        List<TimeSalesDto> hourlySales =
+                orderRepository.findTodayHourlySales(storeId)
+                .stream()
+                .map(row ->
+                    new TimeSalesDto(
+                        ((Number)row[0]).intValue(),
+                        ((Number)row[1]).intValue()
+                    )
+                )
+                .toList();
+
+
+
+        List<CategorySalesDto> categorySales =
+                productRepository.findCategorySales(storeId)
+                .stream()
+                .map(row ->
+                    new CategorySalesDto(
+                        String.valueOf(row[0]),
+                        ((Number)row[1]).intValue()
+                    )
+                )
+                .toList();
+
+
+
+        return DashboardStatisticsDto.builder()
+
+                .todaySales(todaySales)
+
+                .todayOrderCount(todayOrders)
+
+                .todayHourlySales(hourlySales)
+
+                .categorySales(categorySales)
+
+                .build();
 
     }
 

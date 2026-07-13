@@ -1,9 +1,12 @@
 package com.kiosk.branch.statistics.controller;
 
 
+import java.time.LocalDate;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kiosk.branch.statistics.dto.BranchStatisticsResponse;
@@ -25,22 +28,47 @@ public class BranchStatisticsController {
 
 
 
-    /*
-     * 지점 통계 조회
-     *
-     * GET
-     * /branch/statistics/{storeId}
-     *
-     */
     @GetMapping("/{storeId}")
     public BranchStatisticsResponse getStatistics(
-            @PathVariable Integer storeId
+
+            @PathVariable Integer storeId,
+
+
+            @RequestParam(required = false) LocalDate startDate,
+
+
+            @RequestParam(required = false) LocalDate endDate
+
     ){
 
 
-        return statisticsService.getStatistics(storeId);
+        if(startDate == null){
+
+            startDate =
+                LocalDate.now()
+                .minusMonths(1);
+
+        }
+
+
+        if(endDate == null){
+
+            endDate =
+                LocalDate.now();
+
+        }
+
+
+
+        return statisticsService.getStatistics(
+                storeId,
+                startDate,
+                endDate
+        );
+
 
     }
+
 
 
 }

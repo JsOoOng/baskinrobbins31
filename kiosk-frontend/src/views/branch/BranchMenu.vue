@@ -9,7 +9,7 @@ const router = useRouter()
 
 
 const user = JSON.parse(
-    localStorage.getItem('user')
+    localStorage.getItem('branchUser')
 )
 
 

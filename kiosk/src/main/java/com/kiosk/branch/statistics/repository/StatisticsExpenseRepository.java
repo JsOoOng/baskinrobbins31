@@ -1,6 +1,6 @@
 package com.kiosk.branch.statistics.repository;
 
-
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.kiosk.entity.StoreExpense;
-
 
 
 @Repository
@@ -29,10 +28,24 @@ extends JpaRepository<StoreExpense, Integer>{
         FROM StoreExpense e
 
         WHERE e.store.id = :storeId
+
+        AND e.expenseDate
+        BETWEEN :startDate AND :endDate
+
     """)
     Integer findTotalExpense(
-            @Param("storeId") Integer storeId
+
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
     );
+
+
+
+
 
 
 
@@ -41,6 +54,7 @@ extends JpaRepository<StoreExpense, Integer>{
 
     /*
      * =====================================
+     * 기간별 지출
      * 일별 지출
      * =====================================
      */
@@ -53,14 +67,27 @@ extends JpaRepository<StoreExpense, Integer>{
 
         WHERE e.store.id = :storeId
 
+        AND e.expenseDate
+        BETWEEN :startDate AND :endDate
+
+
         GROUP BY e.expenseDate
 
         ORDER BY e.expenseDate
 
     """)
     List<Object[]> findDailyExpense(
-            @Param("storeId") Integer storeId
+
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
     );
+
+
+
 
 
 
@@ -75,7 +102,8 @@ extends JpaRepository<StoreExpense, Integer>{
      * LABOR
      * UTILITY
      * RENT
-     * ETC ...
+     * ETC
+     *
      * =====================================
      */
     @Query("""
@@ -85,14 +113,29 @@ extends JpaRepository<StoreExpense, Integer>{
 
         FROM StoreExpense e
 
+
         WHERE e.store.id = :storeId
+
+
+        AND e.expenseDate
+        BETWEEN :startDate AND :endDate
+
 
         GROUP BY e.expenseCategory
 
     """)
     List<Object[]> findExpenseByCategory(
-            @Param("storeId") Integer storeId
+
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
     );
+
+
+
 
 
 
@@ -106,6 +149,7 @@ extends JpaRepository<StoreExpense, Integer>{
      * CARD
      * CASH
      * TRANSFER
+     *
      * =====================================
      */
     @Query("""
@@ -115,15 +159,26 @@ extends JpaRepository<StoreExpense, Integer>{
 
         FROM StoreExpense e
 
+
         WHERE e.store.id = :storeId
+
+
+        AND e.expenseDate
+        BETWEEN :startDate AND :endDate
+
 
         GROUP BY e.paymentMethod
 
     """)
     List<Object[]> findExpenseByPaymentMethod(
-            @Param("storeId") Integer storeId
-    );
 
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
+    );
 
 
 }

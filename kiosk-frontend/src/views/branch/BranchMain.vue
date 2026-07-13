@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-const user = JSON.parse(localStorage.getItem('user'))
+const user = JSON.parse(localStorage.getItem('branchUser'))
 
 const moveOrder = () => {
   router.push('/branch/order')
@@ -24,7 +24,7 @@ const goStatistics = () => {
 
 const logout = () => {
   localStorage.removeItem('token')
-  localStorage.removeItem('user')
+  localStorage.removeItem('branchUser')
 
   alert('로그아웃되었습니다.')
 

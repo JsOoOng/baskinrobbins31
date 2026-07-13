@@ -1,16 +1,16 @@
 package com.kiosk.branch.statistics.dto;
 
-
 import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-
+import lombok.NoArgsConstructor;
 
 
 @Getter
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class BranchStatisticsResponse {
 
@@ -18,7 +18,7 @@ public class BranchStatisticsResponse {
 
     /*
      * ==========================
-     * 기본 매출 통계
+     * 기본 통계
      * ==========================
      */
 
@@ -45,6 +45,7 @@ public class BranchStatisticsResponse {
 
 
 
+
     /*
      * ==========================
      * 기간별 매출
@@ -66,6 +67,9 @@ public class BranchStatisticsResponse {
 
 
 
+
+
+
     /*
      * ==========================
      * 시간 / 요일 분석
@@ -81,21 +85,23 @@ public class BranchStatisticsResponse {
     private List<DaySalesDto> dayOfWeekSales;
 
 
-
     // 시간대별 주문량
     private List<TimeOrderDto> hourlyOrderCount;
 
 
 
 
+
+
+
     /*
      * ==========================
-     * 상품 통계
+     * 상품 분석
      * ==========================
      */
 
 
-    // 베스트 상품 TOP N
+    // 베스트 판매 상품 TOP N
     private List<ProductRankDto> topProducts;
 
 
@@ -109,9 +115,12 @@ public class BranchStatisticsResponse {
 
 
 
+
+
+
     /*
      * ==========================
-     * 취소 분석
+     * 주문 취소 분석
      * ==========================
      */
 
@@ -120,8 +129,11 @@ public class BranchStatisticsResponse {
     private Integer canceledOrders;
 
 
-    // 취소율
+    // 취소율 (%)
     private Double cancelRate;
+
+
+
 
 
 
@@ -137,11 +149,13 @@ public class BranchStatisticsResponse {
     private List<ExpensePeriodDto> expensePeriod;
 
 
-    // 지출 카테고리
+    // 지출 카테고리별 통계
     private List<ExpenseCategoryDto> expenseCategory;
 
 
-    // 지출 결제 방식
+    // 결제 방식별 지출
     private List<ExpensePaymentDto> expensePayment;
+
+
 
 }

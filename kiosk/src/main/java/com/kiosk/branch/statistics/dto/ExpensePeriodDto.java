@@ -10,7 +10,7 @@ import lombok.Getter;
 public class ExpensePeriodDto {
 
 
-    private String period;
+    private String date;
 
     private Integer amount;
 

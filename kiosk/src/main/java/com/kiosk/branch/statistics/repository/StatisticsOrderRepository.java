@@ -1,7 +1,8 @@
 package com.kiosk.branch.statistics.repository;
 
-
+import java.time.LocalDate;
 import java.util.List;
+import java.time.LocalDate;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,14 +14,13 @@ import com.kiosk.entity.Order;
 
 @Repository
 public interface StatisticsOrderRepository
-        extends JpaRepository<Order, Integer> {
+extends JpaRepository<Order, Integer> {
 
 
 
     /*
      * =====================================
      * 총 매출
-     * COMPLETED 주문만 집계
      * =====================================
      */
     @Query("""
@@ -31,9 +31,18 @@ public interface StatisticsOrderRepository
         WHERE o.store.id = :storeId
 
         AND o.orderStatus = 'COMPLETED'
+
+        AND FUNCTION('DATE',o.createdAt)
+        BETWEEN :startDate AND :endDate
     """)
     Integer findTotalSales(
-            @Param("storeId") Integer storeId
+
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
     );
 
 
@@ -53,9 +62,18 @@ public interface StatisticsOrderRepository
         WHERE o.store.id = :storeId
 
         AND o.orderStatus = 'COMPLETED'
+
+        AND FUNCTION('DATE',o.createdAt)
+        BETWEEN :startDate AND :endDate
     """)
     Integer countCompletedOrders(
-            @Param("storeId") Integer storeId
+
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
     );
 
 
@@ -65,7 +83,7 @@ public interface StatisticsOrderRepository
     /*
      * =====================================
      * 전체 주문 건수
-     * 취소율 계산용
+     * 취소율 계산
      * =====================================
      */
     @Query("""
@@ -74,10 +92,20 @@ public interface StatisticsOrderRepository
         FROM Order o
 
         WHERE o.store.id = :storeId
+
+        AND FUNCTION('DATE',o.createdAt)
+        BETWEEN :startDate AND :endDate
     """)
     Integer countAllOrders(
-            @Param("storeId") Integer storeId
+
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
     );
+
 
 
 
@@ -89,7 +117,7 @@ public interface StatisticsOrderRepository
      * =====================================
      */
     @Query("""
-        SELECT 
+        SELECT
             FUNCTION('DATE',o.createdAt),
             SUM(o.totalPrice)
 
@@ -97,15 +125,26 @@ public interface StatisticsOrderRepository
 
         WHERE o.store.id = :storeId
 
-        AND o.orderStatus = 'COMPLETED'
+        AND o.orderStatus='COMPLETED'
+
+        AND FUNCTION('DATE',o.createdAt)
+        BETWEEN :startDate AND :endDate
 
         GROUP BY FUNCTION('DATE',o.createdAt)
 
         ORDER BY FUNCTION('DATE',o.createdAt)
     """)
     List<Object[]> findDailySales(
-            @Param("storeId") Integer storeId
+
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
     );
+
+
 
 
 
@@ -124,22 +163,35 @@ public interface StatisticsOrderRepository
 
         FROM Order o
 
-        WHERE o.store.id = :storeId
+        WHERE o.store.id=:storeId
 
-        AND o.orderStatus = 'COMPLETED'
+        AND o.orderStatus='COMPLETED'
+
+        AND FUNCTION('DATE',o.createdAt)
+        BETWEEN :startDate AND :endDate
+
 
         GROUP BY
             FUNCTION('YEAR',o.createdAt),
             FUNCTION('MONTH',o.createdAt)
 
+
         ORDER BY
             FUNCTION('YEAR',o.createdAt),
             FUNCTION('MONTH',o.createdAt)
-
     """)
     List<Object[]> findMonthlySales(
-            @Param("storeId") Integer storeId
+
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
     );
+
+
+
 
 
 
@@ -157,9 +209,14 @@ public interface StatisticsOrderRepository
 
         FROM Order o
 
-        WHERE o.store.id = :storeId
+        WHERE o.store.id=:storeId
 
-        AND o.orderStatus = 'COMPLETED'
+        AND o.orderStatus='COMPLETED'
+
+
+        AND FUNCTION('DATE',o.createdAt)
+        BETWEEN :startDate AND :endDate
+
 
         GROUP BY FUNCTION('YEAR',o.createdAt)
 
@@ -167,8 +224,18 @@ public interface StatisticsOrderRepository
 
     """)
     List<Object[]> findYearlySales(
-            @Param("storeId") Integer storeId
+
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
     );
+
+
+
+
 
 
 
@@ -177,7 +244,6 @@ public interface StatisticsOrderRepository
     /*
      * =====================================
      * 시간대별 매출
-     * 최고/최저 매출 시간 분석
      * =====================================
      */
     @Query("""
@@ -187,9 +253,14 @@ public interface StatisticsOrderRepository
 
         FROM Order o
 
-        WHERE o.store.id = :storeId
+        WHERE o.store.id=:storeId
 
-        AND o.orderStatus = 'COMPLETED'
+        AND o.orderStatus='COMPLETED'
+
+
+        AND FUNCTION('DATE',o.createdAt)
+        BETWEEN :startDate AND :endDate
+
 
         GROUP BY FUNCTION('HOUR',o.createdAt)
 
@@ -197,8 +268,18 @@ public interface StatisticsOrderRepository
 
     """)
     List<Object[]> findHourlySales(
-            @Param("storeId") Integer storeId
+
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
     );
+
+
+
+
 
 
 
@@ -216,9 +297,14 @@ public interface StatisticsOrderRepository
 
         FROM Order o
 
-        WHERE o.store.id = :storeId
+        WHERE o.store.id=:storeId
 
-        AND o.orderStatus = 'COMPLETED'
+        AND o.orderStatus='COMPLETED'
+
+
+        AND FUNCTION('DATE',o.createdAt)
+        BETWEEN :startDate AND :endDate
+
 
         GROUP BY FUNCTION('DAYOFWEEK',o.createdAt)
 
@@ -226,8 +312,18 @@ public interface StatisticsOrderRepository
 
     """)
     List<Object[]> findDayOfWeekSales(
-            @Param("storeId") Integer storeId
+
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
     );
+
+
+
+
 
 
 
@@ -235,7 +331,7 @@ public interface StatisticsOrderRepository
 
     /*
      * =====================================
-     * 주문 취소 건수
+     * 취소 주문 건수
      * =====================================
      */
     @Query("""
@@ -243,14 +339,28 @@ public interface StatisticsOrderRepository
 
         FROM Order o
 
-        WHERE o.store.id = :storeId
+        WHERE o.store.id=:storeId
 
-        AND o.orderStatus = 'CANCELED'
+        AND o.orderStatus='CANCELED'
+
+
+        AND FUNCTION('DATE',o.createdAt)
+        BETWEEN :startDate AND :endDate
 
     """)
     Integer countCanceledOrders(
-            @Param("storeId") Integer storeId
+
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
     );
+
+
+
+
 
 
 
@@ -259,7 +369,6 @@ public interface StatisticsOrderRepository
     /*
      * =====================================
      * 시간대별 주문량
-     * 직원 배치 / 피크타임 분석용
      * =====================================
      */
     @Query("""
@@ -269,7 +378,12 @@ public interface StatisticsOrderRepository
 
         FROM Order o
 
-        WHERE o.store.id = :storeId
+        WHERE o.store.id=:storeId
+
+
+        AND FUNCTION('DATE',o.createdAt)
+        BETWEEN :startDate AND :endDate
+
 
         GROUP BY FUNCTION('HOUR',o.createdAt)
 
@@ -277,9 +391,92 @@ public interface StatisticsOrderRepository
 
     """)
     List<Object[]> findHourlyOrderCount(
+
+            @Param("storeId") Integer storeId,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
+
+    );
+
+    /*
+     * ===========================
+     * 오늘 매출
+     * ===========================
+     */
+    @Query("""
+    SELECT COALESCE(SUM(o.totalPrice),0)
+
+    FROM Order o
+
+    WHERE o.store.id=:storeId
+
+    AND o.orderStatus='COMPLETED'
+
+    AND FUNCTION('DATE',o.createdAt)=CURRENT_DATE
+
+    """)
+    Integer findTodaySales(
             @Param("storeId") Integer storeId
     );
 
 
 
+    /*
+     * ===========================
+     * 오늘 주문 수
+     * ===========================
+     */
+    @Query("""
+    SELECT COUNT(o)
+
+    FROM Order o
+
+    WHERE o.store.id=:storeId
+
+    AND o.orderStatus='COMPLETED'
+
+    AND FUNCTION('DATE',o.createdAt)=CURRENT_DATE
+
+    """)
+    Integer countTodayOrders(
+            @Param("storeId") Integer storeId
+    );
+
+
+
+    /*
+     * ===========================
+     * 오늘 시간대별 매출
+     * ===========================
+     */
+    @Query("""
+    SELECT
+
+    FUNCTION('HOUR',o.createdAt),
+
+    SUM(o.totalPrice)
+
+
+    FROM Order o
+
+
+    WHERE o.store.id=:storeId
+
+    AND o.orderStatus='COMPLETED'
+
+    AND FUNCTION('DATE',o.createdAt)=CURRENT_DATE
+
+
+    GROUP BY FUNCTION('HOUR',o.createdAt)
+
+    ORDER BY FUNCTION('HOUR',o.createdAt)
+
+    """)
+    List<Object[]> findTodayHourlySales(
+            @Param("storeId") Integer storeId
+    );
+    
+    
 }

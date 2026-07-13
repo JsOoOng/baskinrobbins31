@@ -10,7 +10,7 @@ import lombok.Getter;
 public class SalesPeriodDto {
 
 
-    private String period;
+	private String period;
 
     private Integer sales;
 
