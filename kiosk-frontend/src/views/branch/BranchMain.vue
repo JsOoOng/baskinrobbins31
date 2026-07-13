@@ -17,6 +17,10 @@ const goMenu = () => {
     router.push('/branch/menu')
 }
 
+const goStatistics = () => {
+    router.push('/branch/statistics')
+}
+
 
 const logout = () => {
   localStorage.removeItem('token')
@@ -62,8 +66,8 @@ const logout = () => {
         </button>
 
 
-        <button>
-            매출 관리
+        <button @click="goStatistics">
+            통계 관리
         </button>
 
 

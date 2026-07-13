@@ -75,6 +75,12 @@ const router = createRouter({
     },
 
     {
+      path: '/branch/statistics',
+      name: 'branch-statistics',
+      component: () => import('../views/branch/BranchStatistics.vue')
+    },
+
+    {
       path: '/branch/menu',
       name: 'branch-menu',
       component: () => import('../views/branch/BranchMenu.vue')
