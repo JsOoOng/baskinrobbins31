@@ -5,25 +5,64 @@
 
 <mapper namespace="com.kiosk.headquarter.repository.HeadAuthMapper">
 
+    <!--
+        로그인 ID로 본사 관리자 조회
+
+        실제 테이블:
+        headquarter_admins
+    -->
     <select id="findEmployeeByLoginId"
+            parameterType="java.lang.String"
             resultType="com.kiosk.headquarter.dto.auth.HeadLoginEmployeeDTO">
+
         SELECT
             admin_id AS employeeId,
             NULL AS storeId,
-            login_id AS loginId,
+            TRIM(login_id) AS loginId,
             password AS password,
             name AS name,
-            role AS role,
-            status AS status
+            TRIM(role) AS role,
+            TRIM(status) AS status
         FROM headquarter_admins
-        WHERE login_id = #{loginId}
+        WHERE TRIM(login_id) = TRIM(#{loginId})
         LIMIT 1
+
     </select>
 
+    <!--
+        관리자 번호로 현재 로그인 관리자 조회
+
+        employeeId라는 DTO 필드명을 사용하지만
+        실제로는 headquarter_admins.admin_id입니다.
+    -->
+    <select id="findEmployeeByEmployeeId"
+            parameterType="java.lang.Integer"
+            resultType="com.kiosk.headquarter.dto.auth.HeadLoginEmployeeDTO">
+
+        SELECT
+            admin_id AS employeeId,
+            NULL AS storeId,
+            TRIM(login_id) AS loginId,
+            password AS password,
+            name AS name,
+            TRIM(role) AS role,
+            TRIM(status) AS status
+        FROM headquarter_admins
+        WHERE admin_id = #{employeeId}
+        LIMIT 1
+
+    </select>
+
+    <!--
+        최초 평문 로그인 성공 후
+        BCrypt 비밀번호로 변경
+    -->
     <update id="updatePassword">
+
         UPDATE headquarter_admins
         SET password = #{password}
         WHERE admin_id = #{employeeId}
+
     </update>
 
 </mapper>

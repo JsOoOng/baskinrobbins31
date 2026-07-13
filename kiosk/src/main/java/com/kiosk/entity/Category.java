@@ -16,15 +16,50 @@ public class Category {
     @Column(name = "category_id")
     private Integer id;
 
-    @Column(name = "category_name", length = 50, nullable = false)
+    @Column(
+            name = "category_name",
+            length = 50,
+            nullable = false
+    )
     private String categoryName;
 
-    @Column(name = "display_order", nullable = false)
+    @Column(
+            name = "display_order",
+            nullable = false
+    )
     @Builder.Default
     private Integer displayOrder = 0;
-    
-    public void updateCategory(String categoryName, Integer displayOrder) {
+
+    /*
+     * true  : 고객 화면에 노출
+     * false : 고객 화면에서 숨김
+     */
+    @Column(
+            name = "active",
+            nullable = false
+    )
+    @Builder.Default
+    private Boolean active = true;
+
+    public void updateCategory(
+            String categoryName,
+            Integer displayOrder,
+            Boolean active
+    ) {
         this.categoryName = categoryName;
         this.displayOrder = displayOrder;
+
+        if (active != null) {
+            this.active = active;
+        }
+    }
+
+    public void changeActive(Boolean active) {
+
+        if (active == null) {
+            return;
+        }
+
+        this.active = active;
     }
 }

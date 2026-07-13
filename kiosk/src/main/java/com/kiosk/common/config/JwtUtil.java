@@ -26,11 +26,19 @@ public class JwtUtil {
 
         return Jwts.builder()
                 .subject(String.valueOf(user.getEmployeeId()))
-                .claim("role", user.getRole())
+
+                // enum일 가능성을 고려해 문자열로 변환
+                .claim("role", String.valueOf(user.getRole()))
+
                 .claim("storeId", user.getStoreId())
                 .claim("userType", "BRANCH")
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .expiration(
+                        new Date(
+                                System.currentTimeMillis()
+                                        + EXPIRATION_TIME
+                        )
+                )
                 .signWith(
                         Keys.hmacShaKeyFor(
                                 SECRET.getBytes(StandardCharsets.UTF_8)
@@ -45,11 +53,19 @@ public class JwtUtil {
         return Jwts.builder()
                 .subject(String.valueOf(user.getEmployeeId()))
                 .claim("loginId", user.getLoginId())
-                .claim("role", normalizeRole(user.getRole()))
+
+                // HEAD_ADMIN을 ADMIN으로 바꾸지 않고 그대로 저장
+                .claim("role", user.getRole())
+
                 .claim("storeId", user.getStoreId())
                 .claim("userType", "HEAD")
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .expiration(
+                        new Date(
+                                System.currentTimeMillis()
+                                        + EXPIRATION_TIME
+                        )
+                )
                 .signWith(
                         Keys.hmacShaKeyFor(
                                 SECRET.getBytes(StandardCharsets.UTF_8)
@@ -58,18 +74,10 @@ public class JwtUtil {
                 .compact();
     }
 
-    // JWT 검증
+    // JWT 유효성 검사
     public boolean validateToken(String token) {
         try {
-            Jwts.parser()
-                    .verifyWith(
-                            Keys.hmacShaKeyFor(
-                                    SECRET.getBytes(StandardCharsets.UTF_8)
-                            )
-                    )
-                    .build()
-                    .parseSignedClaims(token);
-
+            getClaims(token);
             return true;
 
         } catch (Exception e) {
@@ -79,6 +87,7 @@ public class JwtUtil {
 
     // 전체 Claims 추출
     public Claims getClaims(String token) {
+
         return Jwts.parser()
                 .verifyWith(
                         Keys.hmacShaKeyFor(
@@ -90,41 +99,57 @@ public class JwtUtil {
                 .getPayload();
     }
 
-    // 사용자 ID 추출
+    // 직원 ID 추출
     public Integer getEmployeeId(String token) {
+
         Claims claims = getClaims(token);
-        return Integer.parseInt(claims.getSubject());
+
+        return Integer.parseInt(
+                claims.getSubject()
+        );
     }
 
     // 로그인 ID 추출
     public String getLoginId(String token) {
+
         Claims claims = getClaims(token);
-        return claims.get("loginId", String.class);
+
+        return claims.get(
+                "loginId",
+                String.class
+        );
     }
 
-    // 권한 추출
+    // 역할 추출
     public String getRole(String token) {
+
         Claims claims = getClaims(token);
-        return claims.get("role", String.class);
+
+        return claims.get(
+                "role",
+                String.class
+        );
     }
 
-    // 사용자 구분 추출
+    // 사용자 유형 추출
     public String getUserType(String token) {
+
         Claims claims = getClaims(token);
-        return claims.get("userType", String.class);
+
+        return claims.get(
+                "userType",
+                String.class
+        );
     }
 
     // 지점 ID 추출
     public Integer getStoreId(String token) {
+
         Claims claims = getClaims(token);
-        return claims.get("storeId", Integer.class);
-    }
 
-    private String normalizeRole(String role) {
-        if ("HEAD_ADMIN".equals(role)) {
-            return "ADMIN";
-        }
-
-        return role;
+        return claims.get(
+                "storeId",
+                Integer.class
+        );
     }
 }

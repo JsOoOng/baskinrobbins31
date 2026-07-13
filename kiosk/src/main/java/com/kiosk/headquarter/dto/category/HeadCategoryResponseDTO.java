@@ -10,4 +10,5 @@ public class HeadCategoryResponseDTO {
     private Integer categoryId;
     private String categoryName;
     private Integer displayOrder;
+    private Boolean active;
 }
