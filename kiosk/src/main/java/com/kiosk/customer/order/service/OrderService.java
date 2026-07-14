@@ -77,7 +77,6 @@ public class OrderService {
                 .dryIceCount(request.getDryIceCount())
                 .dryIceMins(request.getDryIceMins())
                 .orderStatus(OrderStatus.WAITING)
-                .totalPrice(basket.getTotalPrice())
                 .build();
         
         orderRepository.save(order); // 여기서 order.getId()가 생성됨
@@ -143,10 +142,15 @@ public class OrderService {
         Payment payment = new Payment();
         payment.setOrderId(orderId);
         payment.setPaymentMethod(paymentMethod); // 그대로 사용
-        payment.setBaseAmount(orderRes.getTotalPrice());
-        payment.setCouponDiscount(0);
-        payment.setPointUsed(0);
-        payment.setFinalAmount(orderRes.getTotalPrice());
+        int baseAmount = orderRes.getTotalPrice();
+        int couponDiscount = 0;
+        int pointUsed = 0;
+        int finalAmount = baseAmount - couponDiscount - pointUsed;
+
+        payment.setBaseAmount(baseAmount);
+        payment.setCouponDiscount(couponDiscount);
+        payment.setPointUsed(pointUsed);
+        payment.setFinalAmount(finalAmount);
         payment.setPaymentStatus("PAID"); // 명시적으로 설정
         payment.setPaymentDate(java.time.LocalDateTime.now());
 

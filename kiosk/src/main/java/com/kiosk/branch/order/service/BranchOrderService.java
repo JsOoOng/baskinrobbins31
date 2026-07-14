@@ -109,7 +109,7 @@ public class BranchOrderService {
                     order.getOrderStatus().name()
                 )
                 .totalPrice(
-                    order.getTotalPrice()
+                    order.getOrderItems().stream().mapToInt(item -> item.getQuantity() * item.getUnitPrice()).sum()
                 )
                 .items(items)
                 .build();

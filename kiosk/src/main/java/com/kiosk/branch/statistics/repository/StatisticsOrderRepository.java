@@ -24,9 +24,9 @@ extends JpaRepository<Order, Integer> {
      * =====================================
      */
     @Query("""
-        SELECT COALESCE(SUM(o.totalPrice),0)
+        SELECT COALESCE(SUM(p.baseAmount),0)
 
-        FROM Order o
+        FROM Order o JOIN o.payments p
 
         WHERE o.store.id = :storeId
 
@@ -119,9 +119,9 @@ extends JpaRepository<Order, Integer> {
     @Query("""
         SELECT
             FUNCTION('DATE',o.createdAt),
-            SUM(o.totalPrice)
+            SUM(p.baseAmount)
 
-        FROM Order o
+        FROM Order o JOIN o.payments p
 
         WHERE o.store.id = :storeId
 
@@ -159,9 +159,9 @@ extends JpaRepository<Order, Integer> {
         SELECT
             FUNCTION('YEAR',o.createdAt),
             FUNCTION('MONTH',o.createdAt),
-            SUM(o.totalPrice)
+            SUM(p.baseAmount)
 
-        FROM Order o
+        FROM Order o JOIN o.payments p
 
         WHERE o.store.id=:storeId
 
@@ -205,9 +205,9 @@ extends JpaRepository<Order, Integer> {
     @Query("""
         SELECT
             FUNCTION('YEAR',o.createdAt),
-            SUM(o.totalPrice)
+            SUM(p.baseAmount)
 
-        FROM Order o
+        FROM Order o JOIN o.payments p
 
         WHERE o.store.id=:storeId
 
@@ -249,9 +249,9 @@ extends JpaRepository<Order, Integer> {
     @Query("""
         SELECT
             FUNCTION('HOUR',o.createdAt),
-            SUM(o.totalPrice)
+            SUM(p.baseAmount)
 
-        FROM Order o
+        FROM Order o JOIN o.payments p
 
         WHERE o.store.id=:storeId
 
@@ -293,9 +293,9 @@ extends JpaRepository<Order, Integer> {
     @Query("""
         SELECT
             FUNCTION('DAYOFWEEK',o.createdAt),
-            SUM(o.totalPrice)
+            SUM(p.baseAmount)
 
-        FROM Order o
+        FROM Order o JOIN o.payments p
 
         WHERE o.store.id=:storeId
 
@@ -406,9 +406,9 @@ extends JpaRepository<Order, Integer> {
      * ===========================
      */
     @Query("""
-    SELECT COALESCE(SUM(o.totalPrice),0)
+    SELECT COALESCE(SUM(p.baseAmount),0)
 
-    FROM Order o
+    FROM Order o JOIN o.payments p
 
     WHERE o.store.id=:storeId
 
@@ -456,10 +456,10 @@ extends JpaRepository<Order, Integer> {
 
     FUNCTION('HOUR',o.createdAt),
 
-    SUM(o.totalPrice)
+    SUM(p.baseAmount)
 
 
-    FROM Order o
+    FROM Order o JOIN o.payments p
 
 
     WHERE o.store.id=:storeId

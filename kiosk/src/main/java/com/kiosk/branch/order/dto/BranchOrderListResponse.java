@@ -35,7 +35,7 @@ public class BranchOrderListResponse {
                 .orderNumber(order.getOrderNumber())
                 .orderType(order.getOrderType())
                 .orderStatus(order.getOrderStatus())
-                .totalPrice(order.getTotalPrice())
+                .totalPrice(order.getOrderItems().stream().mapToInt(item -> item.getQuantity() * item.getUnitPrice()).sum())
                 .createdAt(order.getCreatedAt())
                 .build();
 

@@ -25,7 +25,7 @@
         SELECT 
             o.order_id, 
             o.order_number,
-            o.total_price,
+            (SELECT COALESCE(SUM(oi2.unit_price * oi2.quantity), 0) FROM order_items oi2 WHERE oi2.order_id = o.order_id) as total_price,
             oi.order_item_id, 
             oi.product_id,
             p.product_name, 

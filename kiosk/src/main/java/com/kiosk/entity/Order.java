@@ -76,9 +76,13 @@ public class Order {
     public void changeOrderStatus(OrderStatus orderStatus) {
     	this.orderStatus = orderStatus;
     }
-
-    @Column(name = "total_price", nullable = false)
-    private Integer totalPrice;
+    @OneToMany(
+            mappedBy = "order",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
+    private List<Payment> payments = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
