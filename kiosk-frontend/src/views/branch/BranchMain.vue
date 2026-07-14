@@ -21,6 +21,10 @@ const goStatistics = () => {
     router.push('/branch/statistics')
 }
 
+const goKiosk = () => {
+    router.push('/branch/kiosk')
+}
+
 
 const logout = () => {
   localStorage.removeItem('token')
@@ -68,6 +72,10 @@ const logout = () => {
 
         <button @click="goStatistics">
             통계 관리
+        </button>
+
+        <button @click="goKiosk">
+            키오스크 관리
         </button>
 
 

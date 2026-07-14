@@ -197,6 +197,8 @@ const getPaymentMethodText = (method) => {
 
 }
 </script>
+
+
 <template>
 
 <div class="container">
@@ -369,8 +371,16 @@ const getPaymentMethodText = (method) => {
                         </span>
 
                     </li>
+                    <li>
+                       
+                            드라이아이스 :
+                            {{ selectedOrder?.dryIceCount ?? 0 }}개
+                        
+                    </li>
 
                 </ul>
+
+                
 
                 <p>
                     <strong>맛</strong>
