@@ -19,16 +19,21 @@ public class StoreProductStatusResponse {
 
     private Boolean soldOut;
 
+    private Integer currentStock;
 
-
-    public static StoreProductStatusResponse from(StoreProduct sp){
+    public static StoreProductStatusResponse from(
+            StoreProduct sp,
+            Integer currentStock
+    ){
 
         return StoreProductStatusResponse.builder()
                 .storeProductId(sp.getId())
                 .productId(sp.getProduct().getId())
                 .productName(sp.getProduct().getProductName())
                 .soldOut(sp.getIsSoldOut())
+                .currentStock(currentStock)
                 .build();
+
     }
 
 }

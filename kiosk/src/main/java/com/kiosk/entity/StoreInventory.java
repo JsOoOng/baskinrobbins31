@@ -34,4 +34,15 @@ public class StoreInventory {
     @UpdateTimestamp // 업데이트 될 때마다 시간이 자동으로 갱신됩니다.
     @Column(name = "last_updated")
     private LocalDateTime lastUpdated;
+    
+    public void decreaseStock(Integer amount){
+
+        if(currentStock < amount){
+            throw new IllegalArgumentException(
+                "재고 부족"
+            );
+        }
+
+        this.currentStock -= amount;
+    }
 }

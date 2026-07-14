@@ -1,6 +1,7 @@
 package com.kiosk.customer.order.service;
 
 import org.springframework.stereotype.Service;
+
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.customer.basket.dto.BasketAddRequest;
@@ -33,6 +34,7 @@ import com.kiosk.entity.enums.OrderType;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +49,7 @@ public class OrderService {
     private final OrderItemOptionMapper orderItemOptionRepository;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
     
     // 주문 상세 조회
     public OrderResponse getOrderDetails(int orderId) {
@@ -108,7 +111,8 @@ public class OrderService {
                 .build();
         
         orderRepository.save(order); // 여기서 order.getId()가 생성됨
-
+        
+        
         for (BasketAddRequest basketItem : basket.getItems()) {
             Product product = em.getReference(Product.class, basketItem.getProductId());
             OrderItem orderItem = OrderItem.builder()
@@ -143,6 +147,12 @@ public class OrderService {
                 }
             }
         }
+        
+     // 지점에 새 주문 알림 전송
+        messagingTemplate.convertAndSend(
+                "/topic/store/" + request.getStoreId(),
+                "새 주문이 들어왔습니다."
+        );
 
         // 장바구니 초기화는 결제 성공 시점(processPayment)으로 이동
         return order.getId(); // 생성된 PK(orderId)를 반환

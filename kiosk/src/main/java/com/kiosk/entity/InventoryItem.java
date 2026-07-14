@@ -16,8 +16,10 @@ public class InventoryItem {
     @Column(name = "item_id")
     private Integer id;
 
-    @Column(name = "item_name", length = 100, nullable = false)
-    private String itemName;
+    // 상품 참조
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
     @Column(name = "unit", length = 20, nullable = false)
     private String unit;

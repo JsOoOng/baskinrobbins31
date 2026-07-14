@@ -17,6 +17,7 @@
 
             <tr>
                 <th>상품명</th>
+                <th>재고</th>
                 <th>상태</th>
                 <th>변경</th>
             </tr>
@@ -33,6 +34,11 @@
 
                 <td>
                     {{ menu.productName }}
+                </td>
+
+
+                <td>
+                    {{ menu.currentStock }}
                 </td>
 
 
