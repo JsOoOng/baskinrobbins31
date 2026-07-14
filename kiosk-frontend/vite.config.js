@@ -30,13 +30,14 @@ export default defineConfig({
     }
   },
   server: {
+    host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: `http://localhost:${backendPort}`,
+        target: `http://172.16.15.83:${backendPort}`,
         changeOrigin: true
       },
       '/ws': {
-        target: `ws://localhost:${backendPort}`,
+        target: `ws://172.16.15.83:${backendPort}`,
         ws: true,
         changeOrigin: true
       }
