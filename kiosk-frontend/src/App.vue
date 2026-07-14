@@ -39,8 +39,7 @@ onMounted(() => {
 
   client = new Client({
 
-    brokerURL:
-      'ws://localhost:8889/ws',
+    brokerURL: `ws://${window.location.hostname}:8889/ws`,
 
   });
 

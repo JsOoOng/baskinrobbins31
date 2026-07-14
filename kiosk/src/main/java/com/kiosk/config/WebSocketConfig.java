@@ -27,9 +27,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
         // Vue가 접속할 WebSocket 주소
         registry.addEndpoint("/ws")
-                .setAllowedOrigins(
-                        "http://localhost:5173"
-                );
+                .setAllowedOriginPatterns("*");
 
     }
 }
