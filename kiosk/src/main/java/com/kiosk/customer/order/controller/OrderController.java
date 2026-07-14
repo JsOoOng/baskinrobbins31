@@ -60,11 +60,12 @@ public class OrderController {
     @PostMapping("/{orderId}/pay")
     public ResponseEntity<String> completePayment(
             @PathVariable("orderId") int orderId, 
-            @RequestBody Map<String, String> request,
+            @RequestBody Map<String, Object> request,
             HttpSession session) { // session 파라미터 추가
         
-        String paymentMethod = request.get("paymentMethod"); // 키 값으로 추출
-        orderService.processPayment(orderId, paymentMethod, session); // session 전달
+        String paymentMethod = (String) request.get("paymentMethod"); // 키값으로 추출
+        int pointUsed = request.containsKey("pointUsed") ? Integer.parseInt(String.valueOf(request.get("pointUsed"))) : 0;
+        orderService.processPayment(orderId, paymentMethod, pointUsed, session); // session 및 pointUsed 전달
         
         return ResponseEntity.ok("결제 및 재고 차감 완료");
     }
@@ -103,12 +104,12 @@ public class OrderController {
             // 토스 페이먼츠 승인 서버로 실결제 요청 전송
             ResponseEntity<String> response = restTemplate.postForEntity(tossUrl, entity, String.class);
             
-            // 승인이 완료되면 자체 비즈니스 로직(재고 차감, 주문 완료) 처리
+            // 승인이 완료되면 실제 비즈니스 로직(재고 차감, 주문 완료) 처리
             String realOrderIdStr = tossReq.getOrderId().replace("kiosk_order_", "");
             int orderId = Integer.parseInt(realOrderIdStr);
-            orderService.processPayment(orderId, "TOSS", session);
+            orderService.processPayment(orderId, "TOSS", tossReq.getPointUsed(), session);
             
-            // 영수증 데이터 생성 및 로컬 /receipt API 호출
+            // 영수증 데이터 생성 후 로컬 /receipt API 호출
             try {
                 OrderResponse orderRes = orderService.getOrderDetails(orderId);
                 String orderNo = String.format("%03d", orderRes.getOrderNumber());

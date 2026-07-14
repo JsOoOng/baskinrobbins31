@@ -34,4 +34,11 @@ public class User {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+    
+    public void addPoint(int point) {
+        if (this.pointBalance == null) {
+            this.pointBalance = 0;
+        }
+        this.pointBalance += point;
+    }
 }

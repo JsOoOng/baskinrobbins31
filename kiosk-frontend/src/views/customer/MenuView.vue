@@ -56,22 +56,6 @@
       </div>
     </main>
 
-    <!-- 4. 하단 장바구니 요약바 -->
-    <footer class="cart-bottom-bar">
-      <div class="cart-summary">
-        <div>선택한 상품: <strong>{{ cartCount }}</strong>개</div>
-        <div>총 결제금액: <strong class="total-price">{{ formatPrice(totalPrice) }}원</strong></div>
-      </div>
-      <div class="cart-buttons">
-        <button class="btn-view-cart" :disabled="cartCount === 0" @click="openCartModal">
-          장바구니 확인 🛒
-        </button>
-        <button class="btn-pay" :disabled="cartCount === 0" @click="goPayment">
-          결제하기 💳
-        </button>
-      </div>
-    </footer>
-
     <!-- 5. 상품 상세 옵션 모달 팝업 -->
     <div v-if="isModalOpen" class="modal-overlay">
       <div class="modal-content">
@@ -163,14 +147,14 @@
             <img :src="selectedProduct?.imageUrl || `/images/products/${selectedProduct?.productName}.png`" @error="handleProductImgError" class="detail-img" />
             <div class="emoji-placeholder-big fallback-emoji" style="display:none;">🍦</div>
             <div class="detail-texts">
-              <h3>{{ selectedProduct?.productName }} <span class="detail-sub">(콘/컵)</span></h3>
+              <h3>{{ selectedProduct?.productName }} <span class="detail-sub" v-if="isContainerSelectable">(콘/컵)</span></h3>
             </div>
             <div class="detail-price-big">₩{{ formatPrice(calculatedItemPrice) }}</div>
           </div>
-          <p class="flavor-desc">원하는 맛의 아이스크림을 즐기세요!</p>
-          <p class="warning-text">★★ 본 제품은 포장이 불가합니다 ★★</p>
+          <p class="flavor-desc" v-if="currentMaxFlavors > 0">원하는 맛의 아이스크림을 즐기세요!</p>
+          <p class="warning-text" v-if="isContainerSelectable">★★ 본 제품은 포장이 불가합니다 ★★</p>
 
-          <div class="container-options">
+          <div class="container-options" v-if="isContainerSelectable">
             <div class="container-card" :class="{selected: selectedContainer === 'CUP'}" @click="selectedContainer = 'CUP'">
               <div class="container-img-wrap"><span class="container-emoji">🥤</span></div>
               <span class="container-name">컵<br/><span class="sub-text">(포장불가)</span></span>
@@ -210,8 +194,8 @@
             <div 
               v-for="flavor in paginatedFlavors" 
               :key="flavor.flavorId" 
-              :class="['flavor-card', { selected: selectedFlavors.includes(flavor.flavorId) }, { disabled: isFlavorMax && !selectedFlavors.includes(flavor.flavorId) }]"
-              @click="toggleFlavorSlot(flavor.flavorId)"
+              :class="['flavor-card', { selected: selectedFlavors.includes(flavor.flavorId) }, { disabled: isFlavorMax }]"
+              @click="addFlavorSlot(flavor.flavorId)"
             >
               <img v-if="flavor.imageUrl" :src="flavor.imageUrl" :alt="flavor.flavorName" class="flavor-image"/>
               <div v-else class="flavor-image-placeholder">🍦</div>
@@ -220,15 +204,31 @@
           </div>
 
           <!-- Pagination -->
-          <div class="pagination-dots">
-            <span class="dot active"></span>
-            <span class="dot"></span>
+          <div class="pagination-controls-pink">
+            <button class="btn-arrow-pink" :disabled="currentPage === 1" @click="currentPage--">
+              &lt;
+            </button>
+            <div class="pagination-dots">
+              <span 
+                v-for="page in totalPages" 
+                :key="page" 
+                :class="['dot', { active: currentPage === page }]"
+                @click="currentPage = page"
+              ></span>
+            </div>
+            <button class="btn-arrow-pink" :disabled="currentPage === totalPages" @click="currentPage++">
+              &gt;
+            </button>
           </div>
 
           <!-- Selected Slots -->
           <div class="selected-slots-area">
-             <div class="slot-container" v-for="i in currentMaxFlavors" :key="i">
-                <div class="slot-circle" :class="{filled: selectedFlavors[i-1]}"></div>
+             <div class="slot-container" v-for="i in currentMaxFlavors" :key="i" @click="removeFlavorSlot(i-1)" style="cursor: pointer;">
+                <div class="slot-circle" :class="{filled: selectedFlavors[i-1]}">
+                   <img v-if="selectedFlavors[i-1] && getFlavorImage(selectedFlavors[i-1])" 
+                        :src="getFlavorImage(selectedFlavors[i-1])" 
+                        class="slot-flavor-image" />
+                </div>
                 <div class="slot-badge">{{ i }}</div>
              </div>
           </div>
@@ -296,6 +296,35 @@
       </div>
     </div>
 
+    <!-- 7. 토스트 메시지 -->
+    <div v-if="showToast" class="toast-message">
+      {{ toastText }}
+    </div>
+
+    <!-- 8. 포장 시간 선택 모달 -->
+    <div class="modal-overlay" v-if="isPackingModalOpen" style="z-index: 2000;">
+      <div class="modal-content packing-modal">
+        <h2>🛍️ 이동(포장) 시간을 선택해주세요</h2>
+        <p class="modal-subtitle">이동 시간에 맞춰 드라이아이스를 준비해 드립니다.</p>
+        
+        <div class="packing-options">
+          <button class="packing-btn" @click="selectPackingTime(10, 1)">
+            <span class="time-text">10분 이하</span>
+            <span class="dry-ice-text">(드라이아이스 1개)</span>
+          </button>
+          <button class="packing-btn" @click="selectPackingTime(30, 2)">
+            <span class="time-text">30분 이하</span>
+            <span class="dry-ice-text">(드라이아이스 2개)</span>
+          </button>
+          <button class="packing-btn" @click="selectPackingTime(60, 3)">
+            <span class="time-text">30분 초과</span>
+            <span class="dry-ice-text">(드라이아이스 3개)</span>
+          </button>
+        </div>
+
+        <button class="btn-close" @click="isPackingModalOpen = false">취소</button>
+      </div>
+    </div>
 
   </div>
 </template>
@@ -338,6 +367,27 @@ const spoonCount = ref(1)
 // 새로운 UI 전용 상태
 const currentModalTab = ref('INFO') // 'INFO' | 'FLAVOR'
 const selectedContainer = ref('CUP')
+
+const isPackingModalOpen = ref(false)
+const pendingCartItem = ref(null)
+
+const showToast = ref(false)
+const toastText = ref('')
+let toastTimeout = null
+
+const displayToast = (msg) => {
+  toastText.value = msg;
+  showToast.value = true;
+  if (toastTimeout) clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => {
+    showToast.value = false;
+  }, 2000);
+}
+
+const isContainerSelectable = computed(() => {
+  if (!selectedProduct.value) return false;
+  return ['싱글레귤러', '싱글킹', '더블주니어', '더블레귤러'].includes(selectedProduct.value.productName);
+});
 
 const cartCount = computed(() => basketStore.totalCount)
 const totalPrice = computed(() => basketStore.totalPrice)
@@ -459,6 +509,11 @@ const getFlavorName = (fId) => {
   return f ? f.flavorName : '알 수 없는 맛';
 }
 
+const getFlavorImage = (fId) => {
+  const f = dbFlavors.value.find(x => x.flavorId === fId);
+  return f ? f.imageUrl : null;
+}
+
 const addFlavorSlot = (id) => {
   if (!isFlavorMax.value) {
     selectedFlavors.value.push(id)
@@ -537,7 +592,7 @@ const toggleFlavorSlot = (id) => {
 
 const addCurrentItemToCart = async () => { 
   if (currentMaxFlavors.value > 0 && selectedFlavors.value.length < currentMaxFlavors.value) {
-    alert(`아이스크림 맛을 ${currentMaxFlavors.value}가지 모두 선택해주세요.`);
+    displayToast(`아이스크림 맛을 ${currentMaxFlavors.value}가지 모두 선택해주세요.`);
     return;
   }
 
@@ -563,7 +618,7 @@ const addCurrentItemToCart = async () => {
 
   const requestData = {
     productId: selectedProduct.value.productId,
-    productName: selectedProduct.value.productName + (selectedContainer.value ? ` (${selectedContainer.value})` : ''),
+    productName: selectedProduct.value.productName + (isContainerSelectable.value && selectedContainer.value ? ` (${selectedContainer.value})` : ''),
     quantity: editingCartIndex.value !== null ? basketStore.cartItems[editingCartIndex.value].quantity : 1, // 기존 수량 유지
     unitPrice: calculatedItemPrice.value,
     flavors: flavorData,
@@ -571,13 +626,35 @@ const addCurrentItemToCart = async () => {
     extraSpoons: spoonCount.value > 4
   }
 
+  const targetProducts = ['파인트', '쿼터', '패밀리', '하프갤론', '하프갤런'];
+  if (basketStore.orderType === 'TOGO' && targetProducts.includes(selectedProduct.value.productName) && !basketStore.dryIceMins) {
+    pendingCartItem.value = requestData;
+    isPackingModalOpen.value = true;
+    return;
+  }
+
+  await processAddToCart(requestData);
+}
+
+const selectPackingTime = async (mins, count) => {
+  basketStore.setDryIceMins(mins);
+  basketStore.setDryIceCount(count);
+  isPackingModalOpen.value = false;
+  
+  if (pendingCartItem.value) {
+    await processAddToCart(pendingCartItem.value);
+    pendingCartItem.value = null;
+  }
+}
+
+const processAddToCart = async (requestData) => {
   try {
     if (editingCartIndex.value !== null) {
       await axios.put(`/api/customer/basket/item/${editingCartIndex.value}`, requestData);
-      alert(`${selectedProduct.value.productName} 상품 옵션이 수정되었습니다!`);
+      displayToast(`${selectedProduct.value.productName} 상품 옵션이 수정되었습니다!`);
     } else {
       await axios.post('/api/customer/basket', requestData);
-      alert(`${selectedProduct.value.productName} 상품이 장바구니에 담겼습니다!`);
+      displayToast(`${selectedProduct.value.productName} 상품이 장바구니에 담겼습니다!`);
     }
     
     await basketStore.fetchBasket();
@@ -587,7 +664,7 @@ const addCurrentItemToCart = async () => {
     }
   } catch (error) {
     console.error('장바구니 로직 실패:', error);
-    alert('작업을 완료하는데 실패했습니다.');
+    displayToast('작업을 완료하는데 실패했습니다.');
   }
 }
 
@@ -611,41 +688,29 @@ const decreaseCartQty = (index, currentQty) => {
 }
 
 const deleteCartItem = (index) => {
-  if (confirm("이 상품을 장바구니에서 삭제하시겠습니까?")) {
-    basketStore.removeFromCart(index);
-    if (basketStore.cartItems.length === 0) {
-      closeCartModal();
-    }
+  basketStore.removeFromCart(index);
+  displayToast("상품이 장바구니에서 삭제되었습니다.");
+  if (basketStore.cartItems.length === 0) {
+    closeCartModal();
   }
 }
 
 const goHome = async () => { 
   if (basketStore.cartItems.length > 0) {
-    if (confirm('처음으로 돌아가시면 장바구니가 모두 지워집니다. 진행하시겠습니까?')) {
-      await basketStore.clearCart();
-      router.push('/');
-    }
+    await basketStore.clearCart();
+    router.push('/');
   } else {
     router.push('/');
   }
 }
 
 const goPayment = async () => { 
-  try {
-    const res = await axios.post('/api/orders', {
-      orderType: basketStore.orderType || 'TOGO',
-      dryIceCount: basketStore.dryIceCount || 0,
-      dryIceMins: basketStore.dryIceMins || 0,
-      kioskId: 1,
-      storeId: 1
-    });
-    const orderId = res.data;
-    // 주문 번호를 가지고 결제 화면으로 넘어갑니다.
-    router.push(`/payment?orderId=${orderId}`);
-  } catch (error) {
-    console.error('주문 생성 에러:', error);
-    alert('결제를 진행할 수 없습니다. (장바구니가 비어있는지 확인해주세요)');
+  if (basketStore.cartItems.length === 0) {
+    displayToast('결제를 진행할 수 없습니다. (장바구니가 비어있는지 확인해주세요)');
+    return;
   }
+  // 바로 포인트/할인 화면으로 넘어갑니다. (DB 주문 생성은 결제 최종 단계로 지연)
+  router.push(`/point-discount`);
 }
 </script>
 
@@ -1441,9 +1506,34 @@ const goPayment = async () => {
 .flavor-card.disabled { opacity: 0.4; pointer-events: none; }
 .flavor-image { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
 .flavor-name { font-size: 0.85rem; color: #333;}
-.pagination-dots { text-align: center; margin-bottom: 20px; }
-.dot { display: inline-block; width: 8px; height: 8px; background: #ddd; border-radius: 50%; margin: 0 4px; }
-.dot.active { background: #e91e63; }
+.pagination-controls-pink {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+.btn-arrow-pink {
+  background: #e91e63;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.btn-arrow-pink:disabled {
+  background: #f8bbd0;
+  cursor: not-allowed;
+}
+.pagination-dots { display: flex; align-items: center; }
+.dot { display: inline-block; width: 8px; height: 8px; background: #ddd; border-radius: 50%; margin: 0 4px; cursor: pointer; }
+.dot.active { background: #e91e63; width: 10px; height: 10px; }
 
 .selected-slots-area {
   display: flex;
@@ -1458,8 +1548,17 @@ const goPayment = async () => {
   border-radius: 50%;
   border: 1px dashed #e91e63;
   background: #fff0f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
-.slot-circle.filled { background: #e91e63; border-style: solid; }
+.slot-circle.filled { background: white; border-style: solid; border-width: 2px; border-color: #e91e63; }
+.slot-flavor-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .slot-badge {
   position: absolute; top: -5px; right: -5px;
   background: #e91e63; color: white; border-radius: 50%; width: 20px; height: 20px;
@@ -1498,4 +1597,37 @@ const goPayment = async () => {
 .cart-item-price { color: #e91e63; font-weight: bold; margin-top: 5px; }
 .cart-item-options { font-size: 0.9rem; color: #666; margin-top: 5px;}
 .btn-delete { background: #f8f9fa; border: 1px solid #ddd; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: #333;}
+
+/* Toast Message */
+.toast-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(233, 30, 99, 0.85);
+  color: white;
+  padding: 15px 30px;
+  border-radius: 30px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  z-index: 2000;
+  pointer-events: none;
+  animation: fadeInOut 2s ease-in-out forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -40%); }
+  15% { opacity: 1; transform: translate(-50%, -50%); }
+  85% { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, -60%); }
+}
+
+/* Packing Modal Styles */
+.packing-modal h2 { color: #ff7c98; margin-bottom: 10px; }
+.modal-subtitle { color: #666; margin-bottom: 25px; }
+.packing-options { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+.packing-btn { background: #f8f9fa; border: 2px solid #e9ecef; padding: 20px; border-radius: 10px; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
+.packing-btn:hover { border-color: #ff7c98; background: #fff0f3; color: #ff7c98; }
+.dry-ice-text { font-size: 1rem; color: #888; }
+.packing-btn:hover .dry-ice-text { color: #ff7c98; }
 </style>

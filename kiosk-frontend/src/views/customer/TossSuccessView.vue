@@ -19,7 +19,7 @@ const router = useRouter();
 const basketStore = useBasketStore();
 
 onMounted(async () => {
-  const { paymentKey, orderId, amount } = route.query;
+  const { paymentKey, orderId, amount, pointUsed } = route.query;
 
   if (!paymentKey || !orderId || !amount) {
     alert('비정상적인 접근입니다.');
@@ -32,7 +32,8 @@ onMounted(async () => {
     await axios.post('/api/orders/toss/confirm', {
       paymentKey,
       orderId, // ex) kiosk_order_35
-      amount: Number(amount)
+      amount: Number(amount),
+      pointUsed: Number(pointUsed || 0)
     });
 
     // 성공 시 장바구니 초기화 후 완료 화면 이동
