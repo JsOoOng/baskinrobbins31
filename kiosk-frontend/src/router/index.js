@@ -69,6 +69,11 @@ const router = createRouter({
       component: MenuView
     },
     { 
+      path: '/point-discount', 
+      name: 'point-discount', 
+      component: () => import('@/views/customer/PointDiscountView.vue') 
+    },
+    { 
       path: '/payment', 
       name: 'payment', 
       component: () => import('@/views/customer/OrderConfirmView.vue') 

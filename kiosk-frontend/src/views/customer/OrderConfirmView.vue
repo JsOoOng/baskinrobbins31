@@ -1,8 +1,8 @@
 <template>
   <div class="order-confirm-container">
     <div class="header-section" style="display: flex; justify-content: space-between; align-items: center;">
-      <h2>STEP 01. 주문 내역을 확인해주세요</h2>
-      <button class="btn-back-cart" @click="goBackToCart">장바구니로 돌아가기 🔙</button>
+      <h2>STEP 02. 쿠폰/결제 (주문 내역 확인)</h2>
+      <button class="btn-back-cart" @click="goBackToCart">이전 화면으로 🔙</button>
     </div>
     
     <div class="order-list">
@@ -60,69 +60,60 @@ onMounted(() => {
 });
 
 const goBackToCart = async () => {
-  const orderId = route.query.orderId;
-  if (!orderId) {
-    router.push('/menu');
-    return;
-  }
-  
-  if (!confirm('현재 결제를 취소하고 장바구니로 돌아가시겠습니까? (장바구니 내역은 유지됩니다)')) return;
-
-  try {
-    // 1. 주문 취소 API 호출
-    await axios.post(`/api/orders/${orderId}/cancel`);
-    // 2. 장바구니 화면으로 복귀
-    router.push('/menu');
-  } catch (error) {
-    console.error('주문 취소 실패:', error);
-    alert('주문 취소 중 오류가 발생했습니다.');
-  }
+  router.push(`/point-discount`);
 };
 
 const handlePayment = async (method) => {
-  const orderId = route.query.orderId;
-  
-  if (!orderId) {
-    alert('주문 번호를 찾을 수 없습니다. 처음부터 다시 시도해주세요.');
-    router.push('/menu');
+  if (basketStore.cartItems.length === 0) {
+    alert('장바구니가 비어있습니다.');
     return;
   }
 
   try {
-    // 🌟 2단계: 방금 만든 주문서로 결제 및 재고 차감 진행
-    await axios.post(`/api/orders/${orderId}/pay`, { paymentMethod: method });
+    // 1. 주문 생성 API 호출 (DB 저장 및 포인트 적립)
+    const orderRes = await axios.post('/api/orders', {
+      orderType: basketStore.orderType || 'TOGO',
+      dryIceCount: basketStore.dryIceCount || 0,
+      dryIceMins: basketStore.dryIceMins || 0,
+      phoneNumber: basketStore.phoneNumber || null,
+      kioskId: 1,
+      storeId: 1
+    });
+    const orderId = orderRes.data;
 
-    alert(`${method === 'CARD' ? '신용카드' : '현금'} 결제가 완료되었습니다! 영수증 번호를 확인해주세요.`);
+    // 2. 결제 완료 API 호출
+    await axios.post(`/api/orders/${orderId}/pay`, {
+      paymentMethod: method,
+      pointUsed: basketStore.usedPoints || 0
+    });
     
-    // 3단계: 장바구니 초기화 및 메인 이동 대신 완료화면으로 이동
-    await basketStore.fetchBasket(); // 서버에서 세션이 비워졌으니 화면 갱신
-    router.push(`/order-complete?orderId=${orderId}`); 
+    // 3. 결제 완료 화면으로 이동
+    router.push(`/order-complete?orderId=${orderId}`);
   } catch (error) {
-    console.error('결제 오류 발생:', error);
-    const errorMsg = error.response?.data?.error || '결제 처리 중 오류가 발생했습니다.';
-    
-    // 예외 발생 시 안내 팝업 후 장바구니 복귀 여부 묻기
-    if (confirm(`결제 실패: ${errorMsg}\n장바구니로 돌아가 주문을 수정하시겠습니까?`)) {
-      try {
-        await axios.post(`/api/orders/${orderId}/cancel`);
-        router.push('/menu');
-      } catch (cancelError) {
-        alert('주문 취소 및 장바구니 이동에 실패했습니다.');
-        router.push('/menu');
-      }
-    }
+    console.error('결제 처리 중 오류 발생:', error);
+    alert('결제 처리 중 오류가 발생했습니다.');
   }
 };
 
 const handleTossPayment = async () => {
-  const orderId = route.query.orderId;
-  if (!orderId) {
-    alert('주문 번호를 찾을 수 없습니다. 처음부터 다시 시도해주세요.');
+  if (basketStore.cartItems.length === 0) {
+    alert('장바구니가 비어있습니다. 처음부터 다시 시도해주세요.');
     router.push('/menu');
     return;
   }
 
   try {
+    // 1. 토스 띄우기 전 주문 생성 API 호출 (DB 저장 및 포인트 적립)
+    const orderRes = await axios.post('/api/orders', {
+      orderType: basketStore.orderType || 'TOGO',
+      dryIceCount: basketStore.dryIceCount || 0,
+      dryIceMins: basketStore.dryIceMins || 0,
+      phoneNumber: basketStore.phoneNumber || null,
+      kioskId: 1,
+      storeId: 1
+    });
+    const orderId = orderRes.data;
+
     const tossPayments = await loadTossPayments(TOSS_CLIENT_KEY);
     
     let orderName = '주문 상품';
@@ -136,16 +127,16 @@ const handleTossPayment = async () => {
     
     // 토스페이먼츠 결제창 호출 (파라미터 전달)
     await tossPayments.requestPayment('카드', {
-      amount: basketStore.totalPrice,
-      orderId: `kiosk_order_${orderId}`, // 토스는 최소 6자리를 요구하므로 prefix를 붙임
+      amount: basketStore.totalPrice - (basketStore.usedPoints || 0),
+      orderId: `kiosk_order_${orderId}`, // 토스는 최소 6자리 요구하여 prefix를 붙임
       orderName: orderName,
       customerName: '키오스크고객',
-      successUrl: window.location.origin + '/toss/success',
+      successUrl: window.location.origin + `/toss/success?pointUsed=${basketStore.usedPoints || 0}`,
       failUrl: window.location.origin + '/toss/fail',
     });
   } catch (error) {
     console.error('토스 결제창 호출 오류:', error);
-    alert('결제창을 띄우는 중 오류가 발생했습니다.');
+    alert('토스 결제창을 열 수 없습니다.');
   }
 };
 </script>

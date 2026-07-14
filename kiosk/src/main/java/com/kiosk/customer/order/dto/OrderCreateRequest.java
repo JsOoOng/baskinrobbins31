@@ -13,6 +13,9 @@ public class OrderCreateRequest {
     private String orderType;      // "HERE" 또는 "TOGO"
     private Integer dryIceCount;   // 드라이아이스 개수
     private Integer dryIceMins;    // 포장 소요 시간
+    
+    // 포인트 적립용 회원 전화번호 (없는 경우 null 또는 빈 문자열)
+    private String phoneNumber;
 
     // =========================================================
     // 🚀 [여기에 추가!] 장바구니 상세 내역을 받을 리스트 변수 추가

@@ -8,7 +8,10 @@ export const useBasketStore = defineStore('basket', {
     cartItems: [],
     orderType: 'TOGO',
     dryIceCount: 0,
-    dryIceMins: 0
+    dryIceMins: 0,
+    phoneNumber: '',
+    usedPoints: 0,
+    pointMode: ''
   }),
 
   getters: {
@@ -33,6 +36,15 @@ export const useBasketStore = defineStore('basket', {
     },
     setDryIceMins(mins) {
       this.dryIceMins = mins;
+    },
+    setPhoneNumber(phone) {
+      this.phoneNumber = phone;
+    },
+    setUsedPoints(points) {
+      this.usedPoints = points;
+    },
+    setPointMode(mode) {
+      this.pointMode = mode;
     },
 
     // 🔄 서버로부터 장바구니 데이터를 동기화
