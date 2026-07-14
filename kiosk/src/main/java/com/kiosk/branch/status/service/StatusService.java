@@ -11,11 +11,13 @@ import com.kiosk.branch.status.dto.StoreFlavorStatusResponse;
 import com.kiosk.branch.status.dto.StoreProductStatusResponse;
 import com.kiosk.branch.status.reopsitory.IcecreamFlavorMapper;
 import com.kiosk.branch.status.reopsitory.StoreFlavorMapper;
+import com.kiosk.branch.status.reopsitory.StoreInventoryMapper;
 import com.kiosk.branch.status.reopsitory.StoreMapper;
 import com.kiosk.branch.status.reopsitory.StoreProductMapper;
 import com.kiosk.entity.IcecreamFlavor;
 import com.kiosk.entity.Store;
 import com.kiosk.entity.StoreFlavor;
+import com.kiosk.entity.StoreInventory;
 import com.kiosk.entity.StoreProduct;
 
 import lombok.RequiredArgsConstructor;
@@ -31,7 +33,8 @@ public class StatusService {
     private final StoreFlavorMapper storeFlavorMapper;
     private final IcecreamFlavorMapper icecreamFlavorMapper;
     private final StoreMapper storeMapper;
-
+    private final StoreInventoryMapper storeInventoryMapper;
+    
     // 지점 메뉴 품절 상태 변경
     public StoreProductStatusResponse updateProductSoldOut(
             Integer storeProductId,
@@ -39,17 +42,30 @@ public class StatusService {
     ){
 
         StoreProduct storeProduct =
-        		storeProductMapper.findById(storeProductId)
-                .orElseThrow(() -> 
-                    new IllegalArgumentException("상품 없음")
+                storeProductMapper.findById(storeProductId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("상품 없음")
                 );
 
 
         storeProduct.changeSoldOut(soldOut);
 
 
+        Integer stock =
+                storeInventoryMapper
+                        .findByStoreIdAndItemProductId(
+                                storeProduct.getStore().getId(),
+                                storeProduct.getProduct().getId()
+                        )
+                        .map(StoreInventory::getCurrentStock)
+                        .orElse(0);
+
+
         return StoreProductStatusResponse
-                .from(storeProduct);
+                .from(
+                        storeProduct,
+                        stock
+                );
     }
 
 
@@ -63,7 +79,22 @@ public class StatusService {
         return storeProductMapper
                 .findByStoreId(storeId)
                 .stream()
-                .map(StoreProductStatusResponse::from)
+                .map(sp -> {
+
+                    Integer stock =
+                            storeInventoryMapper
+                            .findByStoreIdAndItemProductId(
+                                    storeId,
+                                    sp.getProduct().getId()
+                            )
+                            .map(StoreInventory::getCurrentStock)
+                            .orElse(0);
+
+
+                    return StoreProductStatusResponse
+                            .from(sp, stock);
+
+                })
                 .toList();
 
     }

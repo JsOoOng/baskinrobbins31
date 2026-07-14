@@ -21,6 +21,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -76,13 +77,14 @@ public class Order {
     public void changeOrderStatus(OrderStatus orderStatus) {
     	this.orderStatus = orderStatus;
     }
-    @OneToMany(
-            mappedBy = "order",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    @Builder.Default
-    private List<Payment> payments = new ArrayList<>();
+    
+    @OneToOne(
+    	    mappedBy = "order",
+    	    cascade = CascadeType.ALL,
+    	    orphanRemoval = true,
+    	    fetch = FetchType.LAZY
+    	)
+    	private Payment payment;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
