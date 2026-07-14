@@ -1,11 +1,27 @@
 package com.kiosk.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "PRODUCTS")
@@ -70,4 +86,11 @@ public class Product {
     public void hideProduct() {
         this.isDisplay = false;
     }
+    
+    @OneToMany(
+            mappedBy = "product",
+            fetch = FetchType.LAZY
+    )
+    @Builder.Default
+    private List<InventoryItem> inventoryItems = new ArrayList<>();
 }

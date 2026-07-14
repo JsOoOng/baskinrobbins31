@@ -5,13 +5,9 @@ import api from '@/api/axios'
 
 const router = useRouter()
 
-
 const goBack = () => {
-
     router.push('/branch/main')
-
 }
-
 
 // 주문 목록
 const orders = ref([])
@@ -27,61 +23,64 @@ const user = JSON.parse(localStorage.getItem('branchUser'))
 
 // 주문 목록 조회
 const loadOrders = async () => {
-  try {
-    const response = await api.get(`/branch/order/${user.storeId}`)
+    try {
+        const response = await api.get(`/branch/order/${user.storeId}`)
 
-    orders.value = response.data
+        orders.value = response.data
 
-    // 선택한 주문이 있으면 상세도 갱신
-    if (selectedOrder.value) {
-      await selectOrder(selectedOrder.value.orderId)
+        // 선택한 주문이 있으면 상세도 갱신
+        if (selectedOrder.value) {
+            await selectOrder(selectedOrder.value.orderId)
+        }
+
+    } catch (e) {
+        console.error('주문 목록 조회 실패', e)
     }
-
-  } catch (e) {
-    console.error('주문 목록 조회 실패', e)
-  }
 }
 
 // 주문 상세 조회
 const selectOrder = async (orderId) => {
-  try {
-    const response = await api.get(`/branch/order/detail/${orderId}`)
+    try {
 
-    selectedOrder.value = response.data
-    selectedStatus.value = response.data.orderStatus
+        const response = await api.get(`/branch/order/detail/${orderId}`)
 
-  } catch (e) {
-    console.error('주문 상세 조회 실패', e)
-  }
+        selectedOrder.value = response.data
+        selectedStatus.value = response.data.orderStatus
+
+    } catch (e) {
+        console.error('주문 상세 조회 실패', e)
+    }
 }
 
 // 주문 상태 변경
 const changeStatus = async () => {
-  if (!selectedOrder.value) return
 
-  try {
+    if (!selectedOrder.value) return
 
-    await api.patch(
-      `/branch/order/${selectedOrder.value.orderId}/status`,
-      {
-        status: selectedStatus.value
-      }
-    )
+    try {
 
-    alert('주문 상태가 변경되었습니다.')
+        await api.patch(
+            `/branch/order/${selectedOrder.value.orderId}/status`,
+            {
+                status: selectedStatus.value
+            }
+        )
 
-    // 목록 갱신
-    await loadOrders()
+        alert('주문 상태가 변경되었습니다.')
 
-    // 상세 갱신
-    await selectOrder(selectedOrder.value.orderId)
+        // 목록 새로고침
+        await loadOrders()
 
-  } catch (e) {
+        // 상세 새로고침
+        await selectOrder(selectedOrder.value.orderId)
 
-    console.error('상태 변경 실패', e)
-    alert('상태 변경 실패')
+    } catch (e) {
 
-  }
+        console.error('상태 변경 실패', e)
+        alert('상태 변경 실패')
+
+    }
+
 }
 
 // 자동 새로고침용 타이머
@@ -89,69 +88,59 @@ let intervalId
 
 onMounted(() => {
 
-  // 최초 조회
-  loadOrders()
- 
-  // 5초마다 자동 새로고침
-  intervalId = setInterval(() => {
+    // 최초 조회
     loadOrders()
-  }, 5000)
-   
+
+    // 5초마다 자동 새로고침
+    intervalId = setInterval(() => {
+        loadOrders()
+    }, 5000)
+
 })
 
 onUnmounted(() => {
-  clearInterval(intervalId)
+    clearInterval(intervalId)
 })
 
-
+// 주문 상태 색상
 const getStatusClass = (status) => {
 
-    switch(status){
+    switch (status) {
 
         case 'WAITING':
             return 'status-waiting'
 
-
         case 'PREPARING':
             return 'status-preparing'
-
 
         case 'COMPLETED':
             return 'status-completed'
 
-
         case 'CANCELED':
             return 'status-canceled'
 
-
         default:
             return ''
-
     }
 
 }
 
-
-
+// 주문 상태 한글
 const getStatusText = (status) => {
 
-    switch(status){
+    switch (status) {
 
         case 'WAITING':
             return '대기중'
 
-
         case 'PREPARING':
             return '준비중'
-
 
         case 'COMPLETED':
             return '완료'
 
-
         case 'CANCELED':
             return '취소'
-
 
         default:
             return status
@@ -160,12 +149,59 @@ const getStatusText = (status) => {
 
 }
 
-</script>
+// 결제 상태 한글
+const getPaymentStatusText = (status) => {
 
+    switch (status) {
+
+        case 'PAID':
+            return '결제완료'
+
+        case 'REFUNDED':
+            return '환불완료'
+
+        case 'CANCELED':
+            return '결제취소'
+
+        default:
+            return status
+
+    }
+
+}
+
+// 결제수단 한글
+const getPaymentMethodText = (method) => {
+
+    switch (method) {
+
+        case 'CARD':
+            return '카드'
+
+        case 'CASH':
+            return '현금'
+
+        case 'E_PAY':
+            return '모바일결제'
+
+        case 'COUPON':
+            return '쿠폰'
+
+        case 'TOSS':
+            return '토스페이'
+
+        default:
+            return method
+
+    }
+
+}
+</script>
 <template>
 
 <div class="container">
 
+    <!-- 왼쪽 : 주문 목록 -->
     <div class="left">
 
         <button @click="goBack">
@@ -177,30 +213,39 @@ const getStatusText = (status) => {
         <table>
 
             <thead>
-
-            <tr>
-                <th class="order-number">주문번호</th>
-                <th>상태</th>
-            </tr>
-
+                <tr>
+                    <th class="order-number">주문번호</th>
+                    <th>주문상태</th>
+                    <th>결제상태</th>
+                    <th>결제금액</th>
+                </tr>
             </thead>
 
             <tbody>
 
-            <tr
-                v-for="order in orders"
-                :key="order.orderId"
-                @click="selectOrder(order.orderId)"
-            >
-                <td>{{ order.orderNumber }}</td>
-                <td>
-                    <span
-                        :class="getStatusClass(order.orderStatus)"
-                    >
-                        {{ getStatusText(order.orderStatus) }}
-                    </span>
-                </td>
-            </tr>
+                <tr
+                    v-for="order in orders"
+                    :key="order.orderId"
+                    @click="selectOrder(order.orderId)"
+                >
+
+                    <td>{{ order.orderNumber }}</td>
+
+                    <td>
+                        <span :class="getStatusClass(order.orderStatus)">
+                            {{ getStatusText(order.orderStatus) }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {{ getPaymentStatusText(order.paymentStatus) }}
+                    </td>
+
+                    <td>
+                        {{ order.finalAmount.toLocaleString() }}원
+                    </td>
+
+                </tr>
 
             </tbody>
 
@@ -208,36 +253,80 @@ const getStatusText = (status) => {
 
     </div>
 
+    <!-- 오른쪽 : 주문 상세 -->
     <div class="right">
 
         <h2>주문 상세</h2>
 
         <div v-if="selectedOrder">
 
-            <p>주문번호 : {{ selectedOrder.orderNumber }}</p>
+            <p><strong>주문번호</strong> : {{ selectedOrder.orderNumber }}</p>
 
-            <p>주문유형 : {{ selectedOrder.orderType }}</p>
+            <p><strong>주문유형</strong> : {{ selectedOrder.orderType }}</p>
 
-            <p>주문상태 : {{ selectedOrder.orderStatus }}</p>
+            <p><strong>주문상태</strong> : {{ getStatusText(selectedOrder.orderStatus) }}</p>
 
-            <p>총금액 : {{ selectedOrder.totalPrice.toLocaleString() }}원</p>
+            <hr>
+
+            <div class="payment-box">
+
+                <h3>결제 정보</h3>
+
+                <div class="payment-row">
+                    <span>상품금액</span>
+                    <span>{{ selectedOrder.baseAmount.toLocaleString() }}원</span>
+                </div>
+
+                <div class="payment-row">
+                    <span>쿠폰할인</span>
+                    <span>-{{ selectedOrder.couponDiscount.toLocaleString() }}원</span>
+                </div>
+
+                <div class="payment-row">
+                    <span>포인트 사용</span>
+                    <span>{{ selectedOrder.pointUsed.toLocaleString() }}P</span>
+                </div>
+
+                <div class="payment-row payment-final">
+                    <span>최종 결제금액</span>
+                    <span>{{ selectedOrder.finalAmount.toLocaleString() }}원</span>
+                </div>
+
+                <hr>
+
+                <div class="payment-row">
+                    <span>결제수단</span>
+                    <span>{{ getPaymentMethodText(selectedOrder.paymentMethod) }}</span>
+                </div>
+
+                <div class="payment-row">
+                    <span>결제상태</span>
+                    <span>{{ getPaymentStatusText(selectedOrder.paymentStatus) }}</span>
+                </div>
+
+                <div class="payment-row">
+                    <span>결제시간</span>
+                    <span>{{ selectedOrder.paymentDate }}</span>
+                </div>
+
+            </div>
 
             <hr>
 
             <h3>주문 상태 변경</h3>
 
             <select v-model="selectedStatus">
-            <option value="WAITING">WAITING</option>
-            <option value="PREPARING">PREPARING</option>
-            <option value="COMPLETED">COMPLETED</option>
-            <option value="CANCELED">CANCELED</option>
+
+                <option value="WAITING">WAITING</option>
+                <option value="PREPARING">PREPARING</option>
+                <option value="COMPLETED">COMPLETED</option>
+                <option value="CANCELED">CANCELED</option>
+
             </select>
 
             <button @click="changeStatus">
-            상태 변경
+                상태 변경
             </button>
-
-            <hr>
 
             <hr>
 
@@ -248,30 +337,40 @@ const getStatusText = (status) => {
 
                 <h3>{{ item.productName }}</h3>
 
-                <b class="option-title">옵션</b>
+                <p>
+                    수량 : {{ item.quantity }}
+                </p>
 
-    <ul class="option-list">
+                <p>
+                    단가 : {{ item.unitPrice.toLocaleString() }}원
+                </p>
 
-        <li
-            v-for="option in item.options"
-            :key="option.optionType + option.optionName"
-        >
+                <b class="option-title">
+                    옵션
+                </b>
 
-            <span class="option-type">
-                {{ option.optionType }}
-            </span>
+                <ul class="option-list">
 
-            <span class="option-name">
-                {{ option.optionName }}
-            </span>
+                    <li
+                        v-for="option in item.options"
+                        :key="option.optionType + option.optionName"
+                    >
 
-            <span class="option-price">
-                +{{ option.extraPrice.toLocaleString() }}원
-            </span>
+                        <span class="option-type">
+                            {{ option.optionType }}
+                        </span>
 
-        </li>
+                        <span class="option-name">
+                            {{ option.optionName }}
+                        </span>
 
-    </ul>
+                        <span class="option-price">
+                            +{{ option.extraPrice.toLocaleString() }}원
+                        </span>
+
+                    </li>
+
+                </ul>
 
                 <p>
                     <strong>맛</strong>
@@ -283,10 +382,8 @@ const getStatusText = (status) => {
                         v-for="flavor in item.flavors"
                         :key="flavor.flavorName"
                     >
-
                         {{ flavor.flavorName }}
                         ({{ flavor.quantity }})
-
                     </li>
 
                 </ul>
@@ -619,6 +716,72 @@ tbody tr:last-child td{
 .option-price{
     color:#ff6b00;
     font-weight:bold;
+}
+
+/* =========================
+   결제 정보
+========================= */
+
+.payment-box{
+
+    margin:20px 0;
+
+    padding:20px;
+
+    background:#fafafa;
+
+    border:1px solid #e5e5e5;
+
+    border-radius:12px;
+
+}
+
+.payment-box h3{
+
+    margin-top:0;
+
+    margin-bottom:20px;
+
+    color:#333;
+
+}
+
+.payment-row{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:10px 0;
+
+    border-bottom:1px dashed #e5e5e5;
+
+}
+
+.payment-row:last-child{
+
+    border-bottom:none;
+
+}
+
+.payment-final{
+
+    margin-top:10px;
+
+    padding-top:15px;
+
+    border-top:2px solid #ddd;
+
+    border-bottom:none;
+
+    font-size:18px;
+
+    font-weight:bold;
+
+    color:#ff6b00;
+
 }
 
 

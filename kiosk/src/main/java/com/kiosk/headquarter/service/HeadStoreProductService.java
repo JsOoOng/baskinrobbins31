@@ -5,14 +5,18 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kiosk.entity.InventoryItem;
 import com.kiosk.entity.Product;
 import com.kiosk.entity.Store;
+import com.kiosk.entity.StoreInventory;
 import com.kiosk.entity.StoreProduct;
 import com.kiosk.headquarter.dto.store.HeadStoreProductAddRequestDTO;
 import com.kiosk.headquarter.dto.store.HeadStoreProductDetailResponseDTO;
 import com.kiosk.headquarter.dto.store.HeadStoreProductListResponseDTO;
 import com.kiosk.headquarter.dto.store.HeadStoreProductUpdateRequestDTO;
+import com.kiosk.headquarter.repository.HeadInventoryItemMapper;
 import com.kiosk.headquarter.repository.HeadProductMapper;
+import com.kiosk.headquarter.repository.HeadStoreInventoryMapper;
 import com.kiosk.headquarter.repository.HeadStoreMapper;
 import com.kiosk.headquarter.repository.HeadStoreProductMapper;
 
@@ -31,6 +35,12 @@ public class HeadStoreProductService {
 
     private final HeadProductMapper
             headProductMapper;
+    
+    private final HeadInventoryItemMapper
+    	headInventoryItemMapper;
+    
+    private final HeadStoreInventoryMapper
+    	headStoreInventoryMapper;
 
     /*
      * 지점 판매 메뉴 등록
@@ -116,9 +126,25 @@ public class HeadStoreProductService {
                         .isDeleted(false)
                         .build();
 
-        headStoreProductMapper.save(
-                storeProduct
-        );
+        headStoreProductMapper.save(storeProduct);
+
+        InventoryItem item =
+                headInventoryItemMapper.findByProduct(product)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException("재고 품목이 존재하지 않습니다."));
+
+        // 이미 재고가 등록되어 있는지 확인
+        if (!headStoreInventoryMapper.existsByStoreAndItem(store, item)) {
+
+            StoreInventory inventory =
+                    StoreInventory.builder()
+                            .store(store)
+                            .item(item)
+                            .currentStock(0)
+                            .build();
+
+            headStoreInventoryMapper.save(inventory);
+        }
 
         return "지점 판매 메뉴 등록 성공";
     }
