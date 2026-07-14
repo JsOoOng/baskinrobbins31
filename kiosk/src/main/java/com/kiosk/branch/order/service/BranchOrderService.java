@@ -95,6 +95,8 @@ public class BranchOrderService {
                 .orderType(order.getOrderType().name())
                 .orderStatus(order.getOrderStatus().name())
 
+                .dryIceCount(order.getDryIceCount())
+                
                 // Payment 정보
                 .baseAmount(payment.getBaseAmount())
                 .couponDiscount(payment.getCouponDiscount())

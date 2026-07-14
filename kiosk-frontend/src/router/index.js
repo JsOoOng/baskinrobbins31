@@ -141,6 +141,18 @@ const router = createRouter({
       component: () => import('../views/branch/statistics/BranchStatistics.vue')
     },
 
+    {
+      path: '/branch/kiosk',
+      name: 'branch-kiosk',
+      component: () => import('../views/branch/BranchKiosk.vue')
+    },
+
+    {
+      path: '/branch/kiosk/register',
+      name: 'branch-kiosk-register',
+      component: () => import('../views/branch/BranchKioskRegister.vue')
+    },
+
     // ====================================================
     // 본사 관리자 로그인 및 예외 처리
     // ====================================================

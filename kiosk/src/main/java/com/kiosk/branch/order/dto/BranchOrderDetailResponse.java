@@ -15,6 +15,8 @@ public class BranchOrderDetailResponse {
     private Integer orderNumber;
     private String orderType;
     private String orderStatus;
+    
+    private Integer dryIceCount;
 
     // 결제 정보
     private Integer baseAmount;
