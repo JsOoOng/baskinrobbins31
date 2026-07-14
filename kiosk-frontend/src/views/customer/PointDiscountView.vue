@@ -18,11 +18,11 @@
         <h2 class="section-title">해피포인트 회원이신가요?</h2>
         <div class="button-grid">
           <button class="point-btn" @click="openKeypad('earn')">
-            <img src="@/assets/images/logo.png" alt="Happy Point" class="hp-logo" />
+            <img src="@/assets/images/happy_point.png" alt="Happy Point" class="hp-logo" />
             <span>적립하기</span>
           </button>
           <button class="point-btn" @click="openKeypad('use')">
-            <img src="@/assets/images/logo.png" alt="Happy Point" class="hp-logo" />
+            <img src="@/assets/images/happy_point.png" alt="Happy Point" class="hp-logo" />
             <span>사용하기</span>
           </button>
         </div>
