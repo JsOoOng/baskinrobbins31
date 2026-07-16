@@ -30,11 +30,18 @@ export default defineConfig({
     }
   },
   server: {
+
+    allowedHosts: [
+      'trace-discount-appraisal.ngrok-free.dev' // 여기에 ngrok 도메인 추가
+    ],
     host: '0.0.0.0',
     proxy: {
-      '/api': {
+      // 이 특별한 접두사가 붙은 데이터 요청만 백엔드로 보냅니다.
+      '/proxy-api': {
         target: `http://172.16.15.83:${backendPort}`,
-        changeOrigin: true
+        changeOrigin: true,
+        // 핵심: 스프링 부트에 도착하기 전에 '/proxy-api'라는 글자를 몰래 지워줍니다.
+        rewrite: (path) => path.replace(/^\/proxy-api/, '')
       },
       '/ws': {
         target: `ws://172.16.15.83:${backendPort}`,
