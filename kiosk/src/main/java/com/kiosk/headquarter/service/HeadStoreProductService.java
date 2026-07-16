@@ -140,7 +140,7 @@ public class HeadStoreProductService {
                     StoreInventory.builder()
                             .store(store)
                             .item(item)
-                            .currentStock(0)
+                            .currentStock(10)
                             .build();
 
             headStoreInventoryMapper.save(inventory);

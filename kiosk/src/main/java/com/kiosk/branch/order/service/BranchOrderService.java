@@ -89,25 +89,38 @@ public class BranchOrderService {
                         })
                         .toList();
 
-        return BranchOrderDetailResponse.builder()
-                .orderId(order.getId())
-                .orderNumber(order.getOrderNumber())
-                .orderType(order.getOrderType().name())
-                .orderStatus(order.getOrderStatus().name())
+        BranchOrderDetailResponse.BranchOrderDetailResponseBuilder builder =
+                BranchOrderDetailResponse.builder()
+                        .orderId(order.getId())
+                        .orderNumber(order.getOrderNumber())
+                        .orderType(order.getOrderType().name())
+                        .orderStatus(order.getOrderStatus().name())
+                        .dryIceCount(order.getDryIceCount())
+                        .items(items);
 
-                .dryIceCount(order.getDryIceCount())
-                
-                // Payment 정보
-                .baseAmount(payment.getBaseAmount())
-                .couponDiscount(payment.getCouponDiscount())
-                .pointUsed(payment.getPointUsed())
-                .finalAmount(payment.getFinalAmount())
-                .paymentMethod(payment.getPaymentMethod().name())
-                .paymentStatus(payment.getPaymentStatus().name())
-                .paymentDate(payment.getPaymentDate())
 
-                .items(items)
-                .build();
+        if (payment != null) {
+
+            builder
+                    .baseAmount(payment.getBaseAmount())
+                    .couponDiscount(payment.getCouponDiscount())
+                    .pointUsed(payment.getPointUsed())
+                    .finalAmount(payment.getFinalAmount())
+                    .paymentMethod(
+                            payment.getPaymentMethod() != null
+                                    ? payment.getPaymentMethod().name()
+                                    : null
+                    )
+                    .paymentStatus(
+                            payment.getPaymentStatus() != null
+                                    ? payment.getPaymentStatus().name()
+                                    : null
+                    )
+                    .paymentDate(payment.getPaymentDate());
+
+        }
+
+        return builder.build();
     }
 
     // 주문 상태 변경

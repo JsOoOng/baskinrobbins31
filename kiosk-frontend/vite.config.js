@@ -38,13 +38,13 @@ export default defineConfig({
     proxy: {
       // 이 특별한 접두사가 붙은 데이터 요청만 백엔드로 보냅니다.
       '/proxy-api': {
-        target: `http://172.16.15.83:${backendPort}`,
+        target: `http://localhost:${backendPort}`,
         changeOrigin: true,
         // 핵심: 스프링 부트에 도착하기 전에 '/proxy-api'라는 글자를 몰래 지워줍니다.
         rewrite: (path) => path.replace(/^\/proxy-api/, '')
       },
       '/ws': {
-        target: `ws://172.16.15.83:${backendPort}`,
+        target: `ws://localhost:${backendPort}`,
         ws: true,
         changeOrigin: true
       }

@@ -2,6 +2,7 @@ package com.kiosk.branch.order.dto;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.kiosk.entity.Order;
 import com.kiosk.entity.enums.OrderStatus;
 import com.kiosk.entity.enums.OrderType;
@@ -12,6 +13,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class BranchOrderListResponse {
 
     private Integer orderId;
@@ -29,7 +31,7 @@ public class BranchOrderListResponse {
 
     private LocalDateTime createdAt;
 
-
+    
     public static BranchOrderListResponse from(Order order) {
 
         return BranchOrderListResponse.builder()
@@ -41,7 +43,7 @@ public class BranchOrderListResponse {
                 .finalAmount(
                         order.getPayment() != null
                         ? order.getPayment().getFinalAmount()
-                        : 0
+                        : null
                 )
 
                 .paymentStatus(

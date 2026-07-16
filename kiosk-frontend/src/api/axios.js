@@ -34,8 +34,7 @@ instance.interceptors.request.use(
 
   (error) => {
     return Promise.reject(error)
-  }
-)
+})
 
 /*
  * 응답 인터셉터
