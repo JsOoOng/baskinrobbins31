@@ -183,7 +183,10 @@ const menuGroups = computed(() => {
                 icon: '◆',
                 routeName: 'head-security',
                 phase: 'P1',
-                implemented: true
+                implemented: true,
+                roles: [
+                  'SUPER_ADMIN'
+                ]
               }
             ]
           : []),

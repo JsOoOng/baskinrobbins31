@@ -502,11 +502,26 @@ onMounted(() => {
 }
 
 .brand-title {
-  margin: 0;
-  font-size: clamp(38px, 4.2vw, 58px);
+  margin: 22px 0 28px;
+
+  font-size: 42px;
+  line-height: 1.32;
   font-weight: 800;
-  line-height: 1.18;
-  letter-spacing: -2.2px;
+  letter-spacing: -1.6px;
+
+  color: #ffffff;
+  word-break: keep-all;
+}
+
+.brand-title span {
+  display: block;
+  white-space: nowrap;
+}
+
+@media (max-width: 1200px) {
+  .brand-title {
+    font-size: 38px;
+  }
 }
 
 .brand-description {

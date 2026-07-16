@@ -285,11 +285,29 @@ const router = createRouter({
           component: () => import('../views/head/HeadStatistics.vue'),
           meta: { title: '통계 및 리포트', description: '결제 매출과 지점 및 상품별 판매 실적을 분석합니다.', phase: 'P1' }
         },
-        {
+       {
           path: 'security',
           name: 'head-security',
-          component: loadHeadTemporaryPage,
-          meta: { title: '보안 및 권한', description: '관리자 계정과 접근 권한을 관리합니다.', phase: 'P1', roles: ['SUPER_ADMIN'] }
+
+          component: () =>
+            import(
+              '../views/head/HeadSecurity.vue'
+            ),
+
+          meta: {
+            title: '보안 및 권한',
+
+            description:
+              '본사 관리자 계정과 접근 권한을 관리합니다.',
+
+            phase: 'P1',
+
+            roles: [
+              'SUPER_ADMIN'
+            ],
+
+            implemented: true
+          }
         },
         {
           path: 'settings',
