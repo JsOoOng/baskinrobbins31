@@ -130,21 +130,99 @@ public class BranchOrderService {
         Order order = orderMapper.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
 
-        OrderStatus newStatus = OrderStatus.valueOf(status);
+        OrderStatus currentStatus = order.getOrderStatus();
 
+        OrderStatus newStatus;
+
+        try {
+            newStatus = OrderStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("잘못된 주문 상태입니다.");
+        }
+
+
+        /*
+         * 상태 변경 규칙
+         *
+         * WAITING(대기)
+         *  -> PREPARING(준비)
+         *  -> CANCELED(취소)
+         *
+         * PREPARING(준비)
+         *  -> COMPLETED(완료)
+         *
+         * COMPLETED(완료)
+         *  -> 변경 불가
+         *
+         * CANCELED(취소)
+         *  -> 변경 불가
+         */
+
+
+        // 완료 또는 취소 상태는 변경 불가
+        if(
+            currentStatus == OrderStatus.COMPLETED ||
+            currentStatus == OrderStatus.CANCELED
+        ) {
+
+            throw new RuntimeException(
+                    "완료 또는 취소된 주문은 상태 변경이 불가능합니다."
+            );
+
+        }
+
+
+        // 대기 -> 준비 / 취소만 가능
+        if(currentStatus == OrderStatus.WAITING) {
+
+            if(
+                newStatus != OrderStatus.PREPARING &&
+                newStatus != OrderStatus.CANCELED
+            ) {
+
+                throw new RuntimeException(
+                        "대기 상태에서는 준비 또는 취소만 가능합니다."
+                );
+
+            }
+
+        }
+
+
+        // 준비 -> 완료만 가능
+        if(currentStatus == OrderStatus.PREPARING) {
+
+            if(newStatus != OrderStatus.COMPLETED) {
+
+                throw new RuntimeException(
+                        "준비 상태에서는 완료만 가능합니다."
+                );
+
+            }
+
+        }
+
+
+        // 상태 변경
         order.changeOrderStatus(newStatus);
-        
+
+
+
+        // 준비 단계에서 재고 차감
         if(newStatus == OrderStatus.PREPARING){
 
             inventoryService.decrease(order);
 
         }
 
+
+        // 상태 변경 이력 저장
         OrderStatusHistory history = OrderStatusHistory.builder()
                 .order(order)
                 .store(order.getStore())
                 .orderStatus(newStatus)
                 .build();
+
 
         orderStatusHistoryMapper.save(history);
     }

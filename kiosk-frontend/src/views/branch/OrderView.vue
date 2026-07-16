@@ -42,22 +42,57 @@ const loadOrders = async () => {
 
 // 주문 상세 조회
 const selectOrder = async (orderId) => {
+
     try {
 
-        const response = await api.get(`/branch/order/detail/${orderId}`)
+        const response = await api.get(
+            `/branch/order/detail/${orderId}`
+        )
 
         selectedOrder.value = response.data
-        selectedStatus.value = response.data.orderStatus
+
+
+        const available =
+            getAvailableStatuses(response.data.orderStatus)
+
+
+        selectedStatus.value =
+            available.length > 0
+            ? available[0].value
+            : ''
+
 
     } catch (e) {
+
         console.error('주문 상세 조회 실패', e)
+
     }
+
 }
 
 // 주문 상태 변경
 const changeStatus = async () => {
 
     if (!selectedOrder.value) return
+
+
+    const available =
+        getAvailableStatuses(selectedOrder.value.orderStatus)
+
+
+    const canChange =
+        available.some(
+            status => status.value === selectedStatus.value
+        )
+
+
+    if (!canChange) {
+
+        alert('변경할 수 없는 상태입니다.')
+        return
+
+    }
+
 
     try {
 
@@ -68,18 +103,24 @@ const changeStatus = async () => {
             }
         )
 
+
         alert('주문 상태가 변경되었습니다.')
 
-        // 목록 새로고침
+
         await loadOrders()
 
-        // 상세 새로고침
+
         await selectOrder(selectedOrder.value.orderId)
+
 
     } catch (e) {
 
         console.error('상태 변경 실패', e)
-        alert('상태 변경 실패')
+
+        alert(
+            e.response?.data?.message 
+            || '상태 변경 실패'
+        )
 
     }
 
@@ -194,6 +235,41 @@ const getPaymentMethodText = (method) => {
 
         default:
             return method
+
+    }
+
+}
+
+
+// 현재 상태에서 변경 가능한 상태 목록
+const getAvailableStatuses = (status) => {
+
+    switch(status) {
+
+        case 'WAITING':
+            return [
+                {
+                    value: 'PREPARING',
+                    text: '준비중'
+                },
+                {
+                    value: 'CANCELED',
+                    text: '취소'
+                }
+            ]
+
+
+        case 'PREPARING':
+            return [
+                {
+                    value: 'COMPLETED',
+                    text: '완료'
+                }
+            ]
+
+
+        default:
+            return []
 
     }
 
@@ -320,20 +396,49 @@ const getPaymentMethodText = (method) => {
 
             <hr>
 
-            <h3>주문 상태 변경</h3>
+            <h3>주문 상태</h3>
 
-            <select v-model="selectedStatus">
 
-                <option value="WAITING">WAITING</option>
-                <option value="PREPARING">PREPARING</option>
-                <option value="COMPLETED">COMPLETED</option>
-                <option value="CANCELED">CANCELED</option>
+            <div
+                v-if="selectedOrder.orderStatus === 'COMPLETED'"
+            >
+                완료됨
+            </div>
 
-            </select>
 
-            <button @click="changeStatus">
-                상태 변경
-            </button>
+            <div
+                v-else-if="selectedOrder.orderStatus === 'CANCELED'"
+            >
+                취소됨
+            </div>
+
+
+            <div
+                v-else
+            >
+
+                <select 
+                    v-model="selectedStatus"
+                >
+
+                    <option
+                        v-for="status in getAvailableStatuses(selectedOrder.orderStatus)"
+                        :key="status.value"
+                        :value="status.value"
+                    >
+                        {{ status.text }}
+                    </option>
+
+                </select>
+
+
+                <button
+                    @click="changeStatus"
+                >
+                    상태 변경
+                </button>
+
+            </div>
 
             <hr>
 
