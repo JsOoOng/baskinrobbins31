@@ -71,6 +71,36 @@ INSERT INTO product_options (product_id, option_type, option_name, extra_price, 
 (7, 'CONTAINER', '패밀리 (용기)', 0, 5),
 (8, 'CONTAINER', '하프갤런 (용기)', 0, 6);
 
+-- 24. 카테고리 추가 (커피 카테고리가 없는 경우 추가, active 포함)
+INSERT INTO categories (category_name, display_order, active)
+SELECT '커피', 5, 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE category_name = '커피');
+
+-- 25. 추가 제품 등록 (디저트, 음료, 커피)
+INSERT INTO products (category_id, product_name, description, base_price, discount_rate, is_display, created_at) VALUES
+((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '소금 우유 아이스 모찌', '달콤 짭짤한 소금 우유 맛 아이스 모찌', 3000, 0.00, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '그린티 아이스 모찌', '녹차의 진한 맛을 담은 모찌', 3000, 0.00, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '체리쥬빌레 마카롱', '아이스크림 마카롱', 3500, 0.00, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '바닐라 아이스크림 롤', '부드러운 바닐라 아이스크림 롤', 2000, 0.00, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '엄마는 외계인 블라스트', '초코볼이 가득한 시그니처 블라스트', 5500, 0.00, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '아몬드 봉봉 블라스트', '아몬드 봉봉 아이스크림으로 만든 블라스트', 5500, 0.00, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '딸기 연유 쉐이크', '달콤한 딸기와 연유의 만남', 5000, 0.00, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '오레오 쉐이크', '오레오 쿠키가 듬뿍', 5000, 0.00, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '카푸치노 블라스트 오리지널', '커피 아이스크림 블라스트', 4500, 0.00, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '아이스 아메리카노', '시원한 아메리카노', 2500, 0.00, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '카페라떼', '부드러운 카페라떼', 3000, 0.00, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '연유 라떼', '달콤한 연유가 들어간 라떼', 3500, 0.00, 1, NOW());
+
+-- 26. 추가 제품 옵션 매핑
+INSERT INTO product_options (product_id, option_type, option_name, extra_price, max_flavor_count)
+SELECT product_id, 'SIZE', '기본 레귤러', 0, 0
+FROM products
+WHERE product_name IN (
+'소금 우유 아이스 모찌', '그린티 아이스 모찌', '체리쥬빌레 마카롱', '바닐라 아이스크림 롤',
+'엄마는 외계인 블라스트', '아몬드 봉봉 블라스트', '딸기 연유 쉐이크', '오레오 쉐이크',
+'카푸치노 블라스트 오리지널', '아이스 아메리카노', '카페라떼', '연유 라떼'
+);
+
 -- 5. 지점 데이터
 INSERT INTO stores (store_name, business_number, region, address, phone, business_hours, store_status, created_at) VALUES
 ('배스킨라빈스 강남점', '123-45-67890', '서울', '서울특별시 강남구 역삼동', '02-123-4567', '10:00 - 23:00', 'OPEN', NOW());
@@ -86,6 +116,15 @@ INSERT INTO store_products (store_id, product_id, is_sold_out, is_deleted, store
 (1, 7, 0, 0, 24000),
 (1, 8, 0, 0, 29000);
 
+-- 27. 지점 판매 상품으로 추가 매핑 (강남점 store_id=1 기준)
+INSERT INTO store_products (store_id, product_id, is_sold_out, is_deleted, store_product_price)
+SELECT 1, product_id, 0, 0, base_price
+FROM products
+WHERE product_name IN (
+'소금 우유 아이스 모찌', '그린티 아이스 모찌', '체리쥬빌레 마카롱', '바닐라 아이스크림 롤',
+'엄마는 외계인 블라스트', '아몬드 봉봉 블라스트', '딸기 연유 쉐이크', '오레오 쉐이크',
+'카푸치노 블라스트 오리지널', '아이스 아메리카노', '카페라떼', '연유 라떼'
+);
 -- 7. 지점별 아이스크림 맛 재고 매핑
 INSERT INTO store_flavors (store_id, flavor_id, container, is_sold_out) VALUES
 (1, 1, 6, 0), (1, 2, 6, 0), (1, 3, 6, 0), (1, 4, 6, 0), (1, 5, 6, 0),
@@ -123,18 +162,50 @@ INSERT INTO kiosks (store_id, kiosk_number, device_serial, kiosk_status, created
 (1, 2, 'SN-E5F6G7H8', 'ONLINE', NOW());
 
 -- 13. INVENTORY_ITEMS (본사 등록 물품/소모품)
-INSERT INTO inventory_items (item_name, unit, unit_price) VALUES
-('아이스크림 콘(스탠다드)', 'BOX', 15000),
-('아이스크림 컵(싱글)', 'BOX', 12000),
-('포장용 드라이아이스', 'BOX', 20000),
-('핑크스푼', 'BOX', 5000);
+INSERT INTO inventory_items (product_id, unit, unit_price) VALUES
+((SELECT product_id FROM products WHERE product_name = '싱글레귤러'), 'EA', 1750),
+((SELECT product_id FROM products WHERE product_name = '싱글킹'), 'EA', 2150),
+((SELECT product_id FROM products WHERE product_name = '더블주니어'), 'EA', 2350),
+((SELECT product_id FROM products WHERE product_name = '더블레귤러'), 'EA', 3350),
+((SELECT product_id FROM products WHERE product_name = '파인트'), 'EA', 4450),
+((SELECT product_id FROM products WHERE product_name = '쿼터'), 'EA', 8500),
+((SELECT product_id FROM products WHERE product_name = '패밀리'), 'EA', 12000),
+((SELECT product_id FROM products WHERE product_name = '하프갤런'), 'EA', 14500),
+((SELECT product_id FROM products WHERE product_name = '소금 우유 아이스 모찌'), 'EA', 1500),
+((SELECT product_id FROM products WHERE product_name = '그린티 아이스 모찌'), 'EA', 1500),
+((SELECT product_id FROM products WHERE product_name = '체리쥬빌레 마카롱'), 'EA', 1750),
+((SELECT product_id FROM products WHERE product_name = '바닐라 아이스크림 롤'), 'EA', 1000),
+((SELECT product_id FROM products WHERE product_name = '엄마는 외계인 블라스트'), 'EA', 2750),
+((SELECT product_id FROM products WHERE product_name = '아몬드 봉봉 블라스트'), 'EA', 2750),
+((SELECT product_id FROM products WHERE product_name = '딸기 연유 쉐이크'), 'EA', 2500),
+((SELECT product_id FROM products WHERE product_name = '오레오 쉐이크'), 'EA', 2500),
+((SELECT product_id FROM products WHERE product_name = '카푸치노 블라스트 오리지널'), 'EA', 2250),
+((SELECT product_id FROM products WHERE product_name = '아이스 아메리카노'), 'EA', 1250),
+((SELECT product_id FROM products WHERE product_name = '카페라떼'), 'EA', 1500),
+((SELECT product_id FROM products WHERE product_name = '연유 라떼'), 'EA', 1750);
 
 -- 14. STORE_INVENTORY (지점 재고 현황)
 INSERT INTO store_inventory (store_id, item_id, current_stock, last_updated) VALUES
-(1, 1, 10, NOW()),
-(1, 2, 15, NOW()),
-(1, 3, 5, NOW()),
-(1, 4, 30, NOW());
+(1, 1, 30, NOW()),  -- 싱글레귤러
+(1, 2, 30, NOW()),  -- 싱글킹
+(1, 3, 30, NOW()),  -- 더블주니어
+(1, 4, 30, NOW()),  -- 더블레귤러
+(1, 5, 30, NOW()),  -- 파인트
+(1, 6, 30, NOW()), -- 쿼터
+(1, 7, 30, NOW()), -- 패밀리
+(1, 8, 30, NOW()), -- 하프갤런
+(1, 9, 20, NOW()), -- 소금 우유 아이스 모찌
+(1, 10, 20, NOW()), -- 그린티 아이스 모찌
+(1, 11, 20, NOW()), -- 체리쥬빌레 마카롱
+(1, 12, 20, NOW()), -- 바닐라 아이스크림 롤
+(1, 13, 15, NOW()), -- 엄마는 외계인 블라스트
+(1, 14, 15, NOW()), -- 아몬드 봉봉 블라스트
+(1, 15, 15, NOW()), -- 딸기 연유 쉐이크
+(1, 16, 15, NOW()), -- 오레오 쉐이크
+(1, 17, 15, NOW()), -- 카푸치노 블라스트 오리지널
+(1, 18, 15, NOW()), -- 아이스 아메리카노
+(1, 19, 15, NOW()), -- 카페라떼
+(1, 20, 15, NOW()); -- 연유 라떼
 
 -- 15. STORE_EXPENSES (지점 지출 내역)
 INSERT INTO store_expenses (store_id, employee_id, expense_category, payment_method, expense_date, amount, description, receipt_url, created_at) VALUES
@@ -151,9 +222,9 @@ INSERT INTO inquiries (inquiry_type, store_id, admin_id, title, content, answer,
 ('STORE_TO_HEAD', 1, 1, '포스기 오류 관련 문의', '결제 시 화면이 멈추는 증상이 있습니다.', '접수되었습니다. 기술팀 배정하겠습니다.', 'WAITING', NOW());
 
 -- 18. ORDERS (주문 기록 - total_price 완전히 제거됨)
-INSERT INTO orders (store_id, kiosk_id, user_id, order_number, order_type, dry_ice_mins, order_status, created_at) VALUES
-(1, 1, 1, 101, 'HERE', 0, 'COMPLETED', NOW()),
-(1, 2, NULL, 102, 'TOGO', 30, 'WAITING', NOW());
+INSERT INTO orders (store_id, kiosk_id, user_id, order_number, order_type, dry_ice_count, dry_ice_mins, order_status, created_at) VALUES
+(1, 1, 1, 101, 'HERE', 0, 0, 'COMPLETED', NOW()),
+(1, 2, NULL, 102, 'TOGO', 1, 30, 'WAITING', NOW());
 
 -- 19. ORDER_ITEMS (주문 상품)
 INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES
@@ -185,110 +256,71 @@ INSERT INTO payments (order_id, payment_method, base_amount, coupon_discount, po
 (1, 'CARD', 6700, 0, 0, 6700, 'PAID', NOW()),
 (2, 'E_PAY', 17000, 0, 0, 17000, 'PAID', NOW());
 
--- 24. 카테고리 추가 (커피 카테고리가 없는 경우 추가, active 포함)
-INSERT INTO categories (category_name, display_order, active)
-SELECT '커피', 5, 1 FROM DUAL
-WHERE NOT EXISTS (SELECT 1 FROM categories WHERE category_name = '커피');
-
--- 25. 추가 제품 등록 (디저트, 음료, 커피)
-INSERT INTO products (category_id, product_name, description, base_price, discount_rate, is_display, created_at) VALUES
-((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '소금 우유 아이스 모찌', '달콤 짭짤한 소금 우유 맛 아이스 모찌', 3000, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '그린티 아이스 모찌', '녹차의 진한 맛을 담은 모찌', 3000, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '체리쥬빌레 마카롱', '아이스크림 마카롱', 3500, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '바닐라 아이스크림 롤', '부드러운 바닐라 아이스크림 롤', 2000, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '엄마는 외계인 블라스트', '초코볼이 가득한 시그니처 블라스트', 5500, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '아몬드 봉봉 블라스트', '아몬드 봉봉 아이스크림으로 만든 블라스트', 5500, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '딸기 연유 쉐이크', '달콤한 딸기와 연유의 만남', 5000, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '오레오 쉐이크', '오레오 쿠키가 듬뿍', 5000, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '카푸치노 블라스트 오리지널', '커피 아이스크림 블라스트', 4500, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '아이스 아메리카노', '시원한 아메리카노', 2500, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '카페라떼', '부드러운 카페라떼', 3000, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '연유 라떼', '달콤한 연유가 들어간 라떼', 3500, 0.00, 1, NOW());
-
--- 26. 추가 제품 옵션 매핑
-INSERT INTO product_options (product_id, option_type, option_name, extra_price, max_flavor_count)
-SELECT product_id, 'SIZE', '기본 레귤러', 0, 0
-FROM products
-WHERE product_name IN (
-'소금 우유 아이스 모찌', '그린티 아이스 모찌', '체리쥬빌레 마카롱', '바닐라 아이스크림 롤',
-'엄마는 외계인 블라스트', '아몬드 봉봉 블라스트', '딸기 연유 쉐이크', '오레오 쉐이크',
-'카푸치노 블라스트 오리지널', '아이스 아메리카노', '카페라떼', '연유 라떼'
-);
-
--- 27. 지점 판매 상품으로 추가 매핑 (강남점 store_id=1 기준)
-INSERT INTO store_products (store_id, product_id, is_sold_out, is_deleted, store_product_price)
-SELECT 1, product_id, 0, 0, base_price
-FROM products
-WHERE product_name IN (
-'소금 우유 아이스 모찌', '그린티 아이스 모찌', '체리쥬빌레 마카롱', '바닐라 아이스크림 롤',
-'엄마는 외계인 블라스트', '아몬드 봉봉 블라스트', '딸기 연유 쉐이크', '오레오 쉐이크',
-'카푸치노 블라스트 오리지널', '아이스 아메리카노', '카페라떼', '연유 라떼'
-);
 -- ==========================================
 -- 28. 한 달 분량 통계용 더미 데이터 (Orders, OrderItems, Payments 등)
 -- ==========================================
 
-INSERT INTO orders (order_id, store_id, kiosk_id, user_id, order_number, order_type, dry_ice_mins, order_status, created_at) VALUES
-(100, 1, 1, 2, 1000, 'HERE', 0, 'COMPLETED', '2026-07-09 19:36:00'),
-(101, 1, 1, 2, 1001, 'HERE', 0, 'COMPLETED', '2026-07-04 13:59:00'),
-(102, 1, 1, 1, 1002, 'HERE', 0, 'COMPLETED', '2026-06-23 12:35:00'),
-(103, 1, 1, 2, 1003, 'TOGO', 60, 'COMPLETED', '2026-06-16 21:25:00'),
-(104, 1, 1, 1, 1004, 'TOGO', 60, 'COMPLETED', '2026-07-14 16:38:00'),
-(105, 1, 1, 2, 1005, 'TOGO', 60, 'COMPLETED', '2026-07-07 22:32:00'),
-(106, 1, 1, NULL, 1006, 'TOGO', 30, 'COMPLETED', '2026-07-05 12:20:00'),
-(107, 1, 1, NULL, 1007, 'TOGO', 0, 'COMPLETED', '2026-07-05 18:01:00'),
-(108, 1, 1, 1, 1008, 'TOGO', 30, 'COMPLETED', '2026-06-26 20:14:00'),
-(109, 1, 1, NULL, 1009, 'HERE', 0, 'COMPLETED', '2026-06-27 19:02:00'),
-(110, 1, 1, 2, 1010, 'HERE', 0, 'COMPLETED', '2026-06-30 11:18:00'),
-(111, 1, 1, NULL, 1011, 'HERE', 0, 'COMPLETED', '2026-06-30 21:45:00'),
-(112, 1, 1, 2, 1012, 'HERE', 0, 'COMPLETED', '2026-06-18 18:00:00'),
-(113, 1, 1, 1, 1013, 'HERE', 0, 'COMPLETED', '2026-06-19 12:49:00'),
-(114, 1, 1, 2, 1014, 'HERE', 0, 'COMPLETED', '2026-06-16 18:01:00'),
-(115, 1, 1, NULL, 1015, 'TOGO', 30, 'COMPLETED', '2026-07-11 19:56:00'),
-(116, 1, 1, NULL, 1016, 'TOGO', 0, 'COMPLETED', '2026-06-25 13:20:00'),
-(117, 1, 1, 2, 1017, 'HERE', 0, 'COMPLETED', '2026-07-11 12:44:00'),
-(118, 1, 1, 2, 1018, 'HERE', 0, 'COMPLETED', '2026-06-25 21:01:00'),
-(119, 1, 1, 1, 1019, 'HERE', 0, 'COMPLETED', '2026-06-17 19:31:00'),
-(120, 1, 1, 2, 1020, 'TOGO', 0, 'COMPLETED', '2026-06-16 15:26:00'),
-(121, 1, 1, NULL, 1021, 'TOGO', 60, 'COMPLETED', '2026-06-23 21:20:00'),
-(122, 1, 1, 2, 1022, 'TOGO', 60, 'COMPLETED', '2026-07-05 14:12:00'),
-(123, 1, 1, NULL, 1023, 'HERE', 0, 'COMPLETED', '2026-06-23 19:15:00'),
-(124, 1, 1, 1, 1024, 'TOGO', 30, 'COMPLETED', '2026-07-04 18:58:00'),
-(125, 1, 1, 2, 1025, 'TOGO', 30, 'COMPLETED', '2026-06-25 19:38:00'),
-(126, 1, 1, NULL, 1026, 'TOGO', 60, 'COMPLETED', '2026-07-03 10:25:00'),
-(127, 1, 1, NULL, 1027, 'TOGO', 0, 'COMPLETED', '2026-06-22 13:14:00'),
-(128, 1, 1, 1, 1028, 'HERE', 0, 'COMPLETED', '2026-07-01 10:06:00'),
-(129, 1, 1, NULL, 1029, 'HERE', 0, 'COMPLETED', '2026-07-11 19:59:00'),
-(130, 1, 1, 2, 1030, 'TOGO', 0, 'COMPLETED', '2026-07-03 13:01:00'),
-(131, 1, 1, 1, 1031, 'TOGO', 60, 'COMPLETED', '2026-06-16 22:44:00'),
-(132, 1, 1, 2, 1032, 'TOGO', 60, 'COMPLETED', '2026-07-06 13:46:00'),
-(133, 1, 1, 1, 1033, 'TOGO', 30, 'COMPLETED', '2026-07-08 10:51:00'),
-(134, 1, 1, 1, 1034, 'HERE', 0, 'COMPLETED', '2026-07-04 22:39:00'),
-(135, 1, 1, NULL, 1035, 'TOGO', 30, 'COMPLETED', '2026-06-19 18:04:00'),
-(136, 1, 1, NULL, 1036, 'HERE', 0, 'COMPLETED', '2026-06-16 20:34:00'),
-(137, 1, 1, 2, 1037, 'HERE', 0, 'COMPLETED', '2026-07-13 16:17:00'),
-(138, 1, 1, 1, 1038, 'TOGO', 0, 'COMPLETED', '2026-07-01 17:26:00'),
-(139, 1, 1, 2, 1039, 'HERE', 0, 'COMPLETED', '2026-06-28 17:26:00'),
-(140, 1, 1, 2, 1040, 'HERE', 0, 'COMPLETED', '2026-07-05 10:34:00'),
-(141, 1, 1, 2, 1041, 'TOGO', 60, 'COMPLETED', '2026-07-11 17:58:00'),
-(142, 1, 1, 2, 1042, 'HERE', 0, 'COMPLETED', '2026-06-19 22:19:00'),
-(143, 1, 1, NULL, 1043, 'HERE', 0, 'COMPLETED', '2026-06-28 12:50:00'),
-(144, 1, 1, NULL, 1044, 'TOGO', 60, 'COMPLETED', '2026-06-22 22:56:00'),
-(145, 1, 1, 1, 1045, 'HERE', 0, 'COMPLETED', '2026-06-15 20:13:00'),
-(146, 1, 1, 1, 1046, 'HERE', 0, 'COMPLETED', '2026-06-26 16:28:00'),
-(147, 1, 1, NULL, 1047, 'HERE', 0, 'COMPLETED', '2026-07-07 13:31:00'),
-(148, 1, 1, NULL, 1048, 'TOGO', 60, 'COMPLETED', '2026-06-29 14:40:00'),
-(149, 1, 1, NULL, 1049, 'HERE', 0, 'COMPLETED', '2026-06-19 19:50:00'),
-(150, 1, 1, NULL, 1050, 'HERE', 0, 'COMPLETED', '2026-06-28 12:02:00'),
-(151, 1, 1, NULL, 1051, 'TOGO', 0, 'COMPLETED', '2026-07-13 12:45:00'),
-(152, 1, 1, 2, 1052, 'TOGO', 60, 'COMPLETED', '2026-06-25 10:07:00'),
-(153, 1, 1, 2, 1053, 'HERE', 0, 'COMPLETED', '2026-07-10 15:01:00'),
-(154, 1, 1, 1, 1054, 'TOGO', 0, 'COMPLETED', '2026-07-11 22:11:00'),
-(155, 1, 1, 1, 1055, 'TOGO', 0, 'COMPLETED', '2026-07-01 17:59:00'),
-(156, 1, 1, 2, 1056, 'TOGO', 0, 'COMPLETED', '2026-06-23 15:20:00'),
-(157, 1, 1, 2, 1057, 'TOGO', 30, 'COMPLETED', '2026-06-24 12:36:00'),
-(158, 1, 1, NULL, 1058, 'HERE', 0, 'COMPLETED', '2026-07-10 14:36:00'),
-(159, 1, 1, NULL, 1059, 'TOGO', 30, 'COMPLETED', '2026-06-30 16:19:00');
+INSERT INTO orders (order_id, store_id, kiosk_id, user_id, order_number, order_type, dry_ice_count, dry_ice_mins, order_status, created_at) VALUES
+(100, 1, 1, 2, 1000, 'HERE', 0, 0, 'COMPLETED', '2026-07-09 19:36:00'),
+(101, 1, 1, 2, 1001, 'HERE', 0, 0, 'COMPLETED', '2026-07-04 13:59:00'),
+(102, 1, 1, 1, 1002, 'HERE', 0, 0, 'COMPLETED', '2026-06-23 12:35:00'),
+(103, 1, 1, 2, 1003, 'TOGO', 2, 60, 'COMPLETED', '2026-06-16 21:25:00'),
+(104, 1, 1, 1, 1004, 'TOGO', 2, 60, 'COMPLETED', '2026-07-14 16:38:00'),
+(105, 1, 1, 2, 1005, 'TOGO', 2, 60, 'COMPLETED', '2026-07-07 22:32:00'),
+(106, 1, 1, NULL, 1006, 'TOGO', 1, 30, 'COMPLETED', '2026-07-05 12:20:00'),
+(107, 1, 1, NULL, 1007, 'TOGO', 0, 0, 'COMPLETED', '2026-07-05 18:01:00'),
+(108, 1, 1, 1, 1008, 'TOGO', 1, 30, 'COMPLETED', '2026-06-26 20:14:00'),
+(109, 1, 1, NULL, 1009, 'HERE', 0, 0, 'COMPLETED', '2026-06-27 19:02:00'),
+(110, 1, 1, 2, 1010, 'HERE', 0, 0, 'COMPLETED', '2026-06-30 11:18:00'),
+(111, 1, 1, NULL, 1011, 'HERE', 0, 0, 'COMPLETED', '2026-06-30 21:45:00'),
+(112, 1, 1, 2, 1012, 'HERE', 0, 0, 'COMPLETED', '2026-06-18 18:00:00'),
+(113, 1, 1, 1, 1013, 'HERE', 0, 0, 'COMPLETED', '2026-06-19 12:49:00'),
+(114, 1, 1, 2, 1014, 'HERE', 0, 0, 'COMPLETED', '2026-06-16 18:01:00'),
+(115, 1, 1, NULL, 1015, 'TOGO', 1, 30, 'COMPLETED', '2026-07-11 19:56:00'),
+(116, 1, 1, NULL, 1016, 'TOGO', 0, 0, 'COMPLETED', '2026-06-25 13:20:00'),
+(117, 1, 1, 2, 1017, 'HERE', 0, 0, 'COMPLETED', '2026-07-11 12:44:00'),
+(118, 1, 1, 2, 1018, 'HERE', 0, 0, 'COMPLETED', '2026-06-25 21:01:00'),
+(119, 1, 1, 1, 1019, 'HERE', 0, 0, 'COMPLETED', '2026-06-17 19:31:00'),
+(120, 1, 1, 2, 1020, 'TOGO', 0, 0, 'COMPLETED', '2026-06-16 15:26:00'),
+(121, 1, 1, NULL, 1021, 'TOGO', 2, 60, 'COMPLETED', '2026-06-23 21:20:00'),
+(122, 1, 1, 2, 1022, 'TOGO', 2, 60, 'COMPLETED', '2026-07-05 14:12:00'),
+(123, 1, 1, NULL, 1023, 'HERE', 0, 0, 'COMPLETED', '2026-06-23 19:15:00'),
+(124, 1, 1, 1, 1024, 'TOGO', 1, 30, 'COMPLETED', '2026-07-04 18:58:00'),
+(125, 1, 1, 2, 1025, 'TOGO', 1, 30, 'COMPLETED', '2026-06-25 19:38:00'),
+(126, 1, 1, NULL, 1026, 'TOGO', 2, 60, 'COMPLETED', '2026-07-03 10:25:00'),
+(127, 1, 1, NULL, 1027, 'TOGO', 0, 0, 'COMPLETED', '2026-06-22 13:14:00'),
+(128, 1, 1, 1, 1028, 'HERE', 0, 0, 'COMPLETED', '2026-07-01 10:06:00'),
+(129, 1, 1, NULL, 1029, 'HERE', 0, 0, 'COMPLETED', '2026-07-11 19:59:00'),
+(130, 1, 1, 2, 1030, 'TOGO', 0, 0, 'COMPLETED', '2026-07-03 13:01:00'),
+(131, 1, 1, 1, 1031, 'TOGO', 2, 60, 'COMPLETED', '2026-06-16 22:44:00'),
+(132, 1, 1, 2, 1032, 'TOGO', 2, 60, 'COMPLETED', '2026-07-06 13:46:00'),
+(133, 1, 1, 1, 1033, 'TOGO', 1, 30, 'COMPLETED', '2026-07-08 10:51:00'),
+(134, 1, 1, 1, 1034, 'HERE', 0, 0, 'COMPLETED', '2026-07-04 22:39:00'),
+(135, 1, 1, NULL, 1035, 'TOGO', 1, 30, 'COMPLETED', '2026-06-19 18:04:00'),
+(136, 1, 1, NULL, 1036, 'HERE', 0, 0, 'COMPLETED', '2026-06-16 20:34:00'),
+(137, 1, 1, 2, 1037, 'HERE', 0, 0, 'COMPLETED', '2026-07-13 16:17:00'),
+(138, 1, 1, 1, 1038, 'TOGO', 0, 0, 'COMPLETED', '2026-07-01 17:26:00'),
+(139, 1, 1, 2, 1039, 'HERE', 0, 0, 'COMPLETED', '2026-06-28 17:26:00'),
+(140, 1, 1, 2, 1040, 'HERE', 0, 0, 'COMPLETED', '2026-07-05 10:34:00'),
+(141, 1, 1, 2, 1041, 'TOGO', 2, 60, 'COMPLETED', '2026-07-11 17:58:00'),
+(142, 1, 1, 2, 1042, 'HERE', 0, 0, 'COMPLETED', '2026-06-19 22:19:00'),
+(143, 1, 1, NULL, 1043, 'HERE', 0, 0, 'COMPLETED', '2026-06-28 12:50:00'),
+(144, 1, 1, NULL, 1044, 'TOGO', 2, 60, 'COMPLETED', '2026-06-22 22:56:00'),
+(145, 1, 1, 1, 1045, 'HERE', 0, 0, 'COMPLETED', '2026-06-15 20:13:00'),
+(146, 1, 1, 1, 1046, 'HERE', 0, 0, 'COMPLETED', '2026-06-26 16:28:00'),
+(147, 1, 1, NULL, 1047, 'HERE', 0, 0, 'COMPLETED', '2026-07-07 13:31:00'),
+(148, 1, 1, NULL, 1048, 'TOGO', 2, 60, 'COMPLETED', '2026-06-29 14:40:00'),
+(149, 1, 1, NULL, 1049, 'HERE', 0, 0, 'COMPLETED', '2026-06-19 19:50:00'),
+(150, 1, 1, NULL, 1050, 'HERE', 0, 0, 'COMPLETED', '2026-06-28 12:02:00'),
+(151, 1, 1, NULL, 1051, 'TOGO', 0, 0, 'COMPLETED', '2026-07-13 12:45:00'),
+(152, 1, 1, 2, 1052, 'TOGO', 2, 60, 'COMPLETED', '2026-06-25 10:07:00'),
+(153, 1, 1, 2, 1053, 'HERE', 0, 0, 'COMPLETED', '2026-07-10 15:01:00'),
+(154, 1, 1, 1, 1054, 'TOGO', 0, 0, 'COMPLETED', '2026-07-11 22:11:00'),
+(155, 1, 1, 1, 1055, 'TOGO', 0, 0, 'COMPLETED', '2026-07-01 17:59:00'),
+(156, 1, 1, 2, 1056, 'TOGO', 0, 0, 'COMPLETED', '2026-06-23 15:20:00'),
+(157, 1, 1, 2, 1057, 'TOGO', 1, 30, 'COMPLETED', '2026-06-24 12:36:00'),
+(158, 1, 1, NULL, 1058, 'HERE', 0, 0, 'COMPLETED', '2026-07-10 14:36:00'),
+(159, 1, 1, NULL, 1059, 'TOGO', 1, 30, 'COMPLETED', '2026-06-30 16:19:00');
 
 INSERT INTO order_items (order_item_id, order_id, product_id, quantity, unit_price) VALUES
 (100, 100, 2, 1, 4300),
@@ -794,37 +826,37 @@ INSERT INTO order_item_flavors (order_item_id, flavor_id, quantity) VALUES
 INSERT INTO payments (payment_id, order_id, payment_method, base_amount, coupon_discount, point_used, final_amount, payment_status, payment_date) VALUES
 (100, 100, 'CARD', 12900, 0, 0, 12900, 'PAID', '2026-07-09 19:36:00'),
 (101, 101, 'E_PAY', 6700, 0, 0, 6700, 'PAID', '2026-07-04 13:59:00'),
-(102, 102, 'TOSS_PAY', 174000, 0, 0, 174000, 'PAID', '2026-06-23 12:35:00'),
+(102, 102, 'TOSS', 174000, 0, 0, 174000, 'PAID', '2026-06-23 12:35:00'),
 (103, 103, 'CARD', 46000, 0, 0, 46000, 'PAID', '2026-06-16 21:25:00'),
 (104, 104, 'E_PAY', 17000, 0, 0, 17000, 'PAID', '2026-07-14 16:38:00'),
-(105, 105, 'TOSS_PAY', 24000, 0, 0, 24000, 'PAID', '2026-07-07 22:32:00'),
-(106, 106, 'TOSS_PAY', 17200, 0, 0, 17200, 'PAID', '2026-07-05 12:20:00'),
+(105, 105, 'TOSS', 24000, 0, 0, 24000, 'PAID', '2026-07-07 22:32:00'),
+(106, 106, 'TOSS', 17200, 0, 0, 17200, 'PAID', '2026-07-05 12:20:00'),
 (107, 107, 'E_PAY', 74400, 0, 0, 74400, 'PAID', '2026-07-05 18:01:00'),
-(108, 108, 'TOSS_PAY', 13400, 0, 0, 13400, 'PAID', '2026-06-26 20:14:00'),
+(108, 108, 'TOSS', 13400, 0, 0, 13400, 'PAID', '2026-06-26 20:14:00'),
 (109, 109, 'E_PAY', 31500, 0, 0, 31500, 'PAID', '2026-06-27 19:02:00'),
 (110, 110, 'CARD', 73600, 0, 0, 73600, 'PAID', '2026-06-30 11:18:00'),
-(111, 111, 'TOSS_PAY', 6700, 0, 0, 6700, 'PAID', '2026-06-30 21:45:00'),
+(111, 111, 'TOSS', 6700, 0, 0, 6700, 'PAID', '2026-06-30 21:45:00'),
 (112, 112, 'E_PAY', 4300, 0, 0, 4300, 'PAID', '2026-06-18 18:00:00'),
 (113, 113, 'CARD', 82000, 0, 0, 82000, 'PAID', '2026-06-19 12:49:00'),
 (114, 114, 'CARD', 75000, 0, 0, 75000, 'PAID', '2026-06-16 18:01:00'),
-(115, 115, 'TOSS_PAY', 51800, 0, 0, 51800, 'PAID', '2026-07-11 19:56:00'),
-(116, 116, 'TOSS_PAY', 48000, 0, 0, 48000, 'PAID', '2026-06-25 13:20:00'),
-(117, 117, 'TOSS_PAY', 58000, 0, 0, 58000, 'PAID', '2026-07-11 12:44:00'),
+(115, 115, 'TOSS', 51800, 0, 0, 51800, 'PAID', '2026-07-11 19:56:00'),
+(116, 116, 'TOSS', 48000, 0, 0, 48000, 'PAID', '2026-06-25 13:20:00'),
+(117, 117, 'TOSS', 58000, 0, 0, 58000, 'PAID', '2026-07-11 12:44:00'),
 (118, 118, 'CARD', 8600, 0, 0, 8600, 'PAID', '2026-06-25 21:01:00'),
 (119, 119, 'E_PAY', 33300, 0, 0, 33300, 'PAID', '2026-06-17 19:31:00'),
-(120, 120, 'TOSS_PAY', 8900, 0, 0, 8900, 'PAID', '2026-06-16 15:26:00'),
-(121, 121, 'TOSS_PAY', 8900, 0, 0, 8900, 'PAID', '2026-06-23 21:20:00'),
+(120, 120, 'TOSS', 8900, 0, 0, 8900, 'PAID', '2026-06-16 15:26:00'),
+(121, 121, 'TOSS', 8900, 0, 0, 8900, 'PAID', '2026-06-23 21:20:00'),
 (122, 122, 'E_PAY', 31400, 0, 0, 31400, 'PAID', '2026-07-05 14:12:00'),
 (123, 123, 'CARD', 55000, 0, 0, 55000, 'PAID', '2026-06-23 19:15:00'),
 (124, 124, 'E_PAY', 13400, 0, 0, 13400, 'PAID', '2026-07-04 18:58:00'),
-(125, 125, 'TOSS_PAY', 24500, 0, 0, 24500, 'PAID', '2026-06-25 19:38:00'),
+(125, 125, 'TOSS', 24500, 0, 0, 24500, 'PAID', '2026-06-25 19:38:00'),
 (126, 126, 'E_PAY', 71400, 0, 0, 71400, 'PAID', '2026-07-03 10:25:00'),
 (127, 127, 'E_PAY', 42900, 0, 0, 42900, 'PAID', '2026-06-22 13:14:00'),
 (128, 128, 'CARD', 111000, 0, 0, 111000, 'PAID', '2026-07-01 10:06:00'),
 (129, 129, 'CARD', 8600, 0, 0, 8600, 'PAID', '2026-07-11 19:59:00'),
-(130, 130, 'TOSS_PAY', 76300, 0, 0, 76300, 'PAID', '2026-07-03 13:01:00'),
+(130, 130, 'TOSS', 76300, 0, 0, 76300, 'PAID', '2026-07-03 13:01:00'),
 (131, 131, 'E_PAY', 65800, 0, 0, 65800, 'PAID', '2026-06-16 22:44:00'),
-(132, 132, 'TOSS_PAY', 58000, 0, 0, 58000, 'PAID', '2026-07-06 13:46:00'),
+(132, 132, 'TOSS', 58000, 0, 0, 58000, 'PAID', '2026-07-06 13:46:00'),
 (133, 133, 'CARD', 4300, 0, 0, 4300, 'PAID', '2026-07-08 10:51:00'),
 (134, 134, 'CARD', 27000, 0, 0, 27000, 'PAID', '2026-07-04 22:39:00'),
 (135, 135, 'CARD', 17800, 0, 0, 17800, 'PAID', '2026-06-19 18:04:00'),
@@ -832,16 +864,16 @@ INSERT INTO payments (payment_id, order_id, payment_method, base_amount, coupon_
 (137, 137, 'CARD', 62700, 0, 0, 62700, 'PAID', '2026-07-13 16:17:00'),
 (138, 138, 'E_PAY', 29000, 0, 0, 29000, 'PAID', '2026-07-01 17:26:00'),
 (139, 139, 'E_PAY', 17600, 0, 0, 17600, 'PAID', '2026-06-28 17:26:00'),
-(140, 140, 'TOSS_PAY', 82000, 0, 0, 82000, 'PAID', '2026-07-05 10:34:00'),
+(140, 140, 'TOSS', 82000, 0, 0, 82000, 'PAID', '2026-07-05 10:34:00'),
 (141, 141, 'CARD', 31400, 0, 0, 31400, 'PAID', '2026-07-11 17:58:00'),
 (142, 142, 'CARD', 34700, 0, 0, 34700, 'PAID', '2026-06-19 22:19:00'),
 (143, 143, 'E_PAY', 122700, 0, 0, 122700, 'PAID', '2026-06-28 12:50:00'),
 (144, 144, 'E_PAY', 8900, 0, 0, 8900, 'PAID', '2026-06-22 22:56:00'),
-(145, 145, 'TOSS_PAY', 61500, 0, 0, 61500, 'PAID', '2026-06-15 20:13:00'),
+(145, 145, 'TOSS', 61500, 0, 0, 61500, 'PAID', '2026-06-15 20:13:00'),
 (146, 146, 'CARD', 17800, 0, 0, 17800, 'PAID', '2026-06-26 16:28:00'),
 (147, 147, 'E_PAY', 22500, 0, 0, 22500, 'PAID', '2026-07-07 13:31:00'),
 (148, 148, 'CARD', 18000, 0, 0, 18000, 'PAID', '2026-06-29 14:40:00'),
-(149, 149, 'TOSS_PAY', 69300, 0, 0, 69300, 'PAID', '2026-06-19 19:50:00'),
+(149, 149, 'TOSS', 69300, 0, 0, 69300, 'PAID', '2026-06-19 19:50:00'),
 (150, 150, 'CARD', 29000, 0, 0, 29000, 'PAID', '2026-06-28 12:02:00'),
 (151, 151, 'CARD', 24000, 0, 0, 24000, 'PAID', '2026-07-13 12:45:00'),
 (152, 152, 'E_PAY', 7000, 0, 0, 7000, 'PAID', '2026-06-25 10:07:00'),
@@ -851,5 +883,5 @@ INSERT INTO payments (payment_id, order_id, payment_method, base_amount, coupon_
 (156, 156, 'E_PAY', 15600, 0, 0, 15600, 'PAID', '2026-06-23 15:20:00'),
 (157, 157, 'E_PAY', 76900, 0, 0, 76900, 'PAID', '2026-06-24 12:36:00'),
 (158, 158, 'CARD', 37400, 0, 0, 37400, 'PAID', '2026-07-10 14:36:00'),
-(159, 159, 'TOSS_PAY', 9400, 0, 0, 9400, 'PAID', '2026-06-30 16:19:00');
+(159, 159, 'TOSS', 9400, 0, 0, 9400, 'PAID', '2026-06-30 16:19:00');
 
