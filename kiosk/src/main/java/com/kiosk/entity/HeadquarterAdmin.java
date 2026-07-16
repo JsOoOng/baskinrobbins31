@@ -78,4 +78,14 @@ public class HeadquarterAdmin {
     public void changePassword(String encodedPassword) {
         this.password = encodedPassword;
     }
+    
+    public void updateAdmin(
+            String name,
+            String department,
+            AdminRole role
+    ) {
+        this.name = name;
+        this.department = department;
+        this.role = role;
+    }
 }
