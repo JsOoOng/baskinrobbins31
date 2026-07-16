@@ -26,7 +26,9 @@ const loadOrders = async () => {
     try {
         const response = await api.get(`/branch/order/${user.storeId}`)
 
-        orders.value = response.data
+        orders.value = response.data.filter(
+            order => order.paymentStatus != null
+        )
 
         // 선택한 주문이 있으면 상세도 갱신
         if (selectedOrder.value) {
@@ -244,7 +246,10 @@ const getPaymentMethodText = (method) => {
                     </td>
 
                     <td>
-                        {{ order.finalAmount.toLocaleString() }}원
+                        {{ order.finalAmount != null 
+                            ? order.finalAmount.toLocaleString()
+                            : '-' 
+                        }}원
                     </td>
 
                 </tr>
