@@ -4,7 +4,7 @@ import axios from 'axios'; // 1. 라이브러리 로드
 // 2. 변수 이름을 axios가 아니라 'instance'로 명확히 분리!
 const instance = axios.create({
   // 접속한 호스트네임(localhost 또는 IP)에 맞춰 동적으로 백엔드 주소 설정
-  baseURL: `http://${window.location.hostname}:8889`,
+  baseURL: '/proxy-api',
   
   // 🚨 매우 중요: 백엔드와 세션 쿠키(JSESSIONID)를 공유하기 위한 핵심 설정
   withCredentials: true, 
