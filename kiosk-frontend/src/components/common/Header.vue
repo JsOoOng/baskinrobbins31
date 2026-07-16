@@ -16,7 +16,7 @@ const basketStore = useBasketStore();
 const resetToHome = async () => {
   if(confirm('주문 내역을 모두 지우고 처음으로 돌아가시겠습니까?')) {
     await basketStore.clearBasket(); // 백엔드 쿠키 및 프론트 상태 초기화
-    router.push('/');
+    router.push('/kiosk');
   }
 };
 </script>

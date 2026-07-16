@@ -51,7 +51,7 @@ const fetchOrderNumber = async () => {
 
 const goHome = () => {
   clearInterval(timerInterval);
-  router.push('/');
+  router.push('/kiosk');
 };
 
 onMounted(() => {

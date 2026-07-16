@@ -4,14 +4,11 @@
     <header class="menu-header">
       <div class="header-left">
         <img src="@/assets/images/logo.png" alt="Baskin Robbins" class="logo" />
-        <button class="btn-home" @click="goHome">🏠 처음으로</button>
       </div>
       <div class="kiosk-title">주문하기</div>
-      <div class="header-right">
+      <div class="header-right" style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+        <button class="btn-home" @click="goHome">🏠 처음으로</button>
         <span class="timer-text" v-if="timeoutStore && timeoutStore.timeLeft !== undefined">남은 시간: {{ timeoutStore.timeLeft }}초</span>
-        <button class="btn-close-app" @click="goHome">
-          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
       </div>
     </header>
 
@@ -37,21 +34,41 @@
         이 카테고리에 등록된 상품이 없습니다.
       </div>
 
-      <div v-else class="product-grid">
-        <div 
-          v-for="product in filteredProducts" 
-          :key="product.productId" 
-          class="product-card"
-          @click="openOptionModal(product)"
-        >
-          <div class="product-img-wrapper">
-            <img :src="product.imageUrl || `/images/products/${product.productName}.png`" @error="handleProductImgError" alt="product" class="placeholder-img" />
-            <div class="emoji-placeholder fallback-emoji" style="display:none;">🍦</div>
+      <div v-else class="product-grid-container" style="display: flex; flex-direction: column; height: 100%;">
+        <div class="product-grid">
+          <div 
+            v-for="product in paginatedProducts" 
+            :key="product.productId" 
+            class="product-card"
+            @click="openOptionModal(product)"
+          >
+            <div class="product-img-wrapper">
+              <img :src="product.imageUrl || `/images/products/${product.productName}.png`" @error="handleProductImgError" alt="product" class="placeholder-img" />
+              <div class="emoji-placeholder fallback-emoji" style="display:none;">🍦</div>
+            </div>
+            <div class="product-info">
+              <div class="product-name">{{ product.productName }}</div>
+              <div class="product-price">₩{{ formatPrice(product.basePrice) }}</div>
+            </div>
           </div>
-          <div class="product-info">
-            <div class="product-name">{{ product.productName }}</div>
-            <div class="product-price">₩{{ formatPrice(product.basePrice) }}</div>
+        </div>
+
+        <!-- 상품 페이징 컨트롤 -->
+        <div class="pagination-controls-pink" v-if="productTotalPages > 1" style="margin-top: auto; padding-bottom: 20px;">
+          <button class="btn-arrow-pink" :disabled="currentProductPage === 1" @click="currentProductPage--">
+            &lt;
+          </button>
+          <div class="pagination-dots">
+            <span 
+              v-for="page in productTotalPages" 
+              :key="page" 
+              :class="['dot', { active: currentProductPage === page }]"
+              @click="currentProductPage = page"
+            ></span>
           </div>
+          <button class="btn-arrow-pink" :disabled="currentProductPage === productTotalPages" @click="currentProductPage++">
+            &gt;
+          </button>
         </div>
       </div>
     </main>
@@ -135,6 +152,7 @@
     <!-- 5. 2-Step 상품 옵션 모달 팝업 -->
     <div v-if="isModalOpen" class="modal-overlay">
       <div class="modal-content option-modal">
+        <button class="btn-close-circle" @click="closeModal">✖</button>
         <!-- 모달 탭 -->
         <div class="modal-tabs">
           <button :class="['modal-tab-btn', {active: currentModalTab === 'INFO'}]" @click="currentModalTab = 'INFO'">상품정보</button>
@@ -362,6 +380,9 @@ const editingCartIndex = ref(null)
 const currentPage = ref(1)
 const itemsPerPage = 12
 const selectedFlavors = ref([])
+
+const currentProductPage = ref(1)
+const productsPerPage = 9
 const spoonCount = ref(1)
 
 // 새로운 UI 전용 상태
@@ -449,6 +470,7 @@ onUnmounted(() => {
 // [API 통신 2]: 카테고리 탭 선택 시 해당 카테고리의 상품 리스트 조회
 const selectCategory = async (id) => { 
   currentCategoryId.value = id 
+  currentProductPage.value = 1
   isLoadingProducts.value = true
   try {
     const prodRes = await axios.get(`/api/v1/kiosk/stores/${currentStoreId.value}/categories/${id}/products`)
@@ -481,6 +503,16 @@ const openOptionModal = async (product) => {
 
 const filteredProducts = computed(() => {
   return dbProducts.value.filter(p => p.categoryId === currentCategoryId.value)
+})
+
+const productTotalPages = computed(() => {
+  return Math.max(1, Math.ceil(filteredProducts.value.length / productsPerPage))
+})
+
+const paginatedProducts = computed(() => {
+  const start = (currentProductPage.value - 1) * productsPerPage
+  const end = start + productsPerPage
+  return filteredProducts.value.slice(start, end)
 })
 
 const currentMaxFlavors = computed(() => {
@@ -698,9 +730,9 @@ const deleteCartItem = (index) => {
 const goHome = async () => { 
   if (basketStore.cartItems.length > 0) {
     await basketStore.clearCart();
-    router.push('/');
+    router.push('/kiosk');
   } else {
-    router.push('/');
+    router.push('/kiosk');
   }
 }
 
@@ -790,9 +822,6 @@ const goPayment = async () => {
 
 .product-grid-area {
   flex: 1;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
   padding: 20px;
   overflow-y: auto;
 }
@@ -978,7 +1007,11 @@ const goPayment = async () => {
 }
 
 .logo {
-  height: 40px;
+  height: 80px;
+}
+
+.kiosk-title{
+  font-size : 32px;
 }
 .btn-close-app {
   background: #fce4ec;
@@ -996,20 +1029,20 @@ const goPayment = async () => {
 /* Categories */
 .category-tabs {
   display: flex;
-  padding: 10px 30px;
+  padding: 10px 15px;
   overflow-x: auto;
-  gap: 20px;
+  gap: 10px;
   white-space: nowrap;
 }
 .category-tabs::-webkit-scrollbar { display: none; }
 .tab-item {
   background: transparent;
   border: none;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: bold;
   color: #e91e63;
   cursor: pointer;
-  padding: 10px 20px;
+  padding: 10px 15px;
   border-radius: 25px;
 }
 .tab-item.active {
@@ -1026,8 +1059,9 @@ const goPayment = async () => {
 }
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+  align-content: start;
 }
 .product-card {
   display: flex;
@@ -1104,14 +1138,15 @@ const goPayment = async () => {
   border: none;
   border-radius: 50px;
   height: 60px;
-  padding: 0 40px;
+  padding: 0 20px;
   display: flex;
   align-items: center;
-  gap: 15px;
-  font-size: 1.2rem;
+  gap: 10px;
+  font-size: 1.1rem;
   font-weight: bold;
   box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
   cursor: pointer;
+  white-space: nowrap;
 }
 .checkout-btn:disabled {
   background: #ccc;
@@ -1140,6 +1175,25 @@ const goPayment = async () => {
   border-top-right-radius: 30px;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+.btn-close-circle {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 10;
 }
 .modal-tabs {
   display: flex;
@@ -1189,6 +1243,7 @@ const goPayment = async () => {
 .container-options {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 15px;
   flex: 1;
 }

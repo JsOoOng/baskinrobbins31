@@ -1,5 +1,6 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router';
+import { RouterLink, RouterView, useRoute } from 'vue-router';
+import { computed } from 'vue';
 import Header from '@/components/common/Header.vue';
 import TimeoutModal from '@/components/common/TimeoutModal.vue';
 import { onMounted, onUnmounted } from 'vue';
@@ -8,6 +9,16 @@ import { ref } from 'vue';
 
 const toastMessage = ref('');
 const showToastBox = ref(false);
+
+const route = useRoute();
+const isKiosk = computed(() => {
+  if (!route) return false;
+  const path = route.path;
+  if (path.startsWith('/branch') || path.startsWith('/head') || path === '/') {
+    return false;
+  }
+  return true;
+});
 
 
 const showToast = (message)=>{
@@ -95,8 +106,8 @@ onUnmounted(()=>{
 </script>
 
 <template>
-  <div class="app-container">
-    <main class="main-content">
+  <div class="app-container" :class="{ 'kiosk-wrapper': isKiosk }">
+    <main class="main-content" :class="{ 'kiosk-mode': isKiosk }">
       <router-view />
     </main>
     <TimeoutModal />
@@ -137,6 +148,11 @@ body,
   justify-content: center;
   align-items: flex-start;
 }
+.app-container.kiosk-wrapper {
+  height: 100vh;
+  align-items: center;
+  background-color: #f0f0f0;
+}
 
 /* router-view 영역 */
 .main-content {
@@ -145,6 +161,18 @@ body,
   min-height: 100vh;
   padding: 20px;
   box-sizing: border-box;
+}
+
+.main-content.kiosk-mode {
+  max-width: 600px;
+  height: 100vh;
+  min-height: auto;
+  padding: 0;
+  background-color: white;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .order-toast{

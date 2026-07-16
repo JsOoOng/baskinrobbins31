@@ -13,7 +13,7 @@
     </div>
 
     <!-- 메인 컨텐츠 영역 -->
-    <div class="main-content">
+    <div class="pd-main-content">
       <div class="left-section">
         <h2 class="section-title">해피포인트 회원이신가요?</h2>
         <div class="button-grid">
@@ -69,7 +69,7 @@
         <span class="icon">&lt;</span> 이전
       </button>
       <button class="btn-next" @click="goNext">
-        다음단계(결제하기)
+        다음(결제하기)
       </button>
     </div>
 
@@ -349,17 +349,18 @@ const confirmPointUsage = () => {
   background-color: #adb5bd;
 }
 
-.main-content {
-  flex: 1;
-  display: flex;
-  padding: 40px;
-  gap: 40px;
-}
-
-.left-section {
+.pd-main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
+  padding: 40px;
+  gap: 20px;
+}
+
+.left-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .section-title {
@@ -425,12 +426,13 @@ const confirmPointUsage = () => {
 }
 
 .right-section {
-  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding-left: 40px;
-  border-left: 1px solid #eee;
+  align-items: center;
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
 }
 
 .info-block {
