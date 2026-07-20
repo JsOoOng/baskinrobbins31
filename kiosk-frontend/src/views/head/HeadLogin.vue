@@ -5,6 +5,9 @@ import { useRouter } from 'vue-router'
 
 import { useHeadAuthStore } from '@/stores/head/headAuthStore'
 
+import AppMessageToast
+  from '@/components/common/AppMessageToast.vue'
+
 const router = useRouter()
 const headAuthStore = useHeadAuthStore()
 
@@ -31,6 +34,27 @@ const showPassword = ref(false)
  * 프론트 입력 검증 메시지
  */
 const validationMessage = ref('')
+/*
+ * 화면에 표시할 최종 오류 메시지
+ *
+ * 프론트 검증 오류를 우선 표시하고,
+ * 없으면 서버 로그인 오류를 표시합니다.
+ */
+ const visibleErrorMessage = computed(() => {
+  return (
+    validationMessage.value ||
+    errorMessage.value ||
+    ''
+  )
+})
+
+/*
+ * 오류 메시지 닫기
+ */
+const clearLoginMessage = () => {
+  validationMessage.value = ''
+  errorMessage.value = ''
+}
 
 /*
  * 로그인 버튼 비활성화 여부
@@ -46,8 +70,9 @@ const isSubmitDisabled = computed(() => {
 /*
  * 로그인 처리
  */
-const handleLogin = async () => {
+ const handleLogin = async () => {
   validationMessage.value = ''
+  errorMessage.value = ''
 
   const loginId = form.loginId.trim()
   const password = form.password
@@ -106,6 +131,12 @@ onMounted(() => {
 </script>
 
 <template>
+  <AppMessageToast
+    :message="visibleErrorMessage"
+    type="error"
+    @close="clearLoginMessage"
+  />
+
   <main class="head-login-page">
     <!-- 왼쪽 소개 영역 -->
     <section class="head-login-brand">
@@ -313,28 +344,7 @@ onMounted(() => {
               </button>
             </div>
           </div>
-
-          <!-- 오류 메시지 -->
-          <div
-            v-if="
-              validationMessage ||
-              errorMessage
-            "
-            class="login-error"
-            role="alert"
-          >
-            <span class="error-icon">
-              !
-            </span>
-
-            <span>
-              {{
-                validationMessage ||
-                errorMessage
-              }}
-            </span>
-          </div>
-
+          
           <!-- 로그인 버튼 -->
           <button
             class="login-button"
@@ -728,40 +738,6 @@ onMounted(() => {
   background: transparent;
 
   transform: translateY(-50%);
-}
-
-.login-error {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-
-  padding: 13px 14px;
-
-  border: 1px solid #ffd6dc;
-  border-radius: 10px;
-
-  color: #d53c50;
-  font-size: 13px;
-  line-height: 1.5;
-
-  background: #fff4f6;
-}
-
-.error-icon {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-
-  width: 18px;
-  height: 18px;
-
-  border-radius: 50%;
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: 800;
-
-  background: #ef5c70;
 }
 
 .login-button {

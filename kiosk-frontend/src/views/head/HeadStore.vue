@@ -16,6 +16,9 @@ import {
   updateHeadStore
 } from '@/api/head/headStoreApi'
 
+import AppMessageToast
+  from '@/components/common/AppMessageToast.vue'
+
 const stores = ref([])
 
 const loading = ref(false)
@@ -251,7 +254,6 @@ const clearMessage = () => {
  */
 const loadStores = async () => {
   loading.value = true
-  clearMessage()
 
   try {
     const responseBody =
@@ -298,6 +300,7 @@ const resetStoreForm = () => {
 }
 
 const openCreateStoreModal = () => {
+  clearMessage()
   resetStoreForm()
 
   storeModal.mode = 'create'
@@ -551,6 +554,7 @@ const resetEmployeeForm = () => {
 }
 
 const openEmployeeModal = (store) => {
+  clearMessage()
   resetEmployeeForm()
 
   employeeModal.storeId =
@@ -590,13 +594,34 @@ const validateEmployeeForm = () => {
   }
 
   if (!employeeForm.password) {
-    showMessage(
-      '초기 비밀번호를 입력해주세요.',
-      'error'
-    )
+  showMessage(
+    '초기 비밀번호를 입력해주세요.',
+    'error'
+  )
 
     return false
-  }
+    }
+
+    if (employeeForm.password.length < 4) {
+      showMessage(
+        '비밀번호는 4자 이상이어야 합니다.',
+        'error'
+      )
+
+      return false
+    }
+
+    if (
+      employeeForm.password !==
+      employeeForm.passwordConfirm
+    ) {
+      showMessage(
+        '비밀번호 확인이 일치하지 않습니다.',
+        'error'
+      )
+
+      return false
+    }
 
   if (
     employeeForm.password !==
@@ -666,34 +691,12 @@ onMounted(() => {
 </script>
 
 <template>
+      <AppMessageToast
+      :message="message"
+      :type="messageType"
+      @close="clearMessage"
+      />
   <section class="store-page">
-    <Transition name="message">
-      <div
-        v-if="message"
-        class="page-message"
-        :class="{
-          error: messageType === 'error'
-        }"
-      >
-        <strong>
-          {{
-            messageType === 'error'
-              ? '!'
-              : '✓'
-          }}
-        </strong>
-
-        <p>{{ message }}</p>
-
-        <button
-          type="button"
-          @click="clearMessage"
-        >
-          ×
-        </button>
-      </div>
-    </Transition>
-
     <!-- 요약 카드 -->
     <div class="summary-grid">
       <article>
@@ -1356,51 +1359,6 @@ onMounted(() => {
 .store-page {
   display: grid;
   gap: 18px;
-}
-
-.page-message {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 13px 15px;
-  border: 1px solid #bcebd6;
-  border-radius: 11px;
-  color: #168a5e;
-  background: #edfbf5;
-}
-
-.page-message strong {
-  display: grid;
-  width: 22px;
-  height: 22px;
-  place-items: center;
-  border-radius: 50%;
-  color: white;
-  background: #25ad78;
-}
-
-.page-message p {
-  flex: 1;
-  margin: 0;
-  font-size: 12px;
-}
-
-.page-message button {
-  border: 0;
-  cursor: pointer;
-  color: inherit;
-  font-size: 20px;
-  background: transparent;
-}
-
-.page-message.error {
-  border-color: #ffd0d7;
-  color: #d64359;
-  background: #fff2f4;
-}
-
-.page-message.error strong {
-  background: #eb566b;
 }
 
 .summary-grid {
