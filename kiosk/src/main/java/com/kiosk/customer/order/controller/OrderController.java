@@ -127,7 +127,7 @@ public class OrderController {
                 HttpEntity<String> receiptEntity = new HttpEntity<>(receiptJson, receiptHeaders);
                 
                 // 포트 동적 참조
-                restTemplate.postForEntity("http://localhost:" + this.printServerPort + "/receipt", receiptEntity, String.class);
+                restTemplate.postForEntity("http://172.16.15.97:" + this.printServerPort + "/receipt", receiptEntity, String.class);
             } catch (Exception ex) {
                 System.err.println("영수증 출력 요청 중 오류 (결제는 성공): " + ex.getMessage());
             }
