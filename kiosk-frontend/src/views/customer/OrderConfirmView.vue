@@ -1,7 +1,7 @@
 <template>
   <div class="order-confirm-container">
-    <div class="header-section" style="display: flex; justify-content: space-between; align-items: center;">
-      <h2>STEP 02. 쿠폰/결제 (주문 내역 확인)</h2>
+    <div class="header-section">
+      <h2>STEP 02. 결제 <span class="sub-title">(주문 내역 확인)</span></h2>
       <button class="btn-back-cart" @click="goBackToCart">이전 화면으로 🔙</button>
     </div>
     
@@ -10,7 +10,7 @@
             <div class="item-info">
             <h4>{{ item.productName }}</h4>
             
-            <div v-if="item.flavors && item.flavors.length > 0" class="flavor-list" style="font-size: 0.9rem; color: #666;">
+            <div v-if="item.flavors && item.flavors.length > 0" class="flavor-list">
                 선택한 맛: 
                 <span v-for="(f, fIndex) in item.flavors" :key="fIndex">
                 {{ f.flavorName || '맛ID:' + f.flavorId }}
@@ -32,14 +32,22 @@
       <div class="pay-buttons">
         <button @click="handlePayment('CASH')">현금</button>
         <button @click="handlePayment('CARD')">신용카드</button>
-        <button class="btn-toss" @click="handleTossPayment">토스 간편결제 💳</button>
+        <button class="btn-toss" @click="handleTossPayment">간편결제</button>
+      </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div class="alert-modal" v-if="showAlert">
+      <div class="alert-content">
+        <p>{{ alertMessage }}</p>
+        <button @click="closeAlert">확인</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useBasketStore } from '@/stores/customer/basket';
 import { loadTossPayments } from '@tosspayments/payment-sdk';
@@ -49,13 +57,32 @@ const router = useRouter();
 const route = useRoute();
 const basketStore = useBasketStore();
 
+const showAlert = ref(false);
+const alertMessage = ref('');
+const closeAlertCallback = ref(null);
+
+const displayAlert = (msg, callback = null) => {
+  alertMessage.value = msg;
+  showAlert.value = true;
+  closeAlertCallback.value = callback;
+};
+
+const closeAlert = () => {
+  showAlert.value = false;
+  if (closeAlertCallback.value) {
+    closeAlertCallback.value();
+    closeAlertCallback.value = null;
+  }
+};
+
 // 토스페이먼츠 클라이언트 키 (.env 파일에서 로드)
 const TOSS_CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY;
 
 onMounted(() => {
   if (basketStore.cartItems.length === 0) {
-    alert('장바구니가 비어있어 메인으로 돌아갑니다.');
-    router.push('/');
+    displayAlert('장바구니가 비어있어 메인으로 돌아갑니다.', () => {
+      router.push('/kiosk');
+    });
   }
 });
 
@@ -65,7 +92,7 @@ const goBackToCart = async () => {
 
 const handlePayment = async (method) => {
   if (basketStore.cartItems.length === 0) {
-    alert('장바구니가 비어있습니다.');
+    displayAlert('장바구니가 비어있습니다.');
     return;
   }
 
@@ -91,14 +118,15 @@ const handlePayment = async (method) => {
     router.push(`/order-complete?orderId=${orderId}`);
   } catch (error) {
     console.error('결제 처리 중 오류 발생:', error);
-    alert('결제 처리 중 오류가 발생했습니다.');
+    displayAlert('결제 처리 중 오류가 발생했습니다.');
   }
 };
 
 const handleTossPayment = async () => {
   if (basketStore.cartItems.length === 0) {
-    alert('장바구니가 비어있습니다. 처음부터 다시 시도해주세요.');
-    router.push('/menu');
+    displayAlert('장바구니가 비어있습니다. 처음부터 다시 시도해주세요.', () => {
+      router.push('/kiosk');
+    });
     return;
   }
 
@@ -136,23 +164,166 @@ const handleTossPayment = async () => {
     });
   } catch (error) {
     console.error('토스 결제창 호출 오류:', error);
-    alert('토스 결제창을 열 수 없습니다.');
+    displayAlert('토스 결제창을 열 수 없습니다.');
   }
 };
 </script>
 
 <style scoped>
-/* 필요한 스타일이 있다면 추가 (기존 스타일 유지) */
+.order-confirm-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f4f4f4;
+  padding: 30px;
+  font-family: 'Pretendard', sans-serif;
+  box-sizing: border-box;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  padding: 20px 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+.header-section h2 {
+  margin: 0;
+  color: #e91e63;
+  font-size: 1.5rem;
+}
+
+.sub-title {
+  color: #666;
+  font-size: 1.1rem;
+  font-weight: normal;
+}
+
 .btn-back-cart {
-  padding: 8px 16px;
-  background-color: #ff6b6b;
-  color: white;
-  border: none;
-  border-radius: 4px;
+  padding: 12px 25px;
+  background-color: #fff;
+  color: #e91e63;
+  border: 2px solid #e91e63;
+  border-radius: 30px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 1.1rem;
+  transition: all 0.2s;
 }
+
 .btn-back-cart:hover {
-  background-color: #fa5252;
+  background-color: #e91e63;
+  color: white;
+}
+
+.order-list {
+  flex: 1;
+  background-color: white;
+  border-radius: 15px;
+  padding: 20px 30px;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.order-item:last-child {
+  border-bottom: none;
+}
+
+.item-info h4 {
+  margin: 0 0 10px 0;
+  font-size: 1.3rem;
+  color: #333;
+}
+
+.flavor-list {
+  font-size: 1rem;
+  color: #888;
+}
+
+.item-actions span {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #e91e63;
+}
+
+.payment-section {
+  background-color: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.payment-section h3 {
+  margin: 0 0 25px 0;
+  color: #333;
+  font-size: 1.4rem;
+}
+
+.pay-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.pay-buttons button {
+  flex: 1;
+  padding: 20px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.pay-buttons button:nth-child(1) {
+  background-color: #f1f3f5;
+  color: #495057;
+  border: 1px solid #dee2e6;
+}
+
+.pay-buttons button:nth-child(2) {
+  background-color: #333;
+  color: white;
+}
+
+.btn-toss {
+  background-color: #3182f6 !important;
+  color: white !important;
+}
+
+.pay-buttons button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* Alert Modal */
+.alert-modal {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000;
+}
+.alert-content {
+  background: white; padding: 30px; border-radius: 15px; text-align: center; width: 350px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.alert-content p {
+  font-size: 1.2rem; margin-bottom: 25px; color: #333; line-height: 1.5;
+}
+.alert-content button {
+  background-color: #e91e63; color: white; border: none; padding: 12px 30px; border-radius: 30px; font-size: 1.1rem; cursor: pointer; font-weight: bold;
 }
 </style>

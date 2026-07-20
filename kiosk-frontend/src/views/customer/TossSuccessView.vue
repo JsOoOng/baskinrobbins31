@@ -5,11 +5,19 @@
       <h2>결제 승인 진행 중...</h2>
       <p>창을 닫지 마시고 잠시만 기다려주세요.</p>
     </div>
+
+    <!-- Alert Modal -->
+    <div class="alert-modal" v-if="showAlert">
+      <div class="alert-content">
+        <p>{{ alertMessage }}</p>
+        <button @click="closeAlert">확인</button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '@/api/axios';
 import { useBasketStore } from '@/stores/customer/basket';
@@ -18,12 +26,31 @@ const route = useRoute();
 const router = useRouter();
 const basketStore = useBasketStore();
 
+const showAlert = ref(false);
+const alertMessage = ref('');
+const closeAlertCallback = ref(null);
+
+const displayAlert = (msg, callback = null) => {
+  alertMessage.value = msg;
+  showAlert.value = true;
+  closeAlertCallback.value = callback;
+};
+
+const closeAlert = () => {
+  showAlert.value = false;
+  if (closeAlertCallback.value) {
+    closeAlertCallback.value();
+    closeAlertCallback.value = null;
+  }
+};
+
 onMounted(async () => {
   const { paymentKey, orderId, amount, pointUsed } = route.query;
 
   if (!paymentKey || !orderId || !amount) {
-    alert('비정상적인 접근입니다.');
-    router.push('/');
+    displayAlert('비정상적인 접근입니다.', () => {
+      router.push('/kiosk');
+    });
     return;
   }
 
@@ -46,15 +73,30 @@ onMounted(async () => {
   } catch (error) {
     console.error('결제 승인 에러:', error);
     const errorMsg = error.response?.data?.error || '결제 승인 중 오류가 발생했습니다.';
-    alert(`결제 실패: ${errorMsg}`);
-    
-    // 장바구니로 복귀
-    router.push('/menu');
+    displayAlert(`결제 실패: ${errorMsg}`, () => {
+      // 장바구니로 복귀
+      router.push('/menu');
+    });
   }
 });
 </script>
 
 <style scoped>
+/* Alert Modal */
+.alert-modal {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000;
+}
+.alert-content {
+  background: white; padding: 30px; border-radius: 10px; text-align: center; width: 300px;
+}
+.alert-content p {
+  font-size: 1.1rem; margin-bottom: 20px;
+}
+.alert-content button {
+  background-color: #ff007f; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 1rem; cursor: pointer;
+}
+
 .toss-success-container {
   display: flex;
   align-items: center;
