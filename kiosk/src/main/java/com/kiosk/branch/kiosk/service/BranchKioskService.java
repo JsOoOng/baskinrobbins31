@@ -16,6 +16,10 @@ import com.kiosk.entity.Store;
 import com.kiosk.entity.enums.KioskStatus;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 @Service
@@ -26,6 +30,45 @@ public class BranchKioskService {
 
     private final BranchKioskRepository kioskRepository;
     private final StoreRepository storeRepository;
+    
+    private final Map<Integer, List<SseEmitter>> emitters = new ConcurrentHashMap<>();
+
+    public SseEmitter subscribe(Integer storeId) {
+        SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1시간
+        emitters.computeIfAbsent(storeId, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(emitter);
+
+        emitter.onCompletion(() -> removeEmitter(storeId, emitter));
+        emitter.onTimeout(() -> removeEmitter(storeId, emitter));
+        emitter.onError((e) -> removeEmitter(storeId, emitter));
+
+        try {
+            emitter.send(SseEmitter.event().name("CONNECT").data("connected"));
+        } catch (IOException e) {
+            removeEmitter(storeId, emitter);
+        }
+
+        return emitter;
+    }
+
+    private void removeEmitter(Integer storeId, SseEmitter emitter) {
+        List<SseEmitter> storeEmitters = emitters.get(storeId);
+        if (storeEmitters != null) {
+            storeEmitters.remove(emitter);
+        }
+    }
+
+    private void notifyStore(Integer storeId) {
+        List<SseEmitter> storeEmitters = emitters.get(storeId);
+        if (storeEmitters != null) {
+            for (SseEmitter emitter : storeEmitters) {
+                try {
+                    emitter.send(SseEmitter.event().name("KIOSK_UPDATE").data("update"));
+                } catch (IOException e) {
+                    storeEmitters.remove(emitter);
+                }
+            }
+        }
+    }
 
 
     /*
@@ -65,6 +108,8 @@ public class BranchKioskService {
         kiosk.changeStatus(
                 request.getStatus()
         );
+        
+        notifyStore(kiosk.getStore().getId());
 
     }
     
@@ -137,6 +182,7 @@ public class BranchKioskService {
 
 
         kioskRepository.save(kiosk);
+        notifyStore(request.getStoreId());
 
 
     }
