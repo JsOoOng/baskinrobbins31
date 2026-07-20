@@ -25,6 +25,20 @@ const goKiosk = () => {
     router.push('/branch/kiosk')
 }
 
+const goPartTime = () => {
+
+router.push('/branch/staff')
+
+}
+
+const goWeekSchedule = () => {
+
+router.push(
+    '/branch/week-schedule'
+)
+
+}
+
 
 const logout = () => {
   localStorage.removeItem('token')
@@ -76,6 +90,14 @@ const logout = () => {
 
         <button @click="goKiosk">
             키오스크 관리
+        </button>
+
+        <button @click="goPartTime">
+            알바 관리
+        </button>
+
+        <button @click="goWeekSchedule">
+            한 주 스케줄 확인
         </button>
 
 
