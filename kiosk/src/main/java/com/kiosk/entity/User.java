@@ -38,12 +38,16 @@ public class User {
     private LocalDateTime createdAt;
     
     // 포인트 더하기
-    public void addPoints(int amount) {
+    public void addPoint(int amount) {
+        if (this.pointBalance == null) {
+            this.pointBalance = 0;
+        }
         this.pointBalance += amount;
     }
 
     // 포인트 빼기
     public void deductPoints(int amount) {
         this.pointBalance -= amount;
-    }
+      
+    
 }

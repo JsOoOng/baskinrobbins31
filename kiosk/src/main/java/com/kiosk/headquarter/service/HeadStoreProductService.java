@@ -5,14 +5,18 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kiosk.entity.InventoryItem;
 import com.kiosk.entity.Product;
 import com.kiosk.entity.Store;
+import com.kiosk.entity.StoreInventory;
 import com.kiosk.entity.StoreProduct;
 import com.kiosk.headquarter.dto.store.HeadStoreProductAddRequestDTO;
 import com.kiosk.headquarter.dto.store.HeadStoreProductDetailResponseDTO;
 import com.kiosk.headquarter.dto.store.HeadStoreProductListResponseDTO;
 import com.kiosk.headquarter.dto.store.HeadStoreProductUpdateRequestDTO;
+import com.kiosk.headquarter.repository.HeadInventoryItemMapper;
 import com.kiosk.headquarter.repository.HeadProductMapper;
+import com.kiosk.headquarter.repository.HeadStoreInventoryMapper;
 import com.kiosk.headquarter.repository.HeadStoreMapper;
 import com.kiosk.headquarter.repository.HeadStoreProductMapper;
 
@@ -23,126 +27,370 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class HeadStoreProductService {
 
-    private final HeadStoreProductMapper headStoreProductMapper;
-    private final HeadStoreMapper headStoreMapper;
-    private final HeadProductMapper headProductMapper;
+    private final HeadStoreProductMapper
+            headStoreProductMapper;
 
-    // 지점 판매 메뉴 등록
+    private final HeadStoreMapper
+            headStoreMapper;
+
+    private final HeadProductMapper
+            headProductMapper;
+    
+    private final HeadInventoryItemMapper
+    	headInventoryItemMapper;
+    
+    private final HeadStoreInventoryMapper
+    	headStoreInventoryMapper;
+
+    /*
+     * 지점 판매 메뉴 등록
+     */
     @Transactional
-    public String addStoreProduct(Integer storeId, HeadStoreProductAddRequestDTO requestDTO) {
+    public String addStoreProduct(
+            Integer storeId,
+            HeadStoreProductAddRequestDTO requestDTO
+    ) {
 
-        Store store = headStoreMapper.findById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지점입니다."));
-
-        Product product = headProductMapper.findById(requestDTO.getProductId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다."));
-
-        boolean alreadyExists = headStoreProductMapper.existsByStore_IdAndProduct_Id(
-                storeId,
-                requestDTO.getProductId()
-        );
-
-        if (alreadyExists) {
-            throw new IllegalArgumentException("이미 해당 지점에 등록된 상품입니다.");
+        if (requestDTO == null) {
+            throw new IllegalArgumentException(
+                    "등록 정보를 입력해주세요."
+            );
         }
 
-        StoreProduct storeProduct = StoreProduct.builder()
-                .store(store)
-                .product(product)
-                .isSoldOut(
-                        requestDTO.getIsSoldOut() != null
-                                ? requestDTO.getIsSoldOut()
-                                : false
-                )
-                .build();
+        if (requestDTO.getProductId() == null) {
+            throw new IllegalArgumentException(
+                    "상품 번호가 필요합니다."
+            );
+        }
+
+        Store store =
+                headStoreMapper.findById(storeId)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                "존재하지 않는 지점입니다."
+                                        )
+                        );
+
+        Product product =
+                headProductMapper
+                        .findById(
+                                requestDTO.getProductId()
+                        )
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                "존재하지 않는 상품입니다."
+                                        )
+                        );
+
+        boolean alreadyExists =
+                headStoreProductMapper
+                        .existsByStore_IdAndProduct_IdAndIsDeletedFalse(
+                                storeId,
+                                requestDTO.getProductId()
+                        );
+
+        if (alreadyExists) {
+            throw new IllegalArgumentException(
+                    "이미 해당 지점에 등록된 상품입니다."
+            );
+        }
+
+        /*
+         * 지점 가격이 없으면
+         * 본사 기본 가격을 사용합니다.
+         */
+        Integer storeProductPrice =
+                requestDTO.getStoreProductPrice();
+
+        if (storeProductPrice == null) {
+            storeProductPrice =
+                    product.getBasePrice();
+        }
+
+        validatePrice(storeProductPrice);
+
+        StoreProduct storeProduct =
+                StoreProduct.builder()
+                        .store(store)
+                        .product(product)
+                        .storeProductPrice(
+                                storeProductPrice
+                        )
+                        .isSoldOut(
+                                Boolean.TRUE.equals(
+                                        requestDTO.getIsSoldOut()
+                                )
+                        )
+                        .isDeleted(false)
+                        .build();
 
         headStoreProductMapper.save(storeProduct);
+
+        InventoryItem item =
+                headInventoryItemMapper.findByProduct(product)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException("재고 품목이 존재하지 않습니다."));
+
+        // 이미 재고가 등록되어 있는지 확인
+        if (!headStoreInventoryMapper.existsByStoreAndItem(store, item)) {
+
+            StoreInventory inventory =
+                    StoreInventory.builder()
+                            .store(store)
+                            .item(item)
+                            .currentStock(10)
+                            .build();
+
+            headStoreInventoryMapper.save(inventory);
+        }
 
         return "지점 판매 메뉴 등록 성공";
     }
 
-    // 지점 판매 메뉴 목록 조회
-    public List<HeadStoreProductListResponseDTO> getStoreProductList(Integer storeId) {
+    /*
+     * 지점 판매 메뉴 목록 조회
+     */
+    public List<HeadStoreProductListResponseDTO>
+            getStoreProductList(
+                    Integer storeId
+            ) {
 
-        return headStoreProductMapper.findByStore_IdOrderByIdDesc(storeId)
+        /*
+         * 존재하지 않는 지점 ID로 요청해도
+         * 빈 배열만 반환되는 것을 방지합니다.
+         */
+        if (!headStoreMapper.existsById(storeId)) {
+            throw new IllegalArgumentException(
+                    "존재하지 않는 지점입니다."
+            );
+        }
+
+        return headStoreProductMapper
+                .findByStore_IdAndIsDeletedFalseOrderByIdDesc(
+                        storeId
+                )
                 .stream()
                 .map(this::toListResponseDTO)
                 .toList();
     }
 
-    // 지점 판매 메뉴 상세 조회
-    public HeadStoreProductDetailResponseDTO getStoreProductDetail(
-            Integer storeId,
-            Integer storeProductId) {
+    /*
+     * 지점 판매 메뉴 상세 조회
+     */
+    public HeadStoreProductDetailResponseDTO
+            getStoreProductDetail(
+                    Integer storeId,
+                    Integer storeProductId
+            ) {
 
-        StoreProduct storeProduct = headStoreProductMapper.findByStore_IdAndId(
+        StoreProduct storeProduct =
+                findStoreProduct(
                         storeId,
                         storeProductId
-                )
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지점 판매 상품입니다."));
+                );
 
-        return toDetailResponseDTO(storeProduct);
+        return toDetailResponseDTO(
+                storeProduct
+        );
     }
 
-    // 지점 판매 메뉴 수정
+    /*
+     * 지점 판매 메뉴 수정
+     */
     @Transactional
     public String updateStoreProduct(
             Integer storeId,
             Integer storeProductId,
-            HeadStoreProductUpdateRequestDTO requestDTO) {
+            HeadStoreProductUpdateRequestDTO requestDTO
+    ) {
 
-        StoreProduct storeProduct = headStoreProductMapper.findByStore_IdAndId(
+        if (requestDTO == null) {
+            throw new IllegalArgumentException(
+                    "수정 정보를 입력해주세요."
+            );
+        }
+
+        StoreProduct storeProduct =
+                findStoreProduct(
                         storeId,
                         storeProductId
-                )
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지점 판매 상품입니다."));
+                );
 
-        storeProduct.updateSoldOut(
+        /*
+         * 요청하지 않은 값은 기존 값 유지
+         */
+        Integer storeProductPrice =
+                requestDTO.getStoreProductPrice() != null
+                        ? requestDTO.getStoreProductPrice()
+                        : storeProduct.getStoreProductPrice();
+
+        Boolean isSoldOut =
                 requestDTO.getIsSoldOut() != null
                         ? requestDTO.getIsSoldOut()
-                        : false
+                        : storeProduct.getIsSoldOut();
+
+        validatePrice(storeProductPrice);
+
+        storeProduct.updateStoreProduct(
+                storeProductPrice,
+                isSoldOut
         );
 
+        /*
+         * JPA 변경 감지로 UPDATE 실행
+         */
         return "지점 판매 메뉴 수정 성공";
     }
 
-    // 지점 판매 메뉴 삭제
+    /*
+     * 지점 판매 메뉴 삭제
+     *
+     * 실제 DB 행을 지우지 않고
+     * isDeleted를 true로 변경합니다.
+     */
     @Transactional
-    public String deleteStoreProduct(Integer storeId, Integer storeProductId) {
+    public String deleteStoreProduct(
+            Integer storeId,
+            Integer storeProductId
+    ) {
 
-        StoreProduct storeProduct = headStoreProductMapper.findByStore_IdAndId(
+        StoreProduct storeProduct =
+                findStoreProduct(
                         storeId,
                         storeProductId
-                )
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지점 판매 상품입니다."));
+                );
 
-        headStoreProductMapper.delete(storeProduct);
+        storeProduct.deleteStoreProduct();
 
         return "지점 판매 메뉴 삭제 성공";
     }
 
-    private HeadStoreProductListResponseDTO toListResponseDTO(StoreProduct storeProduct) {
-        return HeadStoreProductListResponseDTO.builder()
-                .storeProductId(storeProduct.getId())
-                .storeId(storeProduct.getStore().getId())
-                .productId(storeProduct.getProduct().getId())
-                .productName(storeProduct.getProduct().getProductName())
-                .basePrice(storeProduct.getProduct().getBasePrice())
-                .isSoldOut(storeProduct.getIsSoldOut())
+    /*
+     * 판매 상품 공통 조회
+     */
+    private StoreProduct findStoreProduct(
+            Integer storeId,
+            Integer storeProductId
+    ) {
+
+        return headStoreProductMapper
+                .findByStore_IdAndIdAndIsDeletedFalse(
+                        storeId,
+                        storeProductId
+                )
+                .orElseThrow(
+                        () ->
+                                new IllegalArgumentException(
+                                        "존재하지 않는 지점 판매 상품입니다."
+                                )
+                );
+    }
+
+    /*
+     * 가격 검증
+     */
+    private void validatePrice(
+            Integer price
+    ) {
+
+        if (price == null || price < 0) {
+            throw new IllegalArgumentException(
+                    "판매 가격은 0원 이상이어야 합니다."
+            );
+        }
+    }
+
+    /*
+     * 목록 응답 변환
+     */
+    private HeadStoreProductListResponseDTO
+            toListResponseDTO(
+                    StoreProduct storeProduct
+            ) {
+
+        return HeadStoreProductListResponseDTO
+                .builder()
+                .storeProductId(
+                        storeProduct.getId()
+                )
+                .storeId(
+                        storeProduct
+                                .getStore()
+                                .getId()
+                )
+                .productId(
+                        storeProduct
+                                .getProduct()
+                                .getId()
+                )
+                .productName(
+                        storeProduct
+                                .getProduct()
+                                .getProductName()
+                )
+                .basePrice(
+                        storeProduct
+                                .getProduct()
+                                .getBasePrice()
+                )
+                .storeProductPrice(
+                        storeProduct
+                                .getStoreProductPrice()
+                )
+                .isSoldOut(
+                        storeProduct.getIsSoldOut()
+                )
                 .build();
     }
 
-    private HeadStoreProductDetailResponseDTO toDetailResponseDTO(StoreProduct storeProduct) {
-        return HeadStoreProductDetailResponseDTO.builder()
-                .storeProductId(storeProduct.getId())
-                .storeId(storeProduct.getStore().getId())
-                .productId(storeProduct.getProduct().getId())
-                .productName(storeProduct.getProduct().getProductName())
-                .description(storeProduct.getProduct().getDescription())
-                .basePrice(storeProduct.getProduct().getBasePrice())
-                .discountRate(storeProduct.getProduct().getDiscountRate())
-                .isDisplay(storeProduct.getProduct().getIsDisplay())
-                .isSoldOut(storeProduct.getIsSoldOut())
+    /*
+     * 상세 응답 변환
+     */
+    private HeadStoreProductDetailResponseDTO
+            toDetailResponseDTO(
+                    StoreProduct storeProduct
+            ) {
+
+        Product product =
+                storeProduct.getProduct();
+
+        return HeadStoreProductDetailResponseDTO
+                .builder()
+                .storeProductId(
+                        storeProduct.getId()
+                )
+                .storeId(
+                        storeProduct
+                                .getStore()
+                                .getId()
+                )
+                .productId(
+                        product.getId()
+                )
+                .productName(
+                        product.getProductName()
+                )
+                .description(
+                        product.getDescription()
+                )
+                .basePrice(
+                        product.getBasePrice()
+                )
+                .storeProductPrice(
+                        storeProduct
+                                .getStoreProductPrice()
+                )
+                .discountRate(
+                        product.getDiscountRate()
+                )
+                .isDisplay(
+                        product.getIsDisplay()
+                )
+                .isSoldOut(
+                        storeProduct.getIsSoldOut()
+                )
                 .build();
     }
 }

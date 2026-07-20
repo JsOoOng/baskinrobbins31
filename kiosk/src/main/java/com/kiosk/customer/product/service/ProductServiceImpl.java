@@ -1,5 +1,6 @@
 package com.kiosk.customer.product.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -12,7 +13,10 @@ import com.kiosk.customer.product.dto.ProductDetailResponse;
 import com.kiosk.customer.product.dto.ProductListResponse;
 import com.kiosk.customer.product.repository.ProductOptionRepository;
 import com.kiosk.customer.product.repository.ProductRepository; // 레포지토리 import
+import com.kiosk.entity.Category;
+import com.kiosk.entity.Product;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -22,28 +26,87 @@ public class ProductServiceImpl implements ProductService {
     // 💡 DB에서 상품 정보를 조회하기 위해 레포지토리를 선언합니다.
     private final ProductRepository productRepository;
     private final ProductOptionRepository productOptionRepository;
+    private final EntityManager em;
+    
     @Override
     public List<ProductListResponse> getProductsByCategory(Long storeId, Long categoryId) {
-        // TODO: STORE_PRODUCTS와 PRODUCTS 조인하여 해당 카테고리 상품 리스트 조회
-        return null;
+        // 🌟 DB에서 지점별 상품 및 품절 여부 조회
+        List<Object[]> results = productRepository.findProductsWithSoldOutStatus(storeId, categoryId);
+        List<ProductListResponse> responseList = new ArrayList<>();
+
+        for (Object[] row : results) {
+            Product product = (Product) row[0];
+            Boolean isSoldOut = (Boolean) row[1];
+
+            // 품절 처리된 상품은 키오스크 화면에 노출하지 않음
+            if (isSoldOut != null && isSoldOut) {
+                continue;
+            }
+
+            // DB 데이터를 프론트엔드가 요구하는 DTO 형식으로 변환
+            ProductListResponse dto = new ProductListResponse();
+            dto.setProductId(product.getId()); // 엔티티의 ID 필드명 확인 필요 (id 혹은 productId)
+            dto.setCategoryId(categoryId.intValue()); // 🌟 누락된 카테고리 ID 설정 추가
+            dto.setProductName(product.getProductName());
+            dto.setBasePrice(product.getBasePrice());
+            dto.setIsSoldOut(isSoldOut);
+            dto.setImageUrl(product.getImageUrl());
+            
+            responseList.add(dto);
+        }
+        return responseList;
+    }
+    
+    @Override
+    public List<CategoryResponse> getAllCategories() {
+        // 🌟 DB에서 전체 카테고리 조회해서 반환
+        List<Category> categories = em.createQuery("SELECT c FROM Category c ORDER BY c.displayOrder", Category.class)
+                                      .getResultList();
+        
+        List<CategoryResponse> responseList = new ArrayList<>();
+        for (Category c : categories) {
+            CategoryResponse dto = new CategoryResponse();
+            dto.setCategoryId(c.getId());
+            dto.setCategoryName(c.getCategoryName());
+            responseList.add(dto);
+        }
+        return responseList;
     }
 
     @Override
     public ProductDetailResponse getProductDetail(Long storeId, Long productId) {
-        // TODO: PRODUCT_OPTIONS 조회하여 OptionGroupDto로 묶고, FlavorService를 통해 맛 목록을 가져와 병합
-        return null;
+        Product product = productRepository.findById(productId.intValue())
+            .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+            
+        List<com.kiosk.entity.ProductOption> options = productOptionRepository.findByProductId(productId.intValue());
+        List<com.kiosk.customer.product.dto.ProductOptionDto> optionDtos = new ArrayList<>();
+        
+        for (com.kiosk.entity.ProductOption opt : options) {
+            com.kiosk.customer.product.dto.ProductOptionDto dto = new com.kiosk.customer.product.dto.ProductOptionDto();
+            dto.setOptionId(opt.getId());
+            dto.setProductId(product.getId());
+            dto.setOptionType(opt.getOptionType().name());
+            dto.setOptionName(opt.getOptionName());
+            dto.setExtraPrice(opt.getExtraPrice());
+            dto.setMaxFlavorCount(opt.getMaxFlavorCount());
+            optionDtos.add(dto);
+        }
+        
+        return new ProductDetailResponse(
+            product.getId(),
+            product.getProductName(),
+            product.getDescription(),
+            product.getBasePrice(),
+            new ArrayList<>(), // optionGroups
+            new ArrayList<>(), // availableFlavors
+            optionDtos         // options
+        );
     }
 
     @Override
     @Transactional
     public void addProduct(ProductCreateRequest request) {
         // TODO: 1. PRODUCTS 저장 -> 2. PRODUCT_OPTIONS 저장 -> 3. 모든 매장에 STORE_PRODUCTS 매핑 저장
-    }
-
-    @Override
-    public List<CategoryResponse> getAllCategories() {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     // =================================================================

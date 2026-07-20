@@ -5,6 +5,7 @@
 
     <resultMap id="orderDetailMap" type="com.kiosk.customer.order.dto.OrderResponse">
         <id property="orderId" column="order_id" />
+        <result property="orderNumber" column="order_number" />
         <result property="totalPrice" column="total_price" />
         
         <collection property="orderItems" ofType="com.kiosk.customer.order.dto.OrderItemDTO">
@@ -23,7 +24,8 @@
     <select id="selectOrderWithDetails" resultMap="orderDetailMap">
         SELECT 
             o.order_id, 
-            o.total_price,
+            o.order_number,
+            (SELECT COALESCE(SUM(oi2.unit_price * oi2.quantity), 0) FROM order_items oi2 WHERE oi2.order_id = o.order_id) as total_price,
             oi.order_item_id, 
             oi.product_id,
             p.product_name, 
@@ -51,10 +53,26 @@
 	    WHERE order_id = #{orderId}
 	</update>
     
- <!-- 결제 내역 저장 -->
-<insert id="insertPayment">
-    INSERT INTO payments (order_id, payment_method, base_amount, final_amount, point_used, payment_status)
-    VALUES (#{orderId}, #{paymentMethod}, #{baseAmount}, #{finalAmount}, #{pointUsed}, #{paymentStatus})
+ <insert id="insertPayment" parameterType="com.kiosk.customer.order.dto.Payment">
+    INSERT INTO payments (
+        order_id, 
+        payment_method, 
+        base_amount, 
+        coupon_discount,
+        point_used,
+        final_amount, 
+        payment_status,
+        payment_date
+    ) VALUES (
+        #{orderId}, 
+        #{paymentMethod}, 
+        #{baseAmount}, 
+        #{couponDiscount},
+        #{pointUsed},
+        #{finalAmount}, 
+        #{paymentStatus},
+        #{paymentDate}
+    )
 </insert>
 
 <!-- 주문 상태 및 결제 정보 업데이트 -->

@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-const user = JSON.parse(localStorage.getItem('user'))
+const user = JSON.parse(localStorage.getItem('branchUser'))
 
 const moveOrder = () => {
   router.push('/branch/order')
@@ -17,10 +17,32 @@ const goMenu = () => {
     router.push('/branch/menu')
 }
 
+const goStatistics = () => {
+    router.push('/branch/statistics')
+}
+
+const goKiosk = () => {
+    router.push('/branch/kiosk')
+}
+
+const goPartTime = () => {
+
+router.push('/branch/staff')
+
+}
+
+const goWeekSchedule = () => {
+
+router.push(
+    '/branch/week-schedule'
+)
+
+}
+
 
 const logout = () => {
   localStorage.removeItem('token')
-  localStorage.removeItem('user')
+  localStorage.removeItem('branchUser')
 
   alert('로그아웃되었습니다.')
 
@@ -62,8 +84,20 @@ const logout = () => {
         </button>
 
 
-        <button>
-            매출 관리
+        <button @click="goStatistics">
+            통계 관리
+        </button>
+
+        <button @click="goKiosk">
+            키오스크 관리
+        </button>
+
+        <button @click="goPartTime">
+            알바 관리
+        </button>
+
+        <button @click="goWeekSchedule">
+            한 주 스케줄 확인
         </button>
 
 

@@ -2,18 +2,19 @@ package com.kiosk.branch.order.dto;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.kiosk.entity.Order;
 import com.kiosk.entity.enums.OrderStatus;
 import com.kiosk.entity.enums.OrderType;
+import com.kiosk.entity.enums.PaymentStatus;
 
 import lombok.Builder;
 import lombok.Getter;
 
-
 @Getter
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class BranchOrderListResponse {
-
 
     private Integer orderId;
 
@@ -23,22 +24,37 @@ public class BranchOrderListResponse {
 
     private OrderStatus orderStatus;
 
-    private Integer totalPrice;
+    // Payment 정보
+    private Integer finalAmount;
+
+    private PaymentStatus paymentStatus;
 
     private LocalDateTime createdAt;
 
-
-    public static BranchOrderListResponse from(Order order){
+    
+    public static BranchOrderListResponse from(Order order) {
 
         return BranchOrderListResponse.builder()
                 .orderId(order.getId())
                 .orderNumber(order.getOrderNumber())
                 .orderType(order.getOrderType())
                 .orderStatus(order.getOrderStatus())
-                .totalPrice(order.getTotalPrice())
-                .createdAt(order.getCreatedAt())
-                .build();
 
+                .finalAmount(
+                        order.getPayment() != null
+                        ? order.getPayment().getFinalAmount()
+                        : null
+                )
+
+                .paymentStatus(
+                        order.getPayment() != null
+                        ? order.getPayment().getPaymentStatus()
+                        : null
+                )
+
+                .createdAt(order.getCreatedAt())
+
+                .build();
     }
 
 }

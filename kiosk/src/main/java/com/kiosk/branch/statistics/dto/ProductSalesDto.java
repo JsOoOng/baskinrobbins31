@@ -1,0 +1,17 @@
+package com.kiosk.branch.statistics.dto;
+
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+
+@Getter
+@AllArgsConstructor
+public class ProductSalesDto {
+
+
+    private String productName;
+
+    private Integer sales;
+
+}

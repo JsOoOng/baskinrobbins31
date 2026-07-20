@@ -3,6 +3,7 @@ package com.kiosk.customer.order.service;
 import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
+
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.customer.basket.dto.BasketAddRequest;
@@ -20,6 +21,7 @@ import com.kiosk.customer.order.repository.OrderRepository;
 import com.kiosk.customer.order.repository.UserCouponRepository;
 import com.kiosk.customer.order.repository.UserRepository;
 import com.kiosk.entity.Coupon;
+import java.util.Optional;
 import com.kiosk.entity.IcecreamFlavor;
 import com.kiosk.entity.Kiosk;
 import com.kiosk.entity.Order;
@@ -37,6 +39,7 @@ import com.kiosk.entity.enums.OrderType;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +53,8 @@ public class OrderService {
     private final OrderItemFlavorMapper orderItemFlavorRepository;
     private final OrderItemOptionMapper orderItemOptionRepository;
     private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
     
     private final UserCouponRepository userCouponRepository;
     
@@ -71,30 +76,51 @@ public class OrderService {
 
         Store store = em.getReference(Store.class, request.getStoreId());
         Kiosk kiosk = (request.getKioskId() != null) ? em.getReference(Kiosk.class, request.getKioskId()) : null;
-        User user = (request.getUserId() != null) ? em.getReference(User.class, request.getUserId()) : null;
 
-        // 🌟 [추가된 부분] 당일 주문번호(영수증 번호) 생성 로직
-        LocalDateTime startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-        LocalDateTime endOfDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        User user = null;
         
-        // DB에서 오늘 해당 지점의 주문 개수를 가져와서 + 1
-        int todayOrderCount = orderRepository.countTodayOrders(request.getStoreId(), startOfDay, endOfDay);
-        int nextOrderNumber = todayOrderCount + 1;
-        
-        // 3. 주문(Order) 마스터 생성 및 저장
+        // 장바구니 총 금액 계산
+        int totalPrice = 0;
+        for (BasketAddRequest basketItem : basket.getItems()) {
+            totalPrice += basketItem.getUnitPrice() * basketItem.getQuantity();
+        }
+
+        // 전화번호가 넘어왔다면 유저 맵핑 (포인트 로직은 processPayment로 이관)
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().trim().isEmpty()) {
+            Optional<User> optionalUser = userRepository.findByPhone(request.getPhoneNumber());
+            
+            if (optionalUser.isPresent()) {
+                user = optionalUser.get();
+            } else {
+                user = User.builder()
+                        .phone(request.getPhoneNumber())
+                        .pointBalance(0)
+                        .build();
+                userRepository.save(user);
+            }
+        } else if (request.getUserId() != null) {
+            // 예외적으로 기존처럼 userId가 직접 넘어온 경우
+            user = em.getReference(User.class, request.getUserId());
+        }
+
+        // 데이터베이스에서 가장 높은 주문 번호를 가져와서 1을 더함 (없으면 1부터 시작)
+        int maxOrderNumber = orderRepository.findMaxOrderNumber();
+        int nextOrderNumber = maxOrderNumber + 1;
+
         Order order = Order.builder()
                 .store(store)
                 .kiosk(kiosk)
                 .user(user)
-                .orderNumber(nextOrderNumber) // TODO: 당일 영수증 번호 생성 로직 필요
+                .orderNumber(nextOrderNumber)
                 .orderType(OrderType.valueOf(request.getOrderType()))
+                .dryIceCount(request.getDryIceCount())
                 .dryIceMins(request.getDryIceMins())
                 .orderStatus(OrderStatus.WAITING)
-                .totalPrice(basket.getTotalPrice())
                 .build();
         
         orderRepository.save(order); // 여기서 order.getId()가 생성됨
-
+        
+        
         for (BasketAddRequest basketItem : basket.getItems()) {
             Product product = em.getReference(Product.class, basketItem.getProductId());
             OrderItem orderItem = OrderItem.builder()
@@ -129,8 +155,14 @@ public class OrderService {
                 }
             }
         }
+        
+     // 지점에 새 주문 알림 전송
+        messagingTemplate.convertAndSend(
+                "/topic/store/" + request.getStoreId(),
+                "새 주문이 들어왔습니다."
+        );
 
-        basketService.clearBasket(session);
+        // 장바구니 초기화는 결제 성공 시점(processPayment)으로 이동
         return order.getId(); // 생성된 PK(orderId)를 반환
     }
 
@@ -138,60 +170,78 @@ public class OrderService {
      * 결제 처리 및 재고 차감 (통합 로직)
      */
     @Transactional
-    public void processPayment(int orderId, String paymentMethod, int userCouponId, boolean usePoints) {
-    	
-    	// 1. 주문 조회
-    	Order order = orderRepository.findById(orderId)
-    	        .orElseThrow(() -> new RuntimeException("주문을 찾을 수 없습니다."));
+    public void processPayment(int orderId, String paymentMethod, int userCouponId, int pointUsed, HttpSession session) {
+        
+        // 1. 주문 조회 (엔티티 기반)
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("주문 엔티티를 찾을 수 없습니다."));
 
-    	int finalAmount = order.getTotalPrice();
+        int baseAmount = order.getTotalPrice();
+        int finalAmount = baseAmount;
+        int couponDiscount = 0;
 
-    	// 2. 쿠폰 계산 (먼저 할인 적용)
-    	if (userCouponId > 0) {
-    	    UserCoupon uc = userCouponRepository.findById(userCouponId)
-    	        .orElseThrow(() -> new RuntimeException("쿠폰 없음"));
-    	    
-    	    int discount = calculateDiscount(finalAmount, uc.getCoupon());
-    	    System.out.println("쿠폰 할인액: " + discount); // <--- 이 로그를 찍어보세요!
-    	    finalAmount -= discount;
-    	    uc.useCoupon(); 
-    	}
+        // 2. 쿠폰 계산 및 적용 (feature 브랜치 로직)
+        if (userCouponId > 0) {
+            UserCoupon uc = userCouponRepository.findById(userCouponId)
+                    .orElseThrow(() -> new RuntimeException("쿠폰을 찾을 수 없습니다."));
+            
+            couponDiscount = calculateDiscount(finalAmount, uc.getCoupon());
+            System.out.println("쿠폰 할인액: " + couponDiscount);
+            
+            finalAmount -= couponDiscount;
+            uc.useCoupon(); // 쿠폰 사용 처리
+        }
 
-    	// 3. 포인트 로직 (쿠폰 할인 후 남은 금액만큼만 사용)
-    	int pointsToUse = 0;
-    	User user = order.getUser(); 
-    	if (user != null && usePoints) {
-    	    // 결제 금액보다 포인트가 많으면 결제 금액만큼만, 적으면 가진 포인트만큼만 사용
-    	    pointsToUse = Math.min(user.getPointBalance(), finalAmount); 
-    	    
-    	    finalAmount -= pointsToUse;
-    	    user.deductPoints(pointsToUse);
-    	}
+        // 3. 포인트 사용 적용 및 5% 적립 (dev1 + feature 혼합)
+        User user = order.getUser(); 
+        if (user != null) {
+            // 3-1. 포인트 사용
+            if (pointUsed > 0) {
+                // 결제 금액을 초과해서 포인트를 사용할 수 없도록 방어
+                pointUsed = Math.min(pointUsed, finalAmount);
+                finalAmount -= pointUsed;
+                
+                // 포인트 차감 (참고: User 엔티티에 deductPoints가 있다면 그걸 쓰셔도 무방합니다)
+                user.addPoint(-pointUsed); 
+            }
 
-    	// 4. 포인트 적립 (0보다 클 때만)
-    	if (user != null && finalAmount > 0) {
-    	    user.addPoints((int)(finalAmount * 0.05));
-    	}
+            // 3-2. 포인트 적립 (최종 결제 금액이 0보다 클 때만)
+            if (finalAmount > 0) {
+                int earnedPoints = (int)(finalAmount * 0.05);
+                if (earnedPoints > 0) {
+                    user.addPoint(earnedPoints);
+                }
+            }
+            userRepository.save(user);
+        }
 
         // 4. 재고 차감
         for (OrderItem item : order.getOrderItems()) {
             int updatedRows = orderMapper.decreaseProductStock(item.getProduct().getId(), item.getQuantity());
-            if (updatedRows == 0) throw new RuntimeException("재고 부족: " + item.getProduct().getProductName());
+            if (updatedRows == 0) {
+                throw new RuntimeException("상품 [" + item.getProduct().getProductName() + "] 재고 부족");
+            }
         }
 
         // 5. 결제 정보 저장 (Payments 테이블에 INSERT)
         Payment payment = new Payment();
         payment.setOrderId(orderId);
-        payment.setBaseAmount(order.getTotalPrice());
-        payment.setFinalAmount(finalAmount);
-        payment.setPointUsed(usePoints ? pointsToUse : 0);
         payment.setPaymentMethod(paymentMethod);
+        payment.setBaseAmount(baseAmount);
+        payment.setCouponDiscount(couponDiscount);
+        payment.setPointUsed(pointUsed);
+        payment.setFinalAmount(finalAmount);
         payment.setPaymentStatus("PAID");
+        payment.setPaymentDate(LocalDateTime.now());
         orderMapper.insertPayment(payment);
         
-        // 6. 주문 상태 업데이트 (ORDERS 테이블에는 상태만 변경!)
-        // 기존의 updatePaymentStatus 대신 상태만 변경하는 메서드 사용
+        // 6. 주문 상태 업데이트 (ORDERS 테이블 상태 변경)
         orderMapper.updateOrderStatus(orderId, "COMPLETED");
+
+        // 7. 장바구니 비우기 (결제 완료 후 세션 초기화)
+        if (session != null) {
+            basketService.clearBasket(session);
+        }
     }
     
     // 결제 방법

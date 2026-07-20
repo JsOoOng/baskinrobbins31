@@ -1,49 +1,45 @@
 package com.kiosk.headquarter.controller;
 
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.kiosk.headquarter.dto.common.HeadApiResponse;
 import com.kiosk.headquarter.dto.employee.HeadEmployeeCreateRequest;
 import com.kiosk.headquarter.dto.employee.HeadEmployeeCreateResponse;
 import com.kiosk.headquarter.service.HeadEmployeeService;
 
-import jakarta.servlet.http.HttpSession;
-import org.springframework.web.bind.annotation.*;
+import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/head/employees")
+@RequestMapping("/head/stores/{storeId}/employees")
+@RequiredArgsConstructor
 public class HeadEmployeeController {
 
-    private final HeadEmployeeService headEmployeeService;
+    private final HeadEmployeeService
+            headEmployeeService;
 
-    public HeadEmployeeController(HeadEmployeeService headEmployeeService) {
-        this.headEmployeeService = headEmployeeService;
-    }
+    @PostMapping
+    public HeadApiResponse<HeadEmployeeCreateResponse>
+            createStoreManager(
+                    @PathVariable
+                    Integer storeId,
 
-    @PostMapping("/store-admins")
-    public HeadApiResponse<HeadEmployeeCreateResponse> createStoreAdmin(
-            @RequestBody HeadEmployeeCreateRequest request,
-            HttpSession session
-    ) {
-        checkHeadLogin(session);
+                    @RequestBody
+                    HeadEmployeeCreateRequest request
+            ) {
+
+        request.setStoreId(storeId);
 
         HeadEmployeeCreateResponse response =
-                headEmployeeService.createStoreAdmin(request);
+                headEmployeeService
+                        .createStoreManager(request);
 
-        return HeadApiResponse.ok("지점 관리자 계정 생성 성공", response);
-    }
-
-    private void checkHeadLogin(HttpSession session) {
-        Object role = session.getAttribute("HEAD_ROLE");
-
-        if (role == null) {
-            throw new IllegalArgumentException("로그인이 필요합니다.");
-        }
-
-        if (!"HEAD_ADMIN".equals(role.toString())
-                && !"SUPER_ADMIN".equals(role.toString())) {
-            throw new IllegalArgumentException("본사 관리자 권한이 필요합니다.");
-        }
-        
-        
-       
+        return HeadApiResponse.ok(
+                "지점 관리자 계정 생성 성공",
+                response
+        );
     }
 }

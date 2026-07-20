@@ -67,15 +67,14 @@ public class HeadEmployeeInsertDTO {
     }
 
     public HeadEmployeeCreateResponse toResponse() {
-        HeadEmployeeCreateResponse response = new HeadEmployeeCreateResponse();
 
-        response.setEmployeeId(this.employeeId);
-        response.setStoreId(this.storeId);
-        response.setLoginId(this.loginId);
-        response.setName(this.name);
-        response.setRole(this.role);
-        response.setStatus(this.status);
-
-        return response;
+        return HeadEmployeeCreateResponse.builder()
+                .employeeId(this.employeeId)
+                .storeId(this.storeId)
+                .loginId(this.loginId)
+                .name(this.name)
+                .role(this.role)
+                .status(this.status)
+                .build();
     }
 }

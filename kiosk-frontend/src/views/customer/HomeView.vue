@@ -1,34 +1,85 @@
 <template>
-  <div class="home-container" @click="goToMenu">
-    <div class="touch-area">
-      <h1 class="brand-name">Baskin Robbins</h1>
-      <p class="touch-text">주문하시려면 화면을 터치해 주세요 👆</p>
+  <div class="kiosk-home">
+    <div class="logo-area">
+      <img src="@/assets/images/logo.png" alt="Baskin Robbins" class="logo" />
+      <h1>배스킨라빈스에 오신 것을 환영합니다</h1>
     </div>
+
+    <div class="button-group">
+      <button class="btn-here" @click="handleOrderType('HERE')">
+        <span class="icon">🍽️</span>
+        <span class="text">먹고가기</span>
+      </button>
+
+      <button class="btn-togo" @click="handleOrderType('TOGO')">
+        <span class="icon">🛍️</span>
+        <span class="text">포장하기</span>
+      </button>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
+import { useBasketStore } from '@/stores/customer/basket'
 
-const router = useRouter();
+const router = useRouter()
+const basketStore = useBasketStore()
 
-const goToMenu = () => {
-  router.push('/menu'); // 터치 시 메뉴 화면으로 이동!
-};
+const handleOrderType = (type) => {
+  basketStore.setOrderType(type)
+  
+  if (type === 'HERE') {
+    basketStore.setDryIceCount(0)
+    basketStore.setDryIceMins(0)
+  }
+  router.push('/menu')
+}
 </script>
 
 <style scoped>
-.home-container {
+.kiosk-home {
   display: flex;
-  justify-content: center; /* 가로 중앙 정렬 */
-  align-items: center;     /* 세로 중앙 정렬 */
-  height: 100%;            /* main-content의 높이를 100% 꽉 채움 */
-  width: 100%;
-  background-color: #ff66b2; /* 베라 핑크색 */
-  color: white;
-  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #fff;
 }
 
+.logo-area {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.button-group {
+  display: flex;
+  gap: 20px;
+}
+
+button.btn-here, button.btn-togo {
+  width: 250px;
+  height: 300px;
+  border-radius: 20px;
+  border: 2px solid #ff7c98;
+  background-color: white;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+button.btn-here:hover, button.btn-togo:hover {
+  background-color: #ff7c98;
+  color: white;
+}
+
+.icon {
+  font-size: 80px;
+}
 .touch-area {
   text-align: center;
 }
@@ -45,8 +96,9 @@ const goToMenu = () => {
   animation: blink 1.5s infinite; 
 }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+.text {
+  font-size: 30px;
+  font-weight: bold;
 }
+
 </style>

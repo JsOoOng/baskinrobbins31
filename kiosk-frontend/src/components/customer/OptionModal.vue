@@ -1,7 +1,7 @@
 <template>
   <div class="modal-overlay" v-if="isOpen" @click.self="closeModal">
     <div class="modal-content">
-      
+      <button class="close-icon-btn" @click="closeModal">✖</button>
       <h2>{{ product?.productName }}</h2>
       <p class="price">{{ product?.basePrice }}원</p>
 
@@ -75,6 +75,24 @@ const addToCart = () => {
   background-color: white; padding: 30px; border-radius: 15px;
   width: 400px; text-align: center;
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  position: relative;
+}
+.close-icon-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 .price { font-size: 1.2rem; color: #ff66b2; font-weight: bold; }
 .flavor-section { margin: 20px 0; text-align: left; background: #f9f9f9; padding: 15px; border-radius: 8px;}

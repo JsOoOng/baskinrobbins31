@@ -21,6 +21,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -60,6 +61,10 @@ public class Order {
     @Column(name = "order_type", nullable = false)
     private OrderType orderType;
 
+    @Column(name = "dry_ice_count")
+    @Builder.Default
+    private Integer dryIceCount = 0;
+
     @Column(name = "dry_ice_mins")
     @Builder.Default
     private Integer dryIceMins = 0;
@@ -72,9 +77,14 @@ public class Order {
     public void changeOrderStatus(OrderStatus orderStatus) {
     	this.orderStatus = orderStatus;
     }
-
-    @Column(name = "total_price", nullable = false)
-    private Integer totalPrice;
+    
+    @OneToOne(
+    	    mappedBy = "order",
+    	    cascade = CascadeType.ALL,
+    	    orphanRemoval = true,
+    	    fetch = FetchType.LAZY
+    	)
+    	private Payment payment;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
