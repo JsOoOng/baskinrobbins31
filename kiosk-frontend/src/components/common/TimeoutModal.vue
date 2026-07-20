@@ -1,13 +1,13 @@
 <template>
   <div v-if="timeoutStore.showModal" class="timeout-modal-overlay">
     <div class="timeout-modal-content">
-      <h2>⚠️ 장시간 입력이 없습니다</h2>
-      <p class="desc-text">계속하시겠습니까?</p>
+      <h2>⚠️ {{ $t('장시간 입력이 없습니다') }}</h2>
+      <p class="desc-text">{{ $t('계속하시겠습니까?') }}</p>
       <div class="countdown-circle">
         <span class="countdown-number">{{ timeoutStore.countdown }}</span>
       </div>
-      <p class="sub-text">응답이 없으면 처음 화면으로 돌아갑니다.</p>
-      <button class="btn-extend" @click="extendTime">연장하기</button>
+      <p class="sub-text">{{ $t('응답이 없으면 처음 화면으로 돌아갑니다.') }}</p>
+      <button class="btn-extend" @click="extendTime">{{ $t('연장하기') }}</button>
     </div>
   </div>
 </template>
