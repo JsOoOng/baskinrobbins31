@@ -1,11 +1,10 @@
 <script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { RouterLink, RouterView, useRoute } from 'vue-router';
-import { computed } from 'vue';
 import Header from '@/components/common/Header.vue';
 import TimeoutModal from '@/components/common/TimeoutModal.vue';
-import { onMounted, onUnmounted } from 'vue';
+import StaffCallButton from '@/components/common/StaffCallButton.vue';
 import { Client } from '@stomp/stompjs';
-import { ref } from 'vue';
 
 const toastMessage = ref('');
 const showToastBox = ref(false);
@@ -42,39 +41,28 @@ onMounted(() => {
     );
 
 
-  // 지점 로그인 상태가 아니면 연결하지 않음
-  if (!branchUser) {
-    return;
-  }
-
+  // branchUser가 없어도 키오스크 모드에서 메시지 발송을 위해 연결을 시도하도록 수정
+  // if (!branchUser) {
+  //   return;
+  // }
 
   client = new Client({
-
     brokerURL: `ws://${window.location.hostname}:8889/ws`,
-
   });
 
-
   client.onConnect = () => {
+    console.log('WebSocket 연결 성공');
 
-
-    console.log(
-      'WebSocket 연결 성공'
-    );
-
-
-    client.subscribe(
-      `/topic/store/${branchUser.storeId}`,
-      (message)=>{
-
+    // 지점 관리자로 로그인되어 있을 때만 알림을 수신(Subscribe)
+    if (branchUser) {
+      client.subscribe(
+        `/topic/store/${branchUser.storeId}`,
+        (message) => {
           showToast(message.body);
-
-      }
-    );
-
-
+        }
+      );
+    }
   };
-
 
   client.onStompError = (error)=>{
 
@@ -93,14 +81,25 @@ onMounted(() => {
 
 
 onUnmounted(()=>{
-
   if(client){
-
     client.deactivate();
-
   }
-
 });
+
+// 키오스크 직원 호출 핸들러
+const handleStaffCall = () => {
+  if (client && client.connected) {
+    // 키오스크는 보통 특정 storeId에 매핑됩니다 (여기서는 임시로 1번 매장 사용).
+    const storeId = 1;
+    client.publish({
+      destination: `/topic/store/${storeId}`,
+      body: '🔔 키오스크에서 직원을 호출했습니다.'
+    });
+    console.log('직원 호출 메시지 전송 완료');
+  } else {
+    console.error('웹소켓이 연결되지 않아 직원을 호출할 수 없습니다.');
+  }
+};
 
 // App.vue는 가장 큰 껍데기이므로 특별한 로직 없이 비워둡니다.
 </script>
@@ -109,6 +108,9 @@ onUnmounted(()=>{
   <div class="app-container" :class="{ 'kiosk-wrapper': isKiosk }">
     <main class="main-content" :class="{ 'kiosk-mode': isKiosk }">
       <router-view />
+      
+      <!-- 키오스크 화면일 때 직원 호출 버튼 렌더링 -->
+      <StaffCallButton v-if="isKiosk" @call-staff="handleStaffCall" />
     </main>
     <TimeoutModal />
     <div 
