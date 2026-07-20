@@ -90,9 +90,12 @@ public class SecurityConfig {
                             "/actuator/**"
                     ).permitAll()
 
-                    // 지점 직원의 로그인 엔드포인트는 인증 없이 접근 가능
+                    // 지점 직원의 로그인 엔드포인트 및 키오스크 조회/SSE 접근 허용 (키오스크 기기용)
                     .requestMatchers(
                             "/branch/login"
+                    ).permitAll()
+                    .requestMatchers(
+                            HttpMethod.GET, "/branch/kiosk/**"
                     ).permitAll()
 
                     // 본사 직원의 로그인 엔드포인트는 인증 없이 접근 가능
