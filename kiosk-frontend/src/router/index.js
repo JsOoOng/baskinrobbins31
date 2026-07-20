@@ -324,7 +324,7 @@ const router = createRouter({
         {
           path: 'events',
           name: 'head-events',
-          component: loadHeadTemporaryPage,
+          component: () => import('../views/head/HeadEvent.vue'),
           meta: { title: '이벤트 관리', description: '이벤트 대상과 진행 기간을 관리합니다.', phase: 'P2' }
         },
         {
