@@ -104,5 +104,20 @@
     SET point_balance = point_balance + #{amount} 
     WHERE user_id = #{userId}
 </update>
+
+<!-- 전화번호로 유저의 보유 포인트 및 미사용 쿠폰 목록 조회 -->
+<select id="findUserPointsAndCouponsByPhone" resultType="com.kiosk.customer.order.dto.UserPointResponseDto$CouponDto">
+    SELECT 
+        uc.user_coupon_id AS userCouponId,
+        c.coupon_name AS couponName,
+        c.discount_value AS discountValue,
+        c.discount_type AS discountType,
+        uc.is_used AS isUsed
+    FROM user_coupon uc
+    JOIN coupon c ON uc.coupon_id = c.coupon_id
+    JOIN user u ON uc.user_id = u.id
+    WHERE u.phone = #{phone}
+      AND uc.is_used = 0
+</select>
     
     </mapper>

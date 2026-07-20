@@ -1,157 +1,186 @@
 <template>
-  <div class="point-discount-container">
-    <!-- 상단 스텝 바 -->
-    <div class="step-header">
-      <div class="step active">
-        <span class="badge">STEP01</span>
-        <span class="title">{{ $t('포인트/할인') }}</span>
+  <div class="kiosk-container">
+    <!-- 상단 헤더 -->
+    <header class="header">
+      <h1>{{ $t('할인 및 포인트 적립') }}</h1>
+    </header>
+
+    <!-- 바디 컨텐츠 -->
+    <div class="content-body">
+      <!-- 전화번호 미입력 상태: 조회 버튼 섹션 -->
+      <div v-if="!phoneNumber" class="auth-section">
+        <p>{{ $t('전화번호를 입력하고 포인트와 쿠폰을 확인하세요.') }}</p>
+        <button class="open-modal-btn" @click="openKeypad('earn')">
+          {{ $t('전화번호 입력 / 조회') }}
+        </button>
       </div>
-      <div class="step inactive">
-        <span class="badge">STEP02</span>
-        <span class="title">{{ $t('쿠폰/결제') }}</span>
+
+      <!-- 전화번호 입력 완료 후 정보 섹션 -->
+      <div v-else>
+        <!-- 유저 카드 -->
+        <div class="user-card">
+          <div class="phone-txt">{{ phoneNumber }}</div>
+          <div class="point-txt">{{ $t('보유 포인트') }}: {{ availablePoints.toLocaleString() }} P</div>
+          <button class="reset-btn" @click="resetUser">{{ $t('번호 재입력') }}</button>
+        </div>
+
+        <!-- 쿠폰 목록 섹션 -->
+        <div class="section-box">
+          <h3>{{ $t('사용 가능한 쿠폰') }}</h3>
+          <div v-if="coupons.length > 0" class="coupon-list">
+            <div 
+              v-for="coupon in coupons" 
+              :key="coupon.userCouponId" 
+              class="coupon-card"
+              :class="{ selected: selectedCoupon?.userCouponId === coupon.userCouponId }"
+              @click="selectCoupon(coupon)"
+            >
+              <div>
+                <div class="c-name">{{ coupon.couponName }}</div>
+                <div class="c-disc">
+                  {{ coupon.discountValue }}{{ coupon.discountType === 'PERCENT' ? '%' : '원' }} {{ $t('할인') }}
+                </div>
+              </div>
+              <div class="radio-icon">
+                {{ selectedCoupon?.userCouponId === coupon.userCouponId ? 'V' : '' }}
+              </div>
+            </div>
+          </div>
+          <div v-else class="empty-msg">
+            {{ $t('사용 가능한 쿠폰이 없습니다.') }}
+          </div>
+        </div>
+
+        <!-- 포인트 사용 섹션 -->
+        <div class="section-box">
+          <h3>{{ $t('포인트 사용') }}</h3>
+          <div class="point-input-group" @click="openPointKeypad">
+            <input 
+              type="text" 
+              readonly 
+              :value="discountAmount > 0 ? `${discountAmount.toLocaleString()} P` : ''" 
+              :placeholder="$t('사용할 포인트를 입력하세요')"
+            />
+            <button class="point-apply-btn">{{ discountAmount > 0 ? $t('변경') : $t('사용') }}</button>
+          </div>
+          <div class="tip-msg">{{ $t('100포인트 이상부터 사용 가능합니다.') }}</div>
+        </div>
+
+        <!-- 적립 예정 금액 표시 공간 -->
+        <div class="section-box earn-preview-box">
+          <h3>{{ $t('적립 예정') }}</h3>
+          <div class="earn-info-content">
+            <span class="earn-label">{{ $t('결제 완료 시 적립') }}</span>
+            <span class="earn-value">+{{ earnedPoints.toLocaleString() }} P</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- 메인 컨텐츠 영역 -->
-    <div class="pd-main-content">
-      <div class="left-section">
-        <h2 class="section-title">{{ $t('해피포인트 회원이신가요?') }}</h2>
-        <div class="button-grid">
-          <button class="point-btn" @click="openKeypad('earn')">
-            <img src="@/assets/images/logo.png" alt="Happy Point" class="hp-logo" />
-            <span>{{ $t('적립하기') }}</span>
-          </button>
-          <button class="point-btn" @click="openKeypad('use')">
-            <img src="@/assets/images/logo.png" alt="Happy Point" class="hp-logo" />
-            <span>{{ $t('사용하기') }}</span>
-          </button>
+    <!-- 푸터 및 요약 / 네비게이션 섹션 -->
+    <div class="footer-section">
+      <div class="price-summary-box">
+        <div class="summary-top">
+          <span class="label">{{ $t('최종 결제금액') }}</span>
+          <span class="final-amount">{{ finalPrice.toLocaleString() }}원</span>
         </div>
-        <div v-if="earnedPoints > 0" class="point-status">
-          <p>🎁 {{ $t('결제 완료 시 {earnedPoints} 포인트가 적립될 예정입니다.', { earnedPoints: earnedPoints.toLocaleString() }) }}</p>
-          <p class="phone-number">{{ $t('(번호: {phoneNumber})', { phoneNumber: phoneNumber }) }}</p>
+        <div class="summary-detail">
+          <div class="col">
+            <span class="sub-label">{{ $t('주문금액') }}</span>
+            <span class="sub-val">{{ basketStore.totalPrice.toLocaleString() }}원</span>
+          </div>
+          <span class="operator">-</span>
+          <div class="col">
+            <span class="sub-label">{{ $t('할인금액') }}</span>
+            <span class="sub-val">{{ totalDiscount.toLocaleString() }}원</span>
+          </div>
+          <span class="operator">=</span>
+          <div class="col">
+            <span class="sub-label">{{ $t('적립예정') }}</span>
+            <span class="sub-val">{{ earnedPoints.toLocaleString() }}P</span>
+          </div>
         </div>
       </div>
 
-      <div class="right-section">
-        <div class="info-block">
-          <h3>{{ $t('* 해피포인트 적립하기') }}</h3>
-          <p>{{ $t('해피포인트 적립을 선택하시면 결제완료 후 자동 적립됩니다.') }}</p>
-        </div>
-        <div class="info-block">
-          <h3>{{ $t('* 해피포인트 사용하기') }}</h3>
-          <p>{{ $t('100포인트 이상 보유시 사용 가능합니다.') }}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- 하단 결제 금액 서머리 -->
-    <div class="summary-footer">
-      <div class="final-price-row">
-        <span class="label">{{ $t('최종 결제금액') }}</span>
-        <span class="value pink">₩ {{ (basketStore.totalPrice - discountAmount).toLocaleString() }}</span>
-      </div>
-      <div class="detail-price-row">
-        <div class="detail-item">
-          <span>{{ $t('총 주문 금액') }}</span>
-          <span>₩ {{ basketStore.totalPrice.toLocaleString() }}</span>
-        </div>
-        <div class="detail-divider">-</div>
-        <div class="detail-item">
-          <span>{{ $t('총 할인 금액') }}</span>
-          <span>₩ {{ discountAmount.toLocaleString() }}</span>
-        </div>
+      <div class="button-group">
+        <button class="prev-btn" @click="goBack">&lt; {{ $t('이전') }}</button>
+        <button class="next-btn" @click="proceedPayment">{{ $t('다음(결제하기)') }}</button>
       </div>
     </div>
 
-    <!-- 하단 네비게이션 버튼 -->
-    <div class="nav-buttons">
-      <button class="btn-prev" @click="goBack">
-        <span class="icon">&lt;</span> {{ $t('이전') }}
-      </button>
-      <button class="btn-next" @click="goNext">
-        {{ $t('다음(결제하기)') }}
-      </button>
-    </div>
-
-    <!-- 번호 입력 키패드 모달 -->
-    <div v-if="showKeypad" class="modal-overlay">
-      <div class="keypad-modal">
+    <!-- 전화번호 입력 키패드 모달 -->
+    <div v-if="showKeypad" class="modal-overlay" @click.self="closeKeypad">
+      <div class="keypad-modal-content">
         <h3>{{ $t('전화번호 입력') }}</h3>
-        <p class="subtitle" v-html="$t('해피포인트 적립을 위해<br/>휴대폰 번호를 입력해주세요.')"></p>
-        
-        <div class="input-display">{{ formatPhoneNumber(inputNumber) || $t('휴대폰 번호 입력') }}</div>
-        
+        <div class="phone-display">{{ formatPhoneNumber(inputNumber) || 'Ex) 010-0000-0000' }}</div>
         <div class="keypad-grid">
-          <button v-for="num in ['1','2','3','4','5','6','7','8','9','010','0']" 
-                  :key="num" 
-                  @click="pressKey(num)" 
-                  class="key-btn">
+          <button v-for="num in ['1','2','3','4','5','6','7','8','9']" :key="num" @click="pressKey(num)">
             {{ num }}
           </button>
-          <button @click="deleteKey" class="key-btn del-btn">←</button>
+          <button class="action-key" @click="pressPrefix('010')">010</button>
+          <button @click="pressKey('0')">0</button>
+          <button class="action-key del-btn" @click="deleteKey">DEL</button>
         </div>
-
-        <div class="modal-actions">
-          <button class="btn-cancel" @click="closeKeypad">{{ $t('취소') }}</button>
-          <button class="btn-confirm" @click="confirmNumber">{{ $t('확인') }}</button>
+        <div class="modal-btns">
+          <button class="cancel-btn" @click="closeKeypad">{{ $t('취소') }}</button>
+          <button class="confirm-btn" @click="confirmNumber">{{ $t('확인') }}</button>
         </div>
       </div>
     </div>
 
-    <!-- 포인트 사용 금액 입력 모달 -->
-    <div v-if="showPointKeypad" class="modal-overlay">
-      <div class="keypad-modal">
-        <h3>{{ $t('포인트 사용') }}</h3>
-        <p class="subtitle" v-html="$t('보유 포인트: {points} P<br/>사용할 금액을 10 단위로 입력해주세요.', { points: availablePoints.toLocaleString() })"></p>
+    <!-- 포인트 사용 키패드 모달 -->
+    <div v-if="showPointKeypad" class="modal-overlay" @click.self="closePointKeypad">
+      <div class="keypad-modal-content">
+        <h3>{{ $t('사용할 포인트 입력') }}</h3>
+        <div class="phone-display">{{ inputPointAmount ? Number(inputPointAmount).toLocaleString() + ' P' : '0 P' }}</div>
         
-        <div class="input-display">{{ inputPointAmount ? parseInt(inputPointAmount).toLocaleString() + ' P' : '0 P' }}</div>
-        
+        <!-- 전액 사용 버튼 추가 -->
+        <button class="max-point-btn" @click="applyMaxPoints">
+          {{ $t('쿠폰 적용 후 남은 금액 전액 사용') }}
+        </button>
+
         <div class="keypad-grid point-keypad">
-          <button v-for="num in ['1','2','3','4','5','6','7','8','9','00','0']" 
-                  :key="num" 
-                  @click="pressPointKey(num)" 
-                  class="key-btn">
+          <button v-for="num in ['1','2','3','4','5','6','7','8','9','0','00']" :key="num" class="key-btn" @click="pressPointKey(num)">
             {{ num }}
           </button>
-          <button @click="deletePointKey" class="key-btn del-btn">{{ $t('지움') }}</button>
+          <button class="key-btn del-btn" @click="deletePointKey">DEL</button>
         </div>
-
-        <div class="modal-actions">
-          <button class="btn-cancel" @click="closePointKeypad">{{ $t('취소') }}</button>
-          <button class="btn-confirm" @click="confirmPointUsage">{{ $t('적용') }}</button>
+        <div class="modal-btns">
+          <button class="cancel-btn" @click="closePointKeypad">{{ $t('취소') }}</button>
+          <button class="confirm-btn" @click="confirmPointUsage">{{ $t('적용') }}</button>
         </div>
       </div>
     </div>
 
     <!-- 토스트 메시지 -->
-    <div v-if="showToast" class="toast-message">
+    <div v-if="showToast" class="toast-popup">
       {{ toastText }}
     </div>
-
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useBasketStore } from '@/stores/customer/basket'
 import { useI18n } from 'vue-i18n'
 import axios from '@/api/axios'
 
 const router = useRouter()
-const route = useRoute()
 const basketStore = useBasketStore()
 const { t } = useI18n({ useScope: 'global' })
 
+const phoneNumber = ref('')
+const availablePoints = ref(0)
+const coupons = ref([])
+const selectedCoupon = ref(null)
 const discountAmount = ref(0)
 const earnedPoints = ref(0)
 
 const showKeypad = ref(false)
 const inputNumber = ref('')
-const phoneNumber = ref('')
 
 const showPointKeypad = ref(false)
-const availablePoints = ref(0)
 const inputPointAmount = ref('')
 
 const showToast = ref(false)
@@ -159,9 +188,7 @@ const toastText = ref('')
 let toastTimeout = null
 
 const displayToast = (msg) => {
-  if (toastTimeout) {
-    clearTimeout(toastTimeout)
-  }
+  if (toastTimeout) clearTimeout(toastTimeout)
   toastText.value = msg
   showToast.value = true
   toastTimeout = setTimeout(() => {
@@ -170,7 +197,6 @@ const displayToast = (msg) => {
 }
 
 onMounted(() => {
-  // 컴포넌트 마운트 시 스토어의 전화번호 초기화
   basketStore.setPhoneNumber('')
   if (basketStore.cartItems.length === 0) {
     displayToast(t('장바구니가 비어있습니다.'))
@@ -178,502 +204,643 @@ onMounted(() => {
   }
 })
 
+// 총 할인 금액 (쿠폰 할인 + 포인트 할인)
+const totalDiscount = computed(() => {
+  let couponDiscount = 0
+  if (selectedCoupon.value) {
+    if (selectedCoupon.value.discountType === 'PERCENT') {
+      couponDiscount = Math.floor(basketStore.totalPrice * (selectedCoupon.value.discountValue / 100))
+    } else {
+      couponDiscount = selectedCoupon.value.discountValue
+    }
+  }
+  return couponDiscount + discountAmount.value
+})
+
+// 최종 결제금액
+const finalPrice = computed(() => {
+  const result = basketStore.totalPrice - totalDiscount.value
+  return result > 0 ? result : 0
+})
+
+// 전화번호 포맷팅
+const formatPhoneNumber = (number) => {
+  if (!number) return ''
+  if (number.length <= 3) return number
+  if (number.length <= 7) return `${number.slice(0, 3)}-${number.slice(3)}`
+  return `${number.slice(0, 3)}-${number.slice(3, 7)}-${number.slice(7, 11)}`
+}
+
+// 키패드 제어
+const openKeypad = () => {
+  inputNumber.value = ''
+  showKeypad.value = true
+}
+
+const closeKeypad = () => {
+  showKeypad.value = false
+  inputNumber.value = ''
+}
+
+const pressKey = (key) => {
+  if (inputNumber.value.length < 11) {
+    inputNumber.value += key
+  }
+}
+
+const pressPrefix = (prefix) => {
+  if (inputNumber.value.length + prefix.length <= 11) {
+    inputNumber.value += prefix
+  }
+}
+
+const deleteKey = () => {
+  inputNumber.value = inputNumber.value.slice(0, -1)
+}
+
+const confirmNumber = async () => {
+  if (inputNumber.value.length < 10) {
+    displayToast(t('올바른 휴대폰 번호를 입력해주세요.'))
+    return
+  }
+
+  const formattedInputPhone = formatPhoneNumber(inputNumber.value)
+  
+  try {
+    const res = await axios.get('/api/users/points', {
+      params: { phone: formattedInputPhone }
+    })
+
+    phoneNumber.value = formattedInputPhone
+    basketStore.setPhoneNumber(formattedInputPhone)
+    
+    availablePoints.value = res.data.pointBalance ?? 0
+    coupons.value = res.data.coupons ? res.data.coupons.filter(c => !c.isUsed) : []
+    
+    earnedPoints.value = Math.floor(finalPrice.value * 0.05)
+    
+    closeKeypad()
+    displayToast(t('회원 정보가 조회되었습니다.'))
+  } catch (error) {
+    console.error('회원 조회 실패:', error)
+    displayToast(t('회원 조회 중 오류가 발생했습니다.'))
+  }
+}
+
+const resetUser = () => {
+  phoneNumber.value = ''
+  availablePoints.value = 0
+  coupons.value = []
+  selectedCoupon.value = null
+  discountAmount.value = 0
+  basketStore.setPhoneNumber('')
+  basketStore.setUsedPoints(0)
+}
+
+const selectCoupon = (coupon) => {
+  if (selectedCoupon.value?.userCouponId === coupon.userCouponId) {
+    selectedCoupon.value = null
+    displayToast(t('쿠폰 적용이 해제되었습니다.'))
+  } else {
+    selectedCoupon.value = coupon
+  }
+
+  if (discountAmount.value > 0) {
+    let currentCouponDiscount = 0
+    if (selectedCoupon.value) {
+      if (selectedCoupon.value.discountType === 'PERCENT') {
+        currentCouponDiscount = Math.floor(basketStore.totalPrice * (selectedCoupon.value.discountValue / 100))
+      } else {
+        currentCouponDiscount = selectedCoupon.value.discountValue
+      }
+    }
+    const maxAllowedPrice = basketStore.totalPrice - currentCouponDiscount
+
+    if (discountAmount.value > maxAllowedPrice) {
+      discountAmount.value = maxAllowedPrice > 0 ? maxAllowedPrice : 0
+      basketStore.setUsedPoints(discountAmount.value)
+    }
+  }
+
+  earnedPoints.value = Math.floor(finalPrice.value * 0.05)
+}
+
+// 포인트 모달 제어
+const openPointKeypad = () => {
+  if (!phoneNumber.value) {
+    displayToast(t('먼저 전화번호를 조회해주세요.'))
+    return
+  }
+  if (availablePoints.value < 100) {
+    displayToast(t('100포인트 이상부터 사용 가능합니다.'))
+    return
+  }
+  inputPointAmount.value = ''
+  showPointKeypad.value = true
+}
+
+const closePointKeypad = () => {
+  showPointKeypad.value = false
+  inputPointAmount.value = ''
+}
+
+// 쿠폰 적용 후 남은 금액 전액 자동 입력 버튼 함수
+const applyMaxPoints = () => {
+  let currentCouponDiscount = 0
+  if (selectedCoupon.value) {
+    if (selectedCoupon.value.discountType === 'PERCENT') {
+      currentCouponDiscount = Math.floor(basketStore.totalPrice * (selectedCoupon.value.discountValue / 100))
+    } else {
+      currentCouponDiscount = selectedCoupon.value.discountValue
+    }
+  }
+  const maxAllowedPrice = basketStore.totalPrice - currentCouponDiscount
+  const maxLimit = Math.min(availablePoints.value, maxAllowedPrice)
+
+  if (maxLimit < 100) {
+    displayToast(t('100포인트 이상부터 사용 가능합니다.'))
+    return
+  }
+
+  // 10원 단위 절삭 (10단위로 맞춤)
+  const adjustedMax = Math.floor(maxLimit / 10) * 10
+  inputPointAmount.value = adjustedMax.toString()
+}
+
+const pressPointKey = (key) => {
+  if (inputPointAmount.value === '' && (key === '0' || key === '00')) return
+  
+  let nextVal = inputPointAmount.value + key
+  let numericVal = parseInt(nextVal, 10)
+  
+  let currentCouponDiscount = 0
+  if (selectedCoupon.value) {
+    if (selectedCoupon.value.discountType === 'PERCENT') {
+      currentCouponDiscount = Math.floor(basketStore.totalPrice * (selectedCoupon.value.discountValue / 100))
+    } else {
+      currentCouponDiscount = selectedCoupon.value.discountValue
+    }
+  }
+  const maxAllowedPrice = basketStore.totalPrice - currentCouponDiscount
+  const maxLimit = Math.min(availablePoints.value, maxAllowedPrice)
+
+  if (numericVal > maxLimit) {
+    inputPointAmount.value = maxLimit.toString()
+    return
+  }
+
+  if (inputPointAmount.value.length < 8) {
+    inputPointAmount.value = nextVal
+  }
+}
+
+const deletePointKey = () => {
+  inputPointAmount.value = inputPointAmount.value.slice(0, -1)
+}
+
+const confirmPointUsage = () => {
+  let amount = parseInt(inputPointAmount.value || '0')
+
+  if (amount > 0 && amount < 100) {
+    displayToast(t('100포인트 이상부터 사용 가능합니다.'))
+    return
+  }
+
+  if (amount % 10 !== 0) {
+    displayToast(t('10 포인트 단위로 입력해주세요.'))
+    return
+  }
+
+  let currentCouponDiscount = 0
+  if (selectedCoupon.value) {
+    if (selectedCoupon.value.discountType === 'PERCENT') {
+      currentCouponDiscount = Math.floor(basketStore.totalPrice * (selectedCoupon.value.discountValue / 100))
+    } else {
+      currentCouponDiscount = selectedCoupon.value.discountValue
+    }
+  }
+  const maxAllowedPrice = basketStore.totalPrice - currentCouponDiscount
+
+  if (amount > availablePoints.value) {
+    amount = availablePoints.value
+  }
+
+  if (amount > maxAllowedPrice) {
+    amount = maxAllowedPrice
+  }
+
+  discountAmount.value = amount
+  basketStore.setUsedPoints(amount)
+  earnedPoints.value = Math.floor(finalPrice.value * 0.05)
+
+  closePointKeypad()
+}
+
 const goBack = async () => {
   if (confirm(t('현재 결제를 취소하고 장바구니로 돌아가시겠습니까? (장바구니 내역은 유지됩니다)'))) {
     router.push('/menu')
   }
 }
 
-const goNext = () => {
-  // 결제 화면으로 넘어감 (orderId는 아직 없음)
-  router.push(`/payment`)
-}
+const proceedPayment = async () => {
+  try {
+    // 스토어 함수 대신 직접 상태 값에 할당 (에러 방지)
+    basketStore.usedPoints = discountAmount.value;
+    basketStore.usedCouponId = selectedCoupon.value ? selectedCoupon.value.userCouponId : null;
 
-// 키패드 관련 로직
-const openKeypad = (mode) => {
-  basketStore.setPointMode(mode);
-  inputNumber.value = '';
-  showKeypad.value = true;
-}
-
-const closeKeypad = () => {
-  showKeypad.value = false;
-  inputNumber.value = '';
-}
-
-const pressKey = (key) => {
-  if (inputNumber.value.length < 11) {
-    inputNumber.value += key;
-  }
-}
-
-const deleteKey = () => {
-  inputNumber.value = inputNumber.value.slice(0, -1);
-}
-
-const formatPhoneNumber = (number) => {
-  if (!number) return '';
-  if (number.length <= 3) return number;
-  if (number.length <= 7) return number.slice(0, 3) + '-' + number.slice(3);
-  return number.slice(0, 3) + '-' + number.slice(3, 7) + '-' + number.slice(7, 11);
-}
-
-const confirmNumber = async () => {
-  if (inputNumber.value.length < 10) {
-    displayToast(t('올바른 휴대폰 번호를 입력해주세요.'));
-    return;
-  }
-  
-  phoneNumber.value = formatPhoneNumber(inputNumber.value);
-  basketStore.setPhoneNumber(phoneNumber.value);
-  
-  if (basketStore.pointMode === 'earn') {
-    // 상품 금액의 5% 적립
-    earnedPoints.value = Math.floor(basketStore.totalPrice * 0.05);
-    displayToast(t('결제 완료 시 {earnedPoints} 포인트가 적립될 예정입니다.', { earnedPoints: earnedPoints.value.toLocaleString() }));
-    closeKeypad();
-  } else if (basketStore.pointMode === 'use') {
-    try {
-      const res = await axios.get(`/api/users/${phoneNumber.value}/points`);
-      const points = res.data;
-      if (points < 100) {
-        displayToast(t('100포인트 이상부터 사용 가능합니다.'));
-      } else {
-        availablePoints.value = points;
-        inputPointAmount.value = '';
-        showKeypad.value = false;
-        showPointKeypad.value = true;
-      }
-    } catch (error) {
-      console.error('포인트 조회 실패:', error);
-      displayToast(t('포인트 조회에 실패했습니다.'));
+    // 만약 setUsedPoints 함수는 있다면 안전하게 호출
+    if (typeof basketStore.setUsedPoints === 'function') {
+      basketStore.setUsedPoints(discountAmount.value);
     }
+
+    await router.push('/payment');
+  } catch (error) {
+    console.error('결제 페이지 이동 실패:', error);
+    displayToast(t('결제 페이지로 이동할 수 없습니다.'));
   }
 }
-
-// 포인트 모달 로직
-const pressPointKey = (key) => {
-  if (inputPointAmount.value === '' && (key === '0' || key === '00')) return;
-  if (inputPointAmount.value.length < 8) {
-    inputPointAmount.value += key;
-  }
-}
-
-const deletePointKey = () => {
-  inputPointAmount.value = inputPointAmount.value.slice(0, -1);
-}
-
-const closePointKeypad = () => {
-  showPointKeypad.value = false;
-  inputPointAmount.value = '';
-}
-
-const confirmPointUsage = () => {
-  let amount = parseInt(inputPointAmount.value || '0');
-  
-  if (amount === 0) {
-    displayToast(t('사용할 포인트를 입력해주세요.'));
-    return;
-  }
-  
-  if (amount % 10 !== 0) {
-    displayToast(t('10 포인트 단위로 입력해주세요.'));
-    return;
-  }
-  
-  if (amount > availablePoints.value) {
-    displayToast(t('보유 포인트를 초과할 수 없습니다.'));
-    return;
-  }
-  
-  if (amount > basketStore.totalPrice) {
-    amount = basketStore.totalPrice;
-  }
-  
-  discountAmount.value = amount;
-  basketStore.setUsedPoints(amount);
-  
-  earnedPoints.value = Math.floor((basketStore.totalPrice - amount) * 0.05);
-  
-  displayToast(t('{amount}포인트 사용 적용 (차액 {earned}P 적립 예정)', { amount: amount.toLocaleString(), earned: earnedPoints.value.toLocaleString() }));
-  closePointKeypad();
-}
-
 </script>
 
 <style scoped>
-.point-discount-container {
+.kiosk-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #fff;
+  background-color: #fcfcfc;
   font-family: 'Pretendard', sans-serif;
+  max-width: 480px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  border: 1px solid #eaeaea;
 }
 
-.step-header {
-  display: flex;
-  height: 80px;
-  background-color: #f8f9fa;
-}
-
-.step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-.step.active {
+.header {
+  height: 60px;
   background-color: #fff;
-  color: #e91e63;
-  border-bottom: 4px solid #e91e63;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #ddd;
+}
+.header h1 {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
 }
 
-.step.inactive {
-  background-color: #f1f3f5;
-  color: #adb5bd;
-  border-bottom: 4px solid #dee2e6;
-}
-
-.badge {
-  font-size: 0.8rem;
-  background-color: currentColor;
-  color: #fff;
-  padding: 2px 8px;
-  border-radius: 12px;
-  margin-bottom: 5px;
-}
-
-.step.inactive .badge {
-  background-color: #adb5bd;
-}
-
-.pd-main-content {
+.content-body {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 40px;
-  gap: 20px;
-}
-
-.left-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.section-title {
-  font-size: 1.8rem;
-  margin-bottom: 30px;
-  color: #333;
-}
-
-.button-grid {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.point-btn {
-  width: 150px;
-  height: 150px;
-  border: 1px solid #dee2e6;
-  border-radius: 15px;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.point-btn:hover {
-  border-color: #e91e63;
-  box-shadow: 0 4px 12px rgba(233, 30, 99, 0.1);
-}
-
-.hp-logo {
-  width: 60px;
-  height: auto;
-  margin-bottom: 15px;
-}
-
-.point-btn span {
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: #333;
-}
-
-.point-status {
-  background: #fff0f3;
   padding: 20px;
-  border-radius: 10px;
-  border: 1px solid #ffc8d5;
+  overflow-y: auto;
 }
 
-.point-status p {
-  margin: 0;
-  color: #e91e63;
-  font-size: 1.1rem;
-}
-
-.point-status .phone-number {
-  font-size: 0.9rem;
-  color: #666;
-  margin-top: 5px;
-}
-
-.right-section {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+.auth-section {
   text-align: center;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
+  margin-top: 100px;
 }
-
-.info-block {
-  margin-bottom: 30px;
-}
-
-.info-block h3 {
-  color: #e91e63;
-  font-size: 1.3rem;
-  margin-bottom: 10px;
-}
-
-.info-block p {
-  color: #888;
-  font-size: 1.1rem;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.summary-footer {
-  background-color: #f8f9fa;
-  padding: 30px 40px;
-}
-
-.final-price-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.final-price-row .label {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #e91e63;
-}
-
-.final-price-row .value {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #e91e63;
-}
-
-.detail-price-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 10%;
-}
-
-.detail-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-.detail-item span:first-child {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #333;
-}
-
-.detail-item span:last-child {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #000;
-}
-
-.detail-divider {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #333;
-}
-
-.nav-buttons {
-  display: flex;
-  justify-content: space-between;
-  padding: 20px 40px;
-  background: #fff;
-  border-top: 1px solid #eee;
-}
-
-.btn-prev {
-  background: #fff;
-  border: 2px solid #ddd;
-  color: #e91e63;
-  font-size: 1.5rem;
-  font-weight: bold;
-  padding: 15px 40px;
-  border-radius: 40px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 300px;
-  justify-content: center;
-}
-
-.btn-prev .icon {
-  font-size: 2rem;
-  font-weight: 900;
-}
-
-.btn-next {
-  background: #e91e63;
-  border: none;
+.open-modal-btn {
+  margin-top: 20px;
+  padding: 15px 30px;
+  background-color: #ff2d55;
   color: white;
-  font-size: 1.5rem;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
   font-weight: bold;
-  padding: 15px 40px;
-  border-radius: 40px;
   cursor: pointer;
-  width: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* Keypad Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 3000;
-}
-
-.keypad-modal {
-  background: #fff;
-  border-radius: 20px;
-  padding: 30px;
-  width: 400px;
-  text-align: center;
-}
-
-.keypad-modal h3 {
-  margin: 0 0 10px 0;
-  color: #333;
-  font-size: 1.5rem;
-}
-
-.keypad-modal .subtitle {
-  color: #666;
-  margin-bottom: 20px;
-}
-
-.input-display {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #e91e63;
-  background: #f8f9fa;
+.user-card {
+  background-color: #fff0f3;
   padding: 15px;
   border-radius: 10px;
   margin-bottom: 20px;
-  letter-spacing: 2px;
-  min-height: 40px;
+  border: 1px solid #ffccd5;
+}
+.phone-txt {
+  font-weight: bold;
+  font-size: 16px;
+  color: #333;
+}
+.point-txt {
+  margin-top: 5px;
+  font-size: 15px;
+  color: #ff2d55;
+}
+.reset-btn {
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #666;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.section-box {
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  margin-bottom: 20px;
+}
+.section-box h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.coupon-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.coupon-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #fafafa;
+}
+.coupon-card.selected {
+  border-color: #ff2d55;
+  background-color: #fff5f7;
+}
+.c-name {
+  font-weight: bold;
+  font-size: 14px;
+}
+.c-disc {
+  color: #ff2d55;
+  font-size: 13px;
+  margin-top: 3px;
+}
+.radio-icon {
+  font-size: 13px;
+  font-weight: bold;
+  color: #ff2d55;
+}
+.empty-msg {
+  color: #888;
+  font-size: 14px;
+  text-align: center;
+  padding: 10px;
+}
+
+.point-input-group {
+  display: flex;
+  gap: 10px;
+  cursor: pointer;
+}
+.point-input-group input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 15px;
+  pointer-events: none;
+  background-color: #fff;
+}
+.point-apply-btn {
+  padding: 0 15px;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.tip-msg {
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+}
+
+.earn-preview-box {
+  background-color: #f4fdf6;
+  border: 1px solid #c3e6cb;
+}
+.earn-info-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.earn-label {
+  font-size: 14px;
+  color: #555;
+}
+.earn-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #27ae60;
+}
+
+.footer-section {
+  background-color: #fff;
+  padding: 20px;
+  border-top: 1px solid #eaeaea;
+}
+.price-summary-box {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+.summary-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dee2e6;
+}
+.summary-top .label {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ff2d55;
+}
+.summary-top .final-amount {
+  font-size: 22px;
+  font-weight: bold;
+  color: #ff2d55;
+}
+.summary-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+}
+.summary-detail .col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.summary-detail .sub-label {
+  font-size: 12px;
+  color: #666;
+}
+.summary-detail .sub-val {
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
+  margin-top: 4px;
+}
+.summary-detail .operator {
+  font-size: 18px;
+  font-weight: bold;
+  color: #888;
+  padding: 0 5px;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+.prev-btn {
+  flex: 1;
+  padding: 15px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  color: #333;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+}
+.next-btn {
+  flex: 2;
+  padding: 15px;
+  background-color: #ff2d55;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.keypad-modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  width: 340px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.keypad-modal-content h3 {
+  margin-bottom: 15px;
+  font-size: 18px;
+  color: #333;
+}
+.phone-display {
+  background-color: #f1f3f5;
+  padding: 12px;
+  font-size: 20px;
+  font-weight: bold;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  min-height: 24px;
+  color: #333;
+  letter-spacing: 1px;
+}
+
+.max-point-btn {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  background-color: #fff0f3;
+  color: #ff2d55;
+  border: 1px solid #ffccd5;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .keypad-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 15px;
 }
-
-.key-btn {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  font-size: 1.8rem;
+.keypad-grid button {
+  padding: 15px;
+  font-size: 20px;
   font-weight: bold;
-  padding: 15px 0;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
   cursor: pointer;
-  transition: 0.1s;
+}
+.keypad-grid button.action-key {
+  font-size: 16px;
+  font-weight: bold;
+  background-color: #e9ecef;
 }
 
-.key-btn:active {
-  background: #f1f3f5;
+.point-keypad {
+  grid-template-columns: repeat(3, 1fr);
 }
-
+.key-btn {
+  padding: 14px;
+  font-size: 18px;
+  font-weight: bold;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  cursor: pointer;
+}
 .del-btn {
-  background: #e9ecef;
-  color: #e91e63;
+  background-color: #e9ecef !important;
+  font-size: 15px !important;
 }
 
-.modal-actions {
+.modal-btns {
   display: flex;
   gap: 10px;
 }
-
-.btn-cancel {
+.cancel-btn, .confirm-btn {
   flex: 1;
-  padding: 15px;
+  padding: 12px;
   border: none;
-  background: #adb5bd;
-  color: white;
-  font-size: 1.2rem;
-  border-radius: 10px;
+  border-radius: 8px;
   font-weight: bold;
+  font-size: 15px;
   cursor: pointer;
 }
-
-.btn-confirm {
-  flex: 2;
-  padding: 15px;
-  border: none;
-  background: #e91e63;
+.cancel-btn {
+  background-color: #dee2e6;
+  color: #495057;
+}
+.confirm-btn {
+  background-color: #ff2d55;
   color: white;
-  font-size: 1.2rem;
-  border-radius: 10px;
-  font-weight: bold;
-  cursor: pointer;
 }
 
-/* Toast Message */
-.toast-message {
+.toast-popup {
   position: fixed;
-  bottom: 120px;
+  bottom: 100px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(255, 124, 152, 0.85);
-  color: white;
-  padding: 16px 30px;
-  border-radius: 30px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  box-shadow: 0 4px 15px rgba(255, 124, 152, 0.4);
-  z-index: 4000;
-  backdrop-filter: blur(4px);
-  animation: fadeInOut 2.5s ease-in-out forwards;
-}
-
-@keyframes fadeInOut {
-  0% { opacity: 0; transform: translate(-50%, 20px); }
-  15% { opacity: 1; transform: translate(-50%, 0); }
-  85% { opacity: 1; transform: translate(-50%, 0); }
-  100% { opacity: 0; transform: translate(-50%, -20px); }
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 20px;
+  font-size: 15px;
+  z-index: 1100;
 }
 </style>

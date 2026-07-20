@@ -28,7 +28,7 @@
     </div>
 
     <div class="payment-section">
-      <h3>{{ $t('결제 방법을 선택해주세요 (총 ₩{total})', { total: basketStore.totalPrice.toLocaleString() }) }}</h3>
+      <h3>{{ $t('결제 방법을 선택해주세요 (총 ₩{total})', { total: (basketStore.totalPrice - (basketStore.usedPoints || 0)).toLocaleString() }) }}</h3>
       <div class="pay-buttons">
         <button @click="handlePayment('CASH')">{{ $t('현금') }}</button>
         <button @click="handlePayment('CARD')">{{ $t('신용카드') }}</button>
@@ -112,21 +112,24 @@ const handlePayment = async (method) => {
   }
 
   try {
-    // 1. 주문 생성 API 호출 (DB 저장 및 포인트 적립)
+    // 1. 주문 생성 API 호출
     const orderRes = await axios.post('/api/orders', {
       orderType: basketStore.orderType || 'TOGO',
       dryIceCount: basketStore.dryIceCount || 0,
       dryIceMins: basketStore.dryIceMins || 0,
       phoneNumber: basketStore.phoneNumber || null,
+      pointUsed: basketStore.usedPoints || 0,
+      userCouponId: basketStore.usedCouponId || null,
       kioskId: 1,
       storeId: 1
     });
     const orderId = orderRes.data;
 
-    // 2. 결제 완료 API 호출
+    // 2. 결제 완료 API 호출 (⭐ 이 부분에 userCouponId 추가!)
     await axios.post(`/api/orders/${orderId}/pay`, {
       paymentMethod: method,
-      pointUsed: basketStore.usedPoints || 0
+      pointUsed: basketStore.usedPoints || 0,
+      userCouponId: basketStore.usedCouponId || null // ⭐ 여기 추가!
     });
     
     // 3. 결제 완료 화면으로 이동
@@ -146,12 +149,14 @@ const handleTossPayment = async () => {
   }
 
   try {
-    // 1. 토스 띄우기 전 주문 생성 API 호출 (DB 저장 및 포인트 적립)
+    // 1. 토스 띄우기 전 주문 생성 API 호출 (DB 저장 및 포인트 적립, 할인 정보 포함)
     const orderRes = await axios.post('/api/orders', {
       orderType: basketStore.orderType || 'TOGO',
       dryIceCount: basketStore.dryIceCount || 0,
       dryIceMins: basketStore.dryIceMins || 0,
       phoneNumber: basketStore.phoneNumber || null,
+      pointUsed: basketStore.usedPoints || 0,
+      userCouponId: basketStore.usedCouponId || null,
       kioskId: 1,
       storeId: 1
     });

@@ -6,4 +6,5 @@ import lombok.Data;
 public class PaymentRequest {
     private int orderId;
     private String paymentMethod; // "CARD" 또는 "E_PAY"
+    private int pointUsed;       
 }

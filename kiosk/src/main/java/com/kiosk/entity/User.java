@@ -49,5 +49,5 @@ public class User {
     public void deductPoints(int amount) {
         this.pointBalance -= amount;
       
-    
+    }
 }
