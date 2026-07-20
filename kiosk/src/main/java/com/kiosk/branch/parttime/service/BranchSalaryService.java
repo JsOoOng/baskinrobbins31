@@ -390,7 +390,7 @@ public class BranchSalaryService {
                  * 급여 대상 월 저장
                  */
                 .expenseDate(
-                        startDate
+                		LocalDate.now()
                 )
 
                 .amount(
