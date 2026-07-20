@@ -61,11 +61,24 @@ public class OrderController {
     public ResponseEntity<String> completePayment(
             @PathVariable("orderId") int orderId, 
             @RequestBody Map<String, Object> request,
-            HttpSession session) { // session 파라미터 추가
+            HttpSession session) { // dev1: session 추가 유지
+
+        // 1. 공통: 결제 수단 추출
+        String paymentMethod = (String) request.get("paymentMethod");
         
-        String paymentMethod = (String) request.get("paymentMethod"); // 키값으로 추출
+        // 2. feature: 쿠폰 ID 추출
+        int userCouponId = request.containsKey("userCouponId") ? (int) request.get("userCouponId") : 0;
+        
+        // 3. dev1 & feature: 포인트 관련 추출 
+        // (boolean으로 여부를 받을지, int로 금액을 받을지는 프론트엔드 연동 방식에 따라 하나만 선택하셔도 됩니다)
+        boolean usePoints = request.containsKey("usePoints") && (boolean) request.get("usePoints");
         int pointUsed = request.containsKey("pointUsed") ? Integer.parseInt(String.valueOf(request.get("pointUsed"))) : 0;
-        orderService.processPayment(orderId, paymentMethod, pointUsed, session); // session 및 pointUsed 전달
+
+        // 4. 서비스로 통합 전달 (OrderService 수정 필요)
+        orderService.processPayment(orderId, paymentMethod, userCouponId, pointUsed, session);
+        
+        return ResponseEntity.ok("결제 및 재고 차감 완료");
+    }
         
         return ResponseEntity.ok("결제 및 재고 차감 완료");
     }
