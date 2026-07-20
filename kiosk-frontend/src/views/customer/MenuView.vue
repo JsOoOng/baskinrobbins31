@@ -698,9 +698,9 @@ const deleteCartItem = (index) => {
 const goHome = async () => { 
   if (basketStore.cartItems.length > 0) {
     await basketStore.clearCart();
-    router.push('/');
+    router.push('/kiosk');
   } else {
-    router.push('/');
+    router.push('/kiosk');
   }
 }
 
