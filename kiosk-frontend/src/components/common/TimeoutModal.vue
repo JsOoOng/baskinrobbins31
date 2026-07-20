@@ -17,11 +17,13 @@ import { onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useBasketStore } from '@/stores/customer/basket';
 import { useTimeoutStore } from '@/stores/customer/timeout';
+import { useI18n } from 'vue-i18n';
 
 const route = useRoute();
 const router = useRouter();
 const basketStore = useBasketStore();
 const timeoutStore = useTimeoutStore();
+const { locale } = useI18n({ useScope: 'global' });
 
 const IDLE_TIME = 60; // 60 seconds
 const COUNTDOWN_TIME = 10; // 10 seconds
@@ -73,6 +75,7 @@ const startCountdown = () => {
 const handleTimeout = async () => {
   timeoutStore.setShowModal(false);
   await basketStore.clearCart();
+  locale.value = 'ko'; // 세션 만료 시 언어를 한국어로 초기화
   router.push('/');
 };
 
