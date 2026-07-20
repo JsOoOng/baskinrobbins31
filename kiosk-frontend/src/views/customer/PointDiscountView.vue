@@ -70,7 +70,7 @@
         <div class="section-box earn-preview-box">
           <h3>{{ $t('적립 예정') }}</h3>
           <div class="earn-info-content">
-            <span class="earn-label">{{ $t('결제 완료 시 적립') }}</span>
+            <span class="earn-label">{{ $t('최종 결제 금액의 5%가 적립됩니다.') }}</span>
             <span class="earn-value">+{{ earnedPoints.toLocaleString() }} P</span>
           </div>
         </div>
@@ -405,11 +405,13 @@ const confirmPointUsage = () => {
     displayToast(t('100포인트 이상부터 사용 가능합니다.'))
     return
   }
-
+// 10단위
+/*
   if (amount % 10 !== 0) {
     displayToast(t('10 포인트 단위로 입력해주세요.'))
     return
   }
+*/
 
   let currentCouponDiscount = 0
   if (selectedCoupon.value) {
