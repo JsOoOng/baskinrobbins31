@@ -1,19 +1,19 @@
 <template>
   <div class="order-confirm-container">
     <div class="header-section">
-      <h2>STEP 02. 결제 <span class="sub-title">(주문 내역 확인)</span></h2>
-      <button class="btn-back-cart" @click="goBackToCart">이전 화면으로 🔙</button>
+      <h2>{{ $t('STEP 02. 결제') }} <span class="sub-title">{{ $t('(주문 내역 확인)') }}</span></h2>
+      <button class="btn-back-cart" @click="goBackToCart">{{ $t('이전 화면으로') }} 🔙</button>
     </div>
     
     <div class="order-list">
         <div v-for="(item, index) in basketStore.cartItems" :key="index" class="order-item">
             <div class="item-info">
-            <h4>{{ item.productName }}</h4>
+            <h4>{{ formatCartItemName(item.productName) }}</h4>
             
             <div v-if="item.flavors && item.flavors.length > 0" class="flavor-list">
-                선택한 맛: 
+                {{ $t('선택한 맛:') }} 
                 <span v-for="(f, fIndex) in item.flavors" :key="fIndex">
-                {{ f.flavorName || '맛ID:' + f.flavorId }}
+                {{ f.flavorName ? $t(f.flavorName) : $t('맛ID:') + f.flavorId }}
                 {{ f.quantity > 1 ? '(' + f.quantity + ')' : '' }}
                 {{ fIndex < item.flavors.length - 1 ? ', ' : '' }}
                 </span>
@@ -21,18 +21,18 @@
             
             </div>
             <div class="item-actions">
-            <span>수량: {{ item.quantity }}개</span>
+            <span>{{ $t('수량: {quantity}개', { quantity: item.quantity }) }}</span>
             <!-- 결제 단계이므로 개별 삭제 버튼은 제거됨 -->
             </div>
         </div>
     </div>
 
     <div class="payment-section">
-      <h3>결제 방법을 선택해주세요 (총 ₩{{ basketStore.totalPrice.toLocaleString() }})</h3>
+      <h3>{{ $t('결제 방법을 선택해주세요 (총 ₩{total})', { total: basketStore.totalPrice.toLocaleString() }) }}</h3>
       <div class="pay-buttons">
-        <button @click="handlePayment('CASH')">현금</button>
-        <button @click="handlePayment('CARD')">신용카드</button>
-        <button class="btn-toss" @click="handleTossPayment">간편결제</button>
+        <button @click="handlePayment('CASH')">{{ $t('현금') }}</button>
+        <button @click="handlePayment('CARD')">{{ $t('신용카드') }}</button>
+        <button class="btn-toss" @click="handleTossPayment">{{ $t('간편결제') }}</button>
       </div>
     </div>
 
@@ -40,7 +40,7 @@
     <div class="alert-modal" v-if="showAlert">
       <div class="alert-content">
         <p>{{ alertMessage }}</p>
-        <button @click="closeAlert">확인</button>
+        <button @click="closeAlert">{{ $t('확인') }}</button>
       </div>
     </div>
   </div>
@@ -50,12 +50,27 @@
 import { onMounted, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useBasketStore } from '@/stores/customer/basket';
+import { useI18n } from 'vue-i18n';
 import { loadTossPayments } from '@tosspayments/payment-sdk';
 import axios from '@/api/axios';
 
 const router = useRouter();
 const route = useRoute();
 const basketStore = useBasketStore();
+const { t } = useI18n({ useScope: 'global' });
+
+const formatCartItemName = (name) => {
+  if (name.includes(' (')) {
+    const parts = name.split(' (');
+    const base = t(parts[0]);
+    let container = parts[1].replace(')', '');
+    if (container === 'CUP') container = t('컵');
+    if (container === 'CONE') container = t('콘');
+    if (container === 'WAFFLE') container = t('와플콘');
+    return `${base} (${container})`;
+  }
+  return t(name);
+}
 
 const showAlert = ref(false);
 const alertMessage = ref('');
@@ -80,7 +95,7 @@ const TOSS_CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY;
 
 onMounted(() => {
   if (basketStore.cartItems.length === 0) {
-    displayAlert('장바구니가 비어있어 메인으로 돌아갑니다.', () => {
+    displayAlert(t('장바구니가 비어있어 메인으로 돌아갑니다.'), () => {
       router.push('/kiosk');
     });
   }
@@ -92,7 +107,7 @@ const goBackToCart = async () => {
 
 const handlePayment = async (method) => {
   if (basketStore.cartItems.length === 0) {
-    displayAlert('장바구니가 비어있습니다.');
+    displayAlert(t('장바구니가 비어있습니다.'));
     return;
   }
 
@@ -118,13 +133,13 @@ const handlePayment = async (method) => {
     router.push(`/order-complete?orderId=${orderId}`);
   } catch (error) {
     console.error('결제 처리 중 오류 발생:', error);
-    displayAlert('결제 처리 중 오류가 발생했습니다.');
+    displayAlert(t('결제 처리 중 오류가 발생했습니다.'));
   }
 };
 
 const handleTossPayment = async () => {
   if (basketStore.cartItems.length === 0) {
-    displayAlert('장바구니가 비어있습니다. 처음부터 다시 시도해주세요.', () => {
+    displayAlert(t('장바구니가 비어있습니다. 처음부터 다시 시도해주세요.'), () => {
       router.push('/kiosk');
     });
     return;
@@ -144,12 +159,12 @@ const handleTossPayment = async () => {
 
     const tossPayments = await loadTossPayments(TOSS_CLIENT_KEY);
     
-    let orderName = '주문 상품';
+    let orderName = t('주문 상품');
     if (basketStore.cartItems.length > 0) {
       if (basketStore.cartItems.length === 1) {
-        orderName = basketStore.cartItems[0].productName;
+        orderName = formatCartItemName(basketStore.cartItems[0].productName);
       } else {
-        orderName = `${basketStore.cartItems[0].productName} 외 ${basketStore.cartItems.length - 1}건`;
+        orderName = t('{product} 외 {count}건', { product: formatCartItemName(basketStore.cartItems[0].productName), count: basketStore.cartItems.length - 1 });
       }
     }
     
@@ -164,7 +179,7 @@ const handleTossPayment = async () => {
     });
   } catch (error) {
     console.error('토스 결제창 호출 오류:', error);
-    displayAlert('토스 결제창을 열 수 없습니다.');
+    displayAlert(t('토스 결제창을 열 수 없습니다.'));
   }
 };
 </script>

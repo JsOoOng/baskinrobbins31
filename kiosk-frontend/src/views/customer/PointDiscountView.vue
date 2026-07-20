@@ -4,42 +4,42 @@
     <div class="step-header">
       <div class="step active">
         <span class="badge">STEP01</span>
-        <span class="title">포인트/할인</span>
+        <span class="title">{{ $t('포인트/할인') }}</span>
       </div>
       <div class="step inactive">
         <span class="badge">STEP02</span>
-        <span class="title">쿠폰/결제</span>
+        <span class="title">{{ $t('쿠폰/결제') }}</span>
       </div>
     </div>
 
     <!-- 메인 컨텐츠 영역 -->
     <div class="pd-main-content">
       <div class="left-section">
-        <h2 class="section-title">해피포인트 회원이신가요?</h2>
+        <h2 class="section-title">{{ $t('해피포인트 회원이신가요?') }}</h2>
         <div class="button-grid">
           <button class="point-btn" @click="openKeypad('earn')">
             <img src="@/assets/images/logo.png" alt="Happy Point" class="hp-logo" />
-            <span>적립하기</span>
+            <span>{{ $t('적립하기') }}</span>
           </button>
           <button class="point-btn" @click="openKeypad('use')">
             <img src="@/assets/images/logo.png" alt="Happy Point" class="hp-logo" />
-            <span>사용하기</span>
+            <span>{{ $t('사용하기') }}</span>
           </button>
         </div>
         <div v-if="earnedPoints > 0" class="point-status">
-          <p>🎁 결제 완료 시 <strong>{{ earnedPoints.toLocaleString() }}</strong> 포인트가 적립될 예정입니다.</p>
-          <p class="phone-number">(번호: {{ phoneNumber }})</p>
+          <p>🎁 {{ $t('결제 완료 시 {earnedPoints} 포인트가 적립될 예정입니다.', { earnedPoints: earnedPoints.toLocaleString() }) }}</p>
+          <p class="phone-number">{{ $t('(번호: {phoneNumber})', { phoneNumber: phoneNumber }) }}</p>
         </div>
       </div>
 
       <div class="right-section">
         <div class="info-block">
-          <h3>* 해피포인트 적립하기</h3>
-          <p>해피포인트 적립을 선택하시면 결제완료 후 자동 적립됩니다.</p>
+          <h3>{{ $t('* 해피포인트 적립하기') }}</h3>
+          <p>{{ $t('해피포인트 적립을 선택하시면 결제완료 후 자동 적립됩니다.') }}</p>
         </div>
         <div class="info-block">
-          <h3>* 해피포인트 사용하기</h3>
-          <p>100포인트 이상 보유시 사용 가능합니다.</p>
+          <h3>{{ $t('* 해피포인트 사용하기') }}</h3>
+          <p>{{ $t('100포인트 이상 보유시 사용 가능합니다.') }}</p>
         </div>
       </div>
     </div>
@@ -47,17 +47,17 @@
     <!-- 하단 결제 금액 서머리 -->
     <div class="summary-footer">
       <div class="final-price-row">
-        <span class="label">최종 결제금액</span>
+        <span class="label">{{ $t('최종 결제금액') }}</span>
         <span class="value pink">₩ {{ (basketStore.totalPrice - discountAmount).toLocaleString() }}</span>
       </div>
       <div class="detail-price-row">
         <div class="detail-item">
-          <span>총 주문 금액</span>
+          <span>{{ $t('총 주문 금액') }}</span>
           <span>₩ {{ basketStore.totalPrice.toLocaleString() }}</span>
         </div>
         <div class="detail-divider">-</div>
         <div class="detail-item">
-          <span>총 할인 금액</span>
+          <span>{{ $t('총 할인 금액') }}</span>
           <span>₩ {{ discountAmount.toLocaleString() }}</span>
         </div>
       </div>
@@ -66,20 +66,20 @@
     <!-- 하단 네비게이션 버튼 -->
     <div class="nav-buttons">
       <button class="btn-prev" @click="goBack">
-        <span class="icon">&lt;</span> 이전
+        <span class="icon">&lt;</span> {{ $t('이전') }}
       </button>
       <button class="btn-next" @click="goNext">
-        다음(결제하기)
+        {{ $t('다음(결제하기)') }}
       </button>
     </div>
 
     <!-- 번호 입력 키패드 모달 -->
     <div v-if="showKeypad" class="modal-overlay">
       <div class="keypad-modal">
-        <h3>전화번호 입력</h3>
-        <p class="subtitle">해피포인트 적립을 위해<br/>휴대폰 번호를 입력해주세요.</p>
+        <h3>{{ $t('전화번호 입력') }}</h3>
+        <p class="subtitle" v-html="$t('해피포인트 적립을 위해<br/>휴대폰 번호를 입력해주세요.')"></p>
         
-        <div class="input-display">{{ formatPhoneNumber(inputNumber) || '휴대폰 번호 입력' }}</div>
+        <div class="input-display">{{ formatPhoneNumber(inputNumber) || $t('휴대폰 번호 입력') }}</div>
         
         <div class="keypad-grid">
           <button v-for="num in ['1','2','3','4','5','6','7','8','9','010','0']" 
@@ -92,8 +92,8 @@
         </div>
 
         <div class="modal-actions">
-          <button class="btn-cancel" @click="closeKeypad">취소</button>
-          <button class="btn-confirm" @click="confirmNumber">확인</button>
+          <button class="btn-cancel" @click="closeKeypad">{{ $t('취소') }}</button>
+          <button class="btn-confirm" @click="confirmNumber">{{ $t('확인') }}</button>
         </div>
       </div>
     </div>
@@ -101,8 +101,8 @@
     <!-- 포인트 사용 금액 입력 모달 -->
     <div v-if="showPointKeypad" class="modal-overlay">
       <div class="keypad-modal">
-        <h3>포인트 사용</h3>
-        <p class="subtitle">보유 포인트: {{ availablePoints.toLocaleString() }} P<br/>사용할 금액을 10 단위로 입력해주세요.</p>
+        <h3>{{ $t('포인트 사용') }}</h3>
+        <p class="subtitle" v-html="$t('보유 포인트: {points} P<br/>사용할 금액을 10 단위로 입력해주세요.', { points: availablePoints.toLocaleString() })"></p>
         
         <div class="input-display">{{ inputPointAmount ? parseInt(inputPointAmount).toLocaleString() + ' P' : '0 P' }}</div>
         
@@ -113,12 +113,12 @@
                   class="key-btn">
             {{ num }}
           </button>
-          <button @click="deletePointKey" class="key-btn del-btn">지움</button>
+          <button @click="deletePointKey" class="key-btn del-btn">{{ $t('지움') }}</button>
         </div>
 
         <div class="modal-actions">
-          <button class="btn-cancel" @click="closePointKeypad">취소</button>
-          <button class="btn-confirm" @click="confirmPointUsage">적용</button>
+          <button class="btn-cancel" @click="closePointKeypad">{{ $t('취소') }}</button>
+          <button class="btn-confirm" @click="confirmPointUsage">{{ $t('적용') }}</button>
         </div>
       </div>
     </div>
@@ -135,11 +135,13 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useBasketStore } from '@/stores/customer/basket'
+import { useI18n } from 'vue-i18n'
 import axios from '@/api/axios'
 
 const router = useRouter()
 const route = useRoute()
 const basketStore = useBasketStore()
+const { t } = useI18n({ useScope: 'global' })
 
 const discountAmount = ref(0)
 const earnedPoints = ref(0)
@@ -171,13 +173,13 @@ onMounted(() => {
   // 컴포넌트 마운트 시 스토어의 전화번호 초기화
   basketStore.setPhoneNumber('')
   if (basketStore.cartItems.length === 0) {
-    displayToast('장바구니가 비어있습니다.')
+    displayToast(t('장바구니가 비어있습니다.'))
     setTimeout(() => router.push('/'), 1500)
   }
 })
 
 const goBack = async () => {
-  if (confirm('현재 결제를 취소하고 장바구니로 돌아가시겠습니까? (장바구니 내역은 유지됩니다)')) {
+  if (confirm(t('현재 결제를 취소하고 장바구니로 돌아가시겠습니까? (장바구니 내역은 유지됩니다)'))) {
     router.push('/menu')
   }
 }
@@ -218,7 +220,7 @@ const formatPhoneNumber = (number) => {
 
 const confirmNumber = async () => {
   if (inputNumber.value.length < 10) {
-    displayToast('올바른 휴대폰 번호를 입력해주세요.');
+    displayToast(t('올바른 휴대폰 번호를 입력해주세요.'));
     return;
   }
   
@@ -228,14 +230,14 @@ const confirmNumber = async () => {
   if (basketStore.pointMode === 'earn') {
     // 상품 금액의 5% 적립
     earnedPoints.value = Math.floor(basketStore.totalPrice * 0.05);
-    displayToast(`결제 완료 시 ${earnedPoints.value.toLocaleString()} 포인트가 적립될 예정입니다.`);
+    displayToast(t('결제 완료 시 {earnedPoints} 포인트가 적립될 예정입니다.', { earnedPoints: earnedPoints.value.toLocaleString() }));
     closeKeypad();
   } else if (basketStore.pointMode === 'use') {
     try {
       const res = await axios.get(`/api/users/${phoneNumber.value}/points`);
       const points = res.data;
       if (points < 100) {
-        displayToast('100포인트 이상부터 사용 가능합니다.');
+        displayToast(t('100포인트 이상부터 사용 가능합니다.'));
       } else {
         availablePoints.value = points;
         inputPointAmount.value = '';
@@ -244,7 +246,7 @@ const confirmNumber = async () => {
       }
     } catch (error) {
       console.error('포인트 조회 실패:', error);
-      displayToast('포인트 조회에 실패했습니다.');
+      displayToast(t('포인트 조회에 실패했습니다.'));
     }
   }
 }
@@ -270,17 +272,17 @@ const confirmPointUsage = () => {
   let amount = parseInt(inputPointAmount.value || '0');
   
   if (amount === 0) {
-    displayToast('사용할 포인트를 입력해주세요.');
+    displayToast(t('사용할 포인트를 입력해주세요.'));
     return;
   }
   
   if (amount % 10 !== 0) {
-    displayToast('10 포인트 단위로 입력해주세요.');
+    displayToast(t('10 포인트 단위로 입력해주세요.'));
     return;
   }
   
   if (amount > availablePoints.value) {
-    displayToast('보유 포인트를 초과할 수 없습니다.');
+    displayToast(t('보유 포인트를 초과할 수 없습니다.'));
     return;
   }
   
@@ -293,7 +295,7 @@ const confirmPointUsage = () => {
   
   earnedPoints.value = Math.floor((basketStore.totalPrice - amount) * 0.05);
   
-  displayToast(`${amount.toLocaleString()}포인트 사용 적용 (차액 ${earnedPoints.value.toLocaleString()}P 적립 예정)`);
+  displayToast(t('{amount}포인트 사용 적용 (차액 {earned}P 적립 예정)', { amount: amount.toLocaleString(), earned: earnedPoints.value.toLocaleString() }));
   closePointKeypad();
 }
 

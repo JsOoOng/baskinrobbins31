@@ -1,13 +1,13 @@
 <template>
   <div v-if="timeoutStore.showModal" class="timeout-modal-overlay">
     <div class="timeout-modal-content">
-      <h2>⚠️ 장시간 입력이 없습니다</h2>
-      <p class="desc-text">계속하시겠습니까?</p>
+      <h2>⚠️ {{ $t('장시간 입력이 없습니다') }}</h2>
+      <p class="desc-text">{{ $t('계속하시겠습니까?') }}</p>
       <div class="countdown-circle">
         <span class="countdown-number">{{ timeoutStore.countdown }}</span>
       </div>
-      <p class="sub-text">응답이 없으면 처음 화면으로 돌아갑니다.</p>
-      <button class="btn-extend" @click="extendTime">연장하기</button>
+      <p class="sub-text">{{ $t('응답이 없으면 처음 화면으로 돌아갑니다.') }}</p>
+      <button class="btn-extend" @click="extendTime">{{ $t('연장하기') }}</button>
     </div>
   </div>
 </template>
@@ -17,11 +17,13 @@ import { onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useBasketStore } from '@/stores/customer/basket';
 import { useTimeoutStore } from '@/stores/customer/timeout';
+import { useI18n } from 'vue-i18n';
 
 const route = useRoute();
 const router = useRouter();
 const basketStore = useBasketStore();
 const timeoutStore = useTimeoutStore();
+const { locale } = useI18n({ useScope: 'global' });
 
 const IDLE_TIME = 60; // 60 seconds
 const COUNTDOWN_TIME = 10; // 10 seconds
@@ -73,6 +75,7 @@ const startCountdown = () => {
 const handleTimeout = async () => {
   timeoutStore.setShowModal(false);
   await basketStore.clearCart();
+  locale.value = 'ko'; // 세션 만료 시 언어를 한국어로 초기화
   router.push('/');
 };
 
