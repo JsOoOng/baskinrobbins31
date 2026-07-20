@@ -7,6 +7,7 @@ import java.time.LocalTime;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.kiosk.entity.enums.WorkDay;
+import com.kiosk.entity.enums.WorkStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,6 +20,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +28,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "WORK_HISTORY")
+@Table(
+        name = "WORK_HISTORY",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {
+                        "staff_id",
+                        "work_date"
+                })
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -55,11 +65,38 @@ public class WorkHistory {
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
 
-    @Column(name = "is_holiday")
+    @Column(name = "is_holiday", nullable = false)
     @Builder.Default
     private Boolean isHoliday = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "work_status", nullable = false)
+    @Builder.Default
+    private WorkStatus workStatus = WorkStatus.SCHEDULED;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    public void update(
+            LocalTime startTime,
+            LocalTime endTime,
+            Boolean isHoliday
+    ) {
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.isHoliday = isHoliday;
+    }
+
+    public void changeStatus(WorkStatus workStatus) {
+        this.workStatus = workStatus;
+    }
+    
+    public void changeHoliday(
+            Boolean isHoliday
+    ) {
+        this.isHoliday = isHoliday;
+    }
+    
+
 }

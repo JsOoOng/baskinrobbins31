@@ -7,22 +7,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import com.kiosk.entity.enums.StaffStatus;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "STAFFS")
@@ -60,7 +46,7 @@ public class Staff {
     private LocalDate healthCertEndDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     @Builder.Default
     private StaffStatus status = StaffStatus.WORKING;
 
@@ -70,4 +56,29 @@ public class Staff {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    public void update(
+            String name,
+            String hp,
+            String email,
+            String address,
+            LocalDate birthDate,
+            LocalDate healthCertEndDate,
+            Integer hourlyWage,
+            StaffStatus status
+    ) {
+        this.name = name;
+        this.hp = hp;
+        this.email = email;
+        this.address = address;
+        this.birthDate = birthDate;
+        this.healthCertEndDate = healthCertEndDate;
+        this.hourlyWage = hourlyWage;
+        this.status = status;
+    }
+
+    public void changeStatus(StaffStatus status) {
+        this.status = status;
+    }
+
 }

@@ -158,6 +158,67 @@ const router = createRouter({
       component: () => import('../views/branch/BranchKioskRegister.vue')
     },
 
+    {
+      path:'/branch/staff',
+      name: 'branch-staff',
+      component:() => import('../views/branch/StaffView.vue')
+    },
+
+    {
+          path:'/branch/staff/register',
+          name:'StaffRegister',
+          component:
+              () => import(
+                  '@/views/branch/StaffRegisterView.vue'
+              )
+      },
+
+      {
+        path:'/branch/staff/:staffId/update',
+        name:'StaffUpdate',
+        component:
+            () => import(
+                '@/views/branch/StaffUpdateView.vue'
+            )
+    },
+
+    {
+          path:'/branch/staff/:staffId/schedule',
+          name:'WeekSchedule',
+          component:
+              () => import(
+                  '@/views/branch/WeekScheduleView.vue'
+              )
+      },
+
+      {
+        path:'/branch/staff/:staffId/history',
+        name:'WorkHistory',
+        component:
+            () => import(
+                '@/views/branch/WorkHistoryView.vue'
+            )
+          },
+
+          {
+            path:'/branch/staff/:staffId/salary',
+            name:'SalaryView',
+            component:
+                () => import(
+                    '@/views/branch/SalaryView.vue'
+                )
+        },
+
+        {
+          path:'/branch/week-schedule',
+          name:'branch-week-schedule',
+          component:
+              () => import(
+                  '@/views/branch/BranchScheduleView.vue'
+              )
+      },
+
+
     // ====================================================
     // 본사 관리자 로그인 및 예외 처리
     // ====================================================
