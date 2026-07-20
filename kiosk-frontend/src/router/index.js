@@ -345,6 +345,12 @@ const router = createRouter({
           component: loadHeadTemporaryPage,
           meta: { title: '배송 관리', description: '재고 출고와 배송 진행 상태를 관리합니다.', phase: 'P2' }
         },
+        {
+          path: 'policies',
+          name: 'head-policies',
+          component: () => import('../views/head/HeadPolicy.vue'),
+          meta: { title: '약관 및 방침 관리', description: '이용약관 및 개인정보 처리방침을 관리합니다.', phase: 'P2' }
+        },
         /*
          * 존재하지 않는 /head 하위 주소 접근 시
          * 본사 대시보드로 리다이렉트
