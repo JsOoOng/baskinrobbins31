@@ -58,8 +58,10 @@
         order_id, 
         payment_method, 
         base_amount, 
+        product_discount,
         coupon_discount,
         point_used,
+        total_discount,
         final_amount, 
         payment_status,
         payment_date
@@ -67,8 +69,10 @@
         #{orderId}, 
         #{paymentMethod}, 
         #{baseAmount}, 
+        #{productDiscount},
         #{couponDiscount},
         #{pointUsed},
+        #{totalDiscount},
         #{finalAmount}, 
         #{paymentStatus},
         #{paymentDate}

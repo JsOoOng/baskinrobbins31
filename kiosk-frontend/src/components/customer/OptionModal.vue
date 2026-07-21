@@ -3,7 +3,7 @@
     <div class="modal-content">
       <button class="close-icon-btn" @click="closeModal">✖</button>
       <h2>{{ product?.productName }}</h2>
-      <p class="price">{{ product?.basePrice }}원</p>
+      <p class="price">{{ product?.finalPrice }}원</p>
 
       <div class="flavor-section">
         <h3>아이스크림 맛을 선택해주세요 🍦</h3>

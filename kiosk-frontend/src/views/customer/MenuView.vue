@@ -48,7 +48,7 @@
             </div>
             <div class="product-info">
               <div class="product-name">{{ $t(product.productName) }}</div>
-              <div class="product-price">₩{{ formatPrice(product.basePrice) }}</div>
+              <div class="product-price">₩{{ formatPrice(product.finalPrice) }}</div>
             </div>
           </div>
         </div>
@@ -577,7 +577,7 @@ const calculatedItemPrice = computed(() => {
   if (spoonCount.value > 4) {
     extraSpoonPrice = (spoonCount.value - 4) * 50
   }
-  return selectedProduct.value.basePrice + extraSpoonPrice
+  return selectedProduct.value.finalPrice + extraSpoonPrice
 })
 
 const formatPrice = (val) => val?.toLocaleString()
@@ -589,12 +589,12 @@ const closeModal = () => {
 const openEditOptionModal = async (index, cartItem) => {
   editingCartIndex.value = index
   
-  // 1. 선택 상품 객체 복원 (basePrice 계산: 스푼이 true면 일단 50원을 뺀 값으로 추정)
-  const basePrice = cartItem.extraSpoons ? cartItem.unitPrice - 50 : cartItem.unitPrice;
+  // 1. 선택 상품 객체 복원 (finalPrice 계산: 스푼이 true면 개당 50원을 뺀 값으로 추정)
+  const finalPrice = cartItem.extraSpoons ? cartItem.unitPrice - 50 : cartItem.unitPrice;
   selectedProduct.value = { 
     productId: cartItem.productId, 
     productName: cartItem.productName, 
-    basePrice: basePrice 
+    finalPrice: finalPrice 
   };
   
   // 2. 맛 배열 복원
