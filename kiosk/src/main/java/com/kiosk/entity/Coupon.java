@@ -2,6 +2,7 @@ package com.kiosk.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime; // 임포트 추가
 
 @Entity
 @Table(name = "Coupon")
@@ -26,4 +27,22 @@ public class Coupon {
 
     @Column(name = "duration_days", nullable = false)
     private Integer durationDays;
+    
+    @Column(name = "is_issued_all", nullable = false)
+    @Builder.Default
+    private Boolean isIssuedAll = false;
+
+    // [추가] 쿠폰 등록 시간 타임스탬프
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    // 데이터가 처음 저장될 때 자동으로 현재 시간 입력
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
+    
+    public void updateIssuedStatus(boolean isIssuedAll) {
+        this.isIssuedAll = isIssuedAll;
+    }
 }

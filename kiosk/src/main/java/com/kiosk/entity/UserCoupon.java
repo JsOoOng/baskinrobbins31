@@ -20,7 +20,7 @@ public class UserCoupon {
     // USERS 테이블과 ManyToOne 매핑
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user; // USERS 테이블의 Entity 클래스명에 맞춰주세요
+    private User user;
 
     // Coupon 테이블과 ManyToOne 매핑
     @ManyToOne(fetch = FetchType.LAZY)
@@ -28,13 +28,24 @@ public class UserCoupon {
     private Coupon coupon;
 
     @Column(name = "is_used", columnDefinition = "BOOLEAN DEFAULT false")
+    @Builder.Default
     private boolean isUsed = false;
 
     @Column(name = "expiry_date", nullable = false)
     private LocalDate expiryDate;
 
+    // ✨ 추가 추천 1: 발급일 필드
+    @Column(name = "issued_date", nullable = false)
+    @Builder.Default
+    private LocalDate issuedDate = LocalDate.now();
+
     // 비즈니스 로직: 쿠폰 사용 처리
     public void useCoupon() {
         this.isUsed = true;
+    }
+
+    //  쿠폰 사용 취소 처리
+    public void cancelCoupon() {
+        this.isUsed = false;
     }
 }

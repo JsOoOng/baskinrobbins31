@@ -93,10 +93,9 @@ const menuGroups = computed(() => {
         {
           label: '쿠폰 관리',
           icon: '◇',
+          routeName: 'head-coupons',
           phase: 'P2',
-          implemented: false,
-          description:
-            '쿠폰 발급, 사용 기간, 할인 조건을 관리하는 기능입니다.'
+          implemented: true
         },
         {
           label: '이벤트 관리',

@@ -102,6 +102,11 @@ public class SecurityConfig {
                     .requestMatchers(
                             "/head/auth/login"
                     ).permitAll()
+                    
+                    // 쿠폰 등록
+                    .requestMatchers(
+                            "/head/coupon/**"
+                    ).permitAll()
 
                     /*
                      * 최고 관리자 전용 API 구역

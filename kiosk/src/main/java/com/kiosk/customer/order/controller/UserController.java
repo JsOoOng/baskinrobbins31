@@ -46,7 +46,8 @@ public class UserController {
                             uc.getCoupon() != null ? uc.getCoupon().getCouponName() : "쿠폰",
                             uc.getCoupon() != null ? uc.getCoupon().getDiscountValue() : 0,
                             uc.getCoupon() != null ? uc.getCoupon().getDiscountType() : "AMOUNT",
-                            uc.isUsed()
+                            uc.isUsed(),
+                            uc.getExpiryDate() // [추가] user_coupon의 만료일자 매핑
                     ))
                     .collect(Collectors.toList());
 
