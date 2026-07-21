@@ -14,7 +14,8 @@ public class ProductDetailResponse {
     private Integer productId;      // 상품 식별자 [cite: 9]
     private String productName;    // 상품명 [cite: 9]
     private String description;    // 상품 상세 설명 [cite: 9]
-    private Integer basePrice;     // 기본 가격 [cite: 10]
+    private Integer basePrice;     // 기본 가격
+    private Integer finalPrice;    // 최종 가격
     
     // 묶여진 옵션 그룹 리스트 (사이즈 그룹, 토핑 그룹, 스푼 그룹 등)
     private List<OptionGroupDto> optionGroups; 

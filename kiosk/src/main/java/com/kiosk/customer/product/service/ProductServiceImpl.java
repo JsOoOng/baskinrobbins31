@@ -49,6 +49,7 @@ public class ProductServiceImpl implements ProductService {
             dto.setCategoryId(categoryId.intValue()); // 🌟 누락된 카테고리 ID 설정 추가
             dto.setProductName(product.getProductName());
             dto.setBasePrice(product.getBasePrice());
+            dto.setFinalPrice(product.getFinalPrice());
             dto.setIsSoldOut(isSoldOut);
             dto.setImageUrl(product.getImageUrl());
             
@@ -97,6 +98,7 @@ public class ProductServiceImpl implements ProductService {
             product.getProductName(),
             product.getDescription(),
             product.getBasePrice(),
+            product.getFinalPrice(),
             new ArrayList<>(), // optionGroups
             new ArrayList<>(), // availableFlavors
             optionDtos         // options

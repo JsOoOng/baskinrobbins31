@@ -176,8 +176,11 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("주문 엔티티를 찾을 수 없습니다."));
 
-        int baseAmount = order.getTotalPrice();
-        int finalAmount = baseAmount;
+        int discountedAmount = order.getTotalPrice(); // 상품 할인만 적용된 총 금액 (프론트에서 보낸 단가 합산)
+        int productDiscount = order.getProductDiscountAmount(); // 상품 자체 할인 총액 계산
+        int baseAmount = order.getOriginalBaseAmount(); // 결제 전 원본 총액 (basePrice 기준)
+        
+        int finalAmount = discountedAmount;
         int couponDiscount = 0;
 
      // 2. 쿠폰 계산 및 적용 부분에 로그 추가
@@ -234,13 +237,17 @@ public class OrderService {
             }
         }
 
+        int totalDiscount = productDiscount + couponDiscount + pointUsed;
+
         // 5. 결제 정보 저장 (Payments 테이블에 INSERT)
         Payment payment = new Payment();
         payment.setOrderId(orderId);
         payment.setPaymentMethod(paymentMethod);
         payment.setBaseAmount(baseAmount);
+        payment.setProductDiscount(productDiscount);
         payment.setCouponDiscount(couponDiscount);
         payment.setPointUsed(pointUsed);
+        payment.setTotalDiscount(totalDiscount);
         payment.setFinalAmount(finalAmount);
         payment.setPaymentStatus("PAID");
         payment.setPaymentDate(LocalDateTime.now());

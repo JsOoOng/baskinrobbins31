@@ -48,13 +48,21 @@ public class Payment {
     @Column(name = "base_amount", nullable = false)
     private Integer baseAmount;
 
-    @Column(name = "coupon_discount")
+    @Column(name = "product_discount", columnDefinition = "INT DEFAULT 0")
+    @Builder.Default
+    private Integer productDiscount = 0; // 상품 자체 할인 적용 금액 총합
+
+    @Column(name = "coupon_discount", columnDefinition = "INT DEFAULT 0")
     @Builder.Default
     private Integer couponDiscount = 0;
 
-    @Column(name = "point_used")
+    @Column(name = "point_used", columnDefinition = "INT DEFAULT 0")
     @Builder.Default
     private Integer pointUsed = 0;
+
+    @Column(name = "total_discount", columnDefinition = "INT DEFAULT 0")
+    @Builder.Default
+    private Integer totalDiscount = 0; // 총 할인 금액 (product + coupon + point)
 
     @Column(name = "final_amount", nullable = false)
     private Integer finalAmount;

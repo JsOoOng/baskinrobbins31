@@ -106,6 +106,22 @@ public class Order {
         }
         return sum; // ✅ 실제 계산된 값을 반환
     }
+
+    public int getProductDiscountAmount() {
+        int discountSum = 0;
+        for (OrderItem item : orderItems) {
+            Product p = item.getProduct();
+            if (p != null && p.getBasePrice() != null && p.getFinalPrice() != null) {
+                int diff = p.getBasePrice() - p.getFinalPrice();
+                discountSum += diff * item.getQuantity();
+            }
+        }
+        return discountSum;
+    }
+
+    public int getOriginalBaseAmount() {
+        return getTotalPrice() + getProductDiscountAmount();
+    }
     
     @OneToMany(
             mappedBy = "order",
