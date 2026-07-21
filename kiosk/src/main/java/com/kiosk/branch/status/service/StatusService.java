@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kiosk.branch.inventory.repository.BranchInventoryMapper;
 import com.kiosk.branch.status.dto.FlavorResponse;
 import com.kiosk.branch.status.dto.StoreFlavorStatusResponse;
 import com.kiosk.branch.status.dto.StoreProductStatusResponse;
@@ -15,6 +16,7 @@ import com.kiosk.branch.status.reopsitory.StoreInventoryMapper;
 import com.kiosk.branch.status.reopsitory.StoreMapper;
 import com.kiosk.branch.status.reopsitory.StoreProductMapper;
 import com.kiosk.entity.IcecreamFlavor;
+import com.kiosk.entity.InventoryItem;
 import com.kiosk.entity.Store;
 import com.kiosk.entity.StoreFlavor;
 import com.kiosk.entity.StoreInventory;
@@ -34,7 +36,7 @@ public class StatusService {
     private final IcecreamFlavorMapper icecreamFlavorMapper;
     private final StoreMapper storeMapper;
     private final StoreInventoryMapper storeInventoryMapper;
-    
+    private final BranchInventoryMapper inventoryMapper;
     // 지점 메뉴 품절 상태 변경
     public StoreProductStatusResponse updateProductSoldOut(
             Integer storeProductId,
@@ -71,7 +73,7 @@ public class StatusService {
 
 
     // 지점 메뉴 상태 조회
-    @Transactional(readOnly = true)
+    @Transactional
     public List<StoreProductStatusResponse> getProducts(
             Integer storeId
     ){
@@ -81,18 +83,50 @@ public class StatusService {
                 .stream()
                 .map(sp -> {
 
-                    Integer stock =
-                            storeInventoryMapper
-                            .findByStoreIdAndItemProductId(
-                                    storeId,
-                                    sp.getProduct().getId()
-                            )
-                            .map(StoreInventory::getCurrentStock)
-                            .orElse(0);
+
+                    boolean soldOut = false;
+
+                    int totalStock = 0;
+
+
+                    for(InventoryItem item : sp.getProduct().getInventoryItems()){
+
+
+                        Integer stock =
+                        		inventoryMapper
+                                .findByStore_IdAndItem_Id(
+                                        storeId,
+                                        item.getId()
+                                )
+                                .map(StoreInventory::getCurrentStock)
+                                .orElse(0);
+
+
+
+                        totalStock += stock;
+
+
+
+                        // 하나라도 0이면 품절
+                        if(stock <= 0){
+
+                            soldOut = true;
+
+                        }
+
+                    }
+
+
+
+                    sp.changeSoldOut(soldOut);
+
 
 
                     return StoreProductStatusResponse
-                            .from(sp, stock);
+                            .from(
+                                sp,
+                                totalStock
+                            );
 
                 })
                 .toList();
@@ -224,6 +258,18 @@ public class StatusService {
 
 
 	    storeFlavor.changeContainer(amount);
+	    
+	 // 컨테이너 0이면 품절 처리
+	    if(storeFlavor.getContainer() <= 0){
+
+	        storeFlavor.changeSoldOut(true);
+
+	    } else {
+
+	        // 재입고 시 자동 판매 가능
+	        storeFlavor.changeSoldOut(false);
+
+	    }
 
 
 	    return StoreFlavorStatusResponse

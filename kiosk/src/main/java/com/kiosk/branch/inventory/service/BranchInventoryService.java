@@ -5,11 +5,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.branch.inventory.repository.BranchInventoryMapper;
+import com.kiosk.branch.status.reopsitory.StoreProductMapper;
 import com.kiosk.common.inventory.AutoRestockService;
 import com.kiosk.entity.InventoryItem;
 import com.kiosk.entity.Order;
 import com.kiosk.entity.OrderItem;
 import com.kiosk.entity.StoreInventory;
+import com.kiosk.entity.StoreProduct;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,24 +25,17 @@ public class BranchInventoryService {
     private final BranchInventoryMapper inventoryMapper;
     private final AutoRestockService autoRestockService;
 
-
+    private final StoreProductMapper storeProductMapper;
 
     public void decrease(Order order){
 
-
-        for(OrderItem orderItem 
-                : order.getOrderItems()){
+        for(OrderItem orderItem : order.getOrderItems()){
 
 
-            // 주문한 상품
-            var product =
-                    orderItem.getProduct();
+            var product = orderItem.getProduct();
 
 
-
-            // 해당 상품의 재고 품목
-            for(InventoryItem item 
-                    : product.getInventoryItems()){
+            for(InventoryItem item : product.getInventoryItems()){
 
 
                 StoreInventory inventory =
@@ -56,6 +51,7 @@ public class BranchInventoryService {
                         );
 
 
+                // 재고 차감
                 inventory.decreaseStock(
                         orderItem.getQuantity()
                 );
@@ -81,6 +77,29 @@ public class BranchInventoryService {
                     );
                 }
 
+
+                // 재고 0이면 품절 처리
+                if(inventory.getCurrentStock() <= 0){
+
+
+                    StoreProduct storeProduct =
+                            storeProductMapper
+                            .findByStoreIdAndProductId(
+                                    order.getStore().getId(),
+                                    product.getId()
+                            )
+                            .orElseThrow(
+                                () -> new RuntimeException(
+                                    "지점 상품 없음"
+                                )
+                            );
+
+
+                    storeProduct.changeSoldOut(true);
+
+                }
+                
+                
 
             }
 

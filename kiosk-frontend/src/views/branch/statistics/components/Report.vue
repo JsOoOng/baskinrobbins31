@@ -450,6 +450,52 @@ function formatMoney(value){
 
 }
 
+function categoryName(value){
+
+const category = {
+
+    RENT:"임대료",
+
+    UTILITY:"공과금",
+
+    LABOR:"인건비",
+
+    SUPPLIES:"비품",
+
+    MAINTENANCE:"유지보수",
+
+    INGREDIENTS:"재료비",
+
+    INSURANCE:"보험",
+
+    ETC:"기타"
+
+};
+
+
+return category[value] || value;
+
+}
+
+
+
+function paymentName(value){
+
+const payment = {
+
+    CARD:"카드",
+
+    CASH:"현금",
+
+    TRANSFER:"계좌이체"
+
+};
+
+
+return payment[value] || value;
+
+}
+
 const discountChart = computed(()=>{
 
 
@@ -1043,46 +1089,71 @@ v-for="(item,index) in statistics?.topProducts"
 
 
 
-
-
 <div class="table-box">
 
-
 <h3>
-지출 비목별 상세 정산 내역
+지출 상세 정산 내역
 </h3>
 
 
 <table>
 
+<thead>
 
 <tr>
 
 <th>
-대분류
+날짜
 </th>
-
 
 <th>
-집행 금액
+내용
 </th>
 
+<th>
+분류
+</th>
+
+<th>
+결제
+</th>
+
+<th>
+금액
+</th>
 
 </tr>
 
+</thead>
+
+
+
+<tbody>
 
 
 <tr
-
-v-for="item in statistics?.expenseCategory"
-
-:key="item.category"
-
+    v-for="item in statistics?.expenseDetail"
+    :key="item.expenseId"
 >
 
 
 <td>
-{{item.category}}
+{{item.expenseDate}}
+</td>
+
+
+<td>
+{{item.description}}
+</td>
+
+
+<td>
+{{categoryName(item.expenseCategory)}}
+</td>
+
+
+<td>
+{{paymentName(item.paymentMethod)}}
 </td>
 
 
@@ -1094,9 +1165,10 @@ v-for="item in statistics?.expenseCategory"
 </tr>
 
 
+</tbody>
+
 
 </table>
-
 
 
 </div>

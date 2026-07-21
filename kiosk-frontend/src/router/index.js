@@ -218,6 +218,14 @@ const router = createRouter({
               )
       },
 
+      {
+        path:"/branch/expense",
+        name:"ExpenseCreate",
+        component:()=>import(
+        "@/views/branch/expense/ExpenseCreate.vue"
+        )
+       },
+
 
     // ====================================================
     // 본사 관리자 로그인 및 예외 처리
