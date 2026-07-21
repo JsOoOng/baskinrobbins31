@@ -290,4 +290,84 @@ public interface StatisticsOrderRepository
     List<Object[]> findTodayHourlySales(
             @Param("storeId") Integer storeId
     );
+    
+    /*
+     * =====================================
+     * 총 결제금액
+     * =====================================
+     */
+    @Query("""
+        SELECT COALESCE(SUM(p.baseAmount),0)
+        FROM Order o
+        JOIN o.payment p
+        WHERE o.store.id = :storeId
+          AND o.orderStatus = 'COMPLETED'
+          AND FUNCTION('DATE', o.createdAt)
+          BETWEEN :startDate AND :endDate
+    """)
+    Integer findTotalPaymentAmount(
+            @Param("storeId") Integer storeId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    /*
+     * =====================================
+     * 총 쿠폰 할인금액
+     * =====================================
+     */
+    @Query("""
+        SELECT COALESCE(SUM(p.couponDiscount),0)
+        FROM Order o
+        JOIN o.payment p
+        WHERE o.store.id = :storeId
+          AND o.orderStatus = 'COMPLETED'
+          AND FUNCTION('DATE', o.createdAt)
+          BETWEEN :startDate AND :endDate
+    """)
+    Integer findCouponDiscountAmount(
+            @Param("storeId") Integer storeId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    /*
+     * =====================================
+     * 총 포인트 사용금액
+     * =====================================
+     */
+    @Query("""
+        SELECT COALESCE(SUM(p.pointUsed),0)
+        FROM Order o
+        JOIN o.payment p
+        WHERE o.store.id = :storeId
+          AND o.orderStatus = 'COMPLETED'
+          AND FUNCTION('DATE', o.createdAt)
+          BETWEEN :startDate AND :endDate
+    """)
+    Integer findPointAmount(
+            @Param("storeId") Integer storeId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    /*
+     * =====================================
+     * 총 최종 결제금액
+     * =====================================
+     */
+    @Query("""
+        SELECT COALESCE(SUM(p.finalAmount),0)
+        FROM Order o
+        JOIN o.payment p
+        WHERE o.store.id = :storeId
+          AND o.orderStatus = 'COMPLETED'
+          AND FUNCTION('DATE', o.createdAt)
+          BETWEEN :startDate AND :endDate
+    """)
+    Integer findFinalPaymentAmount(
+            @Param("storeId") Integer storeId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 }
