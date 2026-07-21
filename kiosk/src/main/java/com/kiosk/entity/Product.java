@@ -49,17 +49,29 @@ public class Product {
     @Column(name = "base_price", nullable = false)
     private Integer basePrice;
 
-    @Column(name = "discount_rate")
+    @Column(
+            name = "discount_rate",
+            nullable = false
+    )
     @Builder.Default
     private Integer discountRate = 0;
 
-    @Column(name = "margin_rate")
+    @Column(
+            name = "margin_rate",
+            nullable = false
+    )
     @Builder.Default
     private Integer marginRate = 65;
 
+    /*
+     * 마진율이 적용된 할인 전 정가
+     */
     @Column(name = "regular_price")
     private Integer regularPrice;
 
+    /*
+     * 할인율까지 적용된 최종 판매가
+     */
     @Column(name = "final_price")
     private Integer finalPrice;
 
@@ -93,21 +105,35 @@ public class Product {
 
     // 사진 수정 메서드에 imageUrl 파라미터가 추가됨!
     public void updateProduct(
-        Category category,
-        String productName,
-        String description,
-        Integer basePrice,
-        Integer discountRate,
-        Integer marginRate,
-        Boolean isDisplay,
-        String imageUrl) {
+            Category category,
+            String productName,
+            String description,
+            Integer basePrice,
+            Integer discountRate,
+            Integer marginRate,
+            Integer regularPrice,
+            Integer finalPrice,
+            Boolean isDisplay,
+            String imageUrl
+    ) {
 
         this.category = category;
         this.productName = productName;
         this.description = description;
         this.basePrice = basePrice;
-        if (discountRate != null) this.discountRate = discountRate;
-        if (marginRate != null) this.marginRate = marginRate;
+
+        this.discountRate =
+                discountRate != null
+                        ? discountRate
+                        : 0;
+
+        this.marginRate =
+                marginRate != null
+                        ? marginRate
+                        : 65;
+
+        this.regularPrice = regularPrice;
+        this.finalPrice = finalPrice;
         this.isDisplay = isDisplay;
         this.imageUrl = imageUrl;
     }

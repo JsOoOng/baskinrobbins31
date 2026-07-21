@@ -1,6 +1,5 @@
 package com.kiosk.headquarter.dto.product;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,11 +28,18 @@ public class HeadProductCreateRequestDTO {
 
     private Integer basePrice;
 
-    private BigDecimal discountRate;
+    private Integer discountRate;
+
+    // 입력하지 않으면 서비스에서 기본값 65 사용
+    private Integer marginRate;
 
     private Boolean isDisplay;
 
     private String imageUrl;
+    
+    private String newFlavorName;
+    
+    private String newFlavorImageUrl;
 
     /*
      * 상품을 판매할 지점 ID 목록
@@ -43,14 +49,6 @@ public class HeadProductCreateRequestDTO {
      */
     @Builder.Default
     private List<Integer> storeIds =
-            new ArrayList<>();
-    
-    /*
-     * 아이스크림 및 아이스크림 케이크에서
-     * 선택하거나 새로 추가한 맛 이름 목록
-     */
-    @Builder.Default
-    private List<String> flavorNames =
             new ArrayList<>();
 
     // INVENTORY_ITEMS 데이터

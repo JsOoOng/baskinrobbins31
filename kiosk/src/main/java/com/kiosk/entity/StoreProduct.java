@@ -10,6 +10,8 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class StoreProduct {
+	
+	private Integer storeProductPrice;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,8 +41,5 @@ public class StoreProduct {
     public void deleteStoreProduct() {
         this.isDeleted = true;
     }
-    
-    public void changeSoldOut(Boolean isSoldOut) {
-    	this.isSoldOut = isSoldOut;
-    }
+
 }

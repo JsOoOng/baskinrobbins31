@@ -1,6 +1,5 @@
 package com.kiosk.headquarter.service;
 
-import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -9,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.entity.Category;
+import com.kiosk.entity.IcecreamFlavor;
 import com.kiosk.entity.InventoryItem;
 import com.kiosk.entity.Product;
 import com.kiosk.entity.Store;
@@ -18,13 +18,12 @@ import com.kiosk.entity.enums.AutoRestockMode;
 import com.kiosk.headquarter.dto.product.HeadProductCreateRequestDTO;
 import com.kiosk.headquarter.dto.product.HeadProductResponseDTO;
 import com.kiosk.headquarter.repository.HeadCategoryMapper;
+import com.kiosk.headquarter.repository.HeadFlavorMapper;
 import com.kiosk.headquarter.repository.HeadInventoryItemMapper;
 import com.kiosk.headquarter.repository.HeadProductMapper;
 import com.kiosk.headquarter.repository.HeadStoreInventoryMapper;
 import com.kiosk.headquarter.repository.HeadStoreMapper;
 import com.kiosk.headquarter.repository.HeadStoreProductMapper;
-import com.kiosk.entity.IcecreamFlavor;
-import com.kiosk.headquarter.repository.HeadFlavorMapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,72 +32,23 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class HeadProductService {
 
-    private static final String
-            ICECREAM_CATEGORY_NAME =
-            "아이스크림";
-    
-    private static final Set<String>
-    FLAVOR_CATEGORY_NAMES =
-    Set.of(
-            "아이스크림",
-            "아이스크림 케이크"
-    );
+    private static final Set<String> FLAVOR_CATEGORY_NAMES =
+            Set.of(
+                    "아이스크림",
+                    "아이스크림 케이크"
+            );
 
-    private final HeadProductMapper
-            headProductMapper;
+    private static final int DEFAULT_DISCOUNT_RATE = 0;
+    private static final int DEFAULT_MARGIN_RATE = 65;
 
-    private final HeadCategoryMapper
-            headCategoryMapper;
-    
-    private final HeadFlavorMapper
-            headFlavorMapper;
+    private final HeadProductMapper headProductMapper;
+    private final HeadCategoryMapper headCategoryMapper;
+    private final HeadFlavorMapper headFlavorMapper;
+    private final HeadInventoryItemMapper headInventoryItemMapper;
+    private final HeadStoreMapper headStoreMapper;
+    private final HeadStoreProductMapper headStoreProductMapper;
+    private final HeadStoreInventoryMapper headStoreInventoryMapper;
 
-    private final HeadInventoryItemMapper
-            headInventoryItemMapper;
-
-    /*
-     * 지점 판매 상품 및 지점 재고 등록에 사용합니다.
-     */
-    private final HeadStoreMapper 
-    		headStoreMapper;
-    
-    private final HeadStoreProductMapper 
-    		headStoreProductMapper;
-    
-    private final HeadStoreInventoryMapper 
-    		headStoreInventoryMapper;
-    
-    /*
-     * 본사 상품 등록
-     *
-     * 처리 순서:
-     * 1. PRODUCTS 저장
-     * 2. INVENTORY_ITEMS 저장
-     * 3. STORE_PRODUCTS 저장
-     * 4. STORE_INVENTORY 저장(current_stock = 0)
-     * 
-     * 아이스크림 카테고리 여부 확인
-     *
-     * 현재는 외래키나 categoryCode가 없으므로
-     * 카테고리 이름을 기준으로 판단합니다.
-     */
-    private boolean isIcecreamCategory(
-            Category category
-    ) {
-
-        if (
-                category == null ||
-                category.getCategoryName() == null
-        ) {
-            return false;
-        }
-
-        return ICECREAM_CATEGORY_NAME.equals(
-                category
-                        .getCategoryName()
-                        .trim()
-        );
-    }
     @Transactional
     public HeadProductResponseDTO createProduct(
             HeadProductCreateRequestDTO requestDTO
@@ -106,13 +56,8 @@ public class HeadProductService {
 
         validateCreateRequest(requestDTO);
 
-        /*
-         * 1. 카테고리 조회
-         */
         Category category = headCategoryMapper
-                .findById(
-                        requestDTO.getCategoryId()
-                )
+                .findById(requestDTO.getCategoryId())
                 .orElseThrow(() ->
                         new IllegalArgumentException(
                                 "존재하지 않는 카테고리입니다."
@@ -122,163 +67,107 @@ public class HeadProductService {
         String productName =
                 requestDTO.getProductName().trim();
 
-        boolean icecreamCategory =
-                isIcecreamCategory(category);
-        
-        Set<String> flavorNames =
-                normalizeFlavorNames(
-                        requestDTO.getFlavorNames()
+        Integer discountRate =
+                resolveDiscountRate(
+                        requestDTO.getDiscountRate()
                 );
 
-        if (
-                supportsFlavor(category) &&
-                flavorNames.isEmpty()
-        ) {
-            throw new IllegalArgumentException(
-                    "아이스크림 상품은 맛을 한 개 이상 선택해주세요."
-            );
-        }
+        Integer marginRate =
+                resolveMarginRate(
+                        requestDTO.getMarginRate()
+                );
 
-        /*
-         * 아이스크림 맛 이름 중복 검사
-         */
-        if (
-                icecreamCategory &&
-                headFlavorMapper
-                        .existsByFlavorName(
-                                productName
-                        )
-        ) {
-            throw new IllegalArgumentException(
-                    "이미 등록된 아이스크림 맛입니다."
-            );
-        }
+        validatePriceRates(
+                discountRate,
+                marginRate
+        );
 
-        /*
-         * 2. PRODUCTS 저장
-         */
+        Integer regularPrice =
+                calculateRegularPrice(
+                        requestDTO.getBasePrice(),
+                        marginRate
+                );
+
+        Integer finalPrice =
+                calculateFinalPrice(
+                        regularPrice,
+                        discountRate
+                );
+
+        validateNewFlavorRequest(
+                category,
+                requestDTO
+        );
+
         Product product = Product.builder()
                 .category(category)
                 .productName(productName)
                 .description(
-                        requestDTO.getDescription()
+                        normalizeText(
+                                requestDTO.getDescription()
+                        )
                 )
                 .basePrice(
                         requestDTO.getBasePrice()
                 )
                 .discountRate(
-                        requestDTO
-                                .getDiscountRate() != null
-                                ? requestDTO
-                                        .getDiscountRate()
-                                : BigDecimal.ZERO
+                        discountRate
+                )
+                .marginRate(
+                        marginRate
+                )
+                .regularPrice(
+                        regularPrice
+                )
+                .finalPrice(
+                        finalPrice
                 )
                 .isDisplay(
-                        requestDTO
-                                .getIsDisplay() != null
-                                ? requestDTO
-                                        .getIsDisplay()
+                        requestDTO.getIsDisplay() != null
+                                ? requestDTO.getIsDisplay()
                                 : true
                 )
                 .imageUrl(
-                        requestDTO.getImageUrl()
+                        normalizeText(
+                                requestDTO.getImageUrl()
+                        )
                 )
                 .build();
 
         Product savedProduct =
                 headProductMapper
                         .saveAndFlush(product);
-        
-        /*
-         * 아이스크림 또는 아이스크림 케이크이면
-         * 선택된 맛 중 기존에 없는 맛만 저장합니다.
-         */
-        if (supportsFlavor(category)) {
-            saveMissingFlavors(flavorNames);
-        }
-        
-        System.out.println(
-                "상품 저장 완료: productId="
-                        + savedProduct.getId()
+
+        saveNewFlavorIfRequested(
+                category,
+                requestDTO
         );
-     
-        
-        /*
-         * 3. 아이스크림 맛 저장
-         */
-        if (icecreamCategory) {
 
-            IcecreamFlavor flavor =
-                    IcecreamFlavor.builder()
-                            .flavorName(
-                                    savedProduct
-                                            .getProductName()
-                            )
-                            .isActive(
-                                    Boolean.TRUE.equals(
-                                            savedProduct
-                                                    .getIsDisplay()
-                                    )
-                            )
-                            .imageUrl(
-                                    savedProduct
-                                            .getImageUrl()
-                            )
-                            .build();
-
-            IcecreamFlavor savedFlavor =
-                    headFlavorMapper
-                            .saveAndFlush(flavor);
-
-            System.out.println(
-                    "아이스크림 맛 저장 완료: "
-                            + "flavorId="
-                            + savedFlavor.getId()
-                            + ", flavorName="
-                            + savedFlavor
-                                    .getFlavorName()
-            );
-        }
-
-        /*
-         * 4. INVENTORY_ITEMS 저장
-         */
         InventoryItem inventoryItem =
                 InventoryItem.builder()
                         .product(savedProduct)
-                        .unit("EA")
+                        .unit(
+                                resolveInventoryUnit(
+                                        requestDTO.getInventoryUnit()
+                                )
+                        )
                         .unitPrice(
-                                savedProduct.getBasePrice()
+                                resolveInventoryUnitPrice(
+                                        requestDTO,
+                                        savedProduct
+                                )
                         )
                         .build();
 
         InventoryItem savedItem =
                 headInventoryItemMapper
-                        .saveAndFlush(
-                                inventoryItem
-                        );
+                        .saveAndFlush(inventoryItem);
 
-        System.out.println(
-                "재고 품목 저장 완료: itemId="
-                        + savedItem.getId()
-        );
-
-        /*
-         * 중복 지점 ID 제거
-         *
-         * 예:
-         * [1, 1, 2]
-         * →
-         * [1, 2]
-         */
         Set<Integer> storeIds =
                 new LinkedHashSet<>(
                         requestDTO.getStoreIds()
                 );
 
-        /*
-         * 4. 선택한 지점을 반복 처리
-         */
         for (Integer storeId : storeIds) {
 
             if (storeId == null || storeId <= 0) {
@@ -288,9 +177,6 @@ public class HeadProductService {
                 );
             }
 
-            /*
-             * 4-1. 지점 조회
-             */
             Store store = headStoreMapper
                     .findById(storeId)
                     .orElseThrow(() ->
@@ -300,12 +186,6 @@ public class HeadProductService {
                             )
                     );
 
-            /*
-             * 4-2. STORE_PRODUCTS 저장
-             *
-             * 해당 지점에서 새 상품을 판매할 수 있도록 연결합니다.
-             * 해당 지점에 삭제되지 않은 동일 상품 연결이 있는지 확인합니다.
-            */
             boolean storeProductExists =
                     headStoreProductMapper
                             .existsByStore_IdAndProduct_IdAndIsDeletedFalse(
@@ -319,45 +199,14 @@ public class HeadProductService {
                         StoreProduct.builder()
                                 .store(store)
                                 .product(savedProduct)
-
-                                /*
-                                 * STORE_PRODUCTS의
-                                 * store_product_price는 NOT NULL이므로
-                                 * 반드시 값을 넣어야 합니다.
-                                // 현재는 본사 상품 기본 가격을
-                				// 지점 판매 가격으로 사용
-                                */
-                                .storeProductPrice(
-                                        savedProduct.getBasePrice()
-                                )
-
                                 .isSoldOut(false)
                                 .isDeleted(false)
                                 .build();
 
-                StoreProduct savedStoreProduct =
-                        headStoreProductMapper
-                                .saveAndFlush(storeProduct);
-
-                System.out.println(
-                        "지점 판매 상품 저장 완료: "
-                                + "storeProductId="
-                                + savedStoreProduct.getId()
-                                + ", storeId="
-                                + store.getId()
-                                + ", productId="
-                                + savedProduct.getId()
-                                + ", storeProductPrice="
-                                + savedProduct.getBasePrice()
-                );
+                headStoreProductMapper
+                        .saveAndFlush(storeProduct);
             }
 
-            /*
-             * 4-3. STORE_INVENTORY 저장
-             *
-             * 새로 생성된 InventoryItem을 해당 지점에 연결하고,
-             * 최초 재고를 0으로 저장합니다.
-             */
             boolean storeInventoryExists =
                     headStoreInventoryMapper
                             .existsByStoreAndItem(
@@ -367,43 +216,27 @@ public class HeadProductService {
 
             if (!storeInventoryExists) {
 
-            	StoreInventory storeInventory =
-            	        StoreInventory.builder()
-            	                .store(store)
-            	                .item(savedItem)
-            	                .currentStock(0)
-            	                .minStock(10)
-            	                .targetStock(50)
-            	                .autoRestockEnabled(true)
-            	                .restockMode(
-            	                        AutoRestockMode.THRESHOLD
-            	                )
-            	                .build();
+                StoreInventory storeInventory =
+                        StoreInventory.builder()
+                                .store(store)
+                                .item(savedItem)
+                                .currentStock(0)
+                                .minStock(10)
+                                .targetStock(50)
+                                .autoRestockEnabled(true)
+                                .restockMode(
+                                        AutoRestockMode.THRESHOLD
+                                )
+                                .build();
 
-                StoreInventory savedStoreInventory =
-                        headStoreInventoryMapper
-                                .saveAndFlush(storeInventory);
-
-                System.out.println(
-                        "지점 재고 저장 완료: "
-                                + "storeInventoryId="
-                                + savedStoreInventory.getId()
-                                + ", storeId="
-                                + store.getId()
-                                + ", itemId="
-                                + savedItem.getId()
-                                + ", currentStock="
-                                + savedStoreInventory.getCurrentStock()
-                );
+                headStoreInventoryMapper
+                        .saveAndFlush(storeInventory);
             }
         }
 
         return toResponseDTO(savedProduct);
     }
 
-    /*
-     * 본사 상품 목록 조회
-     */
     public List<HeadProductResponseDTO> getProductList() {
 
         return headProductMapper
@@ -413,9 +246,6 @@ public class HeadProductService {
                 .toList();
     }
 
-    /*
-     * 본사 상품 상세 조회
-     */
     public HeadProductResponseDTO getProductDetail(
             Integer productId
     ) {
@@ -431,14 +261,13 @@ public class HeadProductService {
         return toResponseDTO(product);
     }
 
-    /*
-     * 본사 상품 수정
-     */
     @Transactional
     public HeadProductResponseDTO updateProduct(
             Integer productId,
             HeadProductCreateRequestDTO requestDTO
     ) {
+
+        validateUpdateRequest(requestDTO);
 
         Product product = headProductMapper
                 .findById(productId)
@@ -456,26 +285,59 @@ public class HeadProductService {
                         )
                 );
 
+        Integer discountRate =
+                resolveDiscountRate(
+                        requestDTO.getDiscountRate()
+                );
+
+        Integer marginRate =
+                resolveMarginRate(
+                        requestDTO.getMarginRate()
+                );
+
+        validatePriceRates(
+                discountRate,
+                marginRate
+        );
+
+        Integer regularPrice =
+                calculateRegularPrice(
+                        requestDTO.getBasePrice(),
+                        marginRate
+                );
+
+        Integer finalPrice =
+                calculateFinalPrice(
+                        regularPrice,
+                        discountRate
+                );
+
         product.updateProduct(
                 category,
-                requestDTO.getProductName(),
-                requestDTO.getDescription(),
+                requestDTO
+                        .getProductName()
+                        .trim(),
+                normalizeText(
+                        requestDTO.getDescription()
+                ),
                 requestDTO.getBasePrice(),
-                requestDTO.getDiscountRate() != null
-                        ? requestDTO.getDiscountRate()
-                        : BigDecimal.ZERO,
+                discountRate,
+                marginRate,
+                regularPrice,
+                finalPrice,
                 requestDTO.getIsDisplay() != null
                         ? requestDTO.getIsDisplay()
                         : true,
-                product.getImageUrl()
+                requestDTO.getImageUrl() != null
+                        ? normalizeText(
+                                requestDTO.getImageUrl()
+                        )
+                        : product.getImageUrl()
         );
 
         return toResponseDTO(product);
     }
 
-    /*
-     * 본사 상품 삭제 처리
-     */
     @Transactional
     public void deleteProduct(Integer productId) {
 
@@ -490,16 +352,36 @@ public class HeadProductService {
         product.hideProduct();
     }
 
-    /*
-     * 상품 등록 요청값 검증
-     */
     private void validateCreateRequest(
+            HeadProductCreateRequestDTO requestDTO
+    ) {
+
+        validateCommonProductRequest(requestDTO);
+
+        if (
+                requestDTO.getStoreIds() == null ||
+                requestDTO.getStoreIds().isEmpty()
+        ) {
+            throw new IllegalArgumentException(
+                    "판매 지점을 한 개 이상 선택해주세요."
+            );
+        }
+    }
+
+    private void validateUpdateRequest(
+            HeadProductCreateRequestDTO requestDTO
+    ) {
+
+        validateCommonProductRequest(requestDTO);
+    }
+
+    private void validateCommonProductRequest(
             HeadProductCreateRequestDTO requestDTO
     ) {
 
         if (requestDTO == null) {
             throw new IllegalArgumentException(
-                    "상품 등록 요청이 없습니다."
+                    "상품 요청 정보가 없습니다."
             );
         }
 
@@ -526,44 +408,78 @@ public class HeadProductService {
                     "기본 가격은 0 이상이어야 합니다."
             );
         }
+    }
+
+    private void validatePriceRates(
+            Integer discountRate,
+            Integer marginRate
+    ) {
 
         if (
-                requestDTO.getStoreIds() == null ||
-                requestDTO.getStoreIds().isEmpty()
+                discountRate < 0 ||
+                discountRate > 100
         ) {
             throw new IllegalArgumentException(
-                    "판매 지점을 한 개 이상 선택해주세요."
+                    "할인율은 0 이상 100 이하여야 합니다."
+            );
+        }
+
+        if (
+                marginRate < 0 ||
+                marginRate >= 100
+        ) {
+            throw new IllegalArgumentException(
+                    "마진율은 0 이상 100 미만이어야 합니다."
             );
         }
     }
 
-    /*
-     * 응답 DTO 변환
-     */
     private HeadProductResponseDTO toResponseDTO(
             Product product
     ) {
 
         return HeadProductResponseDTO.builder()
                 .productId(product.getId())
-                .categoryId(product.getCategory().getId())
+                .categoryId(
+                        product.getCategory().getId()
+                )
                 .categoryName(
                         product.getCategory()
                                 .getCategoryName()
                 )
-                .productName(product.getProductName())
-                .description(product.getDescription())
-                .basePrice(product.getBasePrice())
-                .discountRate(product.getDiscountRate())
-                .isDisplay(product.getIsDisplay())
-                .imageUrl(product.getImageUrl())
-                .createdAt(product.getCreatedAt())
+                .productName(
+                        product.getProductName()
+                )
+                .description(
+                        product.getDescription()
+                )
+                .basePrice(
+                        product.getBasePrice()
+                )
+                .marginRate(
+                        product.getMarginRate()
+                )
+                .regularPrice(
+                        product.getRegularPrice()
+                )
+                .discountRate(
+                        product.getDiscountRate()
+                )
+                .finalPrice(
+                        product.getFinalPrice()
+                )
+                .isDisplay(
+                        product.getIsDisplay()
+                )
+                .imageUrl(
+                        product.getImageUrl()
+                )
+                .createdAt(
+                        product.getCreatedAt()
+                )
                 .build();
     }
-    
-    /*
-     * 맛을 사용하는 카테고리 여부
-     */
+
     private boolean supportsFlavor(
             Category category
     ) {
@@ -582,72 +498,235 @@ public class HeadProductService {
         );
     }
 
-    /*
-     * 맛 이름 정리
-     *
-     * null, 빈 문자열, 중복값을 제거합니다.
-     */
-    private Set<String> normalizeFlavorNames(
-            List<String> flavorNames
+    private void validateNewFlavorRequest(
+            Category category,
+            HeadProductCreateRequestDTO requestDTO
     ) {
 
-        Set<String> normalizedNames =
-                new LinkedHashSet<>();
+        String flavorName =
+                normalizeText(
+                        requestDTO.getNewFlavorName()
+                );
 
-        if (flavorNames == null) {
-            return normalizedNames;
+        String flavorImageUrl =
+                normalizeText(
+                        requestDTO.getNewFlavorImageUrl()
+                );
+
+        if (!supportsFlavor(category)) {
+            return;
         }
 
-        for (String flavorName : flavorNames) {
+        if (
+                flavorName == null &&
+                flavorImageUrl == null
+        ) {
+            return;
+        }
 
-            if (
-                    flavorName == null ||
-                    flavorName.isBlank()
-            ) {
-                continue;
-            }
-
-            normalizedNames.add(
-                    flavorName.trim()
+        if (flavorName == null) {
+            throw new IllegalArgumentException(
+                    "추가할 맛 이름을 입력해주세요."
             );
         }
 
-        return normalizedNames;
+        if (flavorImageUrl == null) {
+            throw new IllegalArgumentException(
+                    "추가할 맛 이미지 URL을 입력해주세요."
+            );
+        }
+
+        if (
+                headFlavorMapper
+                        .existsByFlavorName(
+                                flavorName
+                        )
+        ) {
+            throw new IllegalArgumentException(
+                    "이미 등록된 아이스크림 맛입니다."
+            );
+        }
     }
 
-    /*
-     * ICECREAM_FLAVORS에 없는 맛만 신규 등록
-     */
-    private void saveMissingFlavors(
-            Set<String> flavorNames
+    private void saveNewFlavorIfRequested(
+            Category category,
+            HeadProductCreateRequestDTO requestDTO
     ) {
 
-        for (String flavorName : flavorNames) {
-
-            boolean flavorExists =
-                    headFlavorMapper
-                            .existsByFlavorName(
-                                    flavorName
-                            );
-
-            if (flavorExists) {
-                continue;
-            }
-
-            IcecreamFlavor flavor =
-                    IcecreamFlavor.builder()
-                            .flavorName(flavorName)
-                            .isActive(true)
-
-                            /*
-                             * 상품 이미지는 파인트·케이크 등
-                             * 상품 이미지일 수 있으므로
-                             * 맛 이미지에는 복사하지 않습니다.
-                             */
-                            .imageUrl(null)
-                            .build();
-
-            headFlavorMapper.save(flavor);
+        if (!supportsFlavor(category)) {
+            return;
         }
+
+        String flavorName =
+                normalizeText(
+                        requestDTO.getNewFlavorName()
+                );
+
+        String flavorImageUrl =
+                normalizeText(
+                        requestDTO.getNewFlavorImageUrl()
+                );
+
+        if (
+                flavorName == null &&
+                flavorImageUrl == null
+        ) {
+            return;
+        }
+
+        IcecreamFlavor flavor =
+                IcecreamFlavor.builder()
+                        .flavorName(flavorName)
+                        .isActive(true)
+                        .imageUrl(flavorImageUrl)
+                        .build();
+
+        headFlavorMapper.save(flavor);
+    }
+
+    private Integer calculateRegularPrice(
+            Integer basePrice,
+            Integer marginRate
+    ) {
+
+        if (basePrice == null || basePrice < 0) {
+            throw new IllegalArgumentException(
+                    "기본 가격은 0 이상이어야 합니다."
+            );
+        }
+
+        if (
+                marginRate == null ||
+                marginRate < 0 ||
+                marginRate >= 100
+        ) {
+            throw new IllegalArgumentException(
+                    "마진율은 0 이상 100 미만이어야 합니다."
+            );
+        }
+
+        if (basePrice == 0) {
+            return 0;
+        }
+
+        double regularPrice =
+                basePrice /
+                (
+                        1 -
+                        marginRate / 100.0
+                );
+
+        return roundToHundred(
+                regularPrice
+        );
+    }
+
+    private Integer calculateFinalPrice(
+            Integer regularPrice,
+            Integer discountRate
+    ) {
+
+        if (
+                regularPrice == null ||
+                regularPrice < 0
+        ) {
+            throw new IllegalArgumentException(
+                    "정가는 0 이상이어야 합니다."
+            );
+        }
+
+        if (
+                discountRate == null ||
+                discountRate < 0 ||
+                discountRate > 100
+        ) {
+            throw new IllegalArgumentException(
+                    "할인율은 0 이상 100 이하여야 합니다."
+            );
+        }
+
+        double finalPrice =
+                regularPrice *
+                (
+                        1 -
+                        discountRate / 100.0
+                );
+
+        return roundToHundred(
+                finalPrice
+        );
+    }
+
+    private Integer roundToHundred(
+            double price
+    ) {
+
+        return (int) (
+                Math.round(
+                        price / 100.0
+                ) * 100
+        );
+    }
+
+    private Integer resolveDiscountRate(
+            Integer discountRate
+    ) {
+
+        return discountRate != null
+                ? discountRate
+                : DEFAULT_DISCOUNT_RATE;
+    }
+
+    private Integer resolveMarginRate(
+            Integer marginRate
+    ) {
+
+        return marginRate != null
+                ? marginRate
+                : DEFAULT_MARGIN_RATE;
+    }
+
+    private String resolveInventoryUnit(
+            String inventoryUnit
+    ) {
+
+        String normalizedUnit =
+                normalizeText(inventoryUnit);
+
+        return normalizedUnit != null
+                ? normalizedUnit
+                : "EA";
+    }
+
+    private Integer resolveInventoryUnitPrice(
+            HeadProductCreateRequestDTO requestDTO,
+            Product savedProduct
+    ) {
+
+        Integer inventoryUnitPrice =
+                requestDTO.getInventoryUnitPrice();
+
+        if (
+                inventoryUnitPrice != null &&
+                inventoryUnitPrice >= 0
+        ) {
+            return inventoryUnitPrice;
+        }
+
+        return savedProduct.getBasePrice();
+    }
+
+    private String normalizeText(
+            String value
+    ) {
+
+        if (
+                value == null ||
+                value.isBlank()
+        ) {
+            return null;
+        }
+
+        return value.trim();
     }
 }

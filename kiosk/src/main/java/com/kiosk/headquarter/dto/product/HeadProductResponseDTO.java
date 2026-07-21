@@ -16,7 +16,10 @@ public class HeadProductResponseDTO {
     private String productName;
     private String description;
     private Integer basePrice;
-    private BigDecimal discountRate;
+    private Integer marginRate;
+    private Integer regularPrice;
+    private Integer discountRate;
+    private Integer finalPrice;
     private Boolean isDisplay;
     private String imageUrl;
     private LocalDateTime createdAt;
