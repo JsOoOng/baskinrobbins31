@@ -386,6 +386,195 @@ const pagedDonutLegend =
   })
 
 /*
+ * 한 번에 표시할 페이지 버튼 수
+ *
+ * 예:
+ * 1~5
+ * 6~10
+ * 11~15
+ */
+ const PAGE_GROUP_SIZE = 5
+
+const createPageGroup = (
+  currentPage,
+  totalPages
+) => {
+  /*
+   * 현재 페이지가 포함된 5개 단위 페이지 그룹
+   */
+  const visiblePages = computed(() => {
+    const groupStart =
+      Math.floor(
+        (
+          currentPage.value - 1
+        ) / PAGE_GROUP_SIZE
+      ) * PAGE_GROUP_SIZE + 1
+
+    const groupEnd =
+      Math.min(
+        groupStart +
+          PAGE_GROUP_SIZE -
+          1,
+
+        totalPages.value
+      )
+
+    return Array.from(
+      {
+        length:
+          groupEnd -
+          groupStart +
+          1
+      },
+
+      (_, index) =>
+        groupStart + index
+    )
+  })
+
+  /*
+   * 이전 페이지 그룹 존재 여부
+   */
+  const hasPreviousGroup =
+    computed(() => {
+      const firstPage =
+        visiblePages.value[0] ?? 1
+
+      return firstPage > 1
+    })
+
+  /*
+   * 다음 페이지 그룹 존재 여부
+   */
+  const hasNextGroup =
+    computed(() => {
+      const pages =
+        visiblePages.value
+
+      const lastPage =
+        pages[
+          pages.length - 1
+        ] ?? 1
+
+      return (
+        lastPage <
+        totalPages.value
+      )
+    })
+
+  /*
+   * 이전 그룹으로 이동
+   *
+   * 6~10
+   * →
+   * 5페이지로 이동하면서 1~5 출력
+   */
+  const goPreviousGroup = () => {
+    if (!hasPreviousGroup.value) {
+      return
+    }
+
+    const firstPage =
+      visiblePages.value[0]
+
+    currentPage.value =
+      firstPage - 1
+  }
+
+  /*
+   * 다음 그룹으로 이동
+   *
+   * 1~5
+   * →
+   * 6페이지로 이동하면서 6~10 출력
+   */
+  const goNextGroup = () => {
+    if (!hasNextGroup.value) {
+      return
+    }
+
+    const pages =
+      visiblePages.value
+
+    const lastPage =
+      pages[
+        pages.length - 1
+      ]
+
+    currentPage.value =
+      lastPage + 1
+  }
+
+  return {
+    visiblePages,
+    hasPreviousGroup,
+    hasNextGroup,
+    goPreviousGroup,
+    goNextGroup
+  }
+}
+
+const {
+  visiblePages:
+    productVisiblePages,
+
+  hasPreviousGroup:
+    productHasPreviousGroup,
+
+  hasNextGroup:
+    productHasNextGroup,
+
+  goPreviousGroup:
+    goPreviousProductGroup,
+
+  goNextGroup:
+    goNextProductGroup
+} = createPageGroup(
+  productRankingPage,
+  productRankingTotalPages
+)
+
+const {
+  visiblePages:
+    flavorVisiblePages,
+
+  hasPreviousGroup:
+    flavorHasPreviousGroup,
+
+  hasNextGroup:
+    flavorHasNextGroup,
+
+  goPreviousGroup:
+    goPreviousFlavorGroup,
+
+  goNextGroup:
+    goNextFlavorGroup
+} = createPageGroup(
+  flavorRankingPage,
+  flavorRankingTotalPages
+)
+
+const {
+  visiblePages:
+    donutVisiblePages,
+
+  hasPreviousGroup:
+    donutHasPreviousGroup,
+
+  hasNextGroup:
+    donutHasNextGroup,
+
+  goPreviousGroup:
+    goPreviousDonutGroup,
+
+  goNextGroup:
+    goNextDonutGroup
+} = createPageGroup(
+  donutLegendPage,
+  donutLegendTotalPages
+)
+
+/*
  * 날짜 및 조회 조건
  */
 const getLocalDateString = (date) => {
@@ -1336,22 +1525,23 @@ onMounted(async () => {
             </span>
 
             <div>
+              <!-- 이전 5페이지 그룹 -->
               <button
                 type="button"
                 :disabled="
-                  productRankingPage <= 1
+                  !productHasPreviousGroup
                 "
                 @click="
-                  productRankingPage--
+                  goPreviousProductGroup
                 "
               >
                 ‹
               </button>
 
+              <!-- 최대 5개만 출력 -->
               <button
                 v-for="
-                  page in
-                  productRankingTotalPages
+                  page in productVisiblePages
                 "
                 :key="page"
                 type="button"
@@ -1366,14 +1556,14 @@ onMounted(async () => {
                 {{ page }}
               </button>
 
+              <!-- 다음 5페이지 그룹 -->
               <button
                 type="button"
                 :disabled="
-                  productRankingPage >=
-                  productRankingTotalPages
+                  !productHasNextGroup
                 "
                 @click="
-                  productRankingPage++
+                  goNextProductGroup
                 "
               >
                 ›
@@ -1493,10 +1683,10 @@ onMounted(async () => {
               <button
                 type="button"
                 :disabled="
-                  flavorRankingPage <= 1
+                  !flavorHasPreviousGroup
                 "
                 @click="
-                  flavorRankingPage--
+                  goPreviousFlavorGroup
                 "
               >
                 ‹
@@ -1504,8 +1694,7 @@ onMounted(async () => {
 
               <button
                 v-for="
-                  page in
-                  flavorRankingTotalPages
+                  page in flavorVisiblePages
                 "
                 :key="page"
                 type="button"
@@ -1523,11 +1712,10 @@ onMounted(async () => {
               <button
                 type="button"
                 :disabled="
-                  flavorRankingPage >=
-                  flavorRankingTotalPages
+                  !flavorHasNextGroup
                 "
                 @click="
-                  flavorRankingPage++
+                  goNextFlavorGroup
                 "
               >
                 ›
@@ -1645,7 +1833,10 @@ onMounted(async () => {
 
               <footer
                 v-if="flavorRanking.length > 0"
-                class="ranking-pagination donut-pagination"
+                class="
+                  ranking-pagination
+                  donut-pagination
+                "
               >
                 <span>
                   전체
@@ -1656,10 +1847,10 @@ onMounted(async () => {
                   <button
                     type="button"
                     :disabled="
-                      donutLegendPage <= 1
+                      !donutHasPreviousGroup
                     "
                     @click="
-                      donutLegendPage--
+                      goPreviousDonutGroup
                     "
                   >
                     ‹
@@ -1667,8 +1858,7 @@ onMounted(async () => {
 
                   <button
                     v-for="
-                      page in
-                      donutLegendTotalPages
+                      page in donutVisiblePages
                     "
                     :key="page"
                     type="button"
@@ -1686,11 +1876,10 @@ onMounted(async () => {
                   <button
                     type="button"
                     :disabled="
-                      donutLegendPage >=
-                      donutLegendTotalPages
+                      !donutHasNextGroup
                     "
                     @click="
-                      donutLegendPage++
+                      goNextDonutGroup
                     "
                   >
                     ›
@@ -2125,19 +2314,33 @@ td small {
 /*
  * 페이지네이션
  */
-.ranking-pagination {
+ .ranking-pagination {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   align-items: center;
   justify-content: space-between;
+
   padding: 11px 14px;
+
   border-top: 1px solid #e8ebf0;
+
   color: #8b93a2;
   font-size: 8px;
 }
 
+.ranking-pagination > span {
+  flex-shrink: 0;
+
+  white-space: nowrap;
+}
+
 .ranking-pagination > div {
   display: flex;
+  flex-shrink: 0;
   gap: 4px;
+
+  white-space: nowrap;
 }
 
 .ranking-pagination button {
@@ -2296,8 +2499,17 @@ td small {
 }
 
 .donut-pagination {
+  align-items: flex-start;
+  flex-direction: column;
+
   padding-right: 0;
   padding-left: 0;
+}
+
+.donut-pagination > div {
+  width: 100%;
+
+  justify-content: flex-end;
 }
 
 .empty-donut {

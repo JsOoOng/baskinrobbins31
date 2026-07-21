@@ -8,7 +8,10 @@ import lombok.Getter;
 public class HeadFlavorResponseDTO {
 
     private Integer flavorId;
+
     private String flavorName;
+
     private Boolean isActive;
+
     private String imageUrl;
 }
