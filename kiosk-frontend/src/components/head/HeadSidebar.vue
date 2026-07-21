@@ -101,8 +101,9 @@ const menuGroups = computed(() => {
         {
           label: '이벤트 관리',
           icon: '★',
+          routeName: 'head-events',
           phase: 'P2',
-          implemented: false,
+          implemented: true,
           description:
             '이벤트 기간과 대상 상품·카테고리를 관리하는 기능입니다.'
         },
