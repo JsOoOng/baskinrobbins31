@@ -18,7 +18,7 @@ public class OrderCleanupScheduler {
     private final BranchOrderMapper orderMapper;
 
     @Transactional
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 10 * * *")
     public void deleteNullPaymentOrders() {
 
         List<Order> orders = orderMapper.findByPaymentIsNull();
