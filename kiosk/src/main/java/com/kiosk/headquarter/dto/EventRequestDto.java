@@ -20,6 +20,7 @@ public class EventRequestDto {
     private EventStatus eventStatus;
     private String targetType;
     private Integer discountValue;
+    private String discountType;
     private Boolean isVisible;
 
     public Event toEntity() {
@@ -31,6 +32,7 @@ public class EventRequestDto {
                 .eventStatus(this.eventStatus != null ? this.eventStatus : EventStatus.SCHEDULED)
                 .targetType(this.targetType)
                 .discountValue(this.discountValue != null ? this.discountValue : 0)
+                .discountType(this.discountType != null ? this.discountType : "AMOUNT")
                 .isVisible(this.isVisible != null ? this.isVisible : false)
                 .build();
     }

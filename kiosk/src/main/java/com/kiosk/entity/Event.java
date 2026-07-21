@@ -58,6 +58,10 @@ public class Event {
     @Column(name = "discount_value")
     private Integer discountValue;
 
+    @Column(name = "discount_type", length = 20)
+    @Builder.Default
+    private String discountType = "AMOUNT";
+
     @Column(name = "is_visible", nullable = false)
     @Builder.Default
     private Boolean isVisible = false;
