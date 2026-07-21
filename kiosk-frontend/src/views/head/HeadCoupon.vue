@@ -355,194 +355,602 @@ const executeIssueAll = async () => {
 };
 </script>
   
-  <style scoped>
-  .coupon-dashboard {
-    padding: 30px;
-    max-width: 1000px;
-    margin: 0 auto;
-  }
-  .top-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .btn-primary {
-    background-color: #4f46e5;
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  .btn-secondary {
-    padding: 10px 16px;
-    background-color: #3182ce;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  .coupon-table {
-    width: 100%;
-    table-layout: fixed; 
-    border-collapse: collapse;
-  }
-  .coupon-table th, 
-  .coupon-table td {
-    word-break: break-all;    
-    overflow-wrap: break-word; 
-    white-space: normal;       
-    padding: 12px 8px;
-    text-align: center;
-    vertical-align: middle;
-  }
-  .coupon-table th {
-    background-color: #f8fafc;
-    font-weight: 600;
-    color: #334155;
+
+<style scoped>
+
+.coupon-dashboard {
+  display: grid;
+  gap: 18px;
+}
+
+
+/* 상단 버튼 */
+.top-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  padding: 18px;
+
+  border: 1px solid #e2e6ed;
+  border-radius: 15px;
+
+  background: #ffffff;
+}
+
+
+.btn-primary,
+.btn-secondary {
+
+  height: 36px;
+
+  padding: 0 15px;
+
+  border-radius: 9px;
+
+  cursor: pointer;
+
+  font-size: 10px;
+
+  font-weight: 800;
+
+}
+
+
+/* 새 쿠폰 */
+.btn-primary {
+
+  border: none;
+
+  color: white;
+
+  background: #725ee7;
+
+}
+
+
+/* 전체 발급 */
+.btn-secondary {
+
+  border: 1px solid #dcd7fb;
+
+  color: #6756dc;
+
+  background: #f3f1ff;
+
+}
+
+
+
+/* =====================
+   테이블
+===================== */
+
+
+.coupon-table {
+
+  width:100%;
+
+  min-width:900px;
+
+  border-collapse:collapse;
+
+  background:white;
+
+  border:1px solid #e2e6ed;
+
+}
+
+
+.coupon-table th,
+.coupon-table td {
+
+  padding:13px 12px;
+
+  text-align:center;
+
+  font-size:10px;
+
+  word-break:break-word;
+
+}
+
+
+
+.coupon-table th {
+
+  color:#7e8696;
+
+  background:#fafbfc;
+
+  font-weight:800;
+
+}
+
+
+.coupon-table td {
+
+  color:#515867;
+
+  border-top:1px solid #edf0f4;
+
+}
+
+
+
+/* =====================
+   필터 드롭다운
+===================== */
+
+
+.dropdown-header {
+
+  position:relative;
+
+  cursor:pointer;
+
+}
+
+
+.header-content {
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  gap:5px;
+
+}
+
+
+.filter-arrow {
+
+  font-size:9px;
+
+  color:#725ee7;
+
+}
+
+
+
+.filter-dropdown-menu {
+
+  position:absolute;
+
+  top:35px;
+
+  left:50%;
+
+  transform:translateX(-50%);
+
+  z-index:1000;
+
+
+  width:140px;
+
+  padding:5px 0;
+
+
+  border:1px solid #e2e6ed;
+
+  border-radius:10px;
+
+
+  background:white;
+
+  box-shadow:
+    0 8px 20px rgba(0,0,0,0.08);
+
+}
+
+
+
+.filter-dropdown-menu div {
+
+  padding:10px;
+
+  cursor:pointer;
+
+  font-size:10px;
+
+}
+
+
+
+.filter-dropdown-menu div:hover {
+
+  background:#f4f1ff;
+
+}
+
+
+
+.filter-dropdown-menu .selected {
+
+  color:#725ee7;
+
+  font-weight:800;
+
+  background:#edeaff;
+
+}
+
+
+
+/* =====================
+   할인 타입
+===================== */
+
+
+.badge {
+
+  display:inline-flex;
+
+  padding:5px 8px;
+
+  border-radius:7px;
+
+  font-size:9px;
+
+  font-weight:800;
+
+}
+
+
+.badge.amount {
+
+  color:#6756dc;
+
+  background:#edeaff;
+
+}
+
+
+.badge.percent {
+
+  color:#1c8b62;
+
+  background:#e7f8ef;
+
+}
+
+
+
+/* =====================
+   발급 상태
+===================== */
+
+
+.status-o,
+.status-x {
+
+  display:inline-flex;
+
+  justify-content:center;
+
+  width:22px;
+
+  padding:4px 7px;
+
+  border-radius:7px;
+
+  font-size:9px;
+
+  font-weight:900;
+
+}
+
+
+
+.status-o {
+
+  color:#16804c;
+
+  background:#e5f7ed;
+
+}
+
+
+
+.status-x {
+
+  color:#db485e;
+
+  background:#fff0f3;
+
+}
+
+
+
+/* =====================
+   관리 버튼
+===================== */
+
+
+.btn-edit,
+.btn-delete {
+
+  height:29px;
+
+  padding:0 10px;
+
+  border-radius:7px;
+
+  cursor:pointer;
+
+  font-size:9px;
+
+  font-weight:750;
+
+}
+
+
+
+.btn-edit {
+
+  margin-right:5px;
+
+  border:1px solid #dcd7fb;
+
+  color:#6756dc;
+
+  background:#f3f1ff;
+
+}
+
+
+
+.btn-edit:disabled {
+
+  opacity:0.45;
+
+  cursor:not-allowed;
+
+}
+
+
+
+.btn-delete {
+
+  border:1px solid #ffd5dc;
+
+  color:#db485e;
+
+  background:#fff2f4;
+
+}
+
+
+
+/* 데이터 없음 */
+
+.no-data {
+
+  height:160px;
+
+  color:#9097a6;
+
+}
+
+
+
+/* =====================
+   모달
+===================== */
+
+
+.modal-overlay {
+
+  position:fixed;
+
+  z-index:3000;
+
+  inset:0;
+
+
+  display:flex;
+
+  justify-content:center;
+
+  align-items:center;
+
+
+  background:
+    rgba(25,29,42,0.52);
+
+
+  backdrop-filter:blur(4px);
+
+}
+
+
+
+.modal-content {
+
+  width:100%;
+
+  max-width:480px;
+
+
+  padding:22px;
+
+
+  border:1px solid #e3e6ed;
+
+  border-radius:18px;
+
+
+  background:white;
+
+}
+
+
+
+.modal-content h3 {
+
+  margin:0 0 20px;
+
+  font-size:20px;
+
+}
+
+
+
+.modal-desc {
+
+  margin:-10px 0 20px;
+
+  color:#9299a8;
+
+  font-size:11px;
+
+}
+
+
+
+/* 입력 */
+
+.form-group {
+
+  display:grid;
+
+  gap:8px;
+
+  margin-bottom:15px;
+
+}
+
+
+
+.form-group label {
+
+  color:#464c5a;
+
+  font-size:11px;
+
+  font-weight:750;
+
+}
+
+
+
+.form-group input,
+.form-group select,
+.issue-select {
+
+  width:100%;
+
+  height:43px;
+
+
+  padding:0 12px;
+
+
+  border:1px solid #dfe3ea;
+
+  border-radius:9px;
+
+
+  outline:none;
+
+}
+
+
+
+.form-group input:focus,
+.form-group select:focus {
+
+  border-color:#7461e7;
+
+
+  box-shadow:
+
+    0 0 0 3px rgba(116,97,231,0.1);
+
+}
+
+
+
+/* 모달 버튼 */
+
+.modal-actions {
+
+  display:flex;
+
+  justify-content:flex-end;
+
+  gap:8px;
+
+  margin-top:20px;
+
+}
+
+
+
+.btn-submit,
+.btn-cancel {
+
+  height:39px;
+
+  padding:0 16px;
+
+
+  border-radius:9px;
+
+  cursor:pointer;
+
+
+  font-size:10px;
+
+  font-weight:800;
+
+}
+
+
+
+.btn-submit {
+
+  border:1px solid #725ee7;
+
+  color:white;
+
+  background:#725ee7;
+
+}
+
+
+
+.btn-cancel {
+
+  border:1px solid #dfe3e9;
+
+  color:#646c7a;
+
+  background:white;
+
+}
+
+
+
+/* 반응형 */
+
+@media(max-width:700px){
+
+  .top-actions{
+
+    flex-direction:column;
+
   }
 
-  /* 🔍 드롭다운 헤더 필터 스타일 */
-  .dropdown-header {
-    position: relative;
-    cursor: pointer;
-    user-select: none;
-  }
-  .dropdown-header:hover {
-    background-color: #f1f5f9;
-  }
-  .header-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-  }
-  .filter-arrow {
-    font-size: 10px;
-    color: #64748b;
-  }
-  
-  /* 팝업 드롭다운 메뉴 스타일 */
-  .filter-dropdown-menu {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    z-index: 100;
-    width: 130px;
-    padding: 4px 0;
-    text-align: left;
-  }
-  .filter-dropdown-menu div {
-    padding: 8px 12px;
-    font-size: 13px;
-    color: #334155;
-    cursor: pointer;
-  }
-  .filter-dropdown-menu div:hover {
-    background-color: #f8fafc;
-    color: #4f46e5;
-  }
-  .filter-dropdown-menu div.selected {
-    font-weight: bold;
-    color: #4f46e5;
-    background-color: #e0e7ff;
+
+  .coupon-table{
+
+    min-width:700px;
+
   }
 
-  .no-data {
-    color: #94a3b8;
-    padding: 30px !important;
-  }
-  .badge {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: bold;
-  }
-  .badge.amount { background-color: #e0f2fe; color: #0369a1; }
-  .badge.percent { background-color: #fef3c7; color: #b45309; }
-  
-  .btn-edit {
-    background-color: #e2e8f0;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-right: 6px;
-  }
-  .btn-edit:disabled {
-    background-color: #f1f5f9;
-    color: #cbd5e1;
-    cursor: not-allowed;
-  }
-  .btn-delete {
-    background-color: #fee2e2;
-    color: #991b1b;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  /* 모달 스타일 */
-  .modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  .modal-content {
-    background: white;
-    padding: 30px;
-    border-radius: 12px;
-    width: 400px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  }
-  .form-group {
-    margin-bottom: 15px;
-    display: flex;
-    flex-direction: column;
-  }
-  .form-group label {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: #475569;
-  }
-  .form-group input, .form-group select {
-    padding: 10px;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 14px;
-  }
-  .modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-  }
-  .btn-submit {
-    background-color: #10b981;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  .btn-cancel {
-    background-color: #cbd5e1;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  </style>
+}
+
+</style>
