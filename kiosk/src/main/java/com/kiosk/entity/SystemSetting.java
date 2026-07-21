@@ -31,10 +31,6 @@ public class SystemSetting {
     private Integer id = 1;
 
     // --- 일반 설정 ---
-    @Column(name = "screensaver_time")
-    @Builder.Default
-    private Integer screensaverTime = 60; // 초 단위
-
     @Column(name = "use_voice_guide")
     @Builder.Default
     private Boolean useVoiceGuide = true;

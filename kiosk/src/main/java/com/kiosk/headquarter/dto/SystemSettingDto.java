@@ -15,7 +15,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class SystemSettingDto {
     private Integer id;
-    private Integer screensaverTime;
     private Boolean useVoiceGuide;
     private String receiptPrintMode;
     private Integer tumblerDiscountAmount;
@@ -25,7 +24,6 @@ public class SystemSettingDto {
     public static SystemSettingDto fromEntity(SystemSetting setting) {
         return SystemSettingDto.builder()
                 .id(setting.getId())
-                .screensaverTime(setting.getScreensaverTime())
                 .useVoiceGuide(setting.getUseVoiceGuide())
                 .receiptPrintMode(setting.getReceiptPrintMode())
                 .tumblerDiscountAmount(setting.getTumblerDiscountAmount())

@@ -27,7 +27,6 @@ public class HeadSettingsService {
         SystemSetting setting = systemSettingRepository.findById(1)
                 .orElseGet(() -> SystemSetting.builder().build());
 
-        if (dto.getScreensaverTime() != null) setting.setScreensaverTime(dto.getScreensaverTime());
         if (dto.getUseVoiceGuide() != null) setting.setUseVoiceGuide(dto.getUseVoiceGuide());
         if (dto.getReceiptPrintMode() != null) setting.setReceiptPrintMode(dto.getReceiptPrintMode());
         if (dto.getTumblerDiscountAmount() != null) setting.setTumblerDiscountAmount(dto.getTumblerDiscountAmount());

@@ -1,16 +1,11 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: '/proxy-api/head/settings',
-  timeout: 5000
-});
+import axios from '../axios';
 
 export const getHeadSettings = async () => {
-  const response = await api.get('');
+  const response = await axios.get('/head/settings');
   return response.data;
 };
 
 export const updateHeadSettings = async (settingsDto) => {
-  const response = await api.put('', settingsDto);
+  const response = await axios.put('/head/settings', settingsDto);
   return response.data;
 };
