@@ -1,5 +1,7 @@
 package com.kiosk.customer.order.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +18,9 @@ import com.kiosk.customer.order.repository.OrderItemMapper;
 import com.kiosk.customer.order.repository.OrderItemOptionMapper;
 import com.kiosk.customer.order.repository.OrderMapper;
 import com.kiosk.customer.order.repository.OrderRepository;
+import com.kiosk.customer.order.repository.UserCouponRepository;
 import com.kiosk.customer.order.repository.UserRepository;
+import com.kiosk.entity.Coupon;
 import java.util.Optional;
 import com.kiosk.entity.IcecreamFlavor;
 import com.kiosk.entity.Kiosk;
@@ -28,6 +32,7 @@ import com.kiosk.entity.Product;
 import com.kiosk.entity.ProductOption;
 import com.kiosk.entity.Store;
 import com.kiosk.entity.User;
+import com.kiosk.entity.UserCoupon;
 import com.kiosk.entity.enums.OrderStatus;
 import com.kiosk.entity.enums.OrderType;
 
@@ -50,6 +55,9 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    
+    private final UserCouponRepository userCouponRepository;
+    
     
     // 주문 상세 조회
     public OrderResponse getOrderDetails(int orderId) {
@@ -79,7 +87,7 @@ public class OrderService {
 
         // 전화번호가 넘어왔다면 유저 맵핑 (포인트 로직은 processPayment로 이관)
         if (request.getPhoneNumber() != null && !request.getPhoneNumber().trim().isEmpty()) {
-            Optional<User> optionalUser = userRepository.findByPhone(request.getPhoneNumber());
+        	Optional<User> optionalUser = userRepository.findByPhoneIgnoringHyphen(request.getPhoneNumber());
             
             if (optionalUser.isPresent()) {
                 user = optionalUser.get();
@@ -162,59 +170,101 @@ public class OrderService {
      * 결제 처리 및 재고 차감 (통합 로직)
      */
     @Transactional
-    public void processPayment(int orderId, String paymentMethod, int pointUsed, HttpSession session) {
-        // 1. 주문 조회
-        OrderResponse orderRes = orderMapper.selectOrderWithDetails(orderId);
-        if (orderRes == null) throw new RuntimeException("주문을 찾을 수 없습니다.");
+    public void processPayment(int orderId, String paymentMethod, int userCouponId, int pointUsed, HttpSession session) {
         
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("주문 엔티티를 찾을 수 없습니다."));
+        // 1. 주문 조회 (엔티티 기반)
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("주문 엔티티를 찾을 수 없습니다."));
 
-        // 2. 재고 차감 로직
-        for (OrderItemDTO item : orderRes.getOrderItems()) {
-            int updatedRows = orderMapper.decreaseProductStock(item.getProductId(), item.getQuantity());
-            if (updatedRows == 0) {
-                throw new RuntimeException("상품 [" + item.getProductName() + "] 재고 부족");
-                // System.out.println("Warning: 상품 [" + item.getProductName() + "] 재고가 부족하거나 인벤토리에 없습니다. (결제는 진행됩니다)");
-            }
+        int baseAmount = order.getTotalPrice();
+        int finalAmount = baseAmount;
+        int couponDiscount = 0;
+
+     // 2. 쿠폰 계산 및 적용 부분에 로그 추가
+        System.out.println(">>> 전달받은 userCouponId: " + userCouponId);
+
+        if (userCouponId > 0) {
+            System.out.println(">>> 쿠폰 사용 로직 진입 성공!");
+            UserCoupon uc = userCouponRepository.findById(userCouponId)
+                    .orElseThrow(() -> new RuntimeException("쿠폰을 찾을 수 없습니다."));
+            
+            couponDiscount = calculateDiscount(finalAmount, uc.getCoupon());
+            System.out.println("쿠폰 할인액: " + couponDiscount);
+            
+            finalAmount -= couponDiscount;
+            uc.useCoupon(); 
+            userCouponRepository.save(uc);
+        } else {
+            System.out.println(">>> userCouponId가 0이거나 전달되지 않아 쿠폰 로직을 타지 않습니다.");
         }
 
-        // 3. 결제 내역 세팅
-        Payment payment = new Payment();
-        payment.setOrderId(orderId);
-        payment.setPaymentMethod(paymentMethod); // 그대로 적용
-        int baseAmount = orderRes.getTotalPrice();
-        int couponDiscount = 0;
-        int finalAmount = baseAmount - couponDiscount - pointUsed;
-
-        payment.setBaseAmount(baseAmount);
-        payment.setCouponDiscount(couponDiscount);
-        payment.setPointUsed(pointUsed);
-        payment.setFinalAmount(finalAmount);
-        payment.setPaymentStatus("PAID"); // 명시적으로 지정
-        payment.setPaymentDate(java.time.LocalDateTime.now());
-
-        orderMapper.insertPayment(payment);
-        
-        // 4. 유저 포인트 차감 및 5% 적립
-        if (order.getUser() != null) {
-            User user = order.getUser();
+        // 3. 포인트 사용 적용 및 5% 적립 (dev1 + feature 혼합)
+        User user = order.getUser(); 
+        if (user != null) {
+            // 3-1. 포인트 사용
             if (pointUsed > 0) {
-                // 사용한 포인트 차감
-                user.addPoint(-pointUsed);
+                // 결제 금액을 초과해서 포인트를 사용할 수 없도록 방어
+                pointUsed = Math.min(pointUsed, finalAmount);
+                finalAmount -= pointUsed;
+                
+                // 포인트 차감 (참고: User 엔티티에 deductPoints가 있다면 그걸 쓰셔도 무방합니다)
+                user.addPoint(-pointUsed); 
             }
-            // 최종 결제 금액의 5% 적립
-            int earnedPoints = (int)(finalAmount * 0.05);
-            if (earnedPoints > 0) {
-                user.addPoint(earnedPoints);
+
+            // 3-2. 포인트 적립 (최종 결제 금액이 0보다 클 때만)
+            if (finalAmount > 0) {
+                int earnedPoints = (int)(finalAmount * 0.05);
+                if (earnedPoints > 0) {
+                    user.addPoint(earnedPoints);
+                }
             }
             userRepository.save(user);
         }
 
-        // 5. 장바구니 비우기 (결제와 재고 차감이 모두 성공한 직후에만 실행)
+        // 4. 재고 차감
+        for (OrderItem item : order.getOrderItems()) {
+            int updatedRows = orderMapper.decreaseProductStock(item.getProduct().getId(), item.getQuantity());
+            if (updatedRows == 0) {
+                throw new RuntimeException("상품 [" + item.getProduct().getProductName() + "] 재고 부족");
+            }
+        }
+
+        // 5. 결제 정보 저장 (Payments 테이블에 INSERT)
+        Payment payment = new Payment();
+        payment.setOrderId(orderId);
+        payment.setPaymentMethod(paymentMethod);
+        payment.setBaseAmount(baseAmount);
+        payment.setCouponDiscount(couponDiscount);
+        payment.setPointUsed(pointUsed);
+        payment.setFinalAmount(finalAmount);
+        payment.setPaymentStatus("PAID");
+        payment.setPaymentDate(LocalDateTime.now());
+        orderMapper.insertPayment(payment);
+        
+        // 6. 주문 상태 업데이트 (ORDERS 테이블 상태 변경)
+        orderMapper.updateOrderStatus(orderId, "COMPLETED");
+
+        // 7. 장바구니 비우기 (결제 완료 후 세션 초기화)
         if (session != null) {
             basketService.clearBasket(session);
         }
     }
+    
+    // 결제 방법
+    private int calculateDiscount(int originalPrice, Coupon coupon) {
+        String discountType = coupon.getDiscountType(); 
+        int discountValue = coupon.getDiscountValue();  
+
+        if ("PERCENT".equals(discountType)) {
+            return (int) (originalPrice * (discountValue / 100.0));
+        } else if ("AMOUNT".equals(discountType)) { // AMOUNT만 처리
+            return discountValue;
+        }
+        
+        // 만약 정의되지 않은 타입이 들어올 경우를 대비해 0 반환
+        return 0;
+    }
+    
     
     @Transactional
     public void cancelOrder(int orderId) {

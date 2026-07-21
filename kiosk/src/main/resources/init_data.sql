@@ -161,6 +161,11 @@ INSERT INTO kiosks (store_id, kiosk_number, device_serial, kiosk_status, created
 (1, 1, 'SN-A1B2C3D4', 'ONLINE', NOW()),
 (1, 2, 'SN-E5F6G7H8', 'ONLINE', NOW());
 
+-- 12-1. KIOSK_BANNER (키오스크 배너 맵핑)
+INSERT INTO kiosk_banner (kiosk_id, banner_id) VALUES
+(1, 1),
+(2, 2);
+
 -- 13. INVENTORY_ITEMS (본사 등록 물품/소모품)
 INSERT INTO inventory_items (product_id, unit, unit_price) VALUES
 ((SELECT product_id FROM products WHERE product_name = '싱글레귤러'), 'EA', 1750),

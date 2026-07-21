@@ -2,17 +2,17 @@
   <div class="order-complete-container">
     <div class="complete-card">
       <div class="icon-success">✔️</div>
-      <h2>주문이 완료되었습니다!</h2>
-      <p class="desc">아래의 주문번호가 호출되면 상품을 받아가세요.</p>
+      <h2>{{ $t('주문이 완료되었습니다!') }}</h2>
+      <p class="desc">{{ $t('아래의 주문번호가 호출되면 상품을 받아가세요.') }}</p>
       
       <div class="order-number-box">
-        <span class="label">주문 번호</span>
+        <span class="label">{{ $t('주문 번호') }}</span>
         <span class="number">{{ orderNumber }}</span>
       </div>
       
-      <p class="timer-desc">잠시 후 처음 화면으로 돌아갑니다 ({{ countdown }}초)</p>
+      <p class="timer-desc">{{ $t('잠시 후 처음 화면으로 돌아갑니다 ({countdown}초)', { countdown: countdown }) }}</p>
       
-      <button class="btn-home" @click="goHome">처음으로 돌아가기</button>
+      <button class="btn-home" @click="goHome">{{ $t('처음으로 돌아가기') }}</button>
     </div>
   </div>
 </template>
@@ -20,19 +20,21 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import axios from '@/api/axios';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n({ useScope: 'global' });
 
-const orderNumber = ref('조회중...');
+const orderNumber = ref(t('조회중...'));
 const countdown = ref(7);
 let timerInterval = null;
 
 const fetchOrderNumber = async () => {
   const orderId = route.query.orderId;
   if (!orderId) {
-    orderNumber.value = '오류';
+    orderNumber.value = t('오류');
     return;
   }
   
