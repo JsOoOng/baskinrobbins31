@@ -16,6 +16,7 @@ import com.kiosk.headquarter.dto.statistics.HeadStatisticsPeriod;
 import com.kiosk.headquarter.dto.statistics.HeadStatisticsSummaryResponse;
 import com.kiosk.headquarter.dto.statistics.HeadStoreSalesResponse;
 import com.kiosk.headquarter.service.HeadStatisticsService;
+import com.kiosk.headquarter.dto.statistics.HeadFlavorSalesResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -163,6 +164,43 @@ public class HeadStatisticsController {
         return ResponseEntity.ok(
                 headStatisticsService
                         .getProductSalesRanking(
+                                startDate,
+                                endDate,
+                                storeId,
+                                limit
+                        )
+        );
+    }
+    /*
+     * 맛별 판매 순위
+     */
+    @GetMapping("/flavors")
+    public ResponseEntity<List<HeadFlavorSalesResponse>>
+            getFlavorSalesRanking(
+                    @RequestParam
+                    @DateTimeFormat(
+                            iso = DateTimeFormat.ISO.DATE
+                    )
+                    LocalDate startDate,
+
+                    @RequestParam
+                    @DateTimeFormat(
+                            iso = DateTimeFormat.ISO.DATE
+                    )
+                    LocalDate endDate,
+
+                    @RequestParam(required = false)
+                    Integer storeId,
+
+                    @RequestParam(
+                            defaultValue = "10"
+                    )
+                    Integer limit
+            ) {
+
+        return ResponseEntity.ok(
+                headStatisticsService
+                        .getFlavorSalesRanking(
                                 startDate,
                                 endDate,
                                 storeId,

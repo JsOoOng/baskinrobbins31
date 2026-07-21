@@ -19,6 +19,8 @@ import com.kiosk.headquarter.repository.HeadStatisticsMapper.StoreSalesProjectio
 import com.kiosk.headquarter.repository.HeadStatisticsMapper.SummaryProjection;
 import com.kiosk.headquarter.repository.HeadStatisticsMapper.TrendProjection;
 import com.kiosk.headquarter.repository.HeadStoreMapper;
+import com.kiosk.headquarter.dto.statistics.HeadFlavorSalesResponse;
+import com.kiosk.headquarter.repository.HeadStatisticsMapper.FlavorSalesProjection;
 
 import lombok.RequiredArgsConstructor;
 
@@ -241,7 +243,7 @@ public class HeadStatisticsService {
                         startDate,
                         endDate
                 );
-
+        
         validateStore(storeId);
 
         int normalizedLimit =
@@ -272,6 +274,77 @@ public class HeadStatisticsService {
                                         .productName(
                                                 projection
                                                         .getProductName()
+                                        )
+                                        .salesAmount(
+                                                toLong(
+                                                        projection
+                                                                .getSalesAmount()
+                                                )
+                                        )
+                                        .salesQuantity(
+                                                toLong(
+                                                        projection
+                                                                .getSalesQuantity()
+                                                )
+                                        )
+                                        .orderCount(
+                                                toLong(
+                                                        projection
+                                                                .getOrderCount()
+                                                )
+                                        )
+                                        .build()
+                )
+                .toList();
+    }
+    
+    /*
+     * 맛별 판매 순위
+     */
+    public List<HeadFlavorSalesResponse>
+            getFlavorSalesRanking(
+                    LocalDate startDate,
+                    LocalDate endDate,
+                    Integer storeId,
+                    Integer limit
+            ) {
+
+        DateRange range =
+                createDateRange(
+                        startDate,
+                        endDate
+                );
+
+        validateStore(storeId);
+
+        int normalizedLimit =
+                normalizeLimit(limit);
+
+        List<FlavorSalesProjection> projections =
+                headStatisticsMapper
+                        .findFlavorSalesRanking(
+                                range.startDateTime(),
+                                range.endDateTime(),
+                                storeId,
+                                PageRequest.of(
+                                        0,
+                                        normalizedLimit
+                                )
+                        );
+
+        return projections
+                .stream()
+                .map(
+                        projection ->
+                                HeadFlavorSalesResponse
+                                        .builder()
+                                        .flavorId(
+                                                projection
+                                                        .getFlavorId()
+                                        )
+                                        .flavorName(
+                                                projection
+                                                        .getFlavorName()
                                         )
                                         .salesAmount(
                                                 toLong(
