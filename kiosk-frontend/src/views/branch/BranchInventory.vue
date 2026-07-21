@@ -19,7 +19,7 @@
                 <th>상품명</th>
                 <th>재고</th>
                 <th>상태</th>
-                <th>변경</th>
+                
             </tr>
 
         </thead>
@@ -55,21 +55,7 @@
                 </td>
 
 
-                <td>
-
-                    <button
-                        @click="changeProductSoldOut(menu)"
-                    >
-
-                        {{
-                            menu.soldOut
-                            ? '판매 재개'
-                            : '품절 처리'
-                        }}
-
-                    </button>
-
-                </td>
+               
 
 
             </tr>
@@ -315,49 +301,6 @@ const loadFlavors = async()=>{
 
 
 
-// 상품 품절 변경
-const changeProductSoldOut = async(menu)=>{
-
-
-    try{
-
-
-        await api.patch(
-
-            `/branch/status/product/${menu.storeProductId}`,
-
-            {
-
-                soldOut:
-                !menu.soldOut
-
-            }
-
-        )
-
-
-        await loadMenus()
-
-
-
-    }catch(e){
-
-
-        console.error(e)
-
-
-        alert(
-            '상품 상태 변경 실패'
-        )
-
-
-    }
-
-
-}
-
-
-
 
 
 // 맛 품절 변경
@@ -402,41 +345,29 @@ const changeFlavorSoldOut = async(flavor)=>{
 
 }
 
-const loadProducts = async () => {
-
-    try {
-        
-
-        const response =
-            await api.get(
-                `/branch/status/product/${user.storeId}`
-            )
-
-        menus.value = response.data
-
-
-    } catch(e){
-
-        console.error(e)
-
-    }
-
-}
-
 
 
 onMounted(()=>{
+
+
+// 최초 조회
+loadMenus()
+
+loadFlavors()
+
+
+
+// 5초마다 자동 새로고침
+intervalId = setInterval(() => {
 
 
     loadMenus()
 
     loadFlavors()
 
-    intervalId = setInterval(() => {
 
-        loadProducts()
+}, 5000)
 
-    }, 5000)
 
 })
 
@@ -449,34 +380,30 @@ onUnmounted(() => {
 
 const changeContainer = async (flavor, amount) => {
 
+try {
 
-    try {
-
-
-        const response =
-            await api.patch(
-                `/branch/status/flavor/${flavor.storeFlavorId}/container`,
-                {
-                    amount: amount
-                }
-            )
+    await api.patch(
+        `/branch/status/flavor/${flavor.storeFlavorId}/container`,
+        {
+            amount: amount
+        }
+    )
 
 
-        // 화면 즉시 변경
-        flavor.container = response.data.container
+    // 변경 후 다시 조회
+    await loadFlavors()
 
 
+} catch(e){
 
-    } catch(e){
+    console.error(
+        '재고 변경 실패',
+        e
+    )
 
-        console.error(
-            '재고 변경 실패',
-            e
-        )
+    alert('재고 변경 실패')
 
-        alert('재고 변경 실패')
-
-    }
+}
 
 }
 
