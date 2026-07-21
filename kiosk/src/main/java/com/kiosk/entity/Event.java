@@ -58,9 +58,14 @@ public class Event {
     @Column(name = "discount_value")
     private Integer discountValue;
 
+<<<<<<< Updated upstream
     @Column(name = "discount_type", length = 20)
     @Builder.Default
     private String discountType = "AMOUNT";
+=======
+    @Column(name = "discount_type", length = 10)
+    private String discountType;
+>>>>>>> Stashed changes
 
     @Column(name = "is_visible", nullable = false)
     @Builder.Default
