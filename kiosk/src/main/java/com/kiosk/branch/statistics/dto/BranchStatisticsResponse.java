@@ -156,6 +156,7 @@ public class BranchStatisticsResponse {
     // 결제 방식별 지출
     private List<ExpensePaymentDto> expensePayment;
 
+    private List<ExpenseDetailDto> expenseDetail;
 
     /*
      * ==========================

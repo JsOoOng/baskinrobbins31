@@ -39,6 +39,10 @@ router.push(
 
 }
 
+const goExpenses = () => {
+  router.push('/branch/expense')
+}
+
 
 const logout = () => {
   localStorage.removeItem('token')
@@ -98,6 +102,10 @@ const logout = () => {
 
         <button @click="goWeekSchedule">
             한 주 스케줄 확인
+        </button>
+
+        <button @click="goExpenses">
+            지출 입력
         </button>
 
 
