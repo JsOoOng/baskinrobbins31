@@ -2,7 +2,16 @@
   <div class="head-event-container">
     <div class="header-section">
       <h2>🎉 이벤트 관리</h2>
-      <button class="btn-primary" @click="openModal()">+ 이벤트 등록</button>
+      <div class="header-actions">
+        <select v-model="statusFilter" class="status-filter">
+          <option value="ALL">전체 상태</option>
+          <option value="SCHEDULED">예정 (SCHEDULED)</option>
+          <option value="ACTIVE">진행중 (ACTIVE)</option>
+          <option value="ENDED">종료 (ENDED)</option>
+          <option value="INACTIVE">비활성 (INACTIVE)</option>
+        </select>
+        <button class="btn-primary" @click="openModal()">+ 이벤트 등록</button>
+      </div>
     </div>
 
     <div v-if="eventStore.error" class="error-msg">
@@ -28,10 +37,10 @@
           <tr v-if="eventStore.isLoading">
             <td colspan="9" class="text-center">로딩 중...</td>
           </tr>
-          <tr v-else-if="eventStore.events.length === 0">
-            <td colspan="9" class="text-center">등록된 이벤트가 없습니다.</td>
+          <tr v-else-if="filteredEvents.length === 0">
+            <td colspan="9" class="text-center">조회된 이벤트가 없습니다.</td>
           </tr>
-          <tr v-else v-for="event in eventStore.events" :key="event.eventId">
+          <tr v-else v-for="event in filteredEvents" :key="event.eventId">
             <td>{{ event.eventId }}</td>
             <td class="event-name">{{ event.eventName }}</td>
             <td>
@@ -123,7 +132,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useHeadEventStore } from '@/stores/head/headEventStore';
 
 const eventStore = useHeadEventStore();
@@ -131,6 +140,14 @@ const eventStore = useHeadEventStore();
 const isModalOpen = ref(false);
 const isEditMode = ref(false);
 const currentEventId = ref(null);
+const statusFilter = ref('ALL');
+
+const filteredEvents = computed(() => {
+  if (statusFilter.value === 'ALL') {
+    return eventStore.events;
+  }
+  return eventStore.events.filter(event => event.eventStatus === statusFilter.value);
+});
 
 const defaultForm = {
   eventName: '',
@@ -245,6 +262,21 @@ const toggleVisibility = async (event) => {
 .header-section h2 {
   margin: 0;
   color: #333;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.status-filter {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: white;
+  cursor: pointer;
+  font-size: 14px;
 }
 
 .btn-primary {
