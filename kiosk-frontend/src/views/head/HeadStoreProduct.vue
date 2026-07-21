@@ -234,9 +234,11 @@ const loadInitialData = async () => {
         ? storeData.map(normalizeStore)
         : []
 
-    headquartersProducts.value =
-      Array.isArray(productData)
-        ? productData.map(normalizeProduct)
+    stores.value =
+      Array.isArray(storeData)
+        ? storeData
+            .map(normalizeStore)
+            .sort((a, b) => a.storeId - b.storeId)
         : []
 
     if (
@@ -613,12 +615,12 @@ onMounted(async () => {
       </div>
 
       <select v-model="selectedStoreId">
-        <option value="">
-          지점을 선택해주세요
+        <option disabled value="">
+          지점을 선택해 주세요
         </option>
 
         <option
-          v-for="store in stores"
+          v-for="store in [...stores].sort((a, b) => a.storeId - b.storeId)"
           :key="store.storeId"
           :value="store.storeId"
         >

@@ -115,9 +115,6 @@ public class HeadStoreProductService {
                 StoreProduct.builder()
                         .store(store)
                         .product(product)
-                        .storeProductPrice(
-                                storeProductPrice
-                        )
                         .isSoldOut(
                                 Boolean.TRUE.equals(
                                         requestDTO.getIsSoldOut()
@@ -218,29 +215,15 @@ public class HeadStoreProductService {
                         storeProductId
                 );
 
-        /*
-         * 요청하지 않은 값은 기존 값 유지
-         */
-        Integer storeProductPrice =
-                requestDTO.getStoreProductPrice() != null
-                        ? requestDTO.getStoreProductPrice()
-                        : storeProduct.getStoreProductPrice();
-
         Boolean isSoldOut =
                 requestDTO.getIsSoldOut() != null
                         ? requestDTO.getIsSoldOut()
                         : storeProduct.getIsSoldOut();
 
-        validatePrice(storeProductPrice);
 
-        storeProduct.updateStoreProduct(
-                storeProductPrice,
-                isSoldOut
-        );
+        storeProduct.changeSoldOut(isSoldOut);
 
-        /*
-         * JPA 변경 감지로 UPDATE 실행
-         */
+
         return "지점 판매 메뉴 수정 성공";
     }
 
@@ -335,10 +318,6 @@ public class HeadStoreProductService {
                                 .getProduct()
                                 .getBasePrice()
                 )
-                .storeProductPrice(
-                        storeProduct
-                                .getStoreProductPrice()
-                )
                 .isSoldOut(
                         storeProduct.getIsSoldOut()
                 )
@@ -377,10 +356,6 @@ public class HeadStoreProductService {
                 )
                 .basePrice(
                         product.getBasePrice()
-                )
-                .storeProductPrice(
-                        storeProduct
-                                .getStoreProductPrice()
                 )
                 .discountRate(
                         product.getDiscountRate()

@@ -47,7 +47,6 @@ const menuGroups = computed(() => {
           label: '대시보드',
           icon: '▦',
           routeName: 'head-dashboard',
-          phase: 'P1',
           implemented: true
         }
       ]
@@ -60,21 +59,18 @@ const menuGroups = computed(() => {
           label: '본사 메뉴 관리',
           icon: '▣',
           routeName: 'head-products',
-          phase: 'P0',
           implemented: true
         },
         {
           label: '카테고리 관리',
           icon: '◫',
           routeName: 'head-categories',
-          phase: 'P0',
           implemented: true
         },
         {
           label: '상품 옵션 관리',
           icon: '◇',
           routeName: 'head-product-options',
-          phase: 'P0',
           implemented: true
         }
       ]
@@ -84,24 +80,15 @@ const menuGroups = computed(() => {
       title: '프로모션 관리',
       items: [
         {
-          label: '메뉴 할인 관리',
-          icon: '%',
-          routeName: 'head-discounts',
-          phase: 'P1',
-          implemented: true
-        },
-        {
           label: '쿠폰 관리',
           icon: '◇',
           routeName: 'head-coupons',
-          phase: 'P2',
           implemented: true
         },
         {
           label: '이벤트 관리',
           icon: '★',
           routeName: 'head-events',
-          phase: 'P2',
           implemented: true,
           description:
             '이벤트 기간과 대상 상품·카테고리를 관리하는 기능입니다.'
@@ -110,7 +97,6 @@ const menuGroups = computed(() => {
           label: '배너 관리',
           icon: '▤',
           routeName: 'head-banners',
-          phase: 'P1',
           implemented: true
         }
       ]
@@ -123,20 +109,17 @@ const menuGroups = computed(() => {
           label: '지점 관리',
           icon: '⌂',
           routeName: 'head-stores',
-          phase: 'P0',
           implemented: true
         },
         {
           label: '지점 판매 메뉴',
           icon: '▧',
           routeName: 'head-store-products',
-          phase: 'P0',
           implemented: true
         },
         {
           label: '재고 신청 관리',
           icon: '□',
-          phase: 'P2',
           implemented: false,
           description:
             '지점의 재고 신청 내역을 승인하고 처리하는 기능입니다.'
@@ -144,7 +127,6 @@ const menuGroups = computed(() => {
         {
           label: '재고 현황',
           icon: '▥',
-          phase: 'P2',
           implemented: false,
           description:
             '본사와 지점별 재고 현황을 조회하는 기능입니다.'
@@ -152,7 +134,6 @@ const menuGroups = computed(() => {
         {
           label: '배송 관리',
           icon: '▱',
-          phase: 'P2',
           implemented: false,
           description:
             '출고, 배송 중, 배송 완료 상태를 관리하는 기능입니다.'
@@ -167,7 +148,6 @@ const menuGroups = computed(() => {
           label: '통계 및 리포트',
           icon: '↗',
           routeName: 'head-statistics',
-          phase: 'P1',
           implemented: true
         }
       ]
@@ -182,7 +162,6 @@ const menuGroups = computed(() => {
                 label: '보안 및 권한',
                 icon: '◆',
                 routeName: 'head-security',
-                phase: 'P1',
                 implemented: true,
                 roles: [
                   'SUPER_ADMIN'
@@ -195,7 +174,6 @@ const menuGroups = computed(() => {
           label: '설정',
           icon: '⚙',
           routeName: 'head-settings',
-          phase: 'P1',
           implemented: true
         }
       ]
