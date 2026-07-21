@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kiosk.headquarter.repository.HeadCouponMapper">
+
+	<!-- 1. 전체 쿠폰 조회 (is_issued_all 매핑 추가) -->
+    <select id="findAllCoupons" resultType="com.kiosk.headquarter.dto.coupon.CouponRequestDto">
+	    SELECT 
+	        coupon_id AS couponId,
+	        coupon_name AS couponName,
+	        discount_value AS discountValue,
+	        discount_type AS discountType,
+	        duration_days AS durationDays,
+	        is_issued_all AS isIssuedAll,
+	        created_at AS createdAt
+	    FROM coupon
+	    ORDER BY created_at DESC
+	</select>
+	    
+   <!-- 2. 쿠폰 등록 -->
+	<insert id="insertCoupon" parameterType="com.kiosk.headquarter.dto.coupon.CouponRequestDto">
+	    INSERT INTO coupon (coupon_id, coupon_name, discount_type, discount_value, duration_days, is_issued_all)
+	    VALUES (#{couponId}, #{couponName}, #{discountType}, #{discountValue}, #{durationDays}, 0)
+	</insert>
+	
+	<!-- 3. 쿠폰 수정 -->
+	<update id="updateCoupon" parameterType="com.kiosk.headquarter.dto.coupon.CouponRequestDto">
+	    UPDATE coupon 
+	    SET 
+	        coupon_name = #{couponName},
+	        discount_type = #{discountType},
+	        discount_value = #{discountValue},
+	        duration_days = #{durationDays}
+	    WHERE coupon_id = #{couponId}
+	</update>
+
+	<!-- 쿠폰 삭제 전 user_coupon 테이블의 연관 데이터 먼저 삭제 -->
+	<delete id="deleteUserCouponsByCouponId" parameterType="string">
+	    DELETE FROM user_coupon WHERE coupon_id = #{couponId}
+	</delete>
+	
+    <!-- 4. 삭제 -->
+    <delete id="deleteCoupon" parameterType="string">
+        DELETE FROM coupon 
+        WHERE coupon_id = #{couponId}
+    </delete>
+
+   <!-- 5. 모든 유저에게 해당 쿠폰 일괄 발급 -->
+		<insert id="insertCouponToAllUsers" parameterType="string">
+		    INSERT INTO user_coupon (user_id, coupon_id, is_used, expiry_date, issued_date)
+		    SELECT 
+		        u.user_id, 
+		        #{couponId} AS coupon_id, 
+		        false AS is_used, 
+		        DATE_ADD(CURDATE(), INTERVAL (SELECT duration_days FROM coupon WHERE coupon_id = #{couponId}) DAY),
+		        CURDATE() AS issued_date  <!-- 💡 이 부분을 추가해주세요! -->
+		    FROM users u
+		    CROSS JOIN coupon c
+		    WHERE c.coupon_id = #{couponId}
+		</insert>
+    <!-- 6. 쿠폰 뿌리기 완료 후 상태를 'O'(true)로 업데이트 -->
+    <update id="updateCouponIssuedStatus" parameterType="string">
+        UPDATE coupon 
+        SET is_issued_all = TRUE 
+        WHERE coupon_id = #{couponId}
+    </update>
+
+</mapper>

@@ -69,4 +69,5 @@ public class HeadFlavorController {
 
         return headFlavorService.deleteFlavor(flavorId);
     }
+
 }
