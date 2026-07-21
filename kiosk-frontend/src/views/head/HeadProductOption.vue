@@ -61,27 +61,43 @@ const selectedProduct = computed(() => {
 })
 
 const filteredOptions = computed(() => {
-  const keyword =
-    searchKeyword.value
-      .trim()
-      .toLowerCase()
 
-  if (!keyword) {
-    return options.value
-  }
+const keyword =
+  searchKeyword.value
+    .trim()
+    .toLowerCase()
 
-  return options.value.filter((option) => {
+
+let result = options.value
+
+
+if (keyword) {
+
+  result = options.value.filter((option) => {
+
     return [
       option.optionType,
       option.optionName,
       option.extraPrice,
       option.maxFlavorCount
+
     ].some((value) =>
       String(value ?? '')
         .toLowerCase()
         .includes(keyword)
     )
+
   })
+
+}
+
+
+return [...result].sort(
+  (a, b) =>
+    Number(a.optionId) -
+    Number(b.optionId)
+)
+
 })
 
 const normalizeProduct = (product = {}) => {

@@ -273,7 +273,11 @@ const loadStores = async () => {
     }
 
     stores.value =
-      storeList.map(normalizeStore)
+  storeList
+    .map(normalizeStore)
+    .sort((a, b) =>
+      a.storeId - b.storeId
+    )
 
   } catch (error) {
     showMessage(
