@@ -191,6 +191,11 @@ public class OrderService {
             couponDiscount = calculateDiscount(finalAmount, uc.getCoupon());
             System.out.println("쿠폰 할인액: " + couponDiscount);
             
+            if (finalAmount - couponDiscount < 0) {
+                System.out.println(">>> [예외 발생] 쿠폰 할인 금액이 결제 총액을 초과했습니다.");
+                throw new IllegalArgumentException("상품 금액보다 할인 쿠폰 금액이 커서 사용할 수 없습니다.");
+            }
+            
             finalAmount -= couponDiscount;
             uc.useCoupon(); 
             userCouponRepository.save(uc);

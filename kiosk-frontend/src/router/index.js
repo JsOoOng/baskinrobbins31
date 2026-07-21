@@ -379,7 +379,13 @@ const router = createRouter({
         {
           path: 'coupons',
           name: 'head-coupons',
-          component: loadHeadTemporaryPage,
+          component: () => import('../views/head/HeadCoupon.vue'),
+          meta: { title: '쿠폰 관리', description: '쿠폰 발급과 사용 조건을 관리합니다.', phase: 'P2' }
+        },
+        {
+          path: 'insert-coupons',
+          name: 'head-insert-coupons',
+          component: () => import('../views/head/HeadCouponInsert.vue'),
           meta: { title: '쿠폰 관리', description: '쿠폰 발급과 사용 조건을 관리합니다.', phase: 'P2' }
         },
         {

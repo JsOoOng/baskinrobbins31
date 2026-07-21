@@ -25,31 +25,34 @@
         </div>
 
         <!-- 쿠폰 목록 섹션 -->
-        <div class="section-box">
-          <h3>{{ $t('사용 가능한 쿠폰') }}</h3>
-          <div v-if="coupons.length > 0" class="coupon-list">
-            <div 
-              v-for="coupon in coupons" 
-              :key="coupon.userCouponId" 
-              class="coupon-card"
-              :class="{ selected: selectedCoupon?.userCouponId === coupon.userCouponId }"
-              @click="selectCoupon(coupon)"
-            >
-              <div>
-                <div class="c-name">{{ coupon.couponName }}</div>
-                <div class="c-disc">
-                  {{ coupon.discountValue }}{{ coupon.discountType === 'PERCENT' ? '%' : '원' }} {{ $t('할인') }}
-                </div>
-              </div>
-              <div class="radio-icon">
-                {{ selectedCoupon?.userCouponId === coupon.userCouponId ? 'V' : '' }}
-              </div>
-            </div>
-          </div>
-          <div v-else class="empty-msg">
-            {{ $t('사용 가능한 쿠폰이 없습니다.') }}
-          </div>
+<div class="section-box">
+  <h3>{{ $t('사용 가능한 쿠폰') }}</h3>
+  <div v-if="coupons.length > 0" class="coupon-list">
+    <div 
+      v-for="coupon in coupons" 
+      v-key="coupon.userCouponId" 
+      class="coupon-card"
+      :class="{ selected: selectedCoupon?.userCouponId === coupon.userCouponId }"
+      @click="selectCoupon(coupon)"
+    >
+      <div class="coupon-info">
+        <div class="c-name">{{ coupon.couponName }}</div>
+        <div class="c-disc">
+          {{ coupon.discountValue }}{{ coupon.discountType === 'PERCENT' ? '%' : '원' }} {{ $t('할인') }}
         </div>
+        <div class="c-duration" v-if="coupon.expiryDate">
+          {{ $t('만료일') }}: {{ coupon.expiryDate.substring(0, 10) }} {{ $t('까지') }}
+        </div>
+      </div>
+      <div class="radio-icon">
+        {{ selectedCoupon?.userCouponId === coupon.userCouponId ? 'V' : '' }}
+      </div>
+    </div>
+  </div>
+  <div v-else class="empty-msg">
+    {{ $t('사용 가능한 쿠폰이 없습니다.') }}
+  </div>
+</div>
 
         <!-- 포인트 사용 섹션 -->
         <div class="section-box">
@@ -93,11 +96,6 @@
           <div class="col">
             <span class="sub-label">{{ $t('할인금액') }}</span>
             <span class="sub-val">{{ totalDiscount.toLocaleString() }}원</span>
-          </div>
-          <span class="operator">=</span>
-          <div class="col">
-            <span class="sub-label">{{ $t('적립예정') }}</span>
-            <span class="sub-val">{{ earnedPoints.toLocaleString() }}P</span>
           </div>
         </div>
       </div>
@@ -302,6 +300,12 @@ const selectCoupon = (coupon) => {
     selectedCoupon.value = null
     displayToast(t('쿠폰 적용이 해제되었습니다.'))
   } else {
+    const targetCoupon = coupon.coupon || coupon; 
+
+    if (targetCoupon.discountType === 'AMOUNT' && targetCoupon.discountValue > basketStore.totalPrice) {
+      displayToast(t('상품 금액보다 할인 쿠폰 금액이 커서 사용할 수 없습니다.'));
+      return; // 쿠폰 선택을 차단하고 함수 종료
+    }
     selectedCoupon.value = coupon
   }
 
