@@ -4,7 +4,6 @@ import { getHeadSettings, updateHeadSettings } from '@/api/head/headSettingsApi'
 export const useHeadSettingsStore = defineStore('headSettings', {
   state: () => ({
     settings: {
-      screensaverTime: 60,
       useVoiceGuide: true,
       receiptPrintMode: 'SELECT',
       tumblerDiscountAmount: 300,

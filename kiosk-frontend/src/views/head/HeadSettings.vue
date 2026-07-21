@@ -37,21 +37,6 @@
         <div v-show="activeTab === 'GENERAL'" class="tab-pane">
           <div class="setting-item">
             <div class="setting-info">
-              <h3>대기화면(스크린세이버) 시간</h3>
-              <p>조작이 없을 때 대기화면으로 전환되는 시간입니다.</p>
-            </div>
-            <div class="setting-control">
-              <select v-model="formData.screensaverTime">
-                <option :value="30">30초</option>
-                <option :value="60">60초 (1분)</option>
-                <option :value="120">120초 (2분)</option>
-                <option :value="300">300초 (5분)</option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="setting-item">
-            <div class="setting-info">
               <h3>음성 안내 사용</h3>
               <p>키오스크 터치 및 결제 단계에서 음성 안내를 송출합니다.</p>
             </div>
@@ -140,7 +125,6 @@ const settingsStore = useHeadSettingsStore();
 const activeTab = ref('GENERAL');
 
 const formData = ref({
-  screensaverTime: 60,
   useVoiceGuide: true,
   receiptPrintMode: 'SELECT',
   tumblerDiscountAmount: 300,
