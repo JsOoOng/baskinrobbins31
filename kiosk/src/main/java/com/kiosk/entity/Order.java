@@ -106,4 +106,12 @@ public class Order {
         }
         return sum; // ✅ 실제 계산된 값을 반환
     }
+    
+    @OneToMany(
+            mappedBy = "order",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
+    private List<OrderStatusHistory> orderStatusHistories = new ArrayList<>();
 }
