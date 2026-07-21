@@ -26,6 +26,7 @@ public class HeadStoreUpdateRequest {
     private String region;
 
     @NotBlank(message = "주소는 필수입니다.")
+    @Size(max = 255)
     private String address;
 
     @Size(max = 20)

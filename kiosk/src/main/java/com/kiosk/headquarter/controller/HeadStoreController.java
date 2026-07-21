@@ -3,6 +3,7 @@ package com.kiosk.headquarter.controller;
 import java.net.URI;
 import java.util.List;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,7 +18,6 @@ import com.kiosk.headquarter.dto.store.HeadStoreResponse;
 import com.kiosk.headquarter.dto.store.HeadStoreUpdateRequest;
 import com.kiosk.headquarter.service.HeadStoreService;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController

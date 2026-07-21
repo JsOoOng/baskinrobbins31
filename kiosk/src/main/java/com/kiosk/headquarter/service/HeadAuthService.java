@@ -203,18 +203,23 @@ public class HeadAuthService {
     /*
      * 본사 관리자 권한 검사
      */
-    private boolean isHeadRole(String role) {
+    private boolean isHeadRole(
+            String role
+    ) {
 
         if (role == null) {
             return false;
         }
 
         String normalizedRole =
-                role.trim().toUpperCase();
+                role.trim()
+                        .toUpperCase();
 
-        return "ADMIN".equals(normalizedRole)
-                || "HEAD_ADMIN".equals(normalizedRole)
-                || "SUPER_ADMIN".equals(normalizedRole);
+        return "ADMIN".equals(
+                normalizedRole
+        ) || "SUPER_ADMIN".equals(
+                normalizedRole
+        );
     }
 
     /*

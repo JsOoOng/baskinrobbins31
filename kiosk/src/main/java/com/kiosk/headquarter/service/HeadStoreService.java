@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.entity.Store;
+import com.kiosk.entity.enums.StoreStatus;
 import com.kiosk.headquarter.dto.store.HeadStoreCreateRequest;
 import com.kiosk.headquarter.dto.store.HeadStoreResponse;
 import com.kiosk.headquarter.dto.store.HeadStoreUpdateRequest;
@@ -18,7 +19,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class HeadStoreService {
 
-    private final HeadStoreMapper headStoreMapper;
+    private final HeadStoreMapper
+            headStoreMapper;
 
     /*
      * 전체 지점 목록 조회
@@ -52,6 +54,19 @@ public class HeadStoreService {
     public HeadStoreResponse createStore(
             HeadStoreCreateRequest request
     ) {
+
+        if (request == null) {
+            throw new IllegalArgumentException(
+                    "지점 등록 요청이 없습니다."
+            );
+        }
+
+        validateStoreRequest(
+                request.getStoreName(),
+                request.getRegion(),
+                request.getAddress(),
+                request.getStoreStatus()
+        );
 
         validateBusinessNumber(
                 null,
@@ -109,6 +124,19 @@ public class HeadStoreService {
             HeadStoreUpdateRequest request
     ) {
 
+        if (request == null) {
+            throw new IllegalArgumentException(
+                    "지점 수정 요청이 없습니다."
+            );
+        }
+
+        validateStoreRequest(
+                request.getStoreName(),
+                request.getRegion(),
+                request.getAddress(),
+                request.getStoreStatus()
+        );
+
         Store store =
                 findStore(storeId);
 
@@ -118,15 +146,18 @@ public class HeadStoreService {
         );
 
         store.updateStore(
-                request.getStoreName().trim(),
+                request.getStoreName()
+                        .trim(),
 
                 normalizeNullable(
                         request.getBusinessNumber()
                 ),
 
-                request.getRegion().trim(),
+                request.getRegion()
+                        .trim(),
 
-                request.getAddress().trim(),
+                request.getAddress()
+                        .trim(),
 
                 normalizeNullable(
                         request.getPhone()
@@ -140,6 +171,7 @@ public class HeadStoreService {
         );
 
         /*
+         * @Transactional 안에서 조회한 엔티티이므로
          * JPA 변경 감지로 UPDATE가 실행됩니다.
          */
         return HeadStoreResponse.from(store);
@@ -160,12 +192,55 @@ public class HeadStoreService {
 
         return headStoreMapper
                 .findById(storeId)
-                .orElseThrow(
-                        () ->
-                                new IllegalArgumentException(
-                                        "존재하지 않는 지점입니다."
-                                )
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "존재하지 않는 지점입니다."
+                        )
                 );
+    }
+
+    /*
+     * 필수 지점 정보 검증
+     */
+    private void validateStoreRequest(
+            String storeName,
+            String region,
+            String address,
+            StoreStatus storeStatus
+    ) {
+
+        if (
+                storeName == null ||
+                storeName.isBlank()
+        ) {
+            throw new IllegalArgumentException(
+                    "지점명을 입력해주세요."
+            );
+        }
+
+        if (
+                region == null ||
+                region.isBlank()
+        ) {
+            throw new IllegalArgumentException(
+                    "지역을 입력해주세요."
+            );
+        }
+
+        if (
+                address == null ||
+                address.isBlank()
+        ) {
+            throw new IllegalArgumentException(
+                    "주소를 입력해주세요."
+            );
+        }
+
+        if (storeStatus == null) {
+            throw new IllegalArgumentException(
+                    "지점 상태를 선택해주세요."
+            );
+        }
     }
 
     /*
@@ -189,11 +264,14 @@ public class HeadStoreService {
         }
 
         /*
-         * 수정 전과 동일한 번호라면 검사하지 않음
+         * 수정 전과 동일한 번호라면
+         * 중복 검사를 하지 않습니다.
          */
-        if (normalized.equals(
-                currentBusinessNumber
-        )) {
+        if (
+                normalized.equals(
+                        currentBusinessNumber
+                )
+        ) {
             return;
         }
 

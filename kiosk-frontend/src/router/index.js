@@ -8,6 +8,7 @@ import { useHeadAuthStore } from '../stores/head/headAuthStore'
 // ====================================================
 import HomeView from '@/views/customer/HomeView.vue'
 import MenuView from '@/views/customer/MenuView.vue'
+import HeadInventory from '@/views/head/HeadInventory.vue'
 
 // ====================================================
 // 본사 관리자 권한 및 유틸리티 설정
@@ -405,8 +406,14 @@ const router = createRouter({
         {
           path: 'inventory',
           name: 'head-inventory',
-          component: loadHeadTemporaryPage,
-          meta: { title: '재고 현황', description: '본사와 지점별 재고 수량을 확인합니다.', phase: 'P2' }
+          component: HeadInventory,
+          meta: {
+            title: '재고 현황',
+            description:
+              '전체 지점 재고와 자동 보충 설정을 관리합니다.',
+            phase: 'P2',
+            implemented: true
+          }
         },
         {
           path: 'deliveries',

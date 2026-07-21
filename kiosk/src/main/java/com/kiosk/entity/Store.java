@@ -57,6 +57,7 @@ public class Store {
 
     @Column(
             name = "address",
+            length = 255,
             nullable = false
     )
     private String address;

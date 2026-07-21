@@ -8,6 +8,7 @@ import com.kiosk.entity.enums.AutoRestockMode;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import com.kiosk.entity.enums.AutoRestockMode;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -349,5 +350,28 @@ public class StoreInventory {
                         autoRestockEnabled
                 );
         this.restockMode = restockMode;
+    }
+    
+    /*
+     * 자동 재고 보충 설정 수정
+     */
+    public void updateAutoRestockSetting(
+            Boolean autoRestockEnabled,
+            AutoRestockMode restockMode,
+            Integer minStock,
+            Integer targetStock
+    ) {
+
+        this.autoRestockEnabled =
+                autoRestockEnabled;
+
+        this.restockMode =
+                restockMode;
+
+        this.minStock =
+                minStock;
+
+        this.targetStock =
+                targetStock;
     }
 }

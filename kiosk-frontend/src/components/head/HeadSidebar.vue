@@ -127,7 +127,11 @@ const menuGroups = computed(() => {
         {
           label: '재고 현황',
           icon: '▥',
-          implemented: false,
+          to: {
+            name: 'head-inventory'
+          },
+          phase: 'P2',
+          implemented: true,
           description:
             '본사와 지점별 재고 현황을 조회하는 기능입니다.'
         },
