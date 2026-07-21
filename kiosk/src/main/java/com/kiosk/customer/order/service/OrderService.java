@@ -87,7 +87,7 @@ public class OrderService {
 
         // 전화번호가 넘어왔다면 유저 맵핑 (포인트 로직은 processPayment로 이관)
         if (request.getPhoneNumber() != null && !request.getPhoneNumber().trim().isEmpty()) {
-            Optional<User> optionalUser = userRepository.findByPhone(request.getPhoneNumber());
+        	Optional<User> optionalUser = userRepository.findByPhoneIgnoringHyphen(request.getPhoneNumber());
             
             if (optionalUser.isPresent()) {
                 user = optionalUser.get();
@@ -180,8 +180,11 @@ public class OrderService {
         int finalAmount = baseAmount;
         int couponDiscount = 0;
 
-        // 2. 쿠폰 계산 및 적용 (feature 브랜치 로직)
+     // 2. 쿠폰 계산 및 적용 부분에 로그 추가
+        System.out.println(">>> 전달받은 userCouponId: " + userCouponId);
+
         if (userCouponId > 0) {
+            System.out.println(">>> 쿠폰 사용 로직 진입 성공!");
             UserCoupon uc = userCouponRepository.findById(userCouponId)
                     .orElseThrow(() -> new RuntimeException("쿠폰을 찾을 수 없습니다."));
             
@@ -189,7 +192,10 @@ public class OrderService {
             System.out.println("쿠폰 할인액: " + couponDiscount);
             
             finalAmount -= couponDiscount;
-            uc.useCoupon(); // 쿠폰 사용 처리
+            uc.useCoupon(); 
+            userCouponRepository.save(uc);
+        } else {
+            System.out.println(">>> userCouponId가 0이거나 전달되지 않아 쿠폰 로직을 타지 않습니다.");
         }
 
         // 3. 포인트 사용 적용 및 5% 적립 (dev1 + feature 혼합)

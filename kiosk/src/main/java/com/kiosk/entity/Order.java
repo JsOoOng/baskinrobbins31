@@ -98,4 +98,12 @@ public class Order {
     )
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
+
+    public int getTotalPrice() {
+        int sum = 0;
+        for (OrderItem item : orderItems) {
+            sum += item.getUnitPrice() * item.getQuantity();
+        }
+        return sum; // ✅ 실제 계산된 값을 반환
+    }
 }
