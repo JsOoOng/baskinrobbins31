@@ -1,7 +1,7 @@
 <script setup>
 
 import { ref, computed } from "vue";
-
+import ChartDataLabels from "chartjs-plugin-datalabels";
 import {
     Line,
     Bar,
@@ -28,7 +28,6 @@ import {
 } from "chart.js";
 
 
-
 ChartJS.register(
 
     Title,
@@ -43,7 +42,9 @@ ChartJS.register(
 
     BarElement,
 
-    ArcElement
+    ArcElement,
+
+    ChartDataLabels
 
 );
 
@@ -391,7 +392,43 @@ borderWidth:1
 
 
 
+/*
+==========================
+결제 / 할인 / 마일리지
+==========================
+*/
 
+const paymentStatistics = computed(()=>{
+
+    return [
+
+        {
+            title:"총 결제금액",
+            value:
+                props.statistics?.totalPaymentAmount || 0
+        },
+
+        {
+            title:"쿠폰 할인금액",
+            value:
+                props.statistics?.couponDiscountAmount || 0
+        },
+
+        {
+            title:"포인트 사용금액",
+            value:
+                props.statistics?.pointAmount || 0
+        },
+
+        {
+            title:"최종 결제금액",
+            value:
+                props.statistics?.finalPaymentAmount || 0
+        }
+
+    ];
+
+});
 
 
 
@@ -413,7 +450,157 @@ function formatMoney(value){
 
 }
 
+const discountChart = computed(()=>{
 
+
+    const coupon =
+        props.statistics?.couponDiscountAmount || 0;
+
+
+    const point =
+        props.statistics?.pointAmount || 0;
+
+
+    const total = coupon + point;
+
+
+
+    return {
+
+
+        labels:[
+
+            "쿠폰 할인",
+
+            "포인트 사용"
+
+        ],
+
+
+
+        datasets:[
+
+            {
+
+                data:[
+
+                    coupon,
+
+                    point
+
+                ],
+
+
+
+                backgroundColor:[
+
+                    "#3B82F6",
+
+                    "#F97316"
+
+                ],
+
+
+                borderWidth:3,
+
+
+                borderColor:"#ffffff"
+
+
+            }
+
+        ],
+
+
+
+        plugins:[ChartDataLabels]
+
+    };
+
+
+});
+
+const discountOption = {
+
+
+    responsive:true,
+
+
+    maintainAspectRatio:false,
+
+
+    plugins:{
+
+
+        legend:{
+
+
+            position:"bottom"
+
+
+        },
+
+
+        datalabels:{
+
+
+            color:"#ffffff",
+
+
+            font:{
+
+
+                weight:"bold",
+
+                size:14
+
+
+            },
+
+
+            formatter:(value, context)=>{
+
+
+                const coupon =
+                    props.statistics?.couponDiscountAmount || 0;
+
+
+                const point =
+                    props.statistics?.pointAmount || 0;
+
+
+
+                const total = coupon + point;
+
+
+
+                const percent =
+                    total === 0
+                    ? 0
+                    : ((value / total) * 100)
+                        .toFixed(1);
+
+
+
+                return [
+
+                    value.toLocaleString()+"원",
+
+                    percent+"%"
+
+                ];
+
+
+            }
+
+
+        }
+
+
+    }
+
+
+};
 
 </script>
 
@@ -747,12 +934,49 @@ v-for="(item,index) in statistics?.topProducts"
 </section>
 
 
+<!-- =====================
+결제 / 할인 / 마일리지
+===================== -->
+
+<div 
+    v-if="reportMenu==='payment'"
+    class="payment-container"
+>
 
 
+    <div
+        v-for="(item,index) in paymentStatistics"
+        :key="index"
+        class="payment-card"
+    >
+
+        <h3>
+            {{item.title}}
+        </h3>
 
 
+        <p>
+            {{formatMoney(item.value)}}
+        </p>
 
 
+    </div>
+
+
+</div>
+
+<div v-if="reportMenu==='payment'">
+
+    <div class="payment-box">
+
+        <Doughnut
+            :data="discountChart"
+            :options="discountOption"
+        />
+
+    </div>
+
+</div>
 
 <!-- =====================
 지출 분석
@@ -890,8 +1114,6 @@ v-for="item in statistics?.expenseCategory"
 </template>
 
 
-
-
 <style scoped>
 
 
@@ -902,8 +1124,6 @@ v-for="item in statistics?.expenseCategory"
     min-width:900px;
 
 }
-
-
 
 
 
@@ -921,42 +1141,51 @@ v-for="item in statistics?.expenseCategory"
 
 
 
-
-
 /*
 =========================
 탭 메뉴
 =========================
 */
 
-
 .report-nav{
 
     display:flex;
 
-    gap:10px;
+    gap:15px;
 
     margin-bottom:30px;
 
 }
 
 
-
 .report-nav button{
 
-    width:150px;
+    width:160px;
 
     min-height:60px;
 
+    padding:12px 20px;
+
     border:none;
 
-    background:#f3f3f3;
+    border-radius:20px;
+
+    background:#f1f5f9;
 
     cursor:pointer;
 
-    border-radius:10px;
-
     font-size:15px;
+
+    font-weight:bold;
+
+    transition:.2s;
+
+}
+
+
+.report-nav button:hover{
+
+    background:#e2e8f0;
 
 }
 
@@ -964,14 +1193,11 @@ v-for="item in statistics?.expenseCategory"
 
 .report-nav button.active{
 
-    background:#333;
+    background:#2563eb;
 
     color:white;
 
 }
-
-
-
 
 
 
@@ -982,43 +1208,32 @@ v-for="item in statistics?.expenseCategory"
 */
 
 
-.summary-card{
-
+.summary-card-container{
 
     display:grid;
 
-
     grid-template-columns:
-
     repeat(4,1fr);
-
 
     gap:20px;
 
-
-    margin-bottom:40px;
-
+    margin-bottom:30px;
 
 }
 
 
 
-.summary-card div{
-
+.summary-card{
 
     background:white;
 
+    border-radius:15px;
 
     padding:25px;
 
-
-    border-radius:15px;
-
-
     box-shadow:
 
-    0 3px 10px rgba(0,0,0,.08);
-
+    0 4px 12px rgba(0,0,0,0.08);
 
 }
 
@@ -1026,14 +1241,104 @@ v-for="item in statistics?.expenseCategory"
 
 .summary-card h3{
 
+    color:#64748b;
 
     margin-bottom:15px;
+
+    font-size:16px;
+
+}
+
+
+
+.summary-card p{
+
+    font-size:28px;
+
+    font-weight:bold;
+
+    margin:0;
+
+}
+
+
+
+/*
+=========================
+결제/할인 카드
+=========================
+*/
+
+
+/* =========================
+   결제/할인/마일리지 카드
+========================= */
+
+.payment-card-container {
+
+    display:grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap:20px;
+
+    width:100%;
+
+    margin-bottom:40px;
+
+}
+
+
+.payment-card {
+
+
+    background:white;
+
+    border-radius:15px;
+
+    padding:25px;
+
+    height:130px;
+
+    box-shadow:
+    0 4px 12px rgba(0,0,0,0.08);
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
 
 
 }
 
 
 
+.payment-card h3 {
+
+
+    margin:0 0 15px 0;
+
+    color:#64748b;
+
+    font-size:16px;
+
+}
+
+
+
+.payment-card p {
+
+
+    margin:0;
+
+    font-size:28px;
+
+    font-weight:bold;
+
+    color:#1e293b;
+
+}
 
 
 
@@ -1047,45 +1352,45 @@ v-for="item in statistics?.expenseCategory"
 
 .chart-row{
 
-
     display:grid;
-
 
     grid-template-columns:
 
     repeat(2,1fr);
 
-
     gap:30px;
-
 
     margin-bottom:40px;
 
-
 }
-
 
 
 
 .chart-box{
 
-
     background:white;
 
+    border-radius:18px;
 
-    padding:30px;
+    padding:25px;
 
+    box-shadow:
 
-    border-radius:15px;
-
+    0 4px 15px rgba(0,0,0,0.08);
 
     min-height:400px;
-
 
 }
 
 
 
+.chart-box h2{
+
+    margin-bottom:20px;
+
+    color:#334155;
+
+}
 
 
 
@@ -1098,239 +1403,131 @@ v-for="item in statistics?.expenseCategory"
 
 .table-box{
 
-
     background:white;
-
 
     padding:30px;
 
-
     border-radius:15px;
-
 
     overflow:hidden;
 
-
 }
-
-
 
 
 
 table{
 
-
     width:100%;
-
 
     border-collapse:collapse;
 
-
     table-layout:fixed;
 
-
 }
-
-
 
 
 
 th{
 
-
     background:#f5f5f5;
 
-
 }
-
-
 
 
 
 th,
 td{
 
-
     padding:15px;
 
-
     text-align:center;
-
 
     border-bottom:
 
     1px solid #ddd;
 
-
 }
 
-
-
-
-
-/*
-상품명 줄바꿈 방지
-*/
 
 
 td:nth-child(2){
 
-
     white-space:nowrap;
-
 
     overflow:hidden;
 
-
     text-overflow:ellipsis;
 
-
-}
-
-.report{
-
-    width:100%;
-
 }
 
 
 
-.report-nav{
-
-    display:flex;
-
-    gap:15px;
-
-    margin-bottom:30px;
-
-}
+/*
+=========================
+결제 탭 전용
+=========================
+*/
 
 
-
-.report-nav button{
-
-
-    padding:12px 25px;
-
-    border:none;
-
-    border-radius:20px;
-
-    background:#f1f5f9;
-
-    cursor:pointer;
-
-    font-weight:bold;
-
-
-}
-
-
-
-.report-nav button.active{
-
-
-    background:#2563eb;
-
-    color:white;
-
-
-}
-
-
-
-
-
-.summary-card-container{
-
+.payment-chart{
 
     display:grid;
 
     grid-template-columns:
-    repeat(4,1fr);
 
-    gap:20px;
+    repeat(2,1fr);
 
-    margin-bottom:30px;
-
+    gap:30px;
 
 }
 
 
 
+.payment-chart .chart-box{
 
-
-.summary-card{
-
-
-    background:white;
-
-    border-radius:15px;
-
-    padding:25px;
-
-
-    box-shadow:
-
-    0 4px 12px rgba(0,0,0,0.08);
-
+    min-height:350px;
 
 }
 
 
 
-.summary-card h3{
+/*
+=========================
+반응형
+=========================
+*/
 
 
-    color:#64748b;
-
-}
+@media(max-width:1200px){
 
 
+    .summary-card-container,
+    .payment-card-container{
 
-.summary-card p{
+        grid-template-columns:
+        repeat(2,1fr);
 
-
-    font-size:28px;
-
-    font-weight:bold;
-
-    margin-top:10px;
-
-
-}
-
-
-
-
-.chart-box{
-
-
-    background:white;
-
-    border-radius:18px;
-
-    padding:25px;
-
-
-    box-shadow:
-
-    0 4px 15px rgba(0,0,0,0.08);
+    }
 
 
 }
 
+.payment-box {
 
 
-.chart-box h2{
+    width:350px;
 
+    height:350px;
 
-    margin-bottom:20px;
+    margin:auto;
 
-    color:#334155;
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
 
 
 }
-
 
 </style>

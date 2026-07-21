@@ -112,6 +112,54 @@ public class BranchStatisticsService {
         }
 
 
+        /*
+         * =========================
+         * 결제 / 할인 / 마일리지
+         * =========================
+         */
+
+        Integer totalPaymentAmount =
+                safeInteger(
+                        orderRepository.findTotalPaymentAmount(
+                                storeId,
+                                startDate,
+                                endDate
+                        )
+                );
+
+
+        Integer couponDiscountAmount =
+                safeInteger(
+                        orderRepository.findCouponDiscountAmount(
+                                storeId,
+                                startDate,
+                                endDate
+                        )
+                );
+
+
+        Integer pointAmount =
+                safeInteger(
+                        orderRepository.findPointAmount(
+                                storeId,
+                                startDate,
+                                endDate
+                        )
+                );
+
+
+        Integer finalPaymentAmount =
+                safeInteger(
+                        orderRepository.findFinalPaymentAmount(
+                                storeId,
+                                startDate,
+                                endDate
+                        )
+                );
+        
+        
+
+
 
 
         /*
@@ -360,6 +408,14 @@ public class BranchStatisticsService {
                 .profit(
                     sales - expense
                 )
+                
+                .totalPaymentAmount(totalPaymentAmount)
+
+                .couponDiscountAmount(couponDiscountAmount)
+
+                .pointAmount(pointAmount)
+
+                .finalPaymentAmount(finalPaymentAmount)
 
 
 
@@ -473,6 +529,10 @@ public class BranchStatisticsService {
                 .build();
 
     }
+    
+    
+    
+    
 
 
 }
