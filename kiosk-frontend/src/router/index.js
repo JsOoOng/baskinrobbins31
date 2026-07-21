@@ -373,7 +373,7 @@ const router = createRouter({
         {
           path: 'settings',
           name: 'head-settings',
-          component: loadHeadTemporaryPage,
+          component: () => import('../views/head/HeadSettings.vue'),
           meta: { title: '설정', description: '본사 시스템의 공통 설정을 관리합니다.', phase: 'P1' }
         },
         {
