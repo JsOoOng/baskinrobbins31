@@ -16,9 +16,6 @@ import {
   updateHeadBannerActive
 } from '@/api/head/headBannerApi'
 
-import AppMessageToast
-  from '@/components/common/AppMessageToast.vue'
-
 const banners = ref([])
 
 const loading = ref(false)
@@ -262,13 +259,12 @@ const submitBanner = async () => {
     const payload =
       createPayload()
 
-    let successMessage = ''
-
     if (modal.mode === 'create') {
       await createHeadBanner(payload)
 
-      successMessage =
+      showMessage(
         '배너가 등록되었습니다.'
+      )
 
     } else {
       await updateHeadBanner(
@@ -276,22 +272,14 @@ const submitBanner = async () => {
         payload
       )
 
-      successMessage =
+      showMessage(
         '배너가 수정되었습니다.'
+      )
     }
 
     modal.open = false
 
     await loadBanners()
-
-    /*
-     * 목록 조회가 끝난 뒤 표시해야
-     * clearMessage에 지워지지 않습니다.
-     */
-    showMessage(
-      successMessage,
-      'success'
-    )
 
   } catch (error) {
     showMessage(
@@ -366,12 +354,11 @@ const removeBanner = async (banner) => {
       banner.bannerId
     )
 
-    await loadBanners()
-
     showMessage(
-      '배너가 삭제되었습니다.',
-      'success'
+      '배너가 삭제되었습니다.'
     )
+
+    await loadBanners()
 
   } catch (error) {
     showMessage(
@@ -381,6 +368,7 @@ const removeBanner = async (banner) => {
       ),
       'error'
     )
+
   } finally {
     deletingId.value = null
   }
@@ -392,14 +380,28 @@ onMounted(() => {
 </script>
 
 <template>
-
-  <AppMessageToast
-    :message="message"
-    :type="messageType"
-    @close="clearMessage"
-  />
-
   <section class="banner-page">
+    <div
+      v-if="message"
+      class="page-message"
+      :class="{
+        error: messageType === 'error'
+      }"
+    >
+      <strong>
+        {{ messageType === 'error' ? '!' : '✓' }}
+      </strong>
+
+      <p>{{ message }}</p>
+
+      <button
+        type="button"
+        @click="clearMessage"
+      >
+        ×
+      </button>
+    </div>
+
     <div class="summary-grid">
       <article>
         <div>
@@ -753,6 +755,36 @@ onMounted(() => {
 .banner-page {
   display: grid;
   gap: 18px;
+}
+
+.page-message {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 13px 15px;
+  border: 1px solid #bcebd6;
+  border-radius: 11px;
+  color: #168a5e;
+  background: #edfbf5;
+}
+
+.page-message.error {
+  border-color: #ffd0d7;
+  color: #d64359;
+  background: #fff2f4;
+}
+
+.page-message p {
+  flex: 1;
+  margin: 0;
+  font-size: 12px;
+}
+
+.page-message button {
+  border: 0;
+  cursor: pointer;
+  font-size: 20px;
+  background: transparent;
 }
 
 .summary-grid {

@@ -7,14 +7,10 @@ import {
   watch
 } from 'vue'
 
-import AppMessageToast
-  from '@/components/common/AppMessageToast.vue'
-
 import {
   extractProductData,
-  extractProductErrorMessage,
   getHeadProducts
-  } from '@/api/head/headProductApi'
+} from '@/api/head/headProductApi'
 
 import {
   createHeadProductOption,
@@ -171,7 +167,7 @@ const loadProducts = async () => {
 
   } catch (error) {
     showMessage(
-      extractProductErrorMessage(
+      extractProductOptionErrorMessage(
         error,
         '상품 목록을 불러오지 못했습니다.'
       ),
@@ -193,6 +189,7 @@ const loadOptions = async () => {
   }
 
   loadingOptions.value = true
+  clearMessage()
 
   try {
     const responseBody =
@@ -463,16 +460,43 @@ watch(
 
 onMounted(async () => {
   await loadProducts()
+
+  if (selectedProductId.value) {
+    await loadOptions()
+  }
 })
 </script>
 
 <template>
-  <AppMessageToast
-  :message="message"
-  :type="messageType"
-  @close="clearMessage"
-  />
   <section class="option-page">
+    <Transition name="message">
+      <div
+        v-if="message"
+        class="page-message"
+        :class="{
+          'page-message-error':
+            messageType === 'error'
+        }"
+      >
+        <span>
+          {{
+            messageType === 'error'
+              ? '!'
+              : '✓'
+          }}
+        </span>
+
+        <p>{{ message }}</p>
+
+        <button
+          type="button"
+          @click="clearMessage"
+        >
+          ×
+        </button>
+      </div>
+    </Transition>
+
     <section class="product-selector-card">
       <div>
         <p class="section-label">
@@ -695,34 +719,13 @@ onMounted(async () => {
               <label>
                 <span>옵션 유형 *</span>
 
-                <select
+                <input
                   v-model="form.optionType"
+                  type="text"
+                  maxlength="30"
+                  placeholder="예: SIZE"
                   :disabled="saving"
-                >
-                  <option value="">
-                    옵션 유형을 선택하세요
-                  </option>
-
-                  <option value="CONTAINER">
-                    CONTAINER
-                  </option>
-
-                  <option value="SIZE">
-                    SIZE
-                  </option>
-
-                  <option value="TOPPING">
-                    TOPPING
-                  </option>
-
-                  <option value="SPOON">
-                    SPOON
-                  </option>
-
-                  <option value="ETC">
-                    ETC
-                  </option>
-                </select>
+                />
 
                 <small>
                   백엔드 OptionType enum 값과 동일하게 입력합니다.
@@ -801,6 +804,52 @@ onMounted(async () => {
 .option-page {
   display: grid;
   gap: 18px;
+}
+
+.page-message {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 13px 15px;
+  border: 1px solid #bcebd6;
+  border-radius: 11px;
+  color: #168a5e;
+  background: #edfbf5;
+}
+
+.page-message > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #25ad78;
+}
+
+.page-message p {
+  flex: 1;
+  margin: 0;
+  font-size: 12px;
+}
+
+.page-message button {
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  font-size: 20px;
+  background: transparent;
+}
+
+.page-message-error {
+  border-color: #ffd0d7;
+  color: #d64359;
+  background: #fff2f4;
+}
+
+.page-message-error > span {
+  background: #eb566b;
 }
 
 .product-selector-card {

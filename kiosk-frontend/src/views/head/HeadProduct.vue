@@ -20,9 +20,6 @@ import {
   getHeadCategories
 } from '@/api/head/headCategoryApi'
 
-import AppMessageToast
-  from '@/components/common/AppMessageToast.vue'
-
 /*
  * 서버 데이터
  */
@@ -243,6 +240,7 @@ const formatPrice = (price) => {
  */
 const loadProducts = async () => {
   loading.value = true
+  clearMessage()
 
   try {
     const responseBody =
@@ -400,7 +398,7 @@ const parseStoreIds = () => {
     return []
   }
 
-  const storeIds = form.storeIdsText
+  return form.storeIdsText
     .split(',')
     .map((value) =>
       Number(value.trim())
@@ -409,15 +407,13 @@ const parseStoreIds = () => {
       Number.isInteger(value) &&
       value > 0
     )
-
-  return [...new Set(storeIds)]
 }
 
 /*
  * 등록·수정 요청 데이터 생성
  */
- const createRequestPayload = () => {
-  const payload = {
+const createRequestPayload = () => {
+  return {
     categoryId:
       Number(form.categoryId),
 
@@ -436,22 +432,16 @@ const parseStoreIds = () => {
     isDisplay:
       Boolean(form.isDisplay),
 
-    options: []
-  }
-
     /*
      * 상품 옵션은 상품 옵션 관리 화면에서
      * 별도로 등록할 예정이므로 기본 빈 배열입니다.
      */
+    options: [],
 
-  if (formModal.mode === 'create') {
-    payload.storeIds =
+    storeIds:
       parseStoreIds()
   }
-
-  return payload
 }
-
 
 /*
  * 입력값 검증
@@ -499,49 +489,7 @@ const validateForm = () => {
 
     return false
   }
-  if (formModal.mode === 'create') {
-    if (!form.storeIdsText.trim()) {
-      showMessage(
-        '판매 지점 ID를 한 개 이상 입력해주세요.',
-        'error'
-      )
 
-      return false
-    }
-
-    const storeIdTexts = form.storeIdsText
-      .split(',')
-      .map((value) => value.trim())
-
-    const hasInvalidStoreId =
-      storeIdTexts.some((value) => {
-        const storeId = Number(value)
-
-        return (
-          value === '' ||
-          !Number.isInteger(storeId) ||
-          storeId <= 0
-        )
-      })
-
-    if (hasInvalidStoreId) {
-      showMessage(
-        '판매 지점 ID는 1 이상의 숫자만 입력해주세요.',
-        'error'
-      )
-
-      return false
-    }
-
-    if (parseStoreIds().length === 0) {
-      showMessage(
-        '판매 지점 ID를 한 개 이상 입력해주세요.',
-        'error'
-      )
-
-      return false
-    }
-  }
   return true
 }
 
@@ -725,13 +673,36 @@ onMounted(async () => {
 </script>
 
 <template>
-  <AppMessageToast
-    :message="message"
-    :type="messageType"
-    @close="clearMessage"
-  />
-
   <section class="product-page">
+    <!-- 처리 결과 메시지 -->
+    <Transition name="message">
+      <div
+        v-if="message"
+        class="page-message"
+        :class="{
+          'page-message-error':
+            messageType === 'error'
+        }"
+      >
+        <span>
+          {{
+            messageType === 'error'
+              ? '!'
+              : '✓'
+          }}
+        </span>
+
+        <p>{{ message }}</p>
+
+        <button
+          type="button"
+          aria-label="메시지 닫기"
+          @click="clearMessage"
+        >
+          ×
+        </button>
+      </div>
+    </Transition>
 
     <!-- 요약 카드 -->
     <div class="summary-grid">
@@ -1155,10 +1126,7 @@ onMounted(async () => {
               </label>
 
               <label class="full-field">
-                <span>
-                  판매 지점 ID
-                  <strong>*</strong>
-                </span>
+                <span>판매 지점 ID</span>
 
                 <input
                   v-model="form.storeIdsText"
@@ -1168,7 +1136,7 @@ onMounted(async () => {
                 />
 
                 <small>
-                  판매할 지점 ID를 입력해주세요. 여러 지점은 쉼표로 구분합니다.
+                  여러 지점은 쉼표로 구분합니다. 비워두면 지점 지정 없이 등록됩니다.
                 </small>
               </label>
 
@@ -1414,6 +1382,54 @@ onMounted(async () => {
 .product-page {
   display: grid;
   gap: 18px;
+}
+
+.page-message {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 13px 15px;
+  border: 1px solid #bcebd6;
+  border-radius: 11px;
+  color: #168a5e;
+  background: #edfbf5;
+}
+
+.page-message > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  background: #25ad78;
+}
+
+.page-message p {
+  flex: 1;
+  margin: 0;
+  font-size: 12px;
+}
+
+.page-message button {
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  font-size: 20px;
+  background: transparent;
+}
+
+.page-message-error {
+  border-color: #ffd0d7;
+  color: #d64359;
+  background: #fff2f4;
+}
+
+.page-message-error > span {
+  background: #eb566b;
 }
 
 .summary-grid {
@@ -2024,11 +2040,15 @@ td {
   }
 }
 
+.message-enter-active,
+.message-leave-active,
 .modal-enter-active,
 .modal-leave-active {
   transition: opacity 0.2s ease;
 }
 
+.message-enter-from,
+.message-leave-to,
 .modal-enter-from,
 .modal-leave-to {
   opacity: 0;
