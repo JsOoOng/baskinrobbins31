@@ -140,7 +140,8 @@ const connectSSE = () => {
 
 const loadKiosks = async () => {
   try {
-    const response = await api.get('/branch/kiosk/1')
+    const storeId = Number(localStorage.getItem('storeId')) || 1
+    const response = await api.get(`/branch/kiosk/${storeId}`)
     kiosks.value = response.data.filter(kiosk => kiosk.kioskStatus === 'ONLINE')
     
     // 현재 선택된 키오스크가 온라인 목록에 없다면 첫 번째 항목으로 변경
@@ -161,7 +162,8 @@ const connectKioskSSE = () => {
   if (kioskEventSource) {
     kioskEventSource.close()
   }
-  kioskEventSource = new EventSource(`/proxy-api/branch/kiosk/stream/1`)
+  const storeId = Number(localStorage.getItem('storeId')) || 1
+  kioskEventSource = new EventSource(`/proxy-api/branch/kiosk/stream/${storeId}`)
   
   kioskEventSource.addEventListener('KIOSK_UPDATE', () => {
     loadKiosks()

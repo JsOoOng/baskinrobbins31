@@ -120,8 +120,8 @@ const handlePayment = async (method) => {
       phoneNumber: basketStore.phoneNumber || null,
       pointUsed: basketStore.usedPoints || 0,
       userCouponId: basketStore.usedCouponId || null,
-      kioskId: 1,
-      storeId: 1
+      kioskId: Number(localStorage.getItem('kioskId')) || 1,
+      storeId: Number(localStorage.getItem('storeId')) || 1
     });
     const orderId = orderRes.data;
 
@@ -157,8 +157,8 @@ const handleTossPayment = async () => {
       phoneNumber: basketStore.phoneNumber || null,
       pointUsed: basketStore.usedPoints || 0,
       userCouponId: basketStore.usedCouponId || null,
-      kioskId: 1,
-      storeId: 1
+      kioskId: Number(localStorage.getItem('kioskId')) || 1,
+      storeId: Number(localStorage.getItem('storeId')) || 1
     });
     const orderId = orderRes.data;
 
