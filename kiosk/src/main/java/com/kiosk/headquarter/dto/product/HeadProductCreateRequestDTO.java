@@ -1,6 +1,5 @@
 package com.kiosk.headquarter.dto.product;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,10 +16,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class HeadProductCreateRequestDTO {
 
-    /*
-     * Category 엔티티와 Repository의 ID 타입이
-     * Integer이므로 Integer를 사용합니다.
-     */
     private Integer categoryId;
 
     private String productName;
@@ -29,31 +24,20 @@ public class HeadProductCreateRequestDTO {
 
     private Integer basePrice;
 
-    private BigDecimal discountRate;
+    private Integer discountRate;
 
     private Boolean isDisplay;
 
     private String imageUrl;
 
-    /*
-     * 상품을 판매할 지점 ID 목록
-     *
-     * 프론트 요청 예:
-     * "storeIds": [1, 2, 3]
-     */
     @Builder.Default
     private List<Integer> storeIds =
             new ArrayList<>();
-    
-    /*
-     * 아이스크림 및 아이스크림 케이크에서
-     * 선택하거나 새로 추가한 맛 이름 목록
-     */
+
     @Builder.Default
     private List<String> flavorNames =
             new ArrayList<>();
 
-    // INVENTORY_ITEMS 데이터
     private String inventoryItemName;
     private String inventoryUnit;
     private Integer inventoryUnitPrice;

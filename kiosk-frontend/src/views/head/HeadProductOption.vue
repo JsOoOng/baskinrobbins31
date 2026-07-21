@@ -158,8 +158,10 @@ const loadProducts = async () => {
         ? responseData
         : []
 
-    products.value =
-      productList.map(normalizeProduct)
+        products.value =
+        productList
+          .map(normalizeProduct)
+          .sort((a, b) => a.productId - b.productId)
 
     if (
       !selectedProductId.value &&
@@ -498,7 +500,7 @@ onMounted(async () => {
         </option>
 
         <option
-          v-for="product in products"
+          v-for="product in [...products].sort((a, b) => a.productId - b.productId)"
           :key="product.productId"
           :value="product.productId"
         >

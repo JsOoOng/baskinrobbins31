@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.entity.Category;
+import com.kiosk.entity.IcecreamFlavor;
 import com.kiosk.entity.InventoryItem;
 import com.kiosk.entity.Product;
 import com.kiosk.entity.Store;
@@ -18,13 +19,12 @@ import com.kiosk.entity.enums.AutoRestockMode;
 import com.kiosk.headquarter.dto.product.HeadProductCreateRequestDTO;
 import com.kiosk.headquarter.dto.product.HeadProductResponseDTO;
 import com.kiosk.headquarter.repository.HeadCategoryMapper;
+import com.kiosk.headquarter.repository.HeadFlavorMapper;
 import com.kiosk.headquarter.repository.HeadInventoryItemMapper;
 import com.kiosk.headquarter.repository.HeadProductMapper;
 import com.kiosk.headquarter.repository.HeadStoreInventoryMapper;
 import com.kiosk.headquarter.repository.HeadStoreMapper;
 import com.kiosk.headquarter.repository.HeadStoreProductMapper;
-import com.kiosk.entity.IcecreamFlavor;
-import com.kiosk.headquarter.repository.HeadFlavorMapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -158,32 +158,28 @@ public class HeadProductService {
          * 2. PRODUCTS 저장
          */
         Product product = Product.builder()
-                .category(category)
-                .productName(productName)
-                .description(
-                        requestDTO.getDescription()
-                )
-                .basePrice(
-                        requestDTO.getBasePrice()
-                )
-                .discountRate(
-                        requestDTO
-                                .getDiscountRate() != null
-                                ? requestDTO
-                                        .getDiscountRate()
-                                : BigDecimal.ZERO
-                )
-                .isDisplay(
-                        requestDTO
-                                .getIsDisplay() != null
-                                ? requestDTO
-                                        .getIsDisplay()
-                                : true
-                )
-                .imageUrl(
-                        requestDTO.getImageUrl()
-                )
-                .build();
+        		.category(category)
+        		.productName(productName)
+        		.description(
+        		    requestDTO.getDescription()
+        		)
+        		.basePrice(
+        		    requestDTO.getBasePrice()
+        		)
+        		.discountRate(
+        		    requestDTO.getDiscountRate() != null
+        		        ? requestDTO.getDiscountRate()
+        		        : 0
+        		)
+        		.isDisplay(
+        		    requestDTO.getIsDisplay() != null
+        		        ? requestDTO.getIsDisplay()
+        		        : true
+        		)
+        		.imageUrl(
+        		    requestDTO.getImageUrl()
+        		)
+        		.build();
 
         Product savedProduct =
                 headProductMapper
@@ -327,10 +323,6 @@ public class HeadProductService {
                                 // 현재는 본사 상품 기본 가격을
                 				// 지점 판매 가격으로 사용
                                 */
-                                .storeProductPrice(
-                                        savedProduct.getBasePrice()
-                                )
-
                                 .isSoldOut(false)
                                 .isDeleted(false)
                                 .build();
@@ -461,12 +453,17 @@ public class HeadProductService {
                 requestDTO.getProductName(),
                 requestDTO.getDescription(),
                 requestDTO.getBasePrice(),
+
                 requestDTO.getDiscountRate() != null
                         ? requestDTO.getDiscountRate()
-                        : BigDecimal.ZERO,
+                        : 0,
+
+                product.getMarginRate(),
+
                 requestDTO.getIsDisplay() != null
                         ? requestDTO.getIsDisplay()
                         : true,
+
                 product.getImageUrl()
         );
 

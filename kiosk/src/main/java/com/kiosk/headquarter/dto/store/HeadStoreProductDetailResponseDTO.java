@@ -1,7 +1,5 @@
 package com.kiosk.headquarter.dto.store;
 
-import java.math.BigDecimal;
-
 import lombok.Builder;
 import lombok.Getter;
 
@@ -27,7 +25,7 @@ public class HeadStoreProductDetailResponseDTO {
      * Product 엔티티의 discountRate가
      * BigDecimal이므로 동일한 타입을 사용합니다.
      */
-    private BigDecimal discountRate;
+    private Integer discountRate;
 
     private Boolean isDisplay;
 
