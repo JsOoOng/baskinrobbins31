@@ -49,9 +49,19 @@ public class Product {
     @Column(name = "base_price", nullable = false)
     private Integer basePrice;
 
-    @Column(name = "discount_rate", precision = 5, scale = 2)
+    @Column(name = "discount_rate")
     @Builder.Default
-    private BigDecimal discountRate = BigDecimal.ZERO;
+    private Integer discountRate = 0;
+
+    @Column(name = "margin_rate")
+    @Builder.Default
+    private Integer marginRate = 65;
+
+    @Column(name = "regular_price")
+    private Integer regularPrice;
+
+    @Column(name = "final_price")
+    private Integer finalPrice;
 
     @Column(name = "is_display")
     @Builder.Default
@@ -64,13 +74,31 @@ public class Product {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     
-    // 💡 수정 메서드에 imageUrl 파라미터도 추가!
+    @jakarta.persistence.PrePersist
+    @jakarta.persistence.PreUpdate
+    public void calculatePrices() {
+        if (this.basePrice != null) {
+            int currentMarginRate = (this.marginRate != null) ? this.marginRate : 65;
+            int currentDiscountRate = (this.discountRate != null) ? this.discountRate : 0;
+
+            // 정가 = 반올림(원가 * (1 + 마진율/100)) 후 100원 단위
+            double calcRegular = this.basePrice * (1.0 + (currentMarginRate / 100.0));
+            this.regularPrice = (int) (Math.round(calcRegular / 100.0) * 100);
+
+            // 할인 후 가격 = 반올림(정가 * (1 - 할인율/100)) 후 100원 단위
+            double calcFinal = this.regularPrice * (1.0 - (currentDiscountRate / 100.0));
+            this.finalPrice = (int) (Math.round(calcFinal / 100.0) * 100);
+        }
+    }
+
+    // 사진 수정 메서드에 imageUrl 파라미터가 추가됨!
     public void updateProduct(
         Category category,
         String productName,
         String description,
         Integer basePrice,
-        BigDecimal discountRate,
+        Integer discountRate,
+        Integer marginRate,
         Boolean isDisplay,
         String imageUrl) {
 
@@ -78,7 +106,8 @@ public class Product {
         this.productName = productName;
         this.description = description;
         this.basePrice = basePrice;
-        this.discountRate = discountRate;
+        if (discountRate != null) this.discountRate = discountRate;
+        if (marginRate != null) this.marginRate = marginRate;
         this.isDisplay = isDisplay;
         this.imageUrl = imageUrl;
     }

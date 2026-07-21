@@ -46,15 +46,15 @@ INSERT INTO categories (category_name, display_order, active) VALUES
 ('디저트', 4, 1);
 
 -- 3. 상품 데이터
-INSERT INTO products (category_id, product_name, description, base_price, discount_rate, is_display, created_at) VALUES
-(1, '싱글레귤러', '한 가지 맛을 듬뿍 맛볼 수 있는 사이즈', 3500, 0.00, 1, NOW()),
-(1, '싱글킹', '좋아하는 맛 하나를 더 크게 맛보는 사이즈', 4300, 0.00, 1, NOW()),
-(1, '더블주니어', '두 가지 맛을 조금씩 맛보는 사이즈', 4700, 0.00, 1, NOW()),
-(1, '더블레귤러', '두 가지 맛을 듬뿍 맛보는 사이즈', 6700, 0.00, 1, NOW()),
-(1, '파인트', '세 가지 맛을 골라 먹는 사이즈', 8900, 0.00, 1, NOW()),
-(1, '쿼터', '네 가지 맛을 골라 먹는 사이즈', 17000, 0.00, 1, NOW()),
-(1, '패밀리', '다섯 가지 맛을 나눠 먹는 사이즈', 24000, 0.00, 1, NOW()),
-(1, '하프갤런', '여섯 가지 맛을 넉넉하게 나눠 먹는 사이즈', 29000, 0.00, 1, NOW());
+INSERT INTO products (category_id, product_name, description, base_price, discount_rate, margin_rate, regular_price, final_price, is_display, created_at) VALUES
+(1, '싱글레귤러', '한 가지 맛을 듬뿍 맛볼 수 있는 사이즈', 3500, 0, 65, 5800, 5800, 1, NOW()),
+(1, '싱글킹', '좋아하는 맛 하나를 더 크게 맛보는 사이즈', 4300, 0, 65, 7100, 7100, 1, NOW()),
+(1, '더블주니어', '두 가지 맛을 조금씩 맛보는 사이즈', 4700, 0, 65, 7800, 7800, 1, NOW()),
+(1, '더블레귤러', '두 가지 맛을 듬뿍 맛보는 사이즈', 6700, 0, 65, 11100, 11100, 1, NOW()),
+(1, '파인트', '세 가지 맛을 골라 먹는 사이즈', 8900, 0, 65, 14700, 14700, 1, NOW()),
+(1, '쿼터', '네 가지 맛을 골라 먹는 사이즈', 17000, 0, 65, 28000, 28000, 1, NOW()),
+(1, '패밀리', '다섯 가지 맛을 나눠 먹는 사이즈', 24000, 0, 65, 39600, 39600, 1, NOW()),
+(1, '하프갤런', '여섯 가지 맛을 넉넉하게 나눠 먹는 사이즈', 29000, 0, 65, 47800, 47800, 1, NOW())
 
 -- 4. 상품 옵션 데이터
 INSERT INTO product_options (product_id, option_type, option_name, extra_price, max_flavor_count) VALUES
@@ -77,19 +77,19 @@ SELECT '커피', 5, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM categories WHERE category_name = '커피');
 
 -- 25. 추가 제품 등록 (디저트, 음료, 커피)
-INSERT INTO products (category_id, product_name, description, base_price, discount_rate, is_display, created_at) VALUES
-((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '소금 우유 아이스 모찌', '달콤 짭짤한 소금 우유 맛 아이스 모찌', 3000, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '그린티 아이스 모찌', '녹차의 진한 맛을 담은 모찌', 3000, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '체리쥬빌레 마카롱', '아이스크림 마카롱', 3500, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '바닐라 아이스크림 롤', '부드러운 바닐라 아이스크림 롤', 2000, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '엄마는 외계인 블라스트', '초코볼이 가득한 시그니처 블라스트', 5500, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '아몬드 봉봉 블라스트', '아몬드 봉봉 아이스크림으로 만든 블라스트', 5500, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '딸기 연유 쉐이크', '달콤한 딸기와 연유의 만남', 5000, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '오레오 쉐이크', '오레오 쿠키가 듬뿍', 5000, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '카푸치노 블라스트 오리지널', '커피 아이스크림 블라스트', 4500, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '아이스 아메리카노', '시원한 아메리카노', 2500, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '카페라떼', '부드러운 카페라떼', 3000, 0.00, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '연유 라떼', '달콤한 연유가 들어간 라떼', 3500, 0.00, 1, NOW());
+INSERT INTO products (category_id, product_name, description, base_price, discount_rate, margin_rate, regular_price, final_price, is_display, created_at) VALUES
+((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '소금 우유 아이스 모찌', '달콤 짭짤한 소금 우유 맛 아이스 모찌', 3000, 0, 65, 5000, 5000, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '그린티 아이스 모찌', '녹차의 진한 맛을 담은 모찌', 3000, 0, 65, 5000, 5000, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '체리쥬빌레 마카롱', '아이스크림 마카롱', 3500, 0, 65, 5800, 5800, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '바닐라 아이스크림 롤', '부드러운 바닐라 아이스크림 롤', 2000, 0, 65, 3300, 3300, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '엄마는 외계인 블라스트', '초코볼이 가득한 시그니처 블라스트', 5500, 0, 65, 9100, 9100, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '아몬드 봉봉 블라스트', '아몬드 봉봉 아이스크림으로 만든 블라스트', 5500, 0, 65, 9100, 9100, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '딸기 연유 쉐이크', '달콤한 딸기와 연유의 만남', 5000, 0, 65, 8200, 8200, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '음료' LIMIT 1), '오레오 쉐이크', '오레오 쿠키가 듬뿍', 5000, 0, 65, 8200, 8200, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '카푸치노 블라스트 오리지널', '커피 아이스크림 블라스트', 4500, 0, 65, 7400, 7400, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '아이스 아메리카노', '시원한 아메리카노', 2500, 0, 65, 4100, 4100, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '카페라떼', '부드러운 카페라떼', 3000, 0, 65, 5000, 5000, 1, NOW()),
+((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '연유 라떼', '달콤한 연유가 들어간 라떼', 3500, 0, 65, 5800, 5800, 1, NOW())
 
 -- 26. 추가 제품 옵션 매핑
 INSERT INTO product_options (product_id, option_type, option_name, extra_price, max_flavor_count)
@@ -106,25 +106,26 @@ INSERT INTO stores (store_name, business_number, region, address, phone, busines
 ('배스킨라빈스 강남점', '123-45-67890', '서울', '서울특별시 강남구 역삼동', '02-123-4567', '10:00 - 23:00', 'OPEN', NOW());
 
 -- 6. 지점별 판매 상품 매핑
-INSERT INTO store_products (store_id, product_id, is_sold_out, is_deleted, store_product_price) VALUES
-(1, 1, 0, 0, 3500),
-(1, 2, 0, 0, 4300),
-(1, 3, 0, 0, 4700),
-(1, 4, 0, 0, 6700),
-(1, 5, 0, 0, 8900),
-(1, 6, 0, 0, 17000),
-(1, 7, 0, 0, 24000),
-(1, 8, 0, 0, 29000);
+INSERT INTO store_products (store_id, product_id, is_sold_out, is_deleted) VALUES
+(1, 1, 0, 0),
+(1, 2, 0, 0),
+(1, 3, 0, 0),
+(1, 4, 0, 0),
+(1, 5, 0, 0),
+(1, 6, 0, 0),
+(1, 7, 0, 0),
+(1, 8, 0, 0);
 
 -- 27. 지점 판매 상품으로 추가 매핑 (강남점 store_id=1 기준)
-INSERT INTO store_products (store_id, product_id, is_sold_out, is_deleted, store_product_price)
-SELECT 1, product_id, 0, 0, base_price
+INSERT INTO store_products (store_id, product_id, is_sold_out, is_deleted)
+SELECT 1, product_id, 0, 0
 FROM products
 WHERE product_name IN (
 '소금 우유 아이스 모찌', '그린티 아이스 모찌', '체리쥬빌레 마카롱', '바닐라 아이스크림 롤',
 '엄마는 외계인 블라스트', '아몬드 봉봉 블라스트', '딸기 연유 쉐이크', '오레오 쉐이크',
 '카푸치노 블라스트 오리지널', '아이스 아메리카노', '카페라떼', '연유 라떼'
 );
+
 -- 7. 지점별 아이스크림 맛 재고 매핑
 INSERT INTO store_flavors (store_id, flavor_id, container, is_sold_out) VALUES
 (1, 1, 6, 0), (1, 2, 6, 0), (1, 3, 6, 0), (1, 4, 6, 0), (1, 5, 6, 0),
