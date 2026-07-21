@@ -13,7 +13,7 @@ import com.kiosk.headquarter.service.HeadSettingsService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/head/settings")
+@RequestMapping("/head/settings")
 @RequiredArgsConstructor
 public class HeadSettingsController {
 
