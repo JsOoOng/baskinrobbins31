@@ -44,6 +44,14 @@ public class HeadProductCreateRequestDTO {
     @Builder.Default
     private List<Integer> storeIds =
             new ArrayList<>();
+    
+    /*
+     * 아이스크림 및 아이스크림 케이크에서
+     * 선택하거나 새로 추가한 맛 이름 목록
+     */
+    @Builder.Default
+    private List<String> flavorNames =
+            new ArrayList<>();
 
     // INVENTORY_ITEMS 데이터
     private String inventoryItemName;

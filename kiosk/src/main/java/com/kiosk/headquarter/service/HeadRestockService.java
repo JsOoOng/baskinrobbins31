@@ -7,11 +7,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.entity.HeadquarterAdmin;
 import com.kiosk.entity.RestockRequest;
+import com.kiosk.entity.StoreInventory;
 import com.kiosk.entity.enums.RestockStatus;
 import com.kiosk.headquarter.dto.restock.HeadRestockDetailResponseDTO;
 import com.kiosk.headquarter.dto.restock.HeadRestockListResponseDTO;
 import com.kiosk.headquarter.dto.restock.HeadRestockProcessRequestDTO;
 import com.kiosk.headquarter.repository.HeadRestockRequestMapper;
+import com.kiosk.headquarter.repository.HeadStoreInventoryMapper;
 import com.kiosk.headquarter.repository.HeadquarterAdminMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class HeadRestockService {
 
     private final HeadRestockRequestMapper headRestockRequestMapper;
     private final HeadquarterAdminMapper headquarterAdminMapper;
+    private final HeadStoreInventoryMapper headStoreInventoryMapper;
 
     // 발주 요청 전체 목록 조회
     public List<HeadRestockListResponseDTO> getRestockList() {
@@ -76,15 +79,50 @@ public class HeadRestockService {
 
     // 완료 처리
     @Transactional
-    public String completeRestock(Integer requestId, HeadRestockProcessRequestDTO requestDTO) {
-        RestockRequest restockRequest = headRestockRequestMapper.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 발주 요청입니다."));
+    public String completeRestock(
+            Integer requestId,
+            HeadRestockProcessRequestDTO requestDTO
+    ) {
 
-        HeadquarterAdmin admin = getActiveAdmin(requestDTO.getAdminId());
+        RestockRequest restockRequest =
+                headRestockRequestMapper
+                        .findById(requestId)
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "존재하지 않는 발주 요청입니다."
+                                )
+                        );
 
+        HeadquarterAdmin admin =
+                getActiveAdmin(
+                        requestDTO.getAdminId()
+                );
+
+        /*
+         * SHIPPING 상태일 때만 COMPLETED로 변경됩니다.
+         */
         restockRequest.complete(admin);
 
-        return "발주 요청 완료 처리 성공";
+        StoreInventory inventory =
+                headStoreInventoryMapper
+                        .findByStoreAndItem(
+                                restockRequest
+                                        .getStore(),
+                                restockRequest
+                                        .getItem()
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "해당 지점의 재고 정보가 없습니다."
+                                )
+                        );
+
+        inventory.increaseStock(
+                restockRequest
+                        .getRequestQuantity()
+        );
+
+        return "발주 완료 및 재고 입고 처리 성공";
     }
 
     private HeadquarterAdmin getActiveAdmin(Integer adminId) {
@@ -154,4 +192,6 @@ public class HeadRestockService {
                 .requestedAt(restockRequest.getRequestedAt())
                 .build();
     }
+    
+    
 }

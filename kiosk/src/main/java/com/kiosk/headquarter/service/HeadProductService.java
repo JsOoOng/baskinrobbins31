@@ -14,6 +14,7 @@ import com.kiosk.entity.Product;
 import com.kiosk.entity.Store;
 import com.kiosk.entity.StoreInventory;
 import com.kiosk.entity.StoreProduct;
+import com.kiosk.entity.enums.AutoRestockMode;
 import com.kiosk.headquarter.dto.product.HeadProductCreateRequestDTO;
 import com.kiosk.headquarter.dto.product.HeadProductResponseDTO;
 import com.kiosk.headquarter.repository.HeadCategoryMapper;
@@ -35,13 +36,20 @@ public class HeadProductService {
     private static final String
             ICECREAM_CATEGORY_NAME =
             "아이스크림";
+    
+    private static final Set<String>
+    FLAVOR_CATEGORY_NAMES =
+    Set.of(
+            "아이스크림",
+            "아이스크림 케이크"
+    );
 
     private final HeadProductMapper
             headProductMapper;
 
     private final HeadCategoryMapper
             headCategoryMapper;
-
+    
     private final HeadFlavorMapper
             headFlavorMapper;
 
@@ -59,7 +67,7 @@ public class HeadProductService {
     
     private final HeadStoreInventoryMapper 
     		headStoreInventoryMapper;
-
+    
     /*
      * 본사 상품 등록
      *
@@ -116,6 +124,20 @@ public class HeadProductService {
 
         boolean icecreamCategory =
                 isIcecreamCategory(category);
+        
+        Set<String> flavorNames =
+                normalizeFlavorNames(
+                        requestDTO.getFlavorNames()
+                );
+
+        if (
+                supportsFlavor(category) &&
+                flavorNames.isEmpty()
+        ) {
+            throw new IllegalArgumentException(
+                    "아이스크림 상품은 맛을 한 개 이상 선택해주세요."
+            );
+        }
 
         /*
          * 아이스크림 맛 이름 중복 검사
@@ -166,12 +188,21 @@ public class HeadProductService {
         Product savedProduct =
                 headProductMapper
                         .saveAndFlush(product);
-
+        
+        /*
+         * 아이스크림 또는 아이스크림 케이크이면
+         * 선택된 맛 중 기존에 없는 맛만 저장합니다.
+         */
+        if (supportsFlavor(category)) {
+            saveMissingFlavors(flavorNames);
+        }
+        
         System.out.println(
                 "상품 저장 완료: productId="
                         + savedProduct.getId()
         );
-
+     
+        
         /*
          * 3. 아이스크림 맛 저장
          */
@@ -336,12 +367,18 @@ public class HeadProductService {
 
             if (!storeInventoryExists) {
 
-                StoreInventory storeInventory =
-                        StoreInventory.builder()
-                                .store(store)
-                                .item(savedItem)
-                                .currentStock(0)
-                                .build();
+            	StoreInventory storeInventory =
+            	        StoreInventory.builder()
+            	                .store(store)
+            	                .item(savedItem)
+            	                .currentStock(0)
+            	                .minStock(10)
+            	                .targetStock(50)
+            	                .autoRestockEnabled(true)
+            	                .restockMode(
+            	                        AutoRestockMode.THRESHOLD
+            	                )
+            	                .build();
 
                 StoreInventory savedStoreInventory =
                         headStoreInventoryMapper
@@ -522,5 +559,95 @@ public class HeadProductService {
                 .imageUrl(product.getImageUrl())
                 .createdAt(product.getCreatedAt())
                 .build();
+    }
+    
+    /*
+     * 맛을 사용하는 카테고리 여부
+     */
+    private boolean supportsFlavor(
+            Category category
+    ) {
+
+        if (
+                category == null ||
+                category.getCategoryName() == null
+        ) {
+            return false;
+        }
+
+        return FLAVOR_CATEGORY_NAMES.contains(
+                category
+                        .getCategoryName()
+                        .trim()
+        );
+    }
+
+    /*
+     * 맛 이름 정리
+     *
+     * null, 빈 문자열, 중복값을 제거합니다.
+     */
+    private Set<String> normalizeFlavorNames(
+            List<String> flavorNames
+    ) {
+
+        Set<String> normalizedNames =
+                new LinkedHashSet<>();
+
+        if (flavorNames == null) {
+            return normalizedNames;
+        }
+
+        for (String flavorName : flavorNames) {
+
+            if (
+                    flavorName == null ||
+                    flavorName.isBlank()
+            ) {
+                continue;
+            }
+
+            normalizedNames.add(
+                    flavorName.trim()
+            );
+        }
+
+        return normalizedNames;
+    }
+
+    /*
+     * ICECREAM_FLAVORS에 없는 맛만 신규 등록
+     */
+    private void saveMissingFlavors(
+            Set<String> flavorNames
+    ) {
+
+        for (String flavorName : flavorNames) {
+
+            boolean flavorExists =
+                    headFlavorMapper
+                            .existsByFlavorName(
+                                    flavorName
+                            );
+
+            if (flavorExists) {
+                continue;
+            }
+
+            IcecreamFlavor flavor =
+                    IcecreamFlavor.builder()
+                            .flavorName(flavorName)
+                            .isActive(true)
+
+                            /*
+                             * 상품 이미지는 파인트·케이크 등
+                             * 상품 이미지일 수 있으므로
+                             * 맛 이미지에는 복사하지 않습니다.
+                             */
+                            .imageUrl(null)
+                            .build();
+
+            headFlavorMapper.save(flavor);
+        }
     }
 }

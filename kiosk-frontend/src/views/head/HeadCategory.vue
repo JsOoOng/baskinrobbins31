@@ -364,36 +364,6 @@ onMounted(() => {
   />
 
   <section class="category-page">
-    <!-- 안내 메시지 -->
-    <Transition name="message">
-        <AppMessageToast
-          :message="message"
-          :type="messageType"
-          @close="clearMessage"
-        />
-        <div>
-        <span>
-          {{
-            messageType === 'error'
-              ? '!'
-              : '✓'
-          }}
-        </span>
-
-        <p>
-          {{ message }}
-        </p>
-
-        <button
-          type="button"
-          aria-label="메시지 닫기"
-          @click="clearMessage"
-        >
-          ×
-        </button>
-      </div>
-    </Transition>
-
     <!-- 요약 카드 -->
     <div class="category-summary-grid">
       <article class="summary-card">
