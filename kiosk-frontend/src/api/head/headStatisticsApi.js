@@ -95,6 +95,25 @@ export const getHeadProductSalesRanking = async (
   return response.data
 }
 
+/*
+ * 맛별 판매 순위
+ */
+export const getHeadFlavorSalesRanking = async (
+  filters
+) => {
+  const response = await api.get(
+    '/head/statistics/flavors',
+    {
+      params: createParams(filters)
+    }
+  )
+
+  return response.data
+}
+
+/*
+ * API 응답 데이터 추출
+ */
 export const extractStatisticsData = (
   responseBody
 ) => {
@@ -112,6 +131,9 @@ export const extractStatisticsData = (
   return responseBody
 }
 
+/*
+ * API 오류 메시지 추출
+ */
 export const extractStatisticsErrorMessage = (
   error,
   defaultMessage =

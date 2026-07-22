@@ -11,6 +11,10 @@ const router = useRouter()
 // 키오스크 목록
 const kiosks = ref([])
 
+// 배너 목록 및 매핑 정보
+const banners = ref([])
+const kioskBanners = ref({})
+
 
 // 로그인 사용자 정보
 const user = JSON.parse(
@@ -29,22 +33,50 @@ const goBack = () => {
 const loadKiosks = async () => {
 
     try {
-
-        const response = await api.get(
-            `/branch/kiosk/${user.storeId}`
-        )
-
-
+        const response = await api.get(`/branch/kiosk/${user.storeId}`)
         kiosks.value = response.data
 
-
+        // 키오스크마다 현재 매핑된 배너 조회
+        await Promise.all(kiosks.value.map(async (kiosk) => {
+            try {
+                const bRes = await api.get(`/api/kiosk-banners/${kiosk.kioskId}`)
+                if (bRes.data && bRes.data.bannerId) {
+                    kioskBanners.value[kiosk.kioskId] = bRes.data.bannerId
+                } else {
+                    kioskBanners.value[kiosk.kioskId] = 0 // 기본 화면
+                }
+            } catch(e) {
+                kioskBanners.value[kiosk.kioskId] = 0 // 기본 화면
+            }
+        }))
     } catch(e) {
+        console.error('키오스크 조회 실패', e)
+    }
+}
 
-        console.error(
-            '키오스크 조회 실패',
-            e
-        )
+// 배너 목록 조회
+const loadBanners = async () => {
+    try {
+        const response = await api.get(`/api/banners`)
+        banners.value = response.data
+    } catch(e) {
+        console.error('배너 목록 조회 실패', e)
+    }
+}
 
+// 배너 변경 저장
+const saveBanner = async (kioskId) => {
+    try {
+        const bannerId = kioskBanners.value[kioskId]
+        if (bannerId === '' || bannerId === undefined) {
+            alert('배너를 선택해주세요.')
+            return
+        }
+        await api.put(`/api/kiosk-banners/${kioskId}`, { bannerId: bannerId })
+        alert('배너가 성공적으로 변경 및 즉시 반영되었습니다.')
+    } catch(e) {
+        console.error('배너 변경 실패', e)
+        alert('배너 변경에 실패했습니다.')
     }
 
 }
@@ -169,9 +201,8 @@ const getStatusClass = (status) => {
 
 
 onMounted(() => {
-
+    loadBanners()
     loadKiosks()
-
 })
 
 
@@ -273,8 +304,19 @@ onMounted(() => {
 
             </div>
 
-
-
+            <!-- 배너 설정 -->
+            <div class="banner-box">
+                <p class="banner-title">메인 배너 설정</p>
+                <div class="banner-controls">
+                    <select v-model="kioskBanners[kiosk.kioskId]" class="banner-select">
+                        <option :value="0">기본 화면</option>
+                        <option v-for="banner in banners" :key="banner.id" :value="banner.id">
+                            {{ banner.title }}
+                        </option>
+                    </select>
+                    <button class="banner-save-btn" @click="saveBanner(kiosk.kioskId)">저장</button>
+                </div>
+            </div>
 
             <!-- 상태 변경 -->
 
@@ -522,4 +564,43 @@ transition:0.2s;
 
 }
 
+.banner-box {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.banner-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.banner-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.banner-select {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.banner-save-btn {
+    padding: 8px 15px;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.banner-save-btn:hover {
+    background: #357abd;
+}
 </style>

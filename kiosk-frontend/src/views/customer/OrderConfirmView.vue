@@ -1,19 +1,19 @@
 <template>
   <div class="order-confirm-container">
     <div class="header-section">
-      <h2>STEP 02. 결제 <span class="sub-title">(주문 내역 확인)</span></h2>
-      <button class="btn-back-cart" @click="goBackToCart">이전 화면으로 🔙</button>
+      <h2>{{ $t('STEP 02. 결제') }} <span class="sub-title">{{ $t('(주문 내역 확인)') }}</span></h2>
+      <button class="btn-back-cart" @click="goBackToCart">{{ $t('이전 화면으로') }} 🔙</button>
     </div>
     
     <div class="order-list">
         <div v-for="(item, index) in basketStore.cartItems" :key="index" class="order-item">
             <div class="item-info">
-            <h4>{{ item.productName }}</h4>
+            <h4>{{ formatCartItemName(item.productName) }}</h4>
             
             <div v-if="item.flavors && item.flavors.length > 0" class="flavor-list">
-                선택한 맛: 
+                {{ $t('선택한 맛:') }} 
                 <span v-for="(f, fIndex) in item.flavors" :key="fIndex">
-                {{ f.flavorName || '맛ID:' + f.flavorId }}
+                {{ f.flavorName ? $t(f.flavorName) : $t('맛ID:') + f.flavorId }}
                 {{ f.quantity > 1 ? '(' + f.quantity + ')' : '' }}
                 {{ fIndex < item.flavors.length - 1 ? ', ' : '' }}
                 </span>
@@ -21,18 +21,18 @@
             
             </div>
             <div class="item-actions">
-            <span>수량: {{ item.quantity }}개</span>
+            <span>{{ $t('수량: {quantity}개', { quantity: item.quantity }) }}</span>
             <!-- 결제 단계이므로 개별 삭제 버튼은 제거됨 -->
             </div>
         </div>
     </div>
 
     <div class="payment-section">
-      <h3>결제 방법을 선택해주세요 (총 ₩{{ basketStore.totalPrice.toLocaleString() }})</h3>
+      <h3>{{ $t('결제 방법을 선택해주세요 (총 ₩{total})', { total: (basketStore.totalPrice - (basketStore.usedPoints || 0)).toLocaleString() }) }}</h3>
       <div class="pay-buttons">
-        <button @click="handlePayment('CASH')">현금</button>
-        <button @click="handlePayment('CARD')">신용카드</button>
-        <button class="btn-toss" @click="handleTossPayment">간편결제</button>
+        <button @click="handlePayment('CASH')">{{ $t('현금') }}</button>
+        <button @click="handlePayment('CARD')">{{ $t('신용카드') }}</button>
+        <button class="btn-toss" @click="handleTossPayment">{{ $t('간편결제') }}</button>
       </div>
     </div>
 
@@ -40,7 +40,7 @@
     <div class="alert-modal" v-if="showAlert">
       <div class="alert-content">
         <p>{{ alertMessage }}</p>
-        <button @click="closeAlert">확인</button>
+        <button @click="closeAlert">{{ $t('확인') }}</button>
       </div>
     </div>
   </div>
@@ -50,12 +50,27 @@
 import { onMounted, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useBasketStore } from '@/stores/customer/basket';
+import { useI18n } from 'vue-i18n';
 import { loadTossPayments } from '@tosspayments/payment-sdk';
 import axios from '@/api/axios';
 
 const router = useRouter();
 const route = useRoute();
 const basketStore = useBasketStore();
+const { t } = useI18n({ useScope: 'global' });
+
+const formatCartItemName = (name) => {
+  if (name.includes(' (')) {
+    const parts = name.split(' (');
+    const base = t(parts[0]);
+    let container = parts[1].replace(')', '');
+    if (container === 'CUP') container = t('컵');
+    if (container === 'CONE') container = t('콘');
+    if (container === 'WAFFLE') container = t('와플콘');
+    return `${base} (${container})`;
+  }
+  return t(name);
+}
 
 const showAlert = ref(false);
 const alertMessage = ref('');
@@ -80,7 +95,7 @@ const TOSS_CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY;
 
 onMounted(() => {
   if (basketStore.cartItems.length === 0) {
-    displayAlert('장바구니가 비어있어 메인으로 돌아갑니다.', () => {
+    displayAlert(t('장바구니가 비어있어 메인으로 돌아갑니다.'), () => {
       router.push('/kiosk');
     });
   }
@@ -92,71 +107,89 @@ const goBackToCart = async () => {
 
 const handlePayment = async (method) => {
   if (basketStore.cartItems.length === 0) {
-    displayAlert('장바구니가 비어있습니다.');
+    displayAlert(t('장바구니가 비어있습니다.'));
     return;
   }
 
   try {
-    // 1. 주문 생성 API 호출 (DB 저장 및 포인트 적립)
+    // 1. 주문 생성 API 호출 (orderItems 추가)
     const orderRes = await axios.post('/api/orders', {
       orderType: basketStore.orderType || 'TOGO',
       dryIceCount: basketStore.dryIceCount || 0,
       dryIceMins: basketStore.dryIceMins || 0,
       phoneNumber: basketStore.phoneNumber || null,
-      kioskId: 1,
-      storeId: 1
+      pointUsed: basketStore.usedPoints || 0,
+      userCouponId: basketStore.usedCouponId || null,
+      kioskId: Number(localStorage.getItem('kioskId')) || 1,
+      // storeId is no longer strictly used by backend (derived from kioskId) but let's pass null or 1
+      storeId: Number(localStorage.getItem('storeId')) || 1,
+      // 장바구니 상품 목록과 수량, 선택한 맛(옵션) 정보를 서버로 전달
+      orderItems: basketStore.cartItems.map(item => ({
+        productId: item.productId || item.id, // 장바구니 구조에 맞게 id 필드 확인
+        quantity: item.quantity,
+        flavors: item.flavors || [] // 선택한 맛 정보가 있다면 함께 전달
+      }))
     });
     const orderId = orderRes.data;
 
-    // 2. 결제 완료 API 호출
+    // 2. 결제 완료 API 호출 
     await axios.post(`/api/orders/${orderId}/pay`, {
       paymentMethod: method,
-      pointUsed: basketStore.usedPoints || 0
+      pointUsed: basketStore.usedPoints || 0,
+      userCouponId: basketStore.usedCouponId || null
     });
     
     // 3. 결제 완료 화면으로 이동
     router.push(`/order-complete?orderId=${orderId}`);
   } catch (error) {
     console.error('결제 처리 중 오류 발생:', error);
-    displayAlert('결제 처리 중 오류가 발생했습니다.');
+    displayAlert(t('결제 처리 중 오류가 발생했습니다.'));
   }
 };
 
 const handleTossPayment = async () => {
   if (basketStore.cartItems.length === 0) {
-    displayAlert('장바구니가 비어있습니다. 처음부터 다시 시도해주세요.', () => {
+    displayAlert(t('장바구니가 비어있습니다. 처음부터 다시 시도해주세요.'), () => {
       router.push('/kiosk');
     });
     return;
   }
 
   try {
-    // 1. 토스 띄우기 전 주문 생성 API 호출 (DB 저장 및 포인트 적립)
+    // 1. 토스 띄우기 전 주문 생성 API 호출 (orderItems 추가)
     const orderRes = await axios.post('/api/orders', {
       orderType: basketStore.orderType || 'TOGO',
       dryIceCount: basketStore.dryIceCount || 0,
       dryIceMins: basketStore.dryIceMins || 0,
       phoneNumber: basketStore.phoneNumber || null,
-      kioskId: 1,
-      storeId: 1
+      pointUsed: basketStore.usedPoints || 0,
+      userCouponId: basketStore.usedCouponId || null,
+      kioskId: Number(localStorage.getItem('kioskId')) || 1,
+      storeId: Number(localStorage.getItem('storeId')) || 1,
+      // ⭐ [수정] 장바구니 상품 목록과 수량, 선택한 맛(옵션) 정보를 서버로 전달
+      orderItems: basketStore.cartItems.map(item => ({
+        productId: item.productId || item.id,
+        quantity: item.quantity,
+        flavors: item.flavors || []
+      }))
     });
     const orderId = orderRes.data;
 
     const tossPayments = await loadTossPayments(TOSS_CLIENT_KEY);
     
-    let orderName = '주문 상품';
+    let orderName = t('주문 상품');
     if (basketStore.cartItems.length > 0) {
       if (basketStore.cartItems.length === 1) {
-        orderName = basketStore.cartItems[0].productName;
+        orderName = formatCartItemName(basketStore.cartItems[0].productName);
       } else {
-        orderName = `${basketStore.cartItems[0].productName} 외 ${basketStore.cartItems.length - 1}건`;
+        orderName = t('{product} 외 {count}건', { product: formatCartItemName(basketStore.cartItems[0].productName), count: basketStore.cartItems.length - 1 });
       }
     }
     
     // 토스페이먼츠 결제창 호출 (파라미터 전달)
     await tossPayments.requestPayment('카드', {
       amount: basketStore.totalPrice - (basketStore.usedPoints || 0),
-      orderId: `kiosk_order_${orderId}`, // 토스는 최소 6자리 요구하여 prefix를 붙임
+      orderId: `kiosk_order_${orderId}`,
       orderName: orderName,
       customerName: '키오스크고객',
       successUrl: window.location.origin + `/toss/success?pointUsed=${basketStore.usedPoints || 0}`,
@@ -164,7 +197,7 @@ const handleTossPayment = async () => {
     });
   } catch (error) {
     console.error('토스 결제창 호출 오류:', error);
-    displayAlert('토스 결제창을 열 수 없습니다.');
+    displayAlert(t('토스 결제창을 열 수 없습니다.'));
   }
 };
 </script>

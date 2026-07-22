@@ -179,6 +179,19 @@ extends JpaRepository<StoreExpense, Integer>{
             @Param("endDate") LocalDate endDate
 
     );
+    
+    @Query("""
+    	    SELECT e
+    	    FROM StoreExpense e
+    	    WHERE e.store.id = :storeId
+    	    AND e.expenseDate BETWEEN :startDate AND :endDate
+    	    ORDER BY e.expenseDate DESC
+    	""")
+    	List<StoreExpense> findExpenseDetail(
+    	        Integer storeId,
+    	        LocalDate startDate,
+    	        LocalDate endDate
+    	);
 
 
 }

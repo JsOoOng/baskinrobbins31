@@ -10,6 +10,7 @@ import com.kiosk.branch.statistics.dto.CategorySalesDto;
 import com.kiosk.branch.statistics.dto.DashboardStatisticsDto;
 import com.kiosk.branch.statistics.dto.DaySalesDto;
 import com.kiosk.branch.statistics.dto.ExpenseCategoryDto;
+import com.kiosk.branch.statistics.dto.ExpenseDetailDto;
 import com.kiosk.branch.statistics.dto.ExpensePaymentDto;
 import com.kiosk.branch.statistics.dto.ExpensePeriodDto;
 import com.kiosk.branch.statistics.dto.ProductRankDto;
@@ -110,6 +111,54 @@ public class BranchStatisticsService {
                     * 100;
 
         }
+
+
+        /*
+         * =========================
+         * 결제 / 할인 / 마일리지
+         * =========================
+         */
+
+        Integer totalPaymentAmount =
+                safeInteger(
+                        orderRepository.findTotalPaymentAmount(
+                                storeId,
+                                startDate,
+                                endDate
+                        )
+                );
+
+
+        Integer couponDiscountAmount =
+                safeInteger(
+                        orderRepository.findCouponDiscountAmount(
+                                storeId,
+                                startDate,
+                                endDate
+                        )
+                );
+
+
+        Integer pointAmount =
+                safeInteger(
+                        orderRepository.findPointAmount(
+                                storeId,
+                                startDate,
+                                endDate
+                        )
+                );
+
+
+        Integer finalPaymentAmount =
+                safeInteger(
+                        orderRepository.findFinalPaymentAmount(
+                                storeId,
+                                startDate,
+                                endDate
+                        )
+                );
+        
+        
 
 
 
@@ -335,6 +384,42 @@ public class BranchStatisticsService {
 
 
 
+        List<ExpenseDetailDto> expenseDetail =
+                expenseRepository.findExpenseDetail(
+                        storeId,
+                        startDate,
+                        endDate
+                )
+                .stream()
+                .map(e ->
+                    ExpenseDetailDto.builder()
+
+                        .expenseId(e.getId())
+
+                        .expenseDate(
+                            e.getExpenseDate()
+                        )
+
+                        .description(
+                            e.getDescription()
+                        )
+
+                        .amount(
+                            e.getAmount()
+                        )
+
+                        .expenseCategory(
+                            e.getExpenseCategory()
+                        )
+
+                        .paymentMethod(
+                            e.getPaymentMethod()
+                        )
+
+                        .build()
+                )
+                .toList();
+        
 
 
 
@@ -360,6 +445,14 @@ public class BranchStatisticsService {
                 .profit(
                     sales - expense
                 )
+                
+                .totalPaymentAmount(totalPaymentAmount)
+
+                .couponDiscountAmount(couponDiscountAmount)
+
+                .pointAmount(pointAmount)
+
+                .finalPaymentAmount(finalPaymentAmount)
 
 
 
@@ -399,7 +492,8 @@ public class BranchStatisticsService {
 
                 .expensePayment(expensePayment)
 
-
+                .expenseDetail(expenseDetail)
+                
                 .build();
 
     }
@@ -473,6 +567,10 @@ public class BranchStatisticsService {
                 .build();
 
     }
+    
+    
+    
+    
 
 
 }

@@ -19,7 +19,8 @@
                 <th>상품명</th>
                 <th>재고</th>
                 <th>상태</th>
-                <th>변경</th>
+                <th>발주</th>
+
             </tr>
 
         </thead>
@@ -55,19 +56,14 @@
                 </td>
 
 
-                <td>
+               <td>
 
-                    <button
-                        @click="changeProductSoldOut(menu)"
-                    >
-
-                        {{
-                            menu.soldOut
-                            ? '판매 재개'
-                            : '품절 처리'
-                        }}
-
-                    </button>
+                <button
+                    v-if="menu.storeInventoryId"
+                    @click="openRestockModal(menu,'PRODUCT')"
+                >
+                    재고 신청
+                </button>
 
                 </td>
 
@@ -103,6 +99,8 @@
                 <th>상태</th>
 
                 <th>변경</th>
+
+                <th>발주</th>
 
             </tr>
 
@@ -186,6 +184,16 @@
 
                 </td>
 
+                <td>
+
+                <button
+                    @click="openRestockModal(flavor,'FLAVOR')"
+                >
+                    재고 신청
+                </button>
+
+                </td>
+
 
             </tr>
 
@@ -199,6 +207,60 @@
 
 </div>
 
+<div
+v-if="showRestockModal"
+class="modal-background"
+>
+
+
+<div class="restock-modal">
+
+
+<h3>
+재고 신청
+</h3>
+
+
+
+<p>
+신청 수량
+</p>
+
+
+
+<input
+type="number"
+v-model="restockQuantity"
+min="1"
+/>
+
+
+
+<div class="modal-buttons">
+
+
+<button
+@click="submitRestock"
+>
+완료
+</button>
+
+
+
+<button
+@click="closeRestockModal"
+>
+취소
+</button>
+
+
+</div>
+
+
+</div>
+
+
+</div>
 
 </template>
 
@@ -210,6 +272,14 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/api/axios'
+import { requestRestock } from '@/api/branch/statusApi'
+
+// 발주 모달
+const showRestockModal = ref(false)
+
+const selectedRestock = ref(null)
+
+const restockQuantity = ref(0)
 
 const router = useRouter()
 
@@ -315,49 +385,6 @@ const loadFlavors = async()=>{
 
 
 
-// 상품 품절 변경
-const changeProductSoldOut = async(menu)=>{
-
-
-    try{
-
-
-        await api.patch(
-
-            `/branch/status/product/${menu.storeProductId}`,
-
-            {
-
-                soldOut:
-                !menu.soldOut
-
-            }
-
-        )
-
-
-        await loadMenus()
-
-
-
-    }catch(e){
-
-
-        console.error(e)
-
-
-        alert(
-            '상품 상태 변경 실패'
-        )
-
-
-    }
-
-
-}
-
-
-
 
 
 // 맛 품절 변경
@@ -402,41 +429,29 @@ const changeFlavorSoldOut = async(flavor)=>{
 
 }
 
-const loadProducts = async () => {
-
-    try {
-        
-
-        const response =
-            await api.get(
-                `/branch/status/product/${user.storeId}`
-            )
-
-        menus.value = response.data
-
-
-    } catch(e){
-
-        console.error(e)
-
-    }
-
-}
-
 
 
 onMounted(()=>{
+
+
+// 최초 조회
+loadMenus()
+
+loadFlavors()
+
+
+
+// 5초마다 자동 새로고침
+intervalId = setInterval(() => {
 
 
     loadMenus()
 
     loadFlavors()
 
-    intervalId = setInterval(() => {
 
-        loadProducts()
+}, 5000)
 
-    }, 5000)
 
 })
 
@@ -449,34 +464,199 @@ onUnmounted(() => {
 
 const changeContainer = async (flavor, amount) => {
 
+try {
 
-    try {
-
-
-        const response =
-            await api.patch(
-                `/branch/status/flavor/${flavor.storeFlavorId}/container`,
-                {
-                    amount: amount
-                }
-            )
+    await api.patch(
+        `/branch/status/flavor/${flavor.storeFlavorId}/container`,
+        {
+            amount: amount
+        }
+    )
 
 
-        // 화면 즉시 변경
-        flavor.container = response.data.container
+    // 변경 후 다시 조회
+    await loadFlavors()
+
+
+} catch(e){
+
+    console.error(
+        '재고 변경 실패',
+        e
+    )
+
+    alert('재고 변경 실패')
+
+}
+
+}
+
+/*
+ * 발주창 열기
+ */
+ const openRestockModal = (item, type) => {
+
+
+console.log(
+    '발주 선택 데이터',
+    item
+)
+
+
+selectedRestock.value = {
+
+
+    type: type,
+
+
+    storeInventoryId:
+        type === 'PRODUCT'
+        ? item.storeInventoryId
+        : null,
+
+
+    storeFlavorId:
+        type === 'FLAVOR'
+        ? item.storeFlavorId
+        : null
+
+}
 
 
 
-    } catch(e){
+console.log(
+    '발주 요청 데이터',
+    selectedRestock.value
+)
 
-        console.error(
-            '재고 변경 실패',
-            e
-        )
 
-        alert('재고 변경 실패')
 
-    }
+restockQuantity.value = 0
+
+
+
+showRestockModal.value = true
+
+
+}
+
+
+
+
+
+/*
+* 발주 취소
+*/
+const closeRestockModal = () => {
+
+
+showRestockModal.value = false
+
+
+selectedRestock.value = null
+
+
+restockQuantity.value = 0
+
+
+}
+
+
+
+
+
+/*
+* 발주 신청
+*/
+const submitRestock = async()=>{
+
+
+if(!selectedRestock.value){
+
+    alert(
+        '발주 대상을 선택해주세요.'
+    )
+
+    return
+
+}
+
+
+
+if(
+    restockQuantity.value <= 0
+){
+
+    alert(
+        '발주 수량을 입력해주세요.'
+    )
+
+    return
+
+}
+
+
+
+const requestData = {
+
+
+    storeInventoryId:
+        selectedRestock.value.storeInventoryId ?? null,
+
+
+    storeFlavorId:
+        selectedRestock.value.storeFlavorId ?? null,
+
+
+    requestQuantity:
+        restockQuantity.value
+
+}
+
+
+
+console.log(
+    '최종 발주 요청',
+    requestData
+)
+
+
+
+try{
+
+
+    await requestRestock(
+        requestData
+    )
+
+
+
+    alert(
+        '재고 신청 완료'
+    )
+
+
+
+    closeRestockModal()
+
+
+
+}catch(e){
+
+
+    console.error(
+        '발주 신청 실패',
+        e
+    )
+
+
+
+    alert(
+        '재고 신청 실패'
+    )
+
+}
+
 
 }
 
@@ -865,6 +1045,96 @@ hr {
 .count-btn:hover{
 
     background:#555;
+
+}
+
+.modal-background{
+
+position:fixed;
+
+top:0;
+
+left:0;
+
+width:100%;
+
+height:100%;
+
+background:rgba(0,0,0,0.4);
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+}
+
+
+
+.restock-modal{
+
+
+background:white;
+
+padding:30px;
+
+border-radius:15px;
+
+width:300px;
+
+text-align:center;
+
+
+}
+
+
+
+.restock-modal input{
+
+
+width:80%;
+
+padding:10px;
+
+margin:20px 0;
+
+font-size:16px;
+
+
+}
+
+
+
+.modal-buttons{
+
+
+display:flex;
+
+justify-content:center;
+
+gap:15px;
+
+
+}
+
+
+
+.modal-buttons button{
+
+
+padding:10px 20px;
+
+border:none;
+
+border-radius:8px;
+
+background:#222;
+
+color:white;
+
+cursor:pointer;
+
 
 }
 

@@ -16,6 +16,9 @@ import {
 
 import P2ComingSoonModal from '@/components/head/P2ComingSoonModal.vue'
 
+import AppMessageToast
+  from '@/components/common/AppMessageToast.vue'
+
 /*
  * 서버 데이터
  */
@@ -196,7 +199,7 @@ const closeFormModal = () => {
 /*
  * 카테고리 저장
  */
-const submitCategory = async () => {
+ const submitCategory = async () => {
   const categoryName =
     formModal.categoryName.trim()
 
@@ -233,13 +236,13 @@ const submitCategory = async () => {
       displayOrder
     }
 
+    let successMessage = ''
+
     if (formModal.mode === 'create') {
       await createHeadCategory(payload)
 
-      showMessage(
-        '카테고리가 등록되었습니다.',
-        'success'
-      )
+      successMessage =
+        '카테고리가 등록되었습니다.'
 
     } else {
       await updateHeadCategory(
@@ -247,15 +250,18 @@ const submitCategory = async () => {
         payload
       )
 
-      showMessage(
-        '카테고리가 수정되었습니다.',
-        'success'
-      )
+      successMessage =
+        '카테고리가 수정되었습니다.'
     }
 
     formModal.open = false
 
     await loadCategories()
+
+    showMessage(
+      successMessage,
+      'success'
+    )
 
   } catch (error) {
     showMessage(
@@ -295,12 +301,12 @@ const removeCategory = async (category) => {
       category.categoryId
     )
 
+  await loadCategories()
+
     showMessage(
       '카테고리가 삭제되었습니다.',
       'success'
     )
-
-    await loadCategories()
 
   } catch (error) {
     showMessage(
@@ -351,39 +357,13 @@ onMounted(() => {
 </script>
 
 <template>
+  <AppMessageToast
+    :message="message"
+    :type="messageType"
+    @close="clearMessage"
+  />
+
   <section class="category-page">
-    <!-- 안내 메시지 -->
-    <Transition name="message">
-      <div
-        v-if="message"
-        class="page-message"
-        :class="{
-          'page-message-error':
-            messageType === 'error'
-        }"
-      >
-        <span>
-          {{
-            messageType === 'error'
-              ? '!'
-              : '✓'
-          }}
-        </span>
-
-        <p>
-          {{ message }}
-        </p>
-
-        <button
-          type="button"
-          aria-label="메시지 닫기"
-          @click="clearMessage"
-        >
-          ×
-        </button>
-      </div>
-    </Transition>
-
     <!-- 요약 카드 -->
     <div class="category-summary-grid">
       <article class="summary-card">
@@ -754,64 +734,6 @@ onMounted(() => {
 .category-page {
   display: grid;
   gap: 18px;
-}
-
-.page-message {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-
-  padding: 13px 15px;
-
-  border: 1px solid #bcebd6;
-  border-radius: 11px;
-
-  color: #168a5e;
-  background: #edfbf5;
-}
-
-.page-message > span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 21px;
-  height: 21px;
-
-  border-radius: 50%;
-
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: 900;
-
-  background: #25ad78;
-}
-
-.page-message p {
-  flex: 1;
-  margin: 0;
-
-  font-size: 12px;
-}
-
-.page-message button {
-  border: 0;
-  cursor: pointer;
-
-  color: inherit;
-  font-size: 20px;
-  background: transparent;
-}
-
-.page-message-error {
-  border-color: #ffd0d7;
-
-  color: #d64359;
-  background: #fff2f4;
-}
-
-.page-message-error > span {
-  background: #eb566b;
 }
 
 .category-summary-grid {
@@ -1378,15 +1300,11 @@ td {
   }
 }
 
-.message-enter-active,
-.message-leave-active,
 .modal-enter-active,
 .modal-leave-active {
   transition: opacity 0.2s ease;
 }
 
-.message-enter-from,
-.message-leave-to,
 .modal-enter-from,
 .modal-leave-to {
   opacity: 0;

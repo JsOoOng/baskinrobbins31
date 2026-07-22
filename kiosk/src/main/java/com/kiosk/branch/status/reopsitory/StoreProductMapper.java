@@ -1,6 +1,7 @@
 package com.kiosk.branch.status.reopsitory;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,5 +13,10 @@ public interface StoreProductMapper
 
 
     List<StoreProduct> findByStoreId(Integer storeId);
+    
+    Optional<StoreProduct> findByStoreIdAndProductId(
+            Integer storeId,
+            Integer productId
+    );
 
 }

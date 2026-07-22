@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.kiosk.branch.status.reopsitory.BranchRestockMapper">
+
+
+    <!-- 상품 재고 조회 -->
+    <select id="findStoreInventoryById"
+            parameterType="java.lang.Integer"
+            resultMap="storeInventoryMap">
+
+
+        SELECT
+
+            si.store_inventory_id,
+            si.store_id,
+            si.item_id,
+            si.current_stock,
+            si.min_stock,
+            si.target_stock,
+            si.auto_restock_enabled,
+            si.restock_mode,
+            si.last_updated
+
+
+        FROM store_inventory si
+
+
+        WHERE si.store_inventory_id =
+              #{storeInventoryId}
+
+
+    </select>
+
+
+
+
+    <resultMap id="storeInventoryMap"
+               type="com.kiosk.entity.StoreInventory">
+
+
+        <id property="id"
+            column="store_inventory_id"/>
+
+
+        <result property="currentStock"
+                column="current_stock"/>
+
+
+        <result property="minStock"
+                column="min_stock"/>
+
+
+        <result property="targetStock"
+                column="target_stock"/>
+
+
+        <result property="autoRestockEnabled"
+                column="auto_restock_enabled"/>
+
+
+        <result property="restockMode"
+                column="restock_mode"/>
+
+
+        <association property="store"
+                     javaType="com.kiosk.entity.Store">
+
+
+            <id property="id"
+                column="store_id"/>
+
+
+        </association>
+
+
+        <association property="item"
+                     javaType="com.kiosk.entity.InventoryItem">
+
+
+            <id property="id"
+                column="item_id"/>
+
+
+        </association>
+
+
+    </resultMap>
+
+
+
+
+
+    <!-- 맛 재고 조회 -->
+    <select id="findStoreFlavorById"
+            parameterType="java.lang.Integer"
+            resultMap="storeFlavorMap">
+
+
+        SELECT
+
+            sf.store_flavor_id,
+            sf.store_id,
+            sf.flavor_id,
+            sf.container,
+            sf.is_sold_out,
+            sf.min_stock,
+            sf.target_stock,
+            sf.auto_restock_enabled,
+            sf.restock_mode,
+            sf.last_updated
+
+
+        FROM store_flavors sf
+
+
+        WHERE sf.store_flavor_id =
+              #{storeFlavorId}
+
+
+    </select>
+
+
+
+
+
+    <resultMap id="storeFlavorMap"
+               type="com.kiosk.entity.StoreFlavor">
+
+
+        <id property="id"
+            column="store_flavor_id"/>
+
+
+        <result property="container"
+                column="container"/>
+
+
+        <result property="isSoldOut"
+                column="is_sold_out"/>
+
+
+        <result property="minStock"
+                column="min_stock"/>
+
+
+        <result property="targetStock"
+                column="target_stock"/>
+
+
+        <result property="autoRestockEnabled"
+                column="auto_restock_enabled"/>
+
+
+        <result property="restockMode"
+                column="restock_mode"/>
+
+
+        <association property="store"
+                     javaType="com.kiosk.entity.Store">
+
+
+            <id property="id"
+                column="store_id"/>
+
+
+        </association>
+
+
+
+        <association property="flavor"
+                     javaType="com.kiosk.entity.IcecreamFlavor">
+
+
+            <id property="id"
+                column="flavor_id"/>
+
+
+        </association>
+
+
+    </resultMap>
+
+
+</mapper>

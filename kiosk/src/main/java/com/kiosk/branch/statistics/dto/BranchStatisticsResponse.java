@@ -156,6 +156,24 @@ public class BranchStatisticsResponse {
     // 결제 방식별 지출
     private List<ExpensePaymentDto> expensePayment;
 
+    private List<ExpenseDetailDto> expenseDetail;
 
+    /*
+     * ==========================
+     * 결제 / 할인 / 마일리지
+     * ==========================
+     */
+
+    // 총 결제금액
+    private Integer totalPaymentAmount;
+
+    // 쿠폰 할인금액
+    private Integer couponDiscountAmount;
+
+    // 포인트 사용금액
+    private Integer pointAmount;
+
+    // 최종 결제금액
+    private Integer finalPaymentAmount;
 
 }

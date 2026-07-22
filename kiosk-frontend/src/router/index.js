@@ -8,6 +8,7 @@ import { useHeadAuthStore } from '../stores/head/headAuthStore'
 // ====================================================
 import HomeView from '@/views/customer/HomeView.vue'
 import MenuView from '@/views/customer/MenuView.vue'
+import HeadInventory from '@/views/head/HeadInventory.vue'
 
 // ====================================================
 // 본사 관리자 권한 및 유틸리티 설정
@@ -157,6 +158,75 @@ const router = createRouter({
       name: 'branch-kiosk-register',
       component: () => import('../views/branch/BranchKioskRegister.vue')
     },
+
+    {
+      path:'/branch/staff',
+      name: 'branch-staff',
+      component:() => import('../views/branch/StaffView.vue')
+    },
+
+    {
+          path:'/branch/staff/register',
+          name:'StaffRegister',
+          component:
+              () => import(
+                  '@/views/branch/StaffRegisterView.vue'
+              )
+      },
+
+      {
+        path:'/branch/staff/:staffId/update',
+        name:'StaffUpdate',
+        component:
+            () => import(
+                '@/views/branch/StaffUpdateView.vue'
+            )
+    },
+
+    {
+          path:'/branch/staff/:staffId/schedule',
+          name:'WeekSchedule',
+          component:
+              () => import(
+                  '@/views/branch/WeekScheduleView.vue'
+              )
+      },
+
+      {
+        path:'/branch/staff/:staffId/history',
+        name:'WorkHistory',
+        component:
+            () => import(
+                '@/views/branch/WorkHistoryView.vue'
+            )
+          },
+
+          {
+            path:'/branch/staff/:staffId/salary',
+            name:'SalaryView',
+            component:
+                () => import(
+                    '@/views/branch/SalaryView.vue'
+                )
+        },
+
+        {
+          path:'/branch/week-schedule',
+          name:'branch-week-schedule',
+          component:
+              () => import(
+                  '@/views/branch/BranchScheduleView.vue'
+              )
+      },
+
+      {
+        path:"/branch/expense",
+        name:"ExpenseCreate",
+        component:()=>import(
+        "@/views/branch/expense/ExpenseCreate.vue"
+        )
+       },
+
 
     // ====================================================
     // 본사 관리자 로그인 및 예외 처리
@@ -312,19 +382,25 @@ const router = createRouter({
         {
           path: 'settings',
           name: 'head-settings',
-          component: loadHeadTemporaryPage,
+          component: () => import('../views/head/HeadSettings.vue'),
           meta: { title: '설정', description: '본사 시스템의 공통 설정을 관리합니다.', phase: 'P1' }
+        },
+        {
+          path: 'logs',
+          name: 'head-logs',
+          component: () => import('../views/head/HeadActionLog.vue'),
+          meta: { title: '작업 내역', description: '관리자 작업 내역을 조회합니다.', phase: 'P1' }
         },
         {
           path: 'coupons',
           name: 'head-coupons',
-          component: loadHeadTemporaryPage,
+          component: () => import('../views/head/HeadCoupon.vue'),
           meta: { title: '쿠폰 관리', description: '쿠폰 발급과 사용 조건을 관리합니다.', phase: 'P2' }
         },
         {
           path: 'events',
           name: 'head-events',
-          component: loadHeadTemporaryPage,
+          component: () => import('../views/head/HeadEvent.vue'),
           meta: { title: '이벤트 관리', description: '이벤트 대상과 진행 기간을 관리합니다.', phase: 'P2' }
         },
         {
@@ -336,8 +412,14 @@ const router = createRouter({
         {
           path: 'inventory',
           name: 'head-inventory',
-          component: loadHeadTemporaryPage,
-          meta: { title: '재고 현황', description: '본사와 지점별 재고 수량을 확인합니다.', phase: 'P2' }
+          component: () => import('../views/head/HeadInventory.vue'),
+          meta: {
+            title: '재고 현황',
+            description:
+              '전체 지점 재고와 자동 보충 설정을 관리합니다.',
+            phase: 'P2',
+            implemented: true
+          }
         },
         {
           path: 'deliveries',
@@ -351,6 +433,12 @@ const router = createRouter({
           component: () => import('../views/head/HeadPolicy.vue'),
           meta: { title: '약관 및 방침 관리', description: '이용약관 및 개인정보 처리방침을 관리합니다.', phase: 'P2' }
         },
+        {
+          path: 'storeFlavor',
+          name: 'head-storeFlavor',
+          component: () => import('../views/head/HeadStoreFlavor.vue')
+        },
+
         /*
          * 존재하지 않는 /head 하위 주소 접근 시
          * 본사 대시보드로 리다이렉트

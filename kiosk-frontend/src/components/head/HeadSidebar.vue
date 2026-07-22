@@ -47,7 +47,6 @@ const menuGroups = computed(() => {
           label: '대시보드',
           icon: '▦',
           routeName: 'head-dashboard',
-          phase: 'P1',
           implemented: true
         }
       ]
@@ -60,21 +59,18 @@ const menuGroups = computed(() => {
           label: '본사 메뉴 관리',
           icon: '▣',
           routeName: 'head-products',
-          phase: 'P0',
           implemented: true
         },
         {
           label: '카테고리 관리',
           icon: '◫',
           routeName: 'head-categories',
-          phase: 'P0',
           implemented: true
         },
         {
           label: '상품 옵션 관리',
           icon: '◇',
           routeName: 'head-product-options',
-          phase: 'P0',
           implemented: true
         }
       ]
@@ -84,25 +80,16 @@ const menuGroups = computed(() => {
       title: '프로모션 관리',
       items: [
         {
-          label: '메뉴 할인 관리',
-          icon: '%',
-          routeName: 'head-discounts',
-          phase: 'P1',
-          implemented: true
-        },
-        {
           label: '쿠폰 관리',
           icon: '◇',
-          phase: 'P2',
-          implemented: false,
-          description:
-            '쿠폰 발급, 사용 기간, 할인 조건을 관리하는 기능입니다.'
+          routeName: 'head-coupons',
+          implemented: true
         },
         {
           label: '이벤트 관리',
           icon: '★',
-          phase: 'P2',
-          implemented: false,
+          routeName: 'head-events',
+          implemented: true,
           description:
             '이벤트 기간과 대상 상품·카테고리를 관리하는 기능입니다.'
         },
@@ -110,7 +97,6 @@ const menuGroups = computed(() => {
           label: '배너 관리',
           icon: '▤',
           routeName: 'head-banners',
-          phase: 'P1',
           implemented: true
         }
       ]
@@ -123,20 +109,17 @@ const menuGroups = computed(() => {
           label: '지점 관리',
           icon: '⌂',
           routeName: 'head-stores',
-          phase: 'P0',
           implemented: true
         },
         {
           label: '지점 판매 메뉴',
           icon: '▧',
           routeName: 'head-store-products',
-          phase: 'P0',
           implemented: true
         },
         {
           label: '재고 신청 관리',
           icon: '□',
-          phase: 'P2',
           implemented: false,
           description:
             '지점의 재고 신청 내역을 승인하고 처리하는 기능입니다.'
@@ -144,15 +127,15 @@ const menuGroups = computed(() => {
         {
           label: '재고 현황',
           icon: '▥',
+          routeName: 'head-inventory',
           phase: 'P2',
-          implemented: false,
+          implemented: true,
           description:
             '본사와 지점별 재고 현황을 조회하는 기능입니다.'
         },
         {
           label: '배송 관리',
           icon: '▱',
-          phase: 'P2',
           implemented: false,
           description:
             '출고, 배송 중, 배송 완료 상태를 관리하는 기능입니다.'
@@ -167,7 +150,6 @@ const menuGroups = computed(() => {
           label: '통계 및 리포트',
           icon: '↗',
           routeName: 'head-statistics',
-          phase: 'P1',
           implemented: true
         }
       ]
@@ -182,7 +164,6 @@ const menuGroups = computed(() => {
                 label: '보안 및 권한',
                 icon: '◆',
                 routeName: 'head-security',
-                phase: 'P1',
                 implemented: true,
                 roles: [
                   'SUPER_ADMIN'
@@ -195,7 +176,12 @@ const menuGroups = computed(() => {
           label: '설정',
           icon: '⚙',
           routeName: 'head-settings',
-          phase: 'P1',
+          implemented: true
+        },
+        {
+          label: '작업 내역',
+          icon: '📝',
+          routeName: 'head-logs',
           implemented: true
         }
       ]
@@ -217,31 +203,30 @@ const isActiveMenu = (item) => {
 /*
  * 메뉴 클릭 처리
  */
+/*
+ * 메뉴 클릭 처리
+ */
 const handleMenuClick = async (item) => {
   /*
-   * P2 기능은 화면 이동하지 않고
-   * 공통 안내 모달을 표시합니다.
+   * 아직 구현되지 않은 메뉴
    */
   if (!item.implemented) {
-    emit('open-p2', {
-      title: item.label,
-      description: item.description
-    })
-
-    emit('close')
+    emit('open-p2', item)
     return
   }
 
+  /*
+   * 구현됐지만 Route 이름이 없는 경우
+   */
   if (!item.routeName) {
     console.error(
       `[사이드바] ${item.label}의 Route 이름이 없습니다.`
     )
-
     return
   }
 
   /*
-   * 이미 현재 화면이면 중복 이동하지 않습니다.
+   * 현재 화면이면 중복 이동하지 않음
    */
   if (route.name === item.routeName) {
     emit('close')
@@ -253,13 +238,11 @@ const handleMenuClick = async (item) => {
       name: item.routeName
     })
 
-    emit('close')
-
-  } catch (error) {
     /*
-     * 동적 import 또는 Vue 파일 문법 오류가 발생하면
-     * 이제 브라우저에서 확인할 수 있습니다.
+     * 모바일 사이드바 닫기
      */
+    emit('close')
+  } catch (error) {
     console.error(
       `[사이드바 이동 실패] ${item.label}`,
       error

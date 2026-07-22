@@ -5,10 +5,10 @@
       <div class="header-left">
         <img src="@/assets/images/logo.png" alt="Baskin Robbins" class="logo" />
       </div>
-      <div class="kiosk-title">주문하기</div>
+      <div class="kiosk-title">{{ $t('주문하기') }}</div>
       <div class="header-right" style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
-        <button class="btn-home" @click="goHome">🏠 처음으로</button>
-        <span class="timer-text" v-if="timeoutStore && timeoutStore.timeLeft !== undefined">남은 시간: {{ timeoutStore.timeLeft }}초</span>
+        <button class="btn-home" @click="goHome">🏠 {{ $t('처음으로') }}</button>
+        <span class="timer-text" v-if="timeoutStore && timeoutStore.timeLeft !== undefined">{{ $t('남은 시간') }}: {{ timeoutStore.timeLeft }}{{ $t('초') }}</span>
       </div>
     </header>
 
@@ -20,7 +20,7 @@
         :class="['tab-item', { active: currentCategoryId === category.categoryId }]"
         @click="selectCategory(category.categoryId)"
       >
-        {{ category.categoryName }}
+        {{ $t(category.categoryName) }}
       </button>
     </nav>
 
@@ -47,8 +47,8 @@
               <div class="emoji-placeholder fallback-emoji" style="display:none;">🍦</div>
             </div>
             <div class="product-info">
-              <div class="product-name">{{ product.productName }}</div>
-              <div class="product-price">₩{{ formatPrice(product.basePrice) }}</div>
+              <div class="product-name">{{ $t(product.productName) }}</div>
+              <div class="product-price">₩{{ formatPrice(product.finalPrice) }}</div>
             </div>
           </div>
         </div>
@@ -77,7 +77,7 @@
     <div v-if="isModalOpen" class="modal-overlay">
       <div class="modal-content">
         <header class="modal-header">
-          <h3>{{ selectedProduct.productName }} 옵션 선택</h3>
+          <h3>{{ $t(selectedProduct.productName) }} 옵션 선택</h3>
           <button class="btn-close" @click="closeModal">❌</button>
         </header>
 
@@ -91,7 +91,7 @@
             
             <div class="selected-flavor-badges" v-if="selectedFlavors.length > 0">
               <span v-for="(fId, idx) in selectedFlavors" :key="idx" class="flavor-badge" @click="removeFlavorSlot(idx)">
-                {{ getFlavorName(fId) }} <span class="badge-remove">✖</span>
+                {{ $t(getFlavorName(fId)) }} <span class="badge-remove">✖</span>
               </span>
             </div>
             
@@ -104,7 +104,7 @@
               >
                 <img v-if="flavor.imageUrl" :src="flavor.imageUrl" :alt="flavor.flavorName" class="flavor-image"/>
                 <div v-else class="flavor-image-placeholder">🍦</div>
-                <div class="flavor-name">{{ flavor.flavorName }}</div>
+                <div class="flavor-name">{{ $t(flavor.flavorName) }}</div>
               </div>
             </div>
 
@@ -144,7 +144,7 @@
       </button>
       <button class="checkout-btn" @click="goPayment" :disabled="cartCount === 0">
         <span class="checkout-price" v-if="cartCount > 0">₩{{ formatPrice(totalPrice) }}</span>
-        <span class="checkout-text">결제하기</span>
+        <span class="checkout-text">{{ $t('결제하기') }}</span>
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="white" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
       </button>
     </footer>
@@ -155,8 +155,8 @@
         <button class="btn-close-circle" @click="closeModal">✖</button>
         <!-- 모달 탭 -->
         <div class="modal-tabs">
-          <button :class="['modal-tab-btn', {active: currentModalTab === 'INFO'}]" @click="currentModalTab = 'INFO'">상품정보</button>
-          <button :class="['modal-tab-btn', {active: currentModalTab === 'FLAVOR'}]" @click="currentModalTab = 'FLAVOR'">플레이버</button>
+          <button :class="['modal-tab-btn', {active: currentModalTab === 'INFO'}]" @click="currentModalTab = 'INFO'">{{ $t('상품정보') }}</button>
+          <button :class="['modal-tab-btn', {active: currentModalTab === 'FLAVOR'}]" @click="currentModalTab = 'FLAVOR'">{{ $t('플레이버') }}</button>
         </div>
 
         <!-- STEP 1: 상품 정보 탭 -->
@@ -165,31 +165,31 @@
             <img :src="selectedProduct?.imageUrl || `/images/products/${selectedProduct?.productName}.png`" @error="handleProductImgError" class="detail-img" />
             <div class="emoji-placeholder-big fallback-emoji" style="display:none;">🍦</div>
             <div class="detail-texts">
-              <h3>{{ selectedProduct?.productName }} <span class="detail-sub" v-if="isContainerSelectable">(콘/컵)</span></h3>
+              <h3>{{ $t(selectedProduct?.productName) }} <span class="detail-sub" v-if="isContainerSelectable">{{ $t('(콘/컵)') }}</span></h3>
             </div>
             <div class="detail-price-big">₩{{ formatPrice(calculatedItemPrice) }}</div>
           </div>
-          <p class="flavor-desc" v-if="currentMaxFlavors > 0">원하는 맛의 아이스크림을 즐기세요!</p>
-          <p class="warning-text" v-if="isContainerSelectable">★★ 본 제품은 포장이 불가합니다 ★★</p>
+          <p class="flavor-desc" v-if="currentMaxFlavors > 0">{{ $t('원하는 맛의 아이스크림을 즐기세요!') }}</p>
+          <p class="warning-text" v-if="isContainerSelectable">{{ $t('★★ 본 제품은 포장이 불가합니다 ★★') }}</p>
 
           <div class="container-options" v-if="isContainerSelectable">
             <div class="container-card" :class="{selected: selectedContainer === 'CUP'}" @click="selectedContainer = 'CUP'">
               <div class="container-img-wrap"><span class="container-emoji">🥤</span></div>
-              <span class="container-name">컵<br/><span class="sub-text">(포장불가)</span></span>
+              <span class="container-name">{{ $t('컵') }}<br/><span class="sub-text">{{ $t('(포장불가)') }}</span></span>
               <div class="qty-control-simple">
                 <span>-</span><span>{{ selectedContainer === 'CUP' ? '1' : '0' }}</span><span>+</span>
               </div>
             </div>
             <div class="container-card" :class="{selected: selectedContainer === 'CONE'}" @click="selectedContainer = 'CONE'">
               <div class="container-img-wrap"><span class="container-emoji">🍦</span></div>
-              <span class="container-name">콘<br/><span class="sub-text">(포장불가)</span></span>
+              <span class="container-name">{{ $t('콘') }}<br/><span class="sub-text">{{ $t('(포장불가)') }}</span></span>
               <div class="qty-control-simple">
                 <span>-</span><span>{{ selectedContainer === 'CONE' ? '1' : '0' }}</span><span>+</span>
               </div>
             </div>
             <div class="container-card" :class="{selected: selectedContainer === 'WAFFLE'}" @click="selectedContainer = 'WAFFLE'">
               <div class="container-img-wrap"><span class="container-emoji">🧇</span></div>
-              <span class="container-name">와플콘<br/><span class="sub-text">(포장불가)</span></span>
+              <span class="container-name">{{ $t('와플콘') }}<br/><span class="sub-text">{{ $t('(포장불가)') }}</span></span>
               <div class="qty-control-simple">
                 <span>-</span><span>{{ selectedContainer === 'WAFFLE' ? '1' : '0' }}</span><span>+</span>
               </div>
@@ -198,10 +198,10 @@
 
           <div class="modal-bottom-actions">
             <button class="btn-prev-outline" @click="closeModal">
-              <svg viewBox="0 0 24 24" width="20" height="20" stroke="#e91e63" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg> 이전
+              <svg viewBox="0 0 24 24" width="20" height="20" stroke="#e91e63" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg> {{ $t('이전') }}
             </button>
             <button class="btn-next-pink" @click="currentModalTab = 'FLAVOR'">
-              플레이버(맛) 선택
+              {{ $t('플레이버(맛) 선택') }}
             </button>
           </div>
         </div>
@@ -217,7 +217,7 @@
             >
               <img v-if="flavor.imageUrl" :src="flavor.imageUrl" :alt="flavor.flavorName" class="flavor-image"/>
               <div v-else class="flavor-image-placeholder">🍦</div>
-              <div class="flavor-name">{{ flavor.flavorName }}</div>
+              <div class="flavor-name">{{ $t(flavor.flavorName) }}</div>
             </div>
           </div>
 
@@ -253,10 +253,10 @@
 
           <div class="modal-bottom-actions">
             <button class="btn-prev-outline" @click="currentModalTab = 'INFO'">
-              <svg viewBox="0 0 24 24" width="20" height="20" stroke="#e91e63" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg> 이전
+              <svg viewBox="0 0 24 24" width="20" height="20" stroke="#e91e63" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg> {{ $t('이전') }}
             </button>
             <button class="btn-next-pink" @click="addCurrentItemToCart">
-              장바구니 담기
+              {{ $t('장바구니 담기') }}
             </button>
           </div>
         </div>
@@ -267,36 +267,36 @@
     <div v-if="isCartModalOpen" class="modal-overlay cart-overlay">
       <div class="modal-content cart-modal">
         <header class="modal-header">
-          <h3>장바구니 확인</h3>
+          <h3>{{ $t('장바구니 확인') }}</h3>
           <button class="btn-close" @click="closeCartModal">❌</button>
         </header>
 
         <main class="modal-body">
           <div v-if="basketStore.cartItems.length === 0" class="empty-cart-message">
-            장바구니가 비어 있습니다.
+            {{ $t('장바구니가 비어 있습니다.') }}
           </div>
           <div v-else class="cart-item-list">
             <div v-for="(item, index) in basketStore.cartItems" :key="index" class="cart-item-card">
               <div class="cart-item-info">
-                <div class="cart-item-name">{{ item.productName }}</div>
+                <div class="cart-item-name">{{ formatCartItemName(item.productName) }}</div>
                 <div class="cart-item-options">
                   <span v-for="(flavor, fIdx) in item.flavors" :key="fIdx">
-                    {{ flavor.flavorName }}{{ flavor.quantity > 1 ? '(' + flavor.quantity + ')' : '' }}{{ fIdx < item.flavors.length - 1 ? ', ' : '' }}
+                    {{ $t(flavor.flavorName) }}{{ flavor.quantity > 1 ? '(' + flavor.quantity + ')' : '' }}{{ fIdx < item.flavors.length - 1 ? ', ' : '' }}
                   </span>
                   <span v-if="item.extraSpoons">
-                    (스푼 추가)
+                    {{ $t('(스푼 추가)') }}
                   </span>
                 </div>
                 <div class="cart-item-price">{{ formatPrice(item.unitPrice * item.quantity) }}원</div>
               </div>
                 <div class="cart-item-actions">
-                  <button class="btn-edit-option" @click="openEditOptionModal(index, item)">옵션 변경 ⚙️</button>
+                  <button class="btn-edit-option" @click="openEditOptionModal(index, item)">{{ $t('옵션 변경') }} ⚙️</button>
                   <div class="qty-control">
                     <button class="btn-qty" @click="decreaseCartQty(index, item.quantity)">-</button>
                     <span class="qty-text">{{ item.quantity }}</span>
                     <button class="btn-qty" @click="increaseCartQty(index, item.quantity)">+</button>
                   </div>
-                  <button class="btn-delete" @click="deleteCartItem(index)">삭제 🗑️</button>
+                  <button class="btn-delete" @click="deleteCartItem(index)">{{ $t('삭제') }} 🗑️</button>
                 </div>
             </div>
           </div>
@@ -304,11 +304,11 @@
 
         <footer class="modal-footer cart-modal-footer">
           <div class="cart-modal-summary">
-            총 결제금액: <strong class="total-price">{{ formatPrice(totalPrice) }}원</strong>
+            {{ $t('총 결제금액') }}: <strong class="total-price">{{ formatPrice(totalPrice) }}{{ $t('원') }}</strong>
           </div>
           <div class="cart-modal-buttons">
-            <button class="btn-add-more" @click="closeCartModal">메뉴 더 담기 ➕</button>
-            <button class="btn-pay-now" :disabled="cartCount === 0" @click="goPayment">결제하기 💳</button>
+            <button class="btn-add-more" @click="closeCartModal">{{ $t('메뉴 더 담기') }} ➕</button>
+            <button class="btn-pay-now" :disabled="cartCount === 0" @click="goPayment">{{ $t('결제하기') }} 💳</button>
           </div>
         </footer>
       </div>
@@ -349,6 +349,7 @@
 
 <script setup>
 import { ref, onMounted, computed, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import axios from '@/api/axios'
 import { useBasketStore } from '@/stores/customer/basket'
@@ -357,6 +358,7 @@ import { useTimeoutStore } from '@/stores/customer/timeout'
 const router = useRouter()
 const basketStore = useBasketStore()
 const timeoutStore = useTimeoutStore()
+const { t } = useI18n({ useScope: 'global' })
 
 
 
@@ -366,7 +368,7 @@ const dbProducts = ref([])
 const dbOptions = ref([])
 const dbFlavors = ref([])
 
-const currentStoreId = ref(1) 
+const currentStoreId = ref(Number(localStorage.getItem('storeId')) || 1) 
 const currentCategoryId = ref(null)
 const isModalOpen = ref(false)
 const isCartModalOpen = ref(false)
@@ -484,6 +486,21 @@ const selectCategory = async (id) => {
 
 // [API 통신 3]: 상품을 클릭했을 때 해당 상품의 사이즈 및 최대 선택 맛 수(옵션) 조회
 const openOptionModal = async (product) => {
+  // 아이스크림(카테고리 ID 1)이 아니면 모달을 띄우지 않고 바로 장바구니에 담기
+  if (product.categoryId !== 1 && currentCategoryId.value !== 1) {
+    const cartItem = {
+      productId: product.productId,
+      productName: product.productName,
+      unitPrice: product.finalPrice || product.basePrice,
+      quantity: 1,
+      flavors: [],
+      options: [],
+      extraSpoons: false
+    }
+    await basketStore.addToCart(cartItem)
+    return
+  }
+
   editingCartIndex.value = null
   selectedProduct.value = product
   selectedFlavors.value = []
@@ -546,6 +563,19 @@ const getFlavorImage = (fId) => {
   return f ? f.imageUrl : null;
 }
 
+const formatCartItemName = (name) => {
+  if (name.includes(' (')) {
+    const parts = name.split(' (');
+    const base = t(parts[0]);
+    let container = parts[1].replace(')', '');
+    if (container === 'CUP') container = t('컵');
+    if (container === 'CONE') container = t('콘');
+    if (container === 'WAFFLE') container = t('와플콘');
+    return `${base} (${container})`;
+  }
+  return t(name);
+}
+
 const addFlavorSlot = (id) => {
   if (!isFlavorMax.value) {
     selectedFlavors.value.push(id)
@@ -562,7 +592,7 @@ const calculatedItemPrice = computed(() => {
   if (spoonCount.value > 4) {
     extraSpoonPrice = (spoonCount.value - 4) * 50
   }
-  return selectedProduct.value.basePrice + extraSpoonPrice
+  return selectedProduct.value.finalPrice + extraSpoonPrice
 })
 
 const formatPrice = (val) => val?.toLocaleString()
@@ -574,12 +604,12 @@ const closeModal = () => {
 const openEditOptionModal = async (index, cartItem) => {
   editingCartIndex.value = index
   
-  // 1. 선택 상품 객체 복원 (basePrice 계산: 스푼이 true면 일단 50원을 뺀 값으로 추정)
-  const basePrice = cartItem.extraSpoons ? cartItem.unitPrice - 50 : cartItem.unitPrice;
+  // 1. 선택 상품 객체 복원 (finalPrice 계산: 스푼이 true면 개당 50원을 뺀 값으로 추정)
+  const finalPrice = cartItem.extraSpoons ? cartItem.unitPrice - 50 : cartItem.unitPrice;
   selectedProduct.value = { 
     productId: cartItem.productId, 
     productName: cartItem.productName, 
-    basePrice: basePrice 
+    finalPrice: finalPrice 
   };
   
   // 2. 맛 배열 복원
@@ -624,7 +654,7 @@ const toggleFlavorSlot = (id) => {
 
 const addCurrentItemToCart = async () => { 
   if (currentMaxFlavors.value > 0 && selectedFlavors.value.length < currentMaxFlavors.value) {
-    displayToast(`아이스크림 맛을 ${currentMaxFlavors.value}가지 모두 선택해주세요.`);
+    displayToast(t('아이스크림 맛을 {count}가지 모두 선택해주세요.', { count: currentMaxFlavors.value }));
     return;
   }
 
@@ -683,10 +713,10 @@ const processAddToCart = async (requestData) => {
   try {
     if (editingCartIndex.value !== null) {
       await axios.put(`/api/customer/basket/item/${editingCartIndex.value}`, requestData);
-      displayToast(`${selectedProduct.value.productName} 상품 옵션이 수정되었습니다!`);
+      displayToast(t('{product} 상품 옵션이 수정되었습니다!', { product: t(selectedProduct.value.productName) }));
     } else {
       await axios.post('/api/customer/basket', requestData);
-      displayToast(`${selectedProduct.value.productName} 상품이 장바구니에 담겼습니다!`);
+      displayToast(t('{product} 상품이 장바구니에 담겼습니다!', { product: t(selectedProduct.value.productName) }));
     }
     
     await basketStore.fetchBasket();
@@ -696,7 +726,7 @@ const processAddToCart = async (requestData) => {
     }
   } catch (error) {
     console.error('장바구니 로직 실패:', error);
-    displayToast('작업을 완료하는데 실패했습니다.');
+    displayToast(t('작업을 완료하는데 실패했습니다.'));
   }
 }
 
@@ -721,7 +751,7 @@ const decreaseCartQty = (index, currentQty) => {
 
 const deleteCartItem = (index) => {
   basketStore.removeFromCart(index);
-  displayToast("상품이 장바구니에서 삭제되었습니다.");
+  displayToast(t("상품이 장바구니에서 삭제되었습니다."));
   if (basketStore.cartItems.length === 0) {
     closeCartModal();
   }
@@ -738,7 +768,7 @@ const goHome = async () => {
 
 const goPayment = async () => { 
   if (basketStore.cartItems.length === 0) {
-    displayToast('결제를 진행할 수 없습니다. (장바구니가 비어있는지 확인해주세요)');
+    displayToast(t('결제를 진행할 수 없습니다. (장바구니가 비어있는지 확인해주세요)'));
     return;
   }
   // 바로 포인트/할인 화면으로 넘어갑니다. (DB 주문 생성은 결제 최종 단계로 지연)

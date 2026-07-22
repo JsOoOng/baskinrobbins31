@@ -1,7 +1,11 @@
 package com.kiosk.customer.order.controller;
 
+import java.util.Base64;
 import java.util.Map;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,19 +13,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import com.kiosk.customer.order.dto.OrderCreateRequest;
 import com.kiosk.customer.order.dto.OrderResponse;
 import com.kiosk.customer.order.dto.TossConfirmRequest;
 import com.kiosk.customer.order.repository.OrderMapper;
 import com.kiosk.customer.order.service.OrderService;
+
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.MediaType;
-import java.util.Base64;
 
 @RestController
 @RequiredArgsConstructor
@@ -61,11 +62,25 @@ public class OrderController {
     public ResponseEntity<String> completePayment(
             @PathVariable("orderId") int orderId, 
             @RequestBody Map<String, Object> request,
-            HttpSession session) { // session 파라미터 추가
+            HttpSession session) {
+
+        // 1. 결제 수단 추출
+        String paymentMethod = (String) request.get("paymentMethod");
         
-        String paymentMethod = (String) request.get("paymentMethod"); // 키값으로 추출
-        int pointUsed = request.containsKey("pointUsed") ? Integer.parseInt(String.valueOf(request.get("pointUsed"))) : 0;
-        orderService.processPayment(orderId, paymentMethod, pointUsed, session); // session 및 pointUsed 전달
+        // 2. ⭐ 쿠폰 ID 안전하게 추출 (Type Cast 에러 방지)
+        int userCouponId = 0;
+        if (request.containsKey("userCouponId") && request.get("userCouponId") != null) {
+            userCouponId = Integer.parseInt(String.valueOf(request.get("userCouponId")));
+        }
+        
+        // 3. 포인트 관련 추출 
+        boolean usePoints = request.containsKey("usePoints") && (boolean) request.get("usePoints");
+        int pointUsed = request.containsKey("pointUsed") && request.get("pointUsed") != null 
+                        ? Integer.parseInt(String.valueOf(request.get("pointUsed"))) 
+                        : 0;
+
+        // 4. 서비스로 통합 전달
+        orderService.processPayment(orderId, paymentMethod, userCouponId, pointUsed, session);
         
         return ResponseEntity.ok("결제 및 재고 차감 완료");
     }
@@ -107,7 +122,7 @@ public class OrderController {
             // 승인이 완료되면 실제 비즈니스 로직(재고 차감, 주문 완료) 처리
             String realOrderIdStr = tossReq.getOrderId().replace("kiosk_order_", "");
             int orderId = Integer.parseInt(realOrderIdStr);
-            orderService.processPayment(orderId, "TOSS", tossReq.getPointUsed(), session);
+            orderService.processPayment(orderId, "TOSS", 0, tossReq.getPointUsed(), session);
             
             // 영수증 데이터 생성 후 로컬 /receipt API 호출
             try {
@@ -156,4 +171,3 @@ public class OrderController {
         return ResponseEntity.ok("영수증 출력 성공");
     }
 }
-

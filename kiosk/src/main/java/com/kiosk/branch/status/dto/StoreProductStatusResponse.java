@@ -5,33 +5,65 @@ import com.kiosk.entity.StoreProduct;
 import lombok.Builder;
 import lombok.Getter;
 
-
 @Getter
 @Builder
 public class StoreProductStatusResponse {
 
 
     private Integer storeProductId;
-    
+
+    /*
+     * 발주용 재고 ID
+     */
+    private Integer storeInventoryId;
+
+
     private Integer productId;
+
 
     private String productName;
 
+
     private Boolean soldOut;
 
+
     private Integer currentStock;
+    
+
+
 
     public static StoreProductStatusResponse from(
             StoreProduct sp,
+            Integer storeInventoryId,
             Integer currentStock
     ){
 
         return StoreProductStatusResponse.builder()
-                .storeProductId(sp.getId())
-                .productId(sp.getProduct().getId())
-                .productName(sp.getProduct().getProductName())
-                .soldOut(sp.getIsSoldOut())
-                .currentStock(currentStock)
+
+                .storeProductId(
+                        sp.getId()
+                )
+
+                .storeInventoryId(
+                        storeInventoryId
+                )
+
+                .productId(
+                        sp.getProduct().getId()
+                )
+
+                .productName(
+                        sp.getProduct().getProductName()
+                )
+
+                .soldOut(
+                        sp.getIsSoldOut()
+                )
+
+                .currentStock(
+                        currentStock
+                )
+
                 .build();
 
     }

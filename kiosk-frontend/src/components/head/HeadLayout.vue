@@ -5,6 +5,7 @@ import {
   ref,
   watch
 } from 'vue'
+
 import { useRoute } from 'vue-router'
 
 import HeadSidebar
@@ -12,6 +13,9 @@ import HeadSidebar
 
 import HeadHeader
   from './HeadHeader.vue'
+
+import HeadNotificationBell
+  from '@/components/head/HeadNotificationBell.vue'
 
 import P2ComingSoonModal
   from './P2ComingSoonModal.vue'
@@ -27,16 +31,29 @@ const p2Modal = reactive({
   description: ''
 })
 
+/*
+ * 모바일 사이드바 열기·닫기
+ */
 const toggleSidebar = () => {
   sidebarOpen.value =
     !sidebarOpen.value
 }
 
+/*
+ * 모바일 사이드바 닫기
+ */
 const closeSidebar = () => {
   sidebarOpen.value = false
 }
 
-const openP2Modal = (payload = {}) => {
+/*
+ * 아직 구현되지 않은 P2 기능 안내창
+ *
+ * 사이드바의 미구현 메뉴에서 사용합니다.
+ */
+const openP2Modal = (
+  payload = {}
+) => {
   p2Modal.title =
     payload.title ||
     '준비 중인 기능'
@@ -47,12 +64,16 @@ const openP2Modal = (payload = {}) => {
   p2Modal.open = true
 }
 
+/*
+ * P2 안내창 닫기
+ */
 const closeP2Modal = () => {
   p2Modal.open = false
 }
 
 /*
- * 주소가 변경되면 모바일 사이드바를 닫습니다.
+ * 주소가 변경되면
+ * 모바일 사이드바를 닫습니다.
  */
 watch(
   () => route.fullPath,
@@ -71,10 +92,16 @@ watch(
 
   (open) => {
     document.body.style.overflow =
-      open ? 'hidden' : ''
+      open
+        ? 'hidden'
+        : ''
   }
 )
 
+/*
+ * 레이아웃을 벗어날 때
+ * body 스크롤 상태를 원상복구합니다.
+ */
 onBeforeUnmount(() => {
   document.body.style.overflow = ''
 })
@@ -82,12 +109,14 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="head-layout">
+    <!-- 본사 사이드바 -->
     <HeadSidebar
       :open="sidebarOpen"
       @close="closeSidebar"
       @open-p2="openP2Modal"
     />
 
+    <!-- 모바일 사이드바 배경 -->
     <Transition name="overlay">
       <button
         v-if="sidebarOpen"
@@ -99,16 +128,27 @@ onBeforeUnmount(() => {
     </Transition>
 
     <div class="head-main-shell">
+      <!-- 본사 공통 헤더 -->
       <HeadHeader
         @toggle-sidebar="toggleSidebar"
         @open-p2="openP2Modal"
-      />
+      >
+        <!--
+          HeadHeader의 notification 슬롯에
+          실제 알림 센터를 전달합니다.
+        -->
+        <template #notification>
+          <HeadNotificationBell />
+        </template>
+      </HeadHeader>
 
+      <!-- 현재 라우트 화면 -->
       <main class="head-content">
         <RouterView />
       </main>
     </div>
 
+    <!-- 미구현 P2 기능 안내창 -->
     <P2ComingSoonModal
       :open="p2Modal.open"
       :title="p2Modal.title"
@@ -121,7 +161,6 @@ onBeforeUnmount(() => {
 <style scoped>
 .head-layout {
   min-height: 100vh;
-
   background: #f4f6fa;
 }
 
@@ -138,6 +177,9 @@ onBeforeUnmount(() => {
   display: none;
 }
 
+/*
+ * 태블릿·모바일
+ */
 @media (max-width: 900px) {
   .head-main-shell {
     margin-left: 0;
@@ -164,9 +206,13 @@ onBeforeUnmount(() => {
   }
 }
 
+/*
+ * 모바일 사이드바 배경 전환
+ */
 .overlay-enter-active,
 .overlay-leave-active {
-  transition: opacity 0.2s ease;
+  transition:
+    opacity 0.2s ease;
 }
 
 .overlay-enter-from,

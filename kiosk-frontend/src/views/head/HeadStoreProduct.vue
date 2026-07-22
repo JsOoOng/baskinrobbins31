@@ -17,6 +17,9 @@ import {
   getHeadProducts
 } from '@/api/head/headProductApi'
 
+import AppMessageToast
+  from '@/components/common/AppMessageToast.vue'
+
 import {
   createHeadStoreProduct,
   deleteHeadStoreProduct,
@@ -231,9 +234,11 @@ const loadInitialData = async () => {
         ? storeData.map(normalizeStore)
         : []
 
-    headquartersProducts.value =
-      Array.isArray(productData)
-        ? productData.map(normalizeProduct)
+    stores.value =
+      Array.isArray(storeData)
+        ? storeData
+            .map(normalizeStore)
+            .sort((a, b) => a.storeId - b.storeId)
         : []
 
     if (
@@ -265,7 +270,6 @@ const loadStoreProducts = async () => {
   }
 
   loading.value = true
-  clearMessage()
 
   try {
     const responseBody =
@@ -308,10 +312,21 @@ const resetForm = () => {
 }
 
 const openCreateModal = () => {
+  clearMessage()
+
   if (!selectedStoreId.value) {
     showMessage(
       '지점을 먼저 선택해주세요.',
       'error'
+    )
+
+    return
+  }
+
+  if (availableProducts.value.length === 0) {
+    showMessage(
+      '이 지점에 추가할 수 있는 본사 상품이 없습니다.',
+      'warning'
     )
 
     return
@@ -325,6 +340,8 @@ const openCreateModal = () => {
 }
 
 const openEditModal = (product) => {
+  clearMessage()
+
   form.productId =
     product.productId
 
@@ -562,43 +579,28 @@ const removeStoreProduct = async (
 
 watch(
   selectedStoreId,
-  () => {
+  async () => {
     searchKeyword.value = ''
     soldOutFilter.value = 'ALL'
-    loadStoreProducts()
+
+    clearMessage()
+
+    await loadStoreProducts()
   }
 )
 
 onMounted(async () => {
   await loadInitialData()
-
-  if (selectedStoreId.value) {
-    await loadStoreProducts()
-  }
 })
 </script>
 
 <template>
+  <AppMessageToast
+    :message="message"
+    :type="messageType"
+    @close="clearMessage"
+  />
   <section class="store-product-page">
-    <div
-      v-if="message"
-      class="page-message"
-      :class="{ error: messageType === 'error' }"
-    >
-      <strong>
-        {{ messageType === 'error' ? '!' : '✓' }}
-      </strong>
-
-      <p>{{ message }}</p>
-
-      <button
-        type="button"
-        @click="clearMessage"
-      >
-        ×
-      </button>
-    </div>
-
     <section class="store-selector">
       <div>
         <p class="section-label">
@@ -613,12 +615,12 @@ onMounted(async () => {
       </div>
 
       <select v-model="selectedStoreId">
-        <option value="">
-          지점을 선택해주세요
+        <option disabled value="">
+          지점을 선택해 주세요
         </option>
 
         <option
-          v-for="store in stores"
+          v-for="store in [...stores].sort((a, b) => a.storeId - b.storeId)"
           :key="store.storeId"
           :value="store.storeId"
         >
@@ -696,7 +698,10 @@ onMounted(async () => {
           <button
             type="button"
             class="create-button"
-            :disabled="!selectedStoreId"
+            :disabled="
+              !selectedStoreId ||
+              availableProducts.length === 0
+            "
             @click="openCreateModal"
           >
             ＋ 판매 메뉴 추가
@@ -909,9 +914,16 @@ onMounted(async () => {
               <input
                 v-model="form.isSoldOut"
                 type="checkbox"
+                :disabled="saving"
               />
 
-              <span>등록 즉시 품절 처리</span>
+              <span>
+                {{
+                  modal.mode === 'create'
+                    ? '등록 즉시 품절 처리'
+                    : '현재 상품을 품절 처리'
+                }}
+              </span>
             </label>
           </div>
 
@@ -919,15 +931,16 @@ onMounted(async () => {
             <button
               type="button"
               class="cancel-button"
+              :disabled="saving"
               @click="closeModal"
             >
               취소
             </button>
 
             <button
-              type="submit"
-              class="save-button"
+              type="button"
               :disabled="saving"
+              @click="closeModal"
             >
               {{
                 saving
@@ -948,34 +961,6 @@ onMounted(async () => {
 .store-product-page {
   display: grid;
   gap: 18px;
-}
-
-.page-message {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 13px 15px;
-  border: 1px solid #bcebd6;
-  border-radius: 11px;
-  color: #168a5e;
-  background: #edfbf5;
-}
-
-.page-message.error {
-  border-color: #ffd0d7;
-  color: #d64359;
-  background: #fff2f4;
-}
-
-.page-message p {
-  flex: 1;
-  margin: 0;
-}
-
-.page-message button {
-  border: 0;
-  cursor: pointer;
-  background: transparent;
 }
 
 .store-selector {
@@ -1089,6 +1074,11 @@ onMounted(async () => {
   cursor: pointer;
   color: white;
   background: #725ee7;
+}
+
+.create-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .table-scroll {

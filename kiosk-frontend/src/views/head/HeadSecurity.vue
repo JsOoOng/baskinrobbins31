@@ -6,6 +6,9 @@ import {
   ref
 } from 'vue'
 
+import AppMessageToast
+  from '@/components/common/AppMessageToast.vue'
+
 import {
   createHeadAdmin,
   extractSecurityData,
@@ -494,11 +497,11 @@ const submitAdmin = async () => {
 
       adminModal.open = false
 
-      await loadAdmins(true)
-
       showMessage(
         '본사 관리자 계정이 생성되었습니다.'
       )
+
+      await loadAdmins(true)
 
     } else {
       await updateHeadAdmin(
@@ -518,11 +521,11 @@ const submitAdmin = async () => {
 
       adminModal.open = false
 
-      await loadAdmins(true)
-
       showMessage(
         '관리자 정보가 수정되었습니다.'
       )
+
+      await loadAdmins(true)
     }
 
   } catch (error) {
@@ -699,41 +702,12 @@ onMounted(() => {
 </script>
 
 <template>
+  <AppMessageToast
+  :message="message"
+  :type="messageType"
+  @close="clearMessage"
+  />
   <section class="security-page">
-    <!-- 결과 메시지 -->
-    <Teleport to="body">
-        <Transition name="message">
-            <div
-            v-if="message"
-            class="page-message floating-message"
-            :class="{
-                error:
-                messageType === 'error'
-            }"
-            role="alert"
-            aria-live="assertive"
-            >
-            <strong class="message-icon">
-                {{
-                messageType === 'error'
-                    ? '!'
-                    : '✓'
-                }}
-            </strong>
-
-            <p>{{ message }}</p>
-
-            <button
-                type="button"
-                aria-label="메시지 닫기"
-                @click="clearMessage"
-            >
-                ×
-            </button>
-            </div>
-        </Transition>
-    </Teleport>
-
     <!-- 요약 카드 -->
     <div class="summary-grid">
       <article>
@@ -1381,80 +1355,6 @@ onMounted(() => {
   gap: 18px;
 }
 
-.page-message {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 13px 15px;
-  border: 1px solid #bcebd6;
-  border-radius: 11px;
-  color: #168a5e;
-  background: #edfbf5;
-}
-
-.page-message.error {
-  border-color: #ffd0d7;
-  color: #d64359;
-  background: #fff2f4;
-}
-
-.message-icon {
-  display: grid;
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  place-items: center;
-  border-radius: 50%;
-  color: #ffffff;
-  background: #25ad78;
-}
-
-.page-message.error .message-icon {
-  background: #eb566b;
-}
-
-.page-message p {
-  flex: 1;
-  margin: 0;
-  font-size: 11px;
-}
-
-.page-message > button {
-  border: 0;
-  cursor: pointer;
-  color: inherit;
-  font-size: 20px;
-  background: transparent;
-}
-
-.floating-message {
-  position: fixed;
-  z-index: 5000;
-  inset: 0;
-
-  width: min(
-    420px,
-    calc(100vw - 48px)
-  );
-
-  height: fit-content;
-  margin: auto;
-  box-sizing: border-box;
-
-  box-shadow:
-    0 16px 45px
-    rgba(25, 29, 42, 0.28);
-}
-
-@media (max-width: 650px) {
-  .floating-message {
-    top: 12px;
-    right: 12px;
-    left: 12px;
-    width: auto;
-  }
-}
-
 .summary-grid {
   display: grid;
   grid-template-columns:
@@ -1967,23 +1867,14 @@ tbody tr:hover {
   background: #d94c81;
 }
 
-.message-enter-active,
-.message-leave-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.2s ease;
 }
 
-.message-enter-from,
-.message-leave-to {
+.modal-enter-from,
+.modal-leave-to {
   opacity: 0;
-  transform: scale(0.94);
-}
-
-.message-enter-to,
-.message-leave-from {
-  opacity: 1;
-  transform: scale(1);
 }
 
 @keyframes spin {

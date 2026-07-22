@@ -22,6 +22,9 @@ public class BranchKioskResponse {
 
     private LocalDateTime createdAt;
 
+    private Integer storeId;
+
+    private String storeName;
 
     public static BranchKioskResponse from(Kiosk kiosk){
 
@@ -31,6 +34,8 @@ public class BranchKioskResponse {
                 .deviceSerial(kiosk.getDeviceSerial())
                 .kioskStatus(kiosk.getKioskStatus())
                 .createdAt(kiosk.getCreatedAt())
+                .storeId(kiosk.getStore() != null ? kiosk.getStore().getId() : null)
+                .storeName(kiosk.getStore() != null ? kiosk.getStore().getStoreName() : null)
                 .build();
 
     }

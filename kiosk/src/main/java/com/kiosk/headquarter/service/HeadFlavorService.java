@@ -58,15 +58,6 @@ public class HeadFlavorService {
                 .toList();
     }
 
-    // 운영 중인 아이스크림 맛 목록 조회
-    public List<HeadFlavorResponseDTO> getActiveFlavorList() {
-
-        return headFlavorMapper.findByIsActiveTrueOrderByIdDesc()
-                .stream()
-                .map(this::toResponseDTO)
-                .toList();
-    }
-
     // 아이스크림 맛 상세 조회
     public HeadFlavorResponseDTO getFlavorDetail(Integer flavorId) {
 
@@ -129,5 +120,36 @@ public class HeadFlavorService {
                 .isActive(flavor.getIsActive())
                 .imageUrl(flavor.getImageUrl())
                 .build();
+    }
+    
+    /*
+    * 상품 등록 화면에서 사용할
+    * 활성화된 맛 목록 조회
+    */
+    // 운영 중인 아이스크림 맛 목록 조회
+    public List<HeadFlavorResponseDTO>
+            getActiveFlavorList() {
+
+        return headFlavorMapper
+                .findByIsActiveTrueOrderByIdDesc()
+                .stream()
+                .map(flavor ->
+                        HeadFlavorResponseDTO
+                                .builder()
+                                .flavorId(
+                                        flavor.getId()
+                                )
+                                .flavorName(
+                                        flavor.getFlavorName()
+                                )
+                                .isActive(
+                                        flavor.getIsActive()
+                                )
+                                .imageUrl(
+                                        flavor.getImageUrl()
+                                )
+                                .build()
+                )
+                .toList();
     }
 }

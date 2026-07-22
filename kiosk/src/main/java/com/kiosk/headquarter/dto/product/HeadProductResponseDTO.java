@@ -1,6 +1,5 @@
 package com.kiosk.headquarter.dto.product;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import lombok.Builder;
@@ -16,8 +15,9 @@ public class HeadProductResponseDTO {
     private String productName;
     private String description;
     private Integer basePrice;
-    private BigDecimal discountRate;
+    private Integer discountRate;
     private Boolean isDisplay;
     private String imageUrl;
     private LocalDateTime createdAt;
+
 }

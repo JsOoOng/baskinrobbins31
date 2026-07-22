@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.http.MediaType;
 
 import com.kiosk.branch.kiosk.dto.BranchKioskResponse;
 import com.kiosk.branch.kiosk.dto.KioskCreateRequest;
@@ -45,6 +47,16 @@ public class BranchKioskController {
 
     }
 
+    /*
+     * 전체 키오스크 조회 (전체 지점)
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<BranchKioskResponse>> getAllKiosks(){
+        return ResponseEntity.ok(
+                kioskService.getAllKiosks()
+        );
+    }
+
 
 
     /*
@@ -76,6 +88,11 @@ public class BranchKioskController {
 
         return ResponseEntity.ok().build();
 
+    }
+
+    @GetMapping(value = "/stream/{storeId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamKiosks(@PathVariable Integer storeId) {
+        return kioskService.subscribe(storeId);
     }
 
 }

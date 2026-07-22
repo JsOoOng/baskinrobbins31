@@ -98,4 +98,36 @@ public class Order {
     )
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
+
+    public int getTotalPrice() {
+        int sum = 0;
+        for (OrderItem item : orderItems) {
+            sum += item.getUnitPrice() * item.getQuantity();
+        }
+        return sum; // ✅ 실제 계산된 값을 반환
+    }
+
+    public int getProductDiscountAmount() {
+        int discountSum = 0;
+        for (OrderItem item : orderItems) {
+            Product p = item.getProduct();
+            if (p != null && p.getBasePrice() != null && p.getFinalPrice() != null) {
+                int diff = p.getBasePrice() - p.getFinalPrice();
+                discountSum += diff * item.getQuantity();
+            }
+        }
+        return discountSum;
+    }
+
+    public int getOriginalBaseAmount() {
+        return getTotalPrice() + getProductDiscountAmount();
+    }
+    
+    @OneToMany(
+            mappedBy = "order",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
+    private List<OrderStatusHistory> orderStatusHistories = new ArrayList<>();
 }

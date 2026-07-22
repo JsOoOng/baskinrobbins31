@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.entity.HeadquarterAdmin;
 import com.kiosk.entity.RestockRequest;
+import com.kiosk.entity.StoreFlavor;
+import com.kiosk.entity.StoreInventory;
 import com.kiosk.entity.enums.RestockStatus;
 import com.kiosk.headquarter.dto.restock.HeadRestockDetailResponseDTO;
 import com.kiosk.headquarter.dto.restock.HeadRestockListResponseDTO;
@@ -21,137 +23,408 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class HeadRestockService {
 
+
     private final HeadRestockRequestMapper headRestockRequestMapper;
     private final HeadquarterAdminMapper headquarterAdminMapper;
 
-    // 발주 요청 전체 목록 조회
+
+
+    // 전체 발주 목록
     public List<HeadRestockListResponseDTO> getRestockList() {
-        return headRestockRequestMapper.findAllByOrderByIdDesc()
+
+        return headRestockRequestMapper
+                .findAllByOrderByIdDesc()
                 .stream()
                 .map(this::toListResponseDTO)
                 .toList();
     }
 
-    // 승인 대기 발주 요청 목록 조회
+
+
+    // 대기 발주 목록
     public List<HeadRestockListResponseDTO> getWaitingRestockList() {
-        return headRestockRequestMapper.findByStatusOrderByIdDesc(RestockStatus.WAITING)
+
+        return headRestockRequestMapper
+                .findByStatusOrderByIdDesc(RestockStatus.WAITING)
                 .stream()
                 .map(this::toListResponseDTO)
                 .toList();
     }
 
-    // 발주 요청 상세 조회
+
+
+    // 상세 조회
     public HeadRestockDetailResponseDTO getRestockDetail(Integer requestId) {
-        RestockRequest restockRequest = headRestockRequestMapper.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 발주 요청입니다."));
+
+        RestockRequest restockRequest =
+                headRestockRequestMapper.findById(requestId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "존재하지 않는 발주 요청입니다."
+                        )
+                );
 
         return toDetailResponseDTO(restockRequest);
     }
 
-    // 발주 승인
-    @Transactional
-    public String approveRestock(Integer requestId, HeadRestockProcessRequestDTO requestDTO) {
-        RestockRequest restockRequest = headRestockRequestMapper.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 발주 요청입니다."));
 
-        HeadquarterAdmin admin = getActiveAdmin(requestDTO.getAdminId());
+
+    // 승인
+    @Transactional
+    public String approveRestock(
+            Integer requestId,
+            HeadRestockProcessRequestDTO requestDTO
+    ) {
+
+        RestockRequest restockRequest =
+                getRestock(requestId);
+
+        HeadquarterAdmin admin =
+                getActiveAdmin(requestDTO.getAdminId());
+
 
         restockRequest.approve(admin);
+
 
         return "발주 요청 승인 성공";
     }
 
-    // 배송 처리
-    @Transactional
-    public String startShipping(Integer requestId, HeadRestockProcessRequestDTO requestDTO) {
-        RestockRequest restockRequest = headRestockRequestMapper.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 발주 요청입니다."));
 
-        HeadquarterAdmin admin = getActiveAdmin(requestDTO.getAdminId());
+
+    // 배송
+    @Transactional
+    public String startShipping(
+            Integer requestId,
+            HeadRestockProcessRequestDTO requestDTO
+    ) {
+
+        RestockRequest restockRequest =
+                getRestock(requestId);
+
+
+        HeadquarterAdmin admin =
+                getActiveAdmin(requestDTO.getAdminId());
+
 
         restockRequest.startShipping(admin);
+
 
         return "발주 요청 배송 처리 성공";
     }
 
-    // 완료 처리
+
+
+
+    // 완료 및 재고 증가
     @Transactional
-    public String completeRestock(Integer requestId, HeadRestockProcessRequestDTO requestDTO) {
-        RestockRequest restockRequest = headRestockRequestMapper.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 발주 요청입니다."));
+    public String completeRestock(
+            Integer requestId,
+            HeadRestockProcessRequestDTO requestDTO
+    ) {
 
-        HeadquarterAdmin admin = getActiveAdmin(requestDTO.getAdminId());
 
+        RestockRequest restockRequest =
+                getRestock(requestId);
+
+
+
+        HeadquarterAdmin admin =
+                getActiveAdmin(requestDTO.getAdminId());
+
+
+
+        // SHIPPING -> COMPLETED
         restockRequest.complete(admin);
 
-        return "발주 요청 완료 처리 성공";
+
+
+        /*
+         * 제품 재고 입고
+         */
+        if (restockRequest.getStoreInventory() != null) {
+
+
+            StoreInventory inventory =
+                    restockRequest.getStoreInventory();
+
+
+            inventory.increaseStock(
+                    restockRequest.getRequestQuantity()
+            );
+
+        }
+
+
+
+        /*
+         * 맛 재고 입고
+         */
+        else if (restockRequest.getStoreFlavor() != null) {
+
+
+            StoreFlavor flavor =
+                    restockRequest.getStoreFlavor();
+
+
+            flavor.increaseStock(
+                    restockRequest.getRequestQuantity()
+            );
+
+        }
+
+
+        else {
+
+            throw new IllegalStateException(
+                    "입고 대상 재고 정보가 없습니다."
+            );
+        }
+
+
+
+        return "발주 완료 및 재고 입고 처리 성공";
     }
 
+
+
+
+    private RestockRequest getRestock(Integer requestId) {
+
+        return headRestockRequestMapper.findById(requestId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "존재하지 않는 발주 요청입니다."
+                        )
+                );
+    }
+
+
+
+
+
     private HeadquarterAdmin getActiveAdmin(Integer adminId) {
-        if (adminId == null) {
-            throw new IllegalArgumentException("처리 관리자 adminId가 필요합니다.");
+
+
+        if(adminId == null) {
+            throw new IllegalArgumentException(
+                    "처리 관리자 adminId가 필요합니다."
+            );
         }
 
-        HeadquarterAdmin admin = headquarterAdminMapper.findById(adminId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 본사 관리자입니다."));
 
-        if (!admin.isActiveAdmin()) {
-            throw new IllegalArgumentException("비활성화된 본사 관리자는 발주 요청을 처리할 수 없습니다.");
+        HeadquarterAdmin admin =
+                headquarterAdminMapper.findById(adminId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "존재하지 않는 본사 관리자입니다."
+                        )
+                );
+
+
+        if(!admin.isActiveAdmin()) {
+
+            throw new IllegalArgumentException(
+                    "비활성화된 본사 관리자는 처리할 수 없습니다."
+            );
         }
+
 
         return admin;
     }
 
-    private HeadRestockListResponseDTO toListResponseDTO(RestockRequest restockRequest) {
+
+
+
+
+
+
+    private HeadRestockListResponseDTO toListResponseDTO(
+            RestockRequest restockRequest
+    ) {
+
+
         Integer adminId = null;
         String adminName = null;
 
-        if (restockRequest.getAdmin() != null) {
-            adminId = restockRequest.getAdmin().getId();
-            adminName = restockRequest.getAdmin().getName();
+
+        if(restockRequest.getAdmin()!=null) {
+
+            adminId =
+                    restockRequest.getAdmin().getId();
+
+            adminName =
+                    restockRequest.getAdmin().getName();
         }
+
+
 
         return HeadRestockListResponseDTO.builder()
-                .requestId(restockRequest.getId())
-                .storeId(restockRequest.getStore().getId())
-                .storeName(restockRequest.getStore().getStoreName())
-                .itemId(restockRequest.getItem().getId())
-                .itemName(restockRequest.getItem().getProduct().getProductName())
-                .unit(restockRequest.getItem().getUnit())
-                .requestQuantity(restockRequest.getRequestQuantity())
-                .status(restockRequest.getStatus())
+
+                .requestId(
+                        restockRequest.getId()
+                )
+
+
+                .storeInventoryId(
+                        restockRequest.getStoreInventoryId()
+                )
+
+
+                .storeFlavorId(
+                        restockRequest.getStoreFlavorId()
+                )
+
+
+                .requestQuantity(
+                        restockRequest.getRequestQuantity()
+                )
+
+
+                .status(
+                        restockRequest.getStatus()
+                )
+
+
                 .adminId(adminId)
+
                 .adminName(adminName)
-                .requestedAt(restockRequest.getRequestedAt())
+
+                .requestedAt(
+                        restockRequest.getRequestedAt()
+                )
+
                 .build();
     }
 
-    private HeadRestockDetailResponseDTO toDetailResponseDTO(RestockRequest restockRequest) {
+
+
+
+
+
+
+    private HeadRestockDetailResponseDTO toDetailResponseDTO(
+            RestockRequest restockRequest
+    ) {
+
+
         Integer adminId = null;
         String adminName = null;
 
-        if (restockRequest.getAdmin() != null) {
-            adminId = restockRequest.getAdmin().getId();
-            adminName = restockRequest.getAdmin().getName();
+
+        if(restockRequest.getAdmin()!=null) {
+
+            adminId =
+                    restockRequest.getAdmin().getId();
+
+            adminName =
+                    restockRequest.getAdmin().getName();
         }
 
-        Integer unitPrice = restockRequest.getItem().getUnitPrice();
-        Integer requestQuantity = restockRequest.getRequestQuantity();
+
+
+        Integer unitPrice = 0;
+        String name = "";
+        String unit = "";
+
+
+
+        /*
+         * 제품 재고
+         */
+        if(restockRequest.getStoreInventory()!=null) {
+
+
+            unitPrice =
+                    restockRequest
+                    .getStoreInventory()
+                    .getItem()
+                    .getUnitPrice();
+
+
+            name =
+                    restockRequest
+                    .getStoreInventory()
+                    .getItem()
+                    .getProduct()
+                    .getProductName();
+
+
+            unit =
+                    restockRequest
+                    .getStoreInventory()
+                    .getItem()
+                    .getUnit();
+
+        }
+
+
+
+        /*
+         * 맛 재고
+         */
+        else if(restockRequest.getStoreFlavor()!=null) {
+
+
+            name =
+                    restockRequest
+                    .getStoreFlavor()
+                    .getFlavor()
+                    .getFlavorName();
+
+
+            unit = "EA";
+
+        }
+
+
+
+        Integer quantity =
+                restockRequest.getRequestQuantity();
+
+
 
         return HeadRestockDetailResponseDTO.builder()
-                .requestId(restockRequest.getId())
-                .storeId(restockRequest.getStore().getId())
-                .storeName(restockRequest.getStore().getStoreName())
-                .itemId(restockRequest.getItem().getId())
-                .itemName(restockRequest.getItem().getProduct().getProductName())
-                .unit(restockRequest.getItem().getUnit())
+
+                .requestId(
+                        restockRequest.getId()
+                )
+
+
+                .storeInventoryId(
+                        restockRequest.getStoreInventoryId()
+                )
+
+
+                .storeFlavorId(
+                        restockRequest.getStoreFlavorId()
+                )
+
+
+                .itemName(name)
+
+                .unit(unit)
+
                 .unitPrice(unitPrice)
-                .requestQuantity(requestQuantity)
-                .totalPrice(unitPrice * requestQuantity)
-                .status(restockRequest.getStatus())
+
+                .requestQuantity(quantity)
+
+                .totalPrice(
+                        unitPrice * quantity
+                )
+
+                .status(
+                        restockRequest.getStatus()
+                )
+
                 .adminId(adminId)
+
                 .adminName(adminName)
-                .requestedAt(restockRequest.getRequestedAt())
+
+                .requestedAt(
+                        restockRequest.getRequestedAt()
+                )
+
                 .build();
     }
+
 }

@@ -30,4 +30,8 @@ public interface BranchOrderMapper extends JpaRepository<Order, Integer> {
             order by o.createdAt desc
             """)
     List<Order> findByStore_IdOrderByCreatedAtDesc(@Param("storeId") Integer storeId);
+
+    // 결제가 없고 WAITING 상태인 주문 조회
+    List<Order> findByPaymentIsNull();
+
 }

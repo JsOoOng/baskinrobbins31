@@ -24,6 +24,9 @@ public class StoreProduct {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @Column(name = "store_product_price", nullable = false)
+    private Integer storeProductPrice;
+
     @Column(name = "is_sold_out")
     @Builder.Default
     private Boolean isSoldOut = false;
@@ -31,15 +34,6 @@ public class StoreProduct {
     @Column(name = "is_deleted")
     @Builder.Default
     private Boolean isDeleted = false;
-    
-    //지점 상품 가격
-    @Column(name = "store_product_price", nullable = false)
-    private Integer storeProductPrice;
-    
-    public void updateStoreProduct(Integer storeProductPrice, Boolean isSoldOut) {
-        this.storeProductPrice = storeProductPrice;
-        this.isSoldOut = isSoldOut;
-    }
     
     public void updateSoldOut(Boolean isSoldOut) {
         this.isSoldOut = isSoldOut;
