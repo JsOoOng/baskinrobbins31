@@ -25,6 +25,7 @@ import com.kiosk.entity.StoreProduct;
 
 import lombok.RequiredArgsConstructor;
 
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -46,7 +47,10 @@ public class StatusService {
     private final RestockRequestMapper restockRequestMapper;
 
 
-    // 상품 품절 상태 변경
+
+    /*
+     * 상품 수동 품절 변경
+     */
     public StoreProductStatusResponse updateProductSoldOut(
             Integer storeProductId,
             Boolean soldOut
@@ -59,7 +63,10 @@ public class StatusService {
                 );
 
 
-        storeProduct.changeSoldOut(soldOut);
+        /*
+         * 점장 수동 품절 상태 변경
+         */
+        storeProduct.changeManualSoldOut(soldOut);
 
 
 
@@ -87,11 +94,23 @@ public class StatusService {
 
 
 
+        /*
+         * 최종 품절 상태
+         * 수동 품절 OR 재고 없음
+         */
+        Boolean finalSoldOut =
+                storeProduct.getManualSoldOut()
+                ||
+                stock <= 0;
+
+
+
         return StoreProductStatusResponse
                 .from(
                         storeProduct,
                         storeInventoryId,
-                        stock
+                        stock,
+                        finalSoldOut
                 );
 
     }
@@ -99,7 +118,11 @@ public class StatusService {
 
 
 
-    // 상품 조회
+
+
+    /*
+     * 상품 조회
+     */
     @Transactional(readOnly = true)
     public List<StoreProductStatusResponse> getProducts(
             Integer storeId
@@ -111,7 +134,7 @@ public class StatusService {
                 .map(sp -> {
 
 
-                    boolean soldOut = false;
+                    boolean autoSoldOut = false;
 
                     int totalStock = 0;
 
@@ -153,9 +176,12 @@ public class StatusService {
 
 
 
+                        /*
+                         * 자동 품절
+                         */
                         if(stock <= 0){
 
-                            soldOut = true;
+                            autoSoldOut = true;
 
                         }
 
@@ -163,7 +189,13 @@ public class StatusService {
 
 
 
-                    sp.changeSoldOut(soldOut);
+                    /*
+                     * 최종 품절
+                     */
+                    Boolean finalSoldOut =
+                            sp.getManualSoldOut()
+                            ||
+                            autoSoldOut;
 
 
 
@@ -171,7 +203,8 @@ public class StatusService {
                             .from(
                                     sp,
                                     storeInventoryId,
-                                    totalStock
+                                    totalStock,
+                                    finalSoldOut
                             );
 
 
@@ -185,11 +218,14 @@ public class StatusService {
 
 
 
+
+    /*
+     * 맛 품절 변경
+     */
     public StoreFlavorStatusResponse updateFlavorSoldOut(
             Integer storeFlavorId,
             Boolean soldOut
-    ) {
-
+    ){
 
         StoreFlavor storeFlavor =
                 storeFlavorMapper.findById(storeFlavorId)
@@ -212,7 +248,10 @@ public class StatusService {
 
 
 
-    // 맛 조회
+
+    /*
+     * 맛 조회
+     */
     @Transactional(readOnly = true)
     public List<StoreFlavorStatusResponse> getFlavors(
             Integer storeId
@@ -225,6 +264,7 @@ public class StatusService {
                 .toList();
 
     }
+
 
 
 
@@ -248,12 +288,15 @@ public class StatusService {
 
 
 
+
+    /*
+     * 맛 추가
+     */
     @Transactional
     public StoreFlavorStatusResponse addFlavor(
             Integer storeId,
             Integer flavorId
     ){
-
 
         if(storeFlavorMapper.existsByStoreIdAndFlavorId(
                 storeId,
@@ -306,6 +349,10 @@ public class StatusService {
 
 
 
+
+    /*
+     * 맛 삭제
+     */
     @Transactional
     public void deleteFlavor(Integer storeFlavorId)
     {
@@ -329,6 +376,10 @@ public class StatusService {
 
 
 
+
+    /*
+     * 맛 통 수 변경
+     */
     public StoreFlavorStatusResponse updateContainer(
             Integer storeFlavorId,
             Integer amount
@@ -368,6 +419,10 @@ public class StatusService {
 
 
 
+
+    /*
+     * 맛 자동 발주 설정
+     */
     @Transactional
     public StoreFlavorStatusResponse updateFlavorRestockSetting(
             Integer storeFlavorId,
