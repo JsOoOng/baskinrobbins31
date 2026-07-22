@@ -1,4 +1,4 @@
-package com.kiosk.common.inventory;
+package com.kiosk.headquarter.inventory;
 
 import java.util.List;
 
