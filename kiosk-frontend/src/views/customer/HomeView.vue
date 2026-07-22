@@ -3,7 +3,7 @@
     <div class="kiosk-selector-wrapper">
       <select v-model="selectedKioskId" @change="handleKioskChange" class="kiosk-select">
         <option v-for="kiosk in kiosks" :key="kiosk.kioskId" :value="kiosk.kioskId">
-          {{ kiosk.kioskNumber }}번 키오스크
+          [{{ kiosk.storeName }}] {{ kiosk.kioskNumber }}번 키오스크
         </option>
       </select>
     </div>
@@ -140,7 +140,7 @@ const connectSSE = () => {
 
 const loadKiosks = async () => {
   try {
-    const response = await api.get('/branch/kiosk/1')
+    const response = await api.get('/branch/kiosk/all')
     kiosks.value = response.data.filter(kiosk => kiosk.kioskStatus === 'ONLINE')
     
     // 현재 선택된 키오스크가 온라인 목록에 없다면 첫 번째 항목으로 변경

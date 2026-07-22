@@ -47,6 +47,16 @@ public class BranchKioskController {
 
     }
 
+    /*
+     * 전체 키오스크 조회 (전체 지점)
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<BranchKioskResponse>> getAllKiosks(){
+        return ResponseEntity.ok(
+                kioskService.getAllKiosks()
+        );
+    }
+
 
 
     /*

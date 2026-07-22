@@ -85,6 +85,15 @@ public class BranchKioskService {
 
     }
 
+    /*
+     * 전체 키오스크 목록 조회 (전체 지점)
+     */
+    public List<BranchKioskResponse> getAllKiosks(){
+        return kioskRepository.findAll()
+                .stream()
+                .map(BranchKioskResponse::from)
+                .toList();
+    }
 
 
     /*

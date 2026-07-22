@@ -74,8 +74,14 @@ public class OrderService {
             throw new IllegalArgumentException("장바구니가 비어 있습니다.");
         }
 
-        Store store = em.getReference(Store.class, request.getStoreId());
-        Kiosk kiosk = (request.getKioskId() != null) ? em.getReference(Kiosk.class, request.getKioskId()) : null;
+        Kiosk kiosk = (request.getKioskId() != null) ? em.find(Kiosk.class, request.getKioskId()) : null;
+        if (kiosk == null) {
+            throw new IllegalArgumentException("존재하지 않는 키오스크입니다.");
+        }
+        Store store = kiosk.getStore();
+        if (store == null) {
+            throw new IllegalArgumentException("키오스크에 연결된 지점이 없습니다.");
+        }
 
         User user = null;
         
@@ -158,7 +164,7 @@ public class OrderService {
         
      // 지점에 새 주문 알림 전송
         messagingTemplate.convertAndSend(
-                "/topic/store/" + request.getStoreId(),
+                "/topic/store/" + store.getId(),
                 "새 주문이 들어왔습니다."
         );
 
