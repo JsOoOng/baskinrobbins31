@@ -1,6 +1,5 @@
 package com.kiosk.branch.status.service;
 
-
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -25,7 +24,6 @@ import com.kiosk.entity.StoreProduct;
 
 import lombok.RequiredArgsConstructor;
 
-
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -33,13 +31,20 @@ public class StatusService {
 
 
     private final StoreProductMapper storeProductMapper;
+
     private final StoreFlavorMapper storeFlavorMapper;
+
     private final IcecreamFlavorMapper icecreamFlavorMapper;
+
     private final StoreMapper storeMapper;
+
     private final StoreInventoryMapper storeInventoryMapper;
+
     private final BranchInventoryMapper inventoryMapper;
-    
-    // 지점 메뉴 품절 상태 변경
+
+
+
+    // 상품 품절 상태 변경
     public StoreProductStatusResponse updateProductSoldOut(
             Integer storeProductId,
             Boolean soldOut
@@ -55,27 +60,45 @@ public class StatusService {
         storeProduct.changeSoldOut(soldOut);
 
 
-        Integer stock =
+
+        StoreInventory inventory =
                 storeInventoryMapper
-                        .findByStoreIdAndItemProductId(
-                                storeProduct.getStore().getId(),
-                                storeProduct.getProduct().getId()
-                        )
-                        .map(StoreInventory::getCurrentStock)
-                        .orElse(0);
+                .findByStoreIdAndItemProductId(
+                        storeProduct.getStore().getId(),
+                        storeProduct.getProduct().getId()
+                )
+                .orElse(null);
+
+
+
+        Integer stock =
+                inventory == null
+                ? 0
+                : inventory.getCurrentStock();
+
+
+
+        Integer storeInventoryId =
+                inventory == null
+                ? null
+                : inventory.getId();
+
 
 
         return StoreProductStatusResponse
                 .from(
                         storeProduct,
+                        storeInventoryId,
                         stock
                 );
+
     }
 
 
 
-    // 지점 메뉴 상태 조회
-    @Transactional
+
+    // 상품 조회
+    @Transactional(readOnly = true)
     public List<StoreProductStatusResponse> getProducts(
             Integer storeId
     ){
@@ -90,18 +113,37 @@ public class StatusService {
 
                     int totalStock = 0;
 
+                    Integer storeInventoryId = null;
 
-                    for(InventoryItem item : sp.getProduct().getInventoryItems()){
 
 
-                        Integer stock =
-                        		inventoryMapper
+                    for(InventoryItem item :
+                            sp.getProduct().getInventoryItems()){
+
+
+                        StoreInventory inventory =
+                                inventoryMapper
                                 .findByStore_IdAndItem_Id(
                                         storeId,
                                         item.getId()
                                 )
-                                .map(StoreInventory::getCurrentStock)
-                                .orElse(0);
+                                .orElse(null);
+
+
+
+                        Integer stock =
+                                inventory == null
+                                ? 0
+                                : inventory.getCurrentStock();
+
+
+
+                        if(inventory != null){
+
+                            storeInventoryId =
+                                    inventory.getId();
+
+                        }
 
 
 
@@ -109,7 +151,6 @@ public class StatusService {
 
 
 
-                        // 하나라도 0이면 품절
                         if(stock <= 0){
 
                             soldOut = true;
@@ -126,9 +167,11 @@ public class StatusService {
 
                     return StoreProductStatusResponse
                             .from(
-                                sp,
-                                totalStock
+                                    sp,
+                                    storeInventoryId,
+                                    totalStock
                             );
+
 
                 })
                 .toList();
@@ -137,171 +180,216 @@ public class StatusService {
 
 
 
-	public StoreFlavorStatusResponse updateFlavorSoldOut(Integer storeFlavorId, Boolean soldOut) {
-		    StoreFlavor storeFlavor =
-		    		storeFlavorMapper.findById(storeFlavorId)
-		            .orElseThrow(() -> 
-		                new IllegalArgumentException("맛 없음")
-		            );
-		
-		    storeFlavor.changeSoldOut(soldOut);
-		
-		
-		    return StoreFlavorStatusResponse
-		            .from(storeFlavor);
-		}
-	
-	// 지점 맛 상태 조회
-	@Transactional(readOnly = true)
-	public List<StoreFlavorStatusResponse> getFlavors(
-	        Integer storeId
-	){
-
-	    return storeFlavorMapper
-	            .findByStoreId(storeId)
-	            .stream()
-	            .map(StoreFlavorStatusResponse::from)
-	            .toList();
-
-	}
-	
-	
-	@Transactional(readOnly = true)
-	public List<FlavorResponse> getAllFlavors(){
-
-
-	    return icecreamFlavorMapper
-	            .findByIsActiveTrue() //.findAll()
-	            .stream()
-	            .map(FlavorResponse::from)
-	            .toList();
-
-	}
-	
-	@Transactional
-	public StoreFlavorStatusResponse addFlavor(
-	        Integer storeId,
-	        Integer flavorId
-	){
-
-
-	    if(storeFlavorMapper.existsByStoreIdAndFlavorId(
-	            storeId,
-	            flavorId
-	    )){
-
-	        throw new IllegalArgumentException(
-	                "이미 등록된 맛입니다."
-	        );
-
-	    }
 
 
 
-	    IcecreamFlavor flavor =
-	            icecreamFlavorMapper.findById(flavorId)
-	            .orElseThrow(
-	                    () -> new IllegalArgumentException("맛 없음")
-	            );
+    public StoreFlavorStatusResponse updateFlavorSoldOut(
+            Integer storeFlavorId,
+            Boolean soldOut
+    ) {
+
+
+        StoreFlavor storeFlavor =
+                storeFlavorMapper.findById(storeFlavorId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("맛 없음")
+                );
+
+
+        storeFlavor.changeSoldOut(soldOut);
 
 
 
-	    Store store =
-	            storeMapper.findById(storeId)
-	            .orElseThrow(
-	                    () -> new IllegalArgumentException("지점 없음")
-	            );
+        return StoreFlavorStatusResponse
+                .from(storeFlavor);
+
+    }
 
 
 
-	    StoreFlavor storeFlavor =
-	            StoreFlavor.builder()
-	            .store(store)
-	            .flavor(flavor)
-	            .build();
 
 
 
-	    storeFlavorMapper.save(storeFlavor);
+    // 맛 조회
+    @Transactional(readOnly = true)
+    public List<StoreFlavorStatusResponse> getFlavors(
+            Integer storeId
+    ){
+
+        return storeFlavorMapper
+                .findByStoreId(storeId)
+                .stream()
+                .map(StoreFlavorStatusResponse::from)
+                .toList();
+
+    }
 
 
 
-	    return StoreFlavorStatusResponse
-	            .from(storeFlavor);
-
-	}
-	
-	@Transactional
-	public void deleteFlavor(Integer storeFlavorId){
 
 
-	    StoreFlavor storeFlavor =
-	            storeFlavorMapper.findById(storeFlavorId)
-	            .orElseThrow(
-	                () -> new IllegalArgumentException("등록된 맛 없음")
-	            );
+
+    @Transactional(readOnly = true)
+    public List<FlavorResponse> getAllFlavors(){
 
 
-	    storeFlavorMapper.delete(storeFlavor);
+        return icecreamFlavorMapper
+                .findByIsActiveTrue()
+                .stream()
+                .map(FlavorResponse::from)
+                .toList();
 
-	}
-	
-	public StoreFlavorStatusResponse updateContainer(
-	        Integer storeFlavorId,
-	        Integer amount
-	){
-
-
-	    StoreFlavor storeFlavor =
-	            storeFlavorMapper.findById(storeFlavorId)
-	            .orElseThrow(() ->
-	                new IllegalArgumentException("맛 없음")
-	            );
+    }
 
 
-	    storeFlavor.changeContainer(amount);
-	    
-	 // 컨테이너 0이면 품절 처리
-	    if(storeFlavor.getContainer() <= 0){
-
-	        storeFlavor.changeSoldOut(true);
-
-	    } else {
-
-	        // 재입고 시 자동 판매 가능
-	        storeFlavor.changeSoldOut(false);
-
-	    }
 
 
-	    return StoreFlavorStatusResponse
-	            .from(storeFlavor);
-
-	}
-	
-	@Transactional
-	public StoreFlavorStatusResponse updateFlavorRestockSetting(
-	        Integer storeFlavorId,
-	        StoreFlavorRestockRequest request
-	){
-
-	    StoreFlavor storeFlavor =
-	            storeFlavorMapper.findById(storeFlavorId)
-	            .orElseThrow(
-	                    () -> new IllegalArgumentException("맛 없음")
-	            );
 
 
-	    storeFlavor.updateAutoRestockSetting(
-	            request.getMinStock(),
-	            request.getTargetStock(),
-	            request.getAutoRestockEnabled(),
-	            request.getRestockMode()
-	    );
+    @Transactional
+    public StoreFlavorStatusResponse addFlavor(
+            Integer storeId,
+            Integer flavorId
+    ){
 
 
-	    return StoreFlavorStatusResponse
-	            .from(storeFlavor);
-	}
+        if(storeFlavorMapper.existsByStoreIdAndFlavorId(
+                storeId,
+                flavorId
+        )){
+
+            throw new IllegalArgumentException(
+                    "이미 등록된 맛입니다."
+            );
+
+        }
+
+
+
+        IcecreamFlavor flavor =
+                icecreamFlavorMapper.findById(flavorId)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("맛 없음")
+                );
+
+
+
+        Store store =
+                storeMapper.findById(storeId)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("지점 없음")
+                );
+
+
+
+        StoreFlavor storeFlavor =
+                StoreFlavor.builder()
+                .store(store)
+                .flavor(flavor)
+                .build();
+
+
+
+        storeFlavorMapper.save(storeFlavor);
+
+
+
+        return StoreFlavorStatusResponse
+                .from(storeFlavor);
+
+    }
+
+
+
+
+
+
+    @Transactional
+    public void deleteFlavor(
+            Integer storeFlavorId
+    ){
+
+        StoreFlavor storeFlavor =
+                storeFlavorMapper.findById(storeFlavorId)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("등록된 맛 없음")
+                );
+
+
+        storeFlavorMapper.delete(storeFlavor);
+
+    }
+
+
+
+
+
+
+    public StoreFlavorStatusResponse updateContainer(
+            Integer storeFlavorId,
+            Integer amount
+    ){
+
+
+        StoreFlavor storeFlavor =
+                storeFlavorMapper.findById(storeFlavorId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("맛 없음")
+                );
+
+
+        storeFlavor.changeContainer(amount);
+
+
+
+        if(storeFlavor.getContainer() <= 0){
+
+            storeFlavor.changeSoldOut(true);
+
+        } else {
+
+            storeFlavor.changeSoldOut(false);
+
+        }
+
+
+
+        return StoreFlavorStatusResponse
+                .from(storeFlavor);
+
+    }
+
+
+
+
+
+
+    @Transactional
+    public StoreFlavorStatusResponse updateFlavorRestockSetting(
+            Integer storeFlavorId,
+            StoreFlavorRestockRequest request
+    ){
+
+        StoreFlavor storeFlavor =
+                storeFlavorMapper.findById(storeFlavorId)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("맛 없음")
+                );
+
+
+
+        storeFlavor.updateAutoRestockSetting(
+                request.getMinStock(),
+                request.getTargetStock(),
+                request.getAutoRestockEnabled(),
+                request.getRestockMode()
+        );
+
+
+
+        return StoreFlavorStatusResponse
+                .from(storeFlavor);
+
+    }
 
 }

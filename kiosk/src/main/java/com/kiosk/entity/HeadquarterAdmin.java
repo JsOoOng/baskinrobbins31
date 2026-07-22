@@ -88,4 +88,6 @@ public class HeadquarterAdmin {
         this.department = department;
         this.role = role;
     }
+    
+    
 }
