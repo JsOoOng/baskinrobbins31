@@ -1,5 +1,4 @@
 <script setup>
-import axios from '@/api/axios'
 import {
   computed,
   onMounted,
@@ -25,9 +24,10 @@ import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
 
 import {
+  createHeadFlavor,
   extractFlavorData,
   getHeadFlavors
-} from '@/api/head/headFlavorApi'  
+} from '@/api/head/headFlavorApi'
 
 /*
  * 서버 데이터
@@ -41,13 +41,20 @@ const flavors = ref([])
  */
 const loading = ref(false)
 const saving = ref(false)
+const flavorSaving = ref(false)
 const detailLoading = ref(false)
 const displayUpdatingId = ref(null)
 
 const searchKeyword = ref('')
 const categoryFilter = ref('ALL')
 const displayFilter = ref('ALL')
+
+/*
+ * 아이스크림 맛은 상품과 별도로
+ * icecream_flavors에 등록합니다.
+ */
 const newFlavorName = ref('')
+const newFlavorImageUrl = ref('')
 
 const message = ref('')
 const messageType = ref('success')
@@ -79,13 +86,7 @@ const detailModal = reactive({
   basePrice: 0,
   discountRate: 0,
   isDisplay: true,
-  storeIdsText: '',
-
-  /*
-   * 선택한 기존 맛과
-   * 새로 입력한 맛 이름
-   */
-  flavorNames: []
+  storeIdsText: ''
 })
 
 /*
@@ -318,8 +319,8 @@ const resetForm = () => {
   form.discountRate = 0
   form.isDisplay = true
   form.storeIdsText = ''
-  form.flavorNames = []
   newFlavorName.value = ''
+  newFlavorImageUrl.value = ''
 }
 
 /*
@@ -390,7 +391,10 @@ const openEditModal = async (productId) => {
 }
 
 const closeFormModal = () => {
-  if (saving.value) {
+  if (
+    saving.value ||
+    flavorSaving.value
+  ) {
     return
   }
 
@@ -423,7 +427,9 @@ const parseStoreIds = () => {
 }
 
 /*
- * 등록·수정 요청 데이터 생성
+ * 상품 등록·수정 요청 데이터 생성
+ *
+ * 아이스크림 맛 정보는 포함하지 않습니다.
  */
  const createRequestPayload = () => {
   const payload = {
@@ -443,29 +449,16 @@ const parseStoreIds = () => {
       Number(form.discountRate),
 
     isDisplay:
-      Boolean(form.isDisplay),
-
-    options: []
+      Boolean(form.isDisplay)
   }
 
-    /*
-     * 상품 옵션은 상품 옵션 관리 화면에서
-     * 별도로 등록할 예정이므로 기본 빈 배열입니다.
-     */
-
+  /*
+   * 판매 지점은 신규 상품 등록 시에만 전송합니다.
+   */
   if (formModal.mode === 'create') {
     payload.storeIds =
       parseStoreIds()
   }
-
-  if (
-  formModal.mode === 'create' &&
-  isFlavorCategory.value
-) {
-  payload.flavorNames = [
-    ...form.flavorNames
-  ]
-}
 
   return payload
 }
@@ -517,19 +510,6 @@ const validateForm = () => {
 
     return false
   }
-
-  if (
-  formModal.mode === 'create' &&
-  isFlavorCategory.value &&
-  form.flavorNames.length === 0
-) {
-  showMessage(
-    '아이스크림 상품은 맛을 한 개 이상 선택해주세요.',
-    'error'
-  )
-
-  return false
-}
 
   if (formModal.mode === 'create') {
     if (!form.storeIdsText.trim()) {
@@ -748,85 +728,74 @@ const clearMessage = () => {
   message.value = ''
 }
 
-onMounted(async () => {
-  await Promise.all([
-    loadCategories(),
-    loadProducts(),
-    loadFlavors()
-  ])
-})
-
-const isFlavorSelected = (
-  flavorName
+/*
+ * 맛 목록 조회
+ *
+ * 화면에 맛 선택 버튼을 표시하기 위한 것이 아니라
+ * 등록 전 중복 검사를 위해 사용합니다.
+ */
+ const loadFlavors = async (
+  showError = true
 ) => {
-  return form.flavorNames.includes(
-    flavorName
-  )
-}
+  try {
+    const responseBody =
+      await getHeadFlavors()
 
-const toggleFlavor = (
-  flavorName
-) => {
-  if (isFlavorSelected(flavorName)) {
-    form.flavorNames =
-      form.flavorNames.filter(
-        (name) =>
-          name !== flavorName
+    const responseData =
+      extractFlavorData(
+        responseBody
       )
 
-    return
-  }
+    const flavorList =
+      Array.isArray(responseData)
+        ? responseData
+        : []
 
-  form.flavorNames = [
-    ...form.flavorNames,
-    flavorName
-  ]
+    flavors.value =
+      flavorList.map(
+        (flavor) => ({
+          flavorId:
+            flavor.flavorId ??
+            flavor.id ??
+            null,
+
+          flavorName:
+            flavor.flavorName ??
+            flavor.name ??
+            '',
+
+          imageUrl:
+            flavor.imageUrl ??
+            flavor.image ??
+            '',
+
+          isActive:
+            flavor.isActive ??
+            flavor.active ??
+            true
+        })
+      )
+
+    return true
+
+  } catch (error) {
+    if (showError) {
+      showMessage(
+        extractProductErrorMessage(
+          error,
+          '맛 목록을 불러오지 못했습니다.'
+        ),
+        'error'
+      )
+    }
+
+    return false
+  }
 }
 
-const addNewFlavor = () => {
-  const flavorName =
-    newFlavorName.value.trim()
-
-  if (!flavorName) {
-    showMessage(
-      '추가할 맛 이름을 입력해주세요.',
-      'error'
-    )
-
-    return
-  }
-
-  if (
-    form.flavorNames.includes(
-      flavorName
-    )
-  ) {
-    showMessage(
-      '이미 선택된 맛입니다.',
-      'error'
-    )
-
-    return
-  }
-
-  form.flavorNames = [
-    ...form.flavorNames,
-    flavorName
-  ]
-
-  newFlavorName.value = ''
-}
-
-const removeFlavor = (
-  flavorName
-) => {
-  form.flavorNames =
-    form.flavorNames.filter(
-      (name) =>
-        name !== flavorName
-    )
-}
-
+/*
+ * 선택된 카테고리
+ */
 const selectedCategory =
   computed(() => {
     return categories.value.find(
@@ -836,11 +805,13 @@ const selectedCategory =
     )
   })
 
-const flavorCategoryNames = [
-  '아이스크림',
-  '아이스크림 케이크'
-]
-
+/*
+ * 아이스크림 카테고리에서만
+ * 독립적인 맛 등록 영역을 표시합니다.
+ *
+ * 케이크 상품명과 일반 상품명은
+ * icecream_flavors에 저장하지 않습니다.
+ */
 const isFlavorCategory =
   computed(() => {
     const categoryName =
@@ -848,34 +819,177 @@ const isFlavorCategory =
         ?.categoryName
         ?.trim()
 
-    return flavorCategoryNames.includes(
-      categoryName
-    )
+    return categoryName === '아이스크림'
   })
 
-  const loadFlavors = async () => {
+const normalizeFlavorName = (
+  value
+) => {
+  return String(value ?? '')
+    .trim()
+    .toLocaleLowerCase('ko-KR')
+}
+
+const isDuplicateFlavorName = (
+  flavorName
+) => {
+  const normalizedName =
+    normalizeFlavorName(flavorName)
+
+  return flavors.value.some(
+    (flavor) =>
+      normalizeFlavorName(
+        flavor.flavorName
+      ) === normalizedName
+  )
+}
+
+const validateFlavorInput = () => {
+  const flavorName =
+    newFlavorName.value.trim()
+
+  const imageUrl =
+    newFlavorImageUrl.value.trim()
+
+  if (!flavorName) {
+    showMessage(
+      '추가할 맛 이름을 입력해주세요.',
+      'error'
+    )
+
+    return false
+  }
+
+  if (!imageUrl) {
+    showMessage(
+      '맛 이미지 URL을 입력해주세요.',
+      'error'
+    )
+
+    return false
+  }
+
+  /*
+   * 허용 예:
+   * /images/flavors/black_sorbet.png
+   * /images/flavors/black_sorbet.jpg
+   */
+  const flavorImagePattern =
+    /^\/images\/flavors\/[a-z0-9]+(?:_[a-z0-9]+)*\.(?:png|jpg)$/
+
+  if (
+    !flavorImagePattern.test(
+      imageUrl
+    )
+  ) {
+    showMessage(
+      '이미지 URL은 /images/flavors/파일명.png 또는 /images/flavors/파일명.jpg 형식이어야 하며, 파일명에는 영문 소문자·숫자·언더스코어만 사용할 수 있습니다.',
+      'error'
+    )
+
+    return false
+  }
+
+  return true
+}
+
+/*
+ * 아이스크림 맛 등록 요청 데이터 생성
+ *
+ * 상품 등록 요청과 완전히 별도입니다.
+ */
+ const createFlavorRequestPayload = () => {
+  return {
+    flavorName:
+      newFlavorName.value.trim(),
+
+    imageUrl:
+      newFlavorImageUrl.value.trim()
+  }
+}
+
+/*
+ * 아이스크림 맛 단독 등록
+ *
+ * 상품 등록 요청과 분리되어 있으며,
+ * 이 버튼을 눌렀을 때만
+ * icecream_flavors에 저장됩니다.
+ */
+const addNewFlavor = async () => {
+  if (
+    flavorSaving.value ||
+    !validateFlavorInput()
+  ) {
+    return
+  }
+
+  flavorSaving.value = true
+  clearMessage()
+
   try {
-    const responseBody =
-      await getHeadFlavors()
+    /*
+     * 저장 직전에 최신 맛 목록을 불러와
+     * 프론트 중복 검사를 수행합니다.
+     */
+    await loadFlavors()
 
-    const responseData =
-      extractFlavorData(responseBody)
+    const flavorPayload =
+      createFlavorRequestPayload()
 
-    flavors.value =
-      Array.isArray(responseData)
-        ? responseData
-        : []
+    if (
+      isDuplicateFlavorName(
+        flavorPayload.flavorName
+      )
+    ) {
+      showMessage(
+        '이미 등록된 아이스크림 맛입니다.',
+        'error'
+      )
+
+      return
+    }
+
+    /*
+     * POST /head/flavors
+     *
+     * 상품 등록 API와 관계없이
+     * icecream_flavors에만 저장됩니다.
+     */
+    await createHeadFlavor(
+      flavorPayload
+    )
+
+    newFlavorName.value = ''
+    newFlavorImageUrl.value = ''
+
+    await loadFlavors()
+
+    showMessage(
+      '아이스크림 맛이 등록되었습니다.',
+      'success'
+    )
 
   } catch (error) {
     showMessage(
       extractProductErrorMessage(
         error,
-        '맛 목록을 불러오지 못했습니다.'
+        '아이스크림 맛 등록에 실패했습니다.'
       ),
       'error'
     )
+
+  } finally {
+    flavorSaving.value = false
   }
 }
+
+onMounted(async () => {
+  await Promise.all([
+    loadCategories(),
+    loadProducts(),
+    loadFlavors()
+  ])
+})
 </script>
 
 <template>
@@ -1215,7 +1329,10 @@ const isFlavorCategory =
 
               <button
                 type="button"
-                :disabled="saving"
+                :disabled="
+                  saving ||
+                  flavorSaving
+                "
                 aria-label="닫기"
                 @click="closeFormModal"
               >
@@ -1259,7 +1376,7 @@ const isFlavorCategory =
                     v-model="form.productName"
                     type="text"
                     maxlength="100"
-                    placeholder="예: 엄마는 외계인"
+                    placeholder="예: 싱글 레귤러"
                     :disabled="saving"
                   />
                 </label>
@@ -1306,103 +1423,75 @@ const isFlavorCategory =
                 <div class="flavor-section-header">
                   <div>
                     <strong>
-                      맛 선택 및 추가
+                      아이스크림 맛 추가
                     </strong>
 
                     <p>
-                      기존 맛을 선택하거나 새로운 맛을 입력하세요.
+                      상품 등록과 별도로 icecream_flavors에 저장됩니다.
                     </p>
                   </div>
-
-                  <span>
-                    {{ form.flavorNames.length }}개 선택
-                  </span>
                 </div>
 
-                <div
-                  v-if="flavors.length > 0"
-                  class="flavor-choice-grid"
-                >
-                  <button
-                    v-for="flavor in flavors"
-                    :key="flavor.flavorId"
-                    type="button"
-                    class="flavor-choice"
-                    :class="{
-                      selected:
-                        isFlavorSelected(
-                          flavor.flavorName
-                        )
-                    }"
-                    @click="
-                      toggleFlavor(
-                        flavor.flavorName
-                      )
-                    "
-                  >
+                <div class="flavor-input-list">
+                  <label>
                     <span>
-                      {{
-                        isFlavorSelected(
-                          flavor.flavorName
-                        )
-                          ? '✓'
-                          : '+'
-                      }}
+                      맛 이름
+                      <strong>*</strong>
                     </span>
 
-                    {{ flavor.flavorName }}
-                  </button>
+                    <input
+                      v-model="newFlavorName"
+                      type="text"
+                      maxlength="50"
+                      placeholder="예: 바람과 함께 사라지다"
+                      :disabled="
+                        saving ||
+                        flavorSaving
+                      "
+                    />
+                  </label>
+
+                  <label>
+                    <span>
+                      이미지 URL
+                      <strong>*</strong>
+                    </span>
+
+                    <input
+                      v-model="newFlavorImageUrl"
+                      type="text"
+                      maxlength="500"
+                      placeholder="예: /images/flavors/twinberry_cheesecake.png"
+                      :disabled="
+                        saving ||
+                        flavorSaving
+                      "
+                      @keydown.enter.prevent="
+                        addNewFlavor
+                      "
+                    />
+                  </label>
                 </div>
 
-                <div
-                  v-else
-                  class="empty-flavor-list"
-                >
-                  등록된 맛이 없습니다. 아래에서 새로운 맛을 추가하세요.
-                </div>
-
-                <div class="new-flavor-row">
-                  <input
-                    v-model="newFlavorName"
-                    type="text"
-                    maxlength="50"
-                    placeholder="예: 바람과 함께 사라지다"
-                    :disabled="saving"
-                    @keydown.enter.prevent="
-                      addNewFlavor
-                    "
-                  />
+                <div class="flavor-add-footer">
+                  <p>
+                    같은 맛 이름은 중복 등록되지 않습니다.
+                  </p>
 
                   <button
                     type="button"
-                    :disabled="saving"
+                    :disabled="
+                      saving ||
+                      flavorSaving
+                    "
                     @click="addNewFlavor"
                   >
-                    맛 추가
+                    {{
+                      flavorSaving
+                        ? '확인 중...'
+                        : '맛 추가'
+                    }}
                   </button>
-                </div>
-
-                <div
-                  v-if="form.flavorNames.length > 0"
-                  class="selected-flavor-list"
-                >
-                  <span
-                    v-for="flavorName in form.flavorNames"
-                    :key="flavorName"
-                  >
-                    {{ flavorName }}
-
-                    <button
-                      type="button"
-                      @click="
-                        removeFlavor(
-                          flavorName
-                        )
-                      "
-                    >
-                      ×
-                    </button>
-                  </span>
                 </div>
               </section>
 
@@ -1471,7 +1560,10 @@ const isFlavorCategory =
               <button
                 type="button"
                 class="cancel-button"
-                :disabled="saving"
+                :disabled="
+                  saving ||
+                  flavorSaving
+                "
                 @click="closeFormModal"
               >
                 취소
@@ -1480,14 +1572,19 @@ const isFlavorCategory =
               <button
                 type="submit"
                 class="save-button"
-                :disabled="saving"
+                :disabled="
+                  saving ||
+                  flavorSaving
+                "
               >
                 {{
-                  saving
-                    ? '저장 중...'
-                    : formModal.mode === 'create'
-                      ? '상품 등록'
-                      : '상품 수정'
+                  flavorSaving
+                    ? '맛 처리 중...'
+                    : saving
+                      ? '저장 중...'
+                      : formModal.mode === 'create'
+                        ? '상품 등록'
+                        : '상품 수정'
                 }}
               </button>
             </div>
@@ -2329,7 +2426,7 @@ td {
 
 .flavor-section {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   padding: 15px;
   border: 1px solid #ddd8fb;
   border-radius: 11px;
@@ -2353,50 +2450,45 @@ td {
   font-size: 9px;
 }
 
-.flavor-section-header > span {
-  padding: 5px 8px;
-  border-radius: 20px;
-  color: #6756dc;
-  font-size: 8px;
-  font-weight: 800;
-  background: #ebe8ff;
-}
-
-.flavor-choice-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.flavor-choice {
-  display: inline-flex;
-  gap: 5px;
-  align-items: center;
-  min-height: 31px;
-  padding: 0 10px;
-  border: 1px solid #dfe3ea;
-  border-radius: 20px;
-  cursor: pointer;
-  color: #656d7b;
-  font-size: 9px;
-  background: #ffffff;
-}
-
-.flavor-choice.selected {
-  border-color: #725ee7;
-  color: #6756dc;
-  font-weight: 800;
-  background: #eeebff;
-}
-
-.new-flavor-row {
+.flavor-input-list {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 7px;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.new-flavor-row button {
-  padding: 0 13px;
+.flavor-input-list label {
+  display: grid;
+  gap: 8px;
+}
+
+.flavor-input-list label > span {
+  color: #464c5a;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.flavor-input-list label > span strong {
+  color: #e34d64;
+}
+
+.flavor-add-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.flavor-add-footer p {
+  margin: 0;
+  color: #9299a8;
+  font-size: 9px;
+}
+
+.flavor-add-footer button {
+  min-width: 82px;
+  height: 38px;
+  padding: 0 14px;
   border: 0;
   border-radius: 9px;
   cursor: pointer;
@@ -2406,38 +2498,23 @@ td {
   background: #725ee7;
 }
 
-.selected-flavor-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+.flavor-add-footer button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
-.selected-flavor-list > span {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  padding: 6px 9px;
-  border-radius: 20px;
-  color: #6756dc;
-  font-size: 9px;
-  font-weight: 750;
-  background: #eae7ff;
-}
+@media (max-width: 600px) {
+  .flavor-input-list {
+    grid-template-columns: 1fr;
+  }
 
-.selected-flavor-list button {
-  padding: 0;
-  border: 0;
-  cursor: pointer;
-  color: #8173dc;
-  background: transparent;
-}
+  .flavor-add-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
 
-.empty-flavor-list {
-  padding: 13px;
-  border-radius: 8px;
-  color: #9299a8;
-  font-size: 9px;
-  text-align: center;
-  background: #ffffff;
+  .flavor-add-footer button {
+    width: 100%;
+  }
 }
 </style>

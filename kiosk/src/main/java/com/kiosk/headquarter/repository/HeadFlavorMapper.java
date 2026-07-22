@@ -8,27 +8,41 @@ import org.springframework.stereotype.Repository;
 import com.kiosk.entity.IcecreamFlavor;
 
 @Repository
-public interface HeadFlavorMapper extends JpaRepository<IcecreamFlavor, Integer> {
+public interface HeadFlavorMapper
+        extends JpaRepository<
+                IcecreamFlavor,
+                Integer
+        > {
 
-    List<IcecreamFlavor> findAllByOrderByIdDesc();
+    /*
+     * 본사 관리용 전체 맛 목록
+     *
+     * 최신 등록 순서
+     */
+    List<IcecreamFlavor>
+            findAllByOrderByIdDesc();
 
-    List<IcecreamFlavor> findByIsActiveTrueOrderByIdDesc();
+    /*
+     * 활성화된 맛 목록
+     */
+    List<IcecreamFlavor>
+            findByIsActiveTrueOrderByIdDesc();
 
-    boolean existsByFlavorName(String flavorName);
+    /*
+     * 맛 등록 시 중복 검사
+     *
+     * 영문 대소문자를 구분하지 않습니다.
+     */
+    boolean existsByFlavorNameIgnoreCase(
+            String flavorName
+    );
 
-    boolean existsByFlavorNameAndIdNot(String flavorName, Integer flavorId);
+    /*
+     * 맛 수정 시 현재 맛 번호를 제외하고
+     * 같은 이름이 존재하는지 검사합니다.
+     */
+    boolean existsByFlavorNameIgnoreCaseAndIdNot(
+            String flavorName,
+            Integer flavorId
+    );
 }
-
-/*
-findAllByOrderByIdDesc()
-→ 본사 관리용 전체 맛 목록 조회
-
-findByIsActiveTrueOrderByIdDesc()
-→ 운영 중인 맛만 조회할 때 사용 가능
-
-existsByFlavorName()
-→ 등록 시 맛 이름 중복 확인
-
-existsByFlavorNameAndIdNot()
-→ 수정 시 자기 자신 제외 중복 확인
-*/
