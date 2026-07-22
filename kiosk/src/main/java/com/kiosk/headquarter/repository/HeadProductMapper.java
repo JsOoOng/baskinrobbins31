@@ -18,4 +18,6 @@ public interface HeadProductMapper extends JpaRepository<Product, Integer> {
     Optional<Product> findByIdAndIsDisplayTrue(Integer productId);
     
     long countByCategory_Id(Integer categoryId);
+
+    long countByDiscountRateGreaterThan(Integer discountRate);
 }

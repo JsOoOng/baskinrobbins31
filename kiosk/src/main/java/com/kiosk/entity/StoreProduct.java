@@ -24,6 +24,9 @@ public class StoreProduct {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @Column(name = "store_product_price", nullable = false)
+    private Integer storeProductPrice;
+
     @Column(name = "is_sold_out")
     @Builder.Default
     private Boolean isSoldOut = false;

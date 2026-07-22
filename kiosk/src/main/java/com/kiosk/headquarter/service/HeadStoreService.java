@@ -22,6 +22,9 @@ public class HeadStoreService {
     private final HeadStoreMapper
             headStoreMapper;
 
+    private final AdminLogService
+            adminLogService;
+
     /*
      * 전체 지점 목록 조회
      */
@@ -110,6 +113,8 @@ public class HeadStoreService {
         Store savedStore =
                 headStoreMapper.save(store);
 
+        adminLogService.logAction("지점", savedStore.getStoreName() + " 신규 등록");
+
         return HeadStoreResponse.from(
                 savedStore
         );
@@ -174,6 +179,8 @@ public class HeadStoreService {
          * @Transactional 안에서 조회한 엔티티이므로
          * JPA 변경 감지로 UPDATE가 실행됩니다.
          */
+        adminLogService.logAction("지점", store.getStoreName() + " 정보 수정");
+
         return HeadStoreResponse.from(store);
     }
 

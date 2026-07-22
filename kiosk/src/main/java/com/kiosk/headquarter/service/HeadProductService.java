@@ -67,6 +67,9 @@ public class HeadProductService {
     
     private final HeadStoreInventoryMapper 
     		headStoreInventoryMapper;
+
+    private final AdminLogService
+            adminLogService;
     
     /*
      * 본사 상품 등록
@@ -318,14 +321,7 @@ public class HeadProductService {
                         StoreProduct.builder()
                                 .store(store)
                                 .product(savedProduct)
-
-                                /*
-                                 * STORE_PRODUCTS의
-                                 * store_product_price는 NOT NULL이므로
-                                 * 반드시 값을 넣어야 합니다.
-                                // 현재는 본사 상품 기본 가격을
-                				// 지점 판매 가격으로 사용
-                                */
+                                .storeProductPrice(savedProduct.getBasePrice())
                                 .isSoldOut(false)
                                 .isDeleted(false)
                                 .build();
@@ -392,6 +388,8 @@ public class HeadProductService {
                 );
             }
         }
+
+        adminLogService.logAction("상품", productName + " 신규 등록");
 
         return toResponseDTO(savedProduct);
     }
@@ -470,6 +468,8 @@ public class HeadProductService {
                 product.getImageUrl()
         );
 
+        adminLogService.logAction("상품", product.getProductName() + " 정보 수정");
+
         return toResponseDTO(product);
     }
 
@@ -488,6 +488,8 @@ public class HeadProductService {
                 );
 
         product.hideProduct();
+
+        adminLogService.logAction("상품", product.getProductName() + " 삭제");
     }
 
     /*

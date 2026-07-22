@@ -9,7 +9,9 @@ import com.kiosk.entity.Banner;
 
 @Repository
 public interface HeadBannerMapper
-        extends JpaRepository<Banner, Integer> {
+    extends JpaRepository<Banner, Integer> {
+
+    long countByIsActiveTrue();
 
     /*
      * 최근 등록한 배너부터 조회

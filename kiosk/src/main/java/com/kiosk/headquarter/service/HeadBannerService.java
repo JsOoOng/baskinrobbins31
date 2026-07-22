@@ -22,6 +22,9 @@ public class HeadBannerService {
     private final HeadBannerMapper
             headBannerMapper;
 
+    private final AdminLogService
+            adminLogService;
+
     /*
      * 배너 전체 목록
      */
@@ -79,6 +82,8 @@ public class HeadBannerService {
         Banner savedBanner =
                 headBannerMapper.save(banner);
 
+        adminLogService.logAction("배너", "배너 신규 등록");
+
         return HeadBannerResponse.from(
                 savedBanner
         );
@@ -109,6 +114,8 @@ public class HeadBannerService {
                 isActive
         );
 
+        adminLogService.logAction("배너", "배너 정보 수정");
+
         return HeadBannerResponse.from(
                 banner
         );
@@ -130,6 +137,8 @@ public class HeadBannerService {
                 request.getIsActive()
         );
 
+        adminLogService.logAction("배너", "배너 상태 변경 (" + (request.getIsActive() ? "활성" : "비활성") + ")");
+
         return HeadBannerResponse.from(
                 banner
         );
@@ -150,6 +159,8 @@ public class HeadBannerService {
                 findBanner(bannerId);
 
         headBannerMapper.delete(banner);
+
+        adminLogService.logAction("배너", "배너 삭제");
     }
 
     /*

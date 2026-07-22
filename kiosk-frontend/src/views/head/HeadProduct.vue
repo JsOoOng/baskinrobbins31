@@ -1,4 +1,5 @@
 <script setup>
+import axios from '@/api/axios'
 import {
   computed,
   onMounted,

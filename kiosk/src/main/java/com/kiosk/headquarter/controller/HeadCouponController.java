@@ -30,21 +30,21 @@ public class HeadCouponController {
     // 2. 새 쿠폰 등록 (POST /head/coupon/insert)
     @PostMapping
     public String insertCoupon(@RequestBody CouponRequestDto request) {
-        headCouponMapper.insertCoupon(request);
+        headCouponService.createCoupon(request);
         return "Coupon inserted successfully";
     }
 
     // 3. 쿠폰 수정 (PUT /head/coupon) 
     @PutMapping
     public String updateCoupon(@RequestBody CouponRequestDto request) {
-        headCouponMapper.updateCoupon(request);
+        headCouponService.updateCoupon(request);
         return "Coupon updated successfully";
     }
 
     // 4. 쿠폰 삭제 (DELETE /head/coupon/{couponId})
     @DeleteMapping("/{couponId}")
     public String deleteCoupon(@PathVariable("couponId") String couponId) {
-        headCouponMapper.deleteCoupon(couponId);
+        headCouponService.deleteCoupon(couponId);
         return "Coupon deleted successfully";
     }
     
