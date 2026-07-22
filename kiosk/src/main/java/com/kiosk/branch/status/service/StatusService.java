@@ -11,6 +11,7 @@ import com.kiosk.branch.status.dto.StoreFlavorRestockRequest;
 import com.kiosk.branch.status.dto.StoreFlavorStatusResponse;
 import com.kiosk.branch.status.dto.StoreProductStatusResponse;
 import com.kiosk.branch.status.reopsitory.IcecreamFlavorMapper;
+import com.kiosk.branch.status.reopsitory.RestockRequestMapper;
 import com.kiosk.branch.status.reopsitory.StoreFlavorMapper;
 import com.kiosk.branch.status.reopsitory.StoreInventoryMapper;
 import com.kiosk.branch.status.reopsitory.StoreMapper;
@@ -42,6 +43,7 @@ public class StatusService {
 
     private final BranchInventoryMapper inventoryMapper;
 
+    private final RestockRequestMapper restockRequestMapper;
 
 
     // 상품 품절 상태 변경
@@ -305,15 +307,17 @@ public class StatusService {
 
 
     @Transactional
-    public void deleteFlavor(
-            Integer storeFlavorId
-    ){
+    public void deleteFlavor(Integer storeFlavorId)
+    {
 
         StoreFlavor storeFlavor =
                 storeFlavorMapper.findById(storeFlavorId)
                 .orElseThrow(
                         () -> new IllegalArgumentException("등록된 맛 없음")
                 );
+
+
+        restockRequestMapper.deleteByStoreFlavorId(storeFlavorId);
 
 
         storeFlavorMapper.delete(storeFlavor);

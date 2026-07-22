@@ -98,64 +98,62 @@ const isActive = (flavorId) => {
 }
 
 
-
 // 맛 활성화 / 비활성화 변경
 const toggleFlavor = async (flavor) => {
 
 
-    const target =
-        storeFlavors.value.find(
-            item =>
-            item.flavorId === flavor.flavorId
-        )
+const target =
+    storeFlavors.value.find(
+        item =>
+        item.flavorId === flavor.flavorId
+    )
 
 
-    try {
+try {
 
 
-        // 현재 미사용 -> 추가
-        if(!target){
+    // 현재 OFF 상태 → ON (store_flavors 추가)
+    if(!target){
 
 
-            await api.post(
-                `/branch/status/flavor/${user.storeId}`,
-                {
-                    flavorId: flavor.flavorId
-                }
-            )
-
-
-        }
-
-
-        // 현재 사용중 -> 삭제
-        else{
-
-
-            await api.delete(
-                `/branch/status/flavor/${target.storeFlavorId}`
-            )
-
-
-        }
-
-
-
-        // 변경 후 다시 조회
-        await loadStoreFlavors()
-
-
-
-    } catch(e){
-
-
-        console.error(
-            '맛 상태 변경 실패',
-            e
+        await api.post(
+            `/branch/status/flavor/${user.storeId}`,
+            {
+                flavorId: flavor.flavorId
+            }
         )
 
 
     }
+
+
+    // 현재 ON 상태 → OFF (store_flavors 삭제)
+    else{
+
+
+        await api.delete(
+            `/branch/status/flavor/${target.storeFlavorId}`
+        )
+
+
+    }
+
+
+    // 변경 후 다시 조회
+    await loadStoreFlavors()
+
+
+} catch(e){
+
+
+    console.error(
+        '맛 상태 변경 실패',
+        e
+    )
+
+
+}
+
 
 }
 

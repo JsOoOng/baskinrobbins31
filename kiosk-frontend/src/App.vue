@@ -34,7 +34,11 @@ const showToast = (message)=>{
 let client = null;
 
 
+
+
 onMounted(() => {
+
+  
 
   const branchUser =
     JSON.parse(
@@ -61,6 +65,8 @@ onMounted(() => {
     console.log(
       'WebSocket 연결 성공'
     );
+
+    
 
 
     client.subscribe(
