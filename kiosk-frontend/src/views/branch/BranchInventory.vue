@@ -19,6 +19,7 @@
                 <th>상품명</th>
                 <th>재고</th>
                 <th>상태</th>
+                <th>변경</th>
                 <th>발주</th>
 
             </tr>
@@ -40,6 +41,22 @@
 
                 <td>
                     {{ menu.currentStock }}
+                </td>
+
+                <td>
+
+                <button
+                    @click="changeProductSoldOut(menu)"
+                >
+
+                {{
+                    menu.soldOut
+                    ? '판매 재개'
+                    : '품절 처리'
+                }}
+
+                </button>
+
                 </td>
 
 
@@ -659,6 +676,49 @@ try{
 
 
 }
+
+// 상품 품절 상태 변경
+const changeProductSoldOut = async(menu)=>{
+
+
+try{
+
+
+    await api.patch(
+
+        `/branch/status/product/${menu.storeProductId}`,
+
+        {
+            soldOut:
+                !menu.soldOut
+        }
+
+    )
+
+
+    await loadMenus()
+
+
+}catch(e){
+
+
+    console.error(
+        '상품 품절 변경 실패',
+        e
+    )
+
+
+    alert(
+        '상품 상태 변경 실패'
+    )
+
+
+}
+
+
+}
+
+
 
 </script>
 

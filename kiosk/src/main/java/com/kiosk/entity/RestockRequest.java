@@ -110,7 +110,14 @@ public class RestockRequest {
     private LocalDateTime requestedAt;
 
 
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+        name = "store_flavor_id",
+        nullable = false
+    )
+    
+    
+    
 
     /*
      * 제품 재고 ID 반환

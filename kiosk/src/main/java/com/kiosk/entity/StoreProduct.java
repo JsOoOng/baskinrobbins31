@@ -35,8 +35,18 @@ public class StoreProduct {
     @Builder.Default
     private Boolean isDeleted = false;
     
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean manualSoldOut = false;
+    
     public void updateSoldOut(Boolean isSoldOut) {
         this.isSoldOut = isSoldOut;
+    }
+    
+    public void changeManualSoldOut(Boolean manualSoldOut){
+
+        this.manualSoldOut = manualSoldOut;
+
     }
 
     public void deleteStoreProduct() {

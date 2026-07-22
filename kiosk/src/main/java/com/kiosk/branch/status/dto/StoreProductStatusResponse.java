@@ -12,6 +12,7 @@ public class StoreProductStatusResponse {
 
     private Integer storeProductId;
 
+
     /*
      * 발주용 재고 ID
      */
@@ -24,18 +25,23 @@ public class StoreProductStatusResponse {
     private String productName;
 
 
+    /*
+     * 최종 품절 상태
+     * manualSoldOut || 재고 0
+     */
     private Boolean soldOut;
 
 
     private Integer currentStock;
-    
+
 
 
 
     public static StoreProductStatusResponse from(
             StoreProduct sp,
             Integer storeInventoryId,
-            Integer currentStock
+            Integer currentStock,
+            Boolean soldOut
     ){
 
         return StoreProductStatusResponse.builder()
@@ -57,7 +63,7 @@ public class StoreProductStatusResponse {
                 )
 
                 .soldOut(
-                        sp.getIsSoldOut()
+                        soldOut
                 )
 
                 .currentStock(
