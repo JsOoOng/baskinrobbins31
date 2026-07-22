@@ -368,7 +368,7 @@ const dbProducts = ref([])
 const dbOptions = ref([])
 const dbFlavors = ref([])
 
-const currentStoreId = ref(1) 
+const currentStoreId = ref(Number(localStorage.getItem('storeId')) || 1) 
 const currentCategoryId = ref(null)
 const isModalOpen = ref(false)
 const isCartModalOpen = ref(false)
@@ -486,6 +486,21 @@ const selectCategory = async (id) => {
 
 // [API 통신 3]: 상품을 클릭했을 때 해당 상품의 사이즈 및 최대 선택 맛 수(옵션) 조회
 const openOptionModal = async (product) => {
+  // 아이스크림(카테고리 ID 1)이 아니면 모달을 띄우지 않고 바로 장바구니에 담기
+  if (product.categoryId !== 1 && currentCategoryId.value !== 1) {
+    const cartItem = {
+      productId: product.productId,
+      productName: product.productName,
+      unitPrice: product.finalPrice || product.basePrice,
+      quantity: 1,
+      flavors: [],
+      options: [],
+      extraSpoons: false
+    }
+    await basketStore.addToCart(cartItem)
+    return
+  }
+
   editingCartIndex.value = null
   selectedProduct.value = product
   selectedFlavors.value = []

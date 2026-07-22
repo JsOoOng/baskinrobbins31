@@ -109,8 +109,9 @@ public class OrderService {
             user = em.getReference(User.class, request.getUserId());
         }
 
-        // 데이터베이스에서 가장 높은 주문 번호를 가져와서 1을 더함 (없으면 1부터 시작)
-        int maxOrderNumber = orderRepository.findMaxOrderNumber();
+        // 💡 지점별 및 오늘 날짜 기준으로 가장 높은 주문 번호를 가져와서 1을 더함 (없으면 1부터 시작)
+        java.time.LocalDateTime startOfDay = java.time.LocalDate.now().atStartOfDay();
+        int maxOrderNumber = orderRepository.findMaxOrderNumberByStoreAndDate(store.getId(), startOfDay);
         int nextOrderNumber = maxOrderNumber + 1;
 
         Order order = Order.builder()
