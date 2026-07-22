@@ -23,7 +23,7 @@
         type="button"
         class="refresh-button"
         :disabled="loading"
-        @click="loadInventories"
+        @click="loadInventories(false)"
       >
         {{ loading ? '조회 중...' : '새로고침' }}
       </button>
@@ -559,6 +559,7 @@
 <script setup>
 import {
   computed,
+  onBeforeUnmount,
   onMounted,
   reactive,
   ref,
@@ -576,6 +577,17 @@ const inventories = ref([])
 const loading = ref(false)
 const saving = ref(false)
 const togglingInventoryId = ref(null)
+
+/*
+ * 자동 갱신 설정
+ *
+ * 5000 = 5초
+ */
+ const AUTO_REFRESH_INTERVAL = 5000
+
+const backgroundRefreshing = ref(false)
+
+let autoRefreshTimer = null
 
 const message = ref('')
 const messageType = ref('success')
@@ -640,9 +652,39 @@ const extractItem = (response) => {
   return response?.data?.data ?? response?.data
 }
 
-const loadInventories = async () => {
-  loading.value = true
-  clearMessage()
+/*
+ * 재고 목록 조회
+ *
+ * silent = false
+ * → 사용자가 직접 새로고침
+ * → 로딩 화면과 오류 메시지 표시
+ *
+ * silent = true
+ * → 자동 갱신
+ * → 화면 깜빡임 없이 데이터만 교체
+ */
+ const loadInventories = async (
+  silent = false
+) => {
+  const isSilent =
+    silent === true
+
+  /*
+   * 자동 갱신 요청이 겹치는 것을 방지
+   */
+  if (
+    isSilent &&
+    backgroundRefreshing.value
+  ) {
+    return
+  }
+
+  if (isSilent) {
+    backgroundRefreshing.value = true
+  } else {
+    loading.value = true
+    clearMessage()
+  }
 
   try {
     const response =
@@ -651,6 +693,19 @@ const loadInventories = async () => {
     inventories.value =
       extractList(response)
   } catch (error) {
+    /*
+     * 자동 갱신 실패 시에는
+     * 기존 목록을 지우거나 토스트를 띄우지 않습니다.
+     */
+    if (isSilent) {
+      console.error(
+        '[재고 자동 갱신 실패]',
+        error
+      )
+
+      return
+    }
+
     inventories.value = []
 
     showMessage(
@@ -661,7 +716,84 @@ const loadInventories = async () => {
       'error'
     )
   } finally {
-    loading.value = false
+    if (isSilent) {
+      backgroundRefreshing.value = false
+    } else {
+      loading.value = false
+    }
+  }
+}
+
+/*
+ * 자동 갱신 실행 가능 여부 확인
+ */
+ const runAutoRefresh = () => {
+  /*
+   * 다른 브라우저 탭을 보고 있으면
+   * 불필요한 요청을 보내지 않습니다.
+   */
+  if (
+    document.visibilityState !==
+    'visible'
+  ) {
+    return
+  }
+
+  /*
+   * 목록 조회·설정 저장·상태 변경 중에는
+   * 자동 갱신을 잠시 건너뜁니다.
+   */
+  if (
+    loading.value ||
+    saving.value ||
+    backgroundRefreshing.value ||
+    togglingInventoryId.value !== null ||
+    settingModalOpen.value
+  ) {
+    return
+  }
+
+  loadInventories(true)
+}
+
+/*
+ * 자동 갱신 시작
+ */
+const startAutoRefresh = () => {
+  stopAutoRefresh()
+
+  autoRefreshTimer =
+    window.setInterval(
+      runAutoRefresh,
+      AUTO_REFRESH_INTERVAL
+    )
+}
+
+/*
+ * 자동 갱신 종료
+ */
+const stopAutoRefresh = () => {
+  if (autoRefreshTimer === null) {
+    return
+  }
+
+  window.clearInterval(
+    autoRefreshTimer
+  )
+
+  autoRefreshTimer = null
+}
+
+/*
+ * 다른 탭에서 돌아왔을 때
+ * 즉시 최신 재고 조회
+ */
+const handleVisibilityChange = () => {
+  if (
+    document.visibilityState ===
+    'visible'
+  ) {
+    runAutoRefresh()
   }
 }
 
@@ -1193,8 +1325,37 @@ watch(totalPages, (pageCount) => {
   }
 })
 
-onMounted(() => {
-  loadInventories()
+onMounted(async () => {
+  /*
+   * 최초 목록 조회
+   */
+  await loadInventories(false)
+
+  /*
+   * 5초 자동 갱신 시작
+   */
+  startAutoRefresh()
+
+  /*
+   * 브라우저 탭 복귀 감지
+   */
+  document.addEventListener(
+    'visibilitychange',
+    handleVisibilityChange
+  )
+})
+
+onBeforeUnmount(() => {
+  /*
+   * 재고 화면을 벗어나면
+   * 반복 요청을 반드시 종료합니다.
+   */
+  stopAutoRefresh()
+
+  document.removeEventListener(
+    'visibilitychange',
+    handleVisibilityChange
+  )
 })
 </script>
 

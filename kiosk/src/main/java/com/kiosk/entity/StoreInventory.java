@@ -379,4 +379,16 @@ public class StoreInventory {
         this.targetStock =
                 targetStock;
     }
+    
+    public boolean isLowStock() {
+
+        if (
+                currentStock == null ||
+                minStock == null
+        ) {
+            return false;
+        }
+
+        return currentStock <= minStock;
+    }
 }
