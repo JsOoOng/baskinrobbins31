@@ -260,7 +260,7 @@ public class OrderService {
         orderMapper.insertPayment(payment);
         
         // 6. 주문 상태 업데이트 (ORDERS 테이블 상태 변경)
-        orderMapper.updateOrderStatus(orderId, "PREPARING");
+        orderMapper.updateOrderStatus(orderId, "WAITING");
 
         // 7. 장바구니 비우기 (결제 완료 후 세션 초기화)
         if (session != null) {
