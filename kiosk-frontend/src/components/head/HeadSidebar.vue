@@ -183,6 +183,12 @@ const menuGroups = computed(() => {
           icon: '📝',
           routeName: 'head-logs',
           implemented: true
+        },
+        {
+          label: '이용약관 정책',
+          icon: '📜',
+          routeName: 'head-policies',
+          implemented: true
         }
       ]
     }
