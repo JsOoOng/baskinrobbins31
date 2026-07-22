@@ -1,110 +1,154 @@
 package com.kiosk.branch.inventory.service;
 
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.branch.inventory.repository.BranchInventoryMapper;
 import com.kiosk.branch.status.reopsitory.StoreProductMapper;
-import com.kiosk.common.inventory.AutoRestockService;
 import com.kiosk.entity.InventoryItem;
 import com.kiosk.entity.Order;
 import com.kiosk.entity.OrderItem;
 import com.kiosk.entity.StoreInventory;
 import com.kiosk.entity.StoreProduct;
+import com.kiosk.headquarter.inventory.AutoRestockService;
 
 import lombok.RequiredArgsConstructor;
-
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class BranchInventoryService {
 
+    private final BranchInventoryMapper
+            inventoryMapper;
 
-    private final BranchInventoryMapper inventoryMapper;
-    private final AutoRestockService autoRestockService;
+    private final AutoRestockService
+            autoRestockService;
 
-    private final StoreProductMapper storeProductMapper;
+    private final StoreProductMapper
+            storeProductMapper;
 
-    public void decrease(Order order){
+    /*
+     * 주문 완료 후 재고 차감
+     */
+    public void decrease(
+            Order order
+    ) {
 
-        for(OrderItem orderItem : order.getOrderItems()){
+        if (
+                order == null ||
+                order.getStore() == null
+        ) {
+            throw new IllegalArgumentException(
+                    "주문 또는 지점 정보가 없습니다."
+            );
+        }
 
+        for (
+                OrderItem orderItem
+                : order.getOrderItems()
+        ) {
 
-            var product = orderItem.getProduct();
+            if (
+                    orderItem == null ||
+                    orderItem.getProduct() == null
+            ) {
+                continue;
+            }
 
+            Integer orderQuantity =
+                    orderItem.getQuantity();
 
-            for(InventoryItem item : product.getInventoryItems()){
+            if (
+                    orderQuantity == null ||
+                    orderQuantity <= 0
+            ) {
+                throw new IllegalArgumentException(
+                        "주문 수량은 1개 이상이어야 합니다."
+                );
+            }
 
+            var product =
+                    orderItem.getProduct();
+
+            /*
+             * 상품에 연결된 재고 품목 중
+             * 하나라도 재고가 없으면 상품 품절 처리
+             */
+            boolean soldOut = false;
+
+            for (
+                    InventoryItem item
+                    : product.getInventoryItems()
+            ) {
 
                 StoreInventory inventory =
                         inventoryMapper
-                        .findByStore_IdAndItem_Id(
-                                order.getStore().getId(),
-                                item.getId()
-                        )
-                        .orElseThrow(
-                            () -> new RuntimeException(
-                                "재고 없음"
-                            )
-                        );
+                                .findByStore_IdAndItem_Id(
+                                        order
+                                                .getStore()
+                                                .getId(),
+                                        item.getId()
+                                )
+                                .orElseThrow(() ->
+                                        new IllegalArgumentException(
+                                                "해당 지점의 재고 정보가 없습니다."
+                                        )
+                                );
 
-
-                // 재고 차감
+                /*
+                 * 1. 주문 수량만큼 한 번만 차감
+                 */
                 inventory.decreaseStock(
-                        orderItem.getQuantity()
+                        orderQuantity
                 );
 
-                autoRestockService
-                        .processThresholdRestock(
-                                inventory
-                        );
+                /*
+                 * 2. THRESHOLD 또는 BOTH이면
+                 * 최소 재고 이하인지 검사하여
+                 * 목표 재고까지 자동 보충
+                 *
+                 * DAILY는 이 검사에서 통과하지 않음
+                 */
+                Integer restockedQuantity =
+                        autoRestockService
+                                .processThresholdRestock(
+                                        inventory
+                                );
 
-                if (inventory.needsThresholdRestock()) {
-
-                    Integer restockedQuantity =
-                            inventory.autoRestock();
-
-                    System.out.println(
-                            "임계 재고 자동 보충: "
-                                    + "storeInventoryId="
-                                    + inventory.getId()
-                                    + ", quantity="
-                                    + restockedQuantity
-                                    + ", currentStock="
-                                    + inventory.getCurrentStock()
-                    );
+                /*
+                 * 자동 보충되지 않았고
+                 * 실제 재고가 0 이하인 경우 품절
+                 */
+                if (
+                        restockedQuantity <= 0 &&
+                        inventory.getCurrentStock() <= 0
+                ) {
+                    soldOut = true;
                 }
-
-
-                // 재고 0이면 품절 처리
-                if(inventory.getCurrentStock() <= 0){
-
-
-                    StoreProduct storeProduct =
-                            storeProductMapper
-                            .findByStoreIdAndProductId(
-                                    order.getStore().getId(),
-                                    product.getId()
-                            )
-                            .orElseThrow(
-                                () -> new RuntimeException(
-                                    "지점 상품 없음"
-                                )
-                            );
-
-
-                    storeProduct.changeSoldOut(true);
-
-                }
-                
-                
-
             }
 
+            /*
+             * 연결된 모든 재고를 검사한 결과에 따라
+             * 지점 판매 상품 품절 상태 변경
+             */
+            StoreProduct storeProduct =
+                    storeProductMapper
+                            .findByStoreIdAndProductId(
+                                    order
+                                            .getStore()
+                                            .getId(),
+                                    product.getId()
+                            )
+                            .orElseThrow(() ->
+                                    new IllegalArgumentException(
+                                            "지점 판매 상품 정보가 없습니다."
+                                    )
+                            );
+
+            storeProduct.changeSoldOut(
+                    soldOut
+            );
         }
-
     }
-
 }

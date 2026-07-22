@@ -203,7 +203,7 @@ public class StoreInventory {
     }
 
     /*
-     * 판매 후 임계 재고 보충 대상인지 확인
+     * 임계 재고 자동 보충 대상인지 확인
      */
     public boolean needsThresholdRestock() {
 
@@ -217,7 +217,8 @@ public class StoreInventory {
 
         if (
                 restockMode !=
-                        AutoRestockMode.THRESHOLD &&
+                        AutoRestockMode.THRESHOLD
+                &&
                 restockMode !=
                         AutoRestockMode.BOTH
         ) {
@@ -226,16 +227,18 @@ public class StoreInventory {
 
         if (
                 currentStock == null ||
-                minStock == null
+                minStock == null ||
+                targetStock == null
         ) {
             return false;
         }
 
-        return currentStock <= minStock;
+        return currentStock <= minStock
+                && currentStock < targetStock;
     }
 
     /*
-     * 정기 스케줄 보충 대상인지 확인
+     * 정기 자동 보충 대상인지 확인
      */
     public boolean needsDailyRestock() {
 
@@ -248,10 +251,8 @@ public class StoreInventory {
         }
 
         if (
-                restockMode !=
-                        AutoRestockMode.DAILY &&
-                restockMode !=
-                        AutoRestockMode.BOTH
+                restockMode != AutoRestockMode.DAILY &&
+                restockMode != AutoRestockMode.BOTH
         ) {
             return false;
         }
@@ -290,14 +291,18 @@ public class StoreInventory {
      */
     public Integer autoRestock() {
 
-        Integer restockQuantity =
-                calculateRestockQuantity();
-
-        if (restockQuantity <= 0) {
+        if (
+                currentStock == null ||
+                targetStock == null ||
+                currentStock >= targetStock
+        ) {
             return 0;
         }
 
-        increaseStock(restockQuantity);
+        Integer restockQuantity =
+                targetStock - currentStock;
+
+        currentStock = targetStock;
 
         return restockQuantity;
     }

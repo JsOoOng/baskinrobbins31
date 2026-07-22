@@ -262,7 +262,7 @@ public class OrderService {
         }
     }
     
-    // 결제 방법
+    // 쿠폰 사용
     private int calculateDiscount(int originalPrice, Coupon coupon) {
         String discountType = coupon.getDiscountType(); 
         int discountValue = coupon.getDiscountValue();  

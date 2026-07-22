@@ -24,7 +24,9 @@ public class HeadInventoryResponse {
 
     private Integer itemId;
 
-    private String itemName;
+    private Integer productId;
+
+    private String productName;
 
     private String unit;
 
@@ -66,9 +68,15 @@ public class HeadInventoryResponse {
                         inventory.getItem()
                                 .getId()
                 )
-                .itemName(
+                .productId(
                         inventory.getItem()
-                                .getItemName()
+                                .getProduct()
+                                .getId()
+                )
+                .productName(
+                        inventory.getItem()
+                                .getProduct()
+                                .getProductName()
                 )
                 .unit(
                         inventory.getItem()

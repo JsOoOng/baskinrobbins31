@@ -27,7 +27,6 @@
 
     </select>
 
-    <!-- 쿠폰 등록 -->
     <insert id="insertCoupon"
             parameterType=
                     "com.kiosk.headquarter.dto.coupon.CouponRequestDto">
@@ -52,9 +51,7 @@
 
     </insert>
 
-    <!--
-        쿠폰 수정
-    -->
+    <!-- 쿠폰 수정 -->
     <update id="updateCoupon"
             parameterType=
                     "com.kiosk.headquarter.dto.coupon.CouponRequestDto">
@@ -69,9 +66,7 @@
 
     </update>
 
-    <!--
-        쿠폰 삭제 전 회원 쿠폰 삭제
-    -->
+    <!-- 쿠폰 삭제 전 회원 쿠폰 삭제 -->
     <delete id="deleteUserCouponsByCouponId"
             parameterType="java.lang.String">
 
@@ -80,9 +75,7 @@
 
     </delete>
 
-    <!--
-        쿠폰 삭제
-    -->
+    <!-- 쿠폰 삭제 -->
     <delete id="deleteCoupon"
             parameterType="java.lang.String">
 
@@ -91,12 +84,7 @@
 
     </delete>
 
-    <!--
-        모든 회원에게 쿠폰 일괄 발급
-
-        이미 같은 쿠폰이 발급된 회원은
-        다시 발급하지 않습니다.
-    -->
+    <!-- 모든 회원에게 쿠폰 일괄 발급 이미 같은 쿠폰이 발급된 회원은 다시 발급하지 않습니다. -->
     <insert id="insertCouponToAllUsers"
             parameterType="java.lang.String">
 
@@ -128,9 +116,7 @@
 
     </insert>
 
-    <!--
-        전체 회원 발급 완료 상태 변경
-    -->
+    <!-- 전체 회원 발급 완료 상태 변경 -->
     <update id="updateCouponIssuedStatus"
             parameterType="java.lang.String">
 

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kiosk.entity.StoreInventory;
 import com.kiosk.headquarter.dto.inventory.HeadInventoryResponse;
 import com.kiosk.headquarter.dto.inventory.HeadInventoryUpdateRequest;
+import com.kiosk.headquarter.inventory.AutoRestockService;
 import com.kiosk.headquarter.repository.HeadStoreInventoryMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,9 @@ public class HeadInventoryService {
 
     private final HeadStoreInventoryMapper
             headStoreInventoryMapper;
+
+    private final AutoRestockService
+            autoRestockService;
 
     /*
      * 전체 지점 재고 조회
@@ -93,6 +97,9 @@ public class HeadInventoryService {
                         storeInventoryId
                 );
 
+        /*
+         * 1. 자동 보충 설정 변경
+         */
         inventory.updateAutoRestockSetting(
                 request.getAutoRestockEnabled(),
                 request.getRestockMode(),
@@ -101,9 +108,28 @@ public class HeadInventoryService {
         );
 
         /*
-         * @Transactional 내부에서 조회한 엔티티이므로
-         * JPA 변경 감지로 UPDATE가 실행됩니다.
+         * 2. THRESHOLD 또는 BOTH로 설정했고,
+         * 현재 재고가 이미 최소 재고 이하라면
+         * 설정 저장 즉시 목표 재고까지 보충합니다.
          */
+        Integer restockedQuantity =
+                autoRestockService
+                        .processThresholdRestock(
+                                inventory
+                        );
+
+        if (restockedQuantity > 0) {
+            System.out.println(
+                    "재고 설정 저장 후 임계 자동 보충: "
+                            + "storeInventoryId="
+                            + inventory.getId()
+                            + ", restockedQuantity="
+                            + restockedQuantity
+                            + ", currentStock="
+                            + inventory.getCurrentStock()
+            );
+        }
+
         return HeadInventoryResponse.from(
                 inventory
         );

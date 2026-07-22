@@ -1,4 +1,4 @@
-package com.kiosk.common.inventory;
+package com.kiosk.headquarter.inventory;
 
 import java.util.List;
 
@@ -22,8 +22,10 @@ public class AutoRestockService {
             headStoreInventoryMapper;
 
     /*
-     * 정해진 시간에 DAILY 또는 BOTH 재고를
-     * 목표 재고까지 자동 보충합니다.
+     * DAILY 또는 BOTH 재고를 검사합니다.
+     *
+     * 현재 재고가 목표 재고보다 적으면
+     * 목표 재고까지 보충합니다.
      */
     @Transactional
     public void processDailyRestock() {
@@ -49,10 +51,7 @@ public class AutoRestockService {
             Integer restockQuantity =
                     inventory.autoRestock();
 
-            if (
-                    restockQuantity == null ||
-                    restockQuantity <= 0
-            ) {
+            if (restockQuantity <= 0) {
                 continue;
             }
 
@@ -63,13 +62,9 @@ public class AutoRestockService {
             log.info(
                     "정기 자동 재고 보충: "
                             + "storeInventoryId={}, "
-                            + "storeId={}, "
-                            + "itemId={}, "
                             + "restockQuantity={}, "
                             + "currentStock={}",
                     inventory.getId(),
-                    inventory.getStore().getId(),
-                    inventory.getItem().getId(),
                     restockQuantity,
                     inventory.getCurrentStock()
             );
@@ -85,7 +80,69 @@ public class AutoRestockService {
     }
 
     /*
-     * 상품 판매 직후 임계 재고 검사
+     * THRESHOLD 또는 BOTH 재고를 전체 검사합니다.
+     *
+     * 현재 재고가 최소 재고 이하이면
+     * 목표 재고까지 보충합니다.
+     */
+    @Transactional
+    public void processThresholdRestockSweep() {
+
+        List<StoreInventory> inventories =
+                headStoreInventoryMapper
+                        .findByAutoRestockEnabledTrueAndRestockModeIn(
+                                List.of(
+                                        AutoRestockMode.THRESHOLD,
+                                        AutoRestockMode.BOTH
+                                )
+                        );
+
+        int processedCount = 0;
+        int totalRestockQuantity = 0;
+
+        for (StoreInventory inventory : inventories) {
+
+            if (!inventory.needsThresholdRestock()) {
+                continue;
+            }
+
+            Integer restockQuantity =
+                    inventory.autoRestock();
+
+            if (restockQuantity <= 0) {
+                continue;
+            }
+
+            processedCount++;
+            totalRestockQuantity +=
+                    restockQuantity;
+
+            log.info(
+                    "임계 자동 재고 보충: "
+                            + "storeInventoryId={}, "
+                            + "currentStock={}, "
+                            + "minStock={}, "
+                            + "targetStock={}, "
+                            + "restockQuantity={}",
+                    inventory.getId(),
+                    inventory.getCurrentStock(),
+                    inventory.getMinStock(),
+                    inventory.getTargetStock(),
+                    restockQuantity
+            );
+        }
+
+        log.info(
+                "임계 자동 재고 보충 검사 완료: "
+                        + "processedCount={}, "
+                        + "totalRestockQuantity={}",
+                processedCount,
+                totalRestockQuantity
+        );
+    }
+
+    /*
+     * 주문 직후 특정 재고 한 건을 검사합니다.
      */
     @Transactional
     public Integer processThresholdRestock(
@@ -102,15 +159,8 @@ public class AutoRestockService {
         Integer restockQuantity =
                 inventory.autoRestock();
 
-        if (
-                restockQuantity == null ||
-                restockQuantity <= 0
-        ) {
-            return 0;
-        }
-
         log.info(
-                "임계 재고 자동 보충: "
+                "주문 후 임계 자동 재고 보충: "
                         + "storeInventoryId={}, "
                         + "restockQuantity={}, "
                         + "currentStock={}",
