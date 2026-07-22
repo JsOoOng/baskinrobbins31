@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/api/axios'
+import { Client } from '@stomp/stompjs'
 
 const router = useRouter()
 
@@ -129,10 +130,45 @@ const changeStatus = async () => {
 // 자동 새로고침용 타이머
 let intervalId
 
+// STOMP 클라이언트
+let stompClient = null
+
+const connectWebSocket = () => {
+    // Vite proxy(vite.config.js) 설정에 따라 /ws 요청을 백엔드로 프록시
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+    
+    stompClient = new Client({
+        brokerURL: wsUrl,
+        reconnectDelay: 5000,
+        onConnect: () => {
+            console.log('STOMP Connected for staff calls');
+            stompClient.subscribe(`/topic/stores/${user.storeId}/calls`, (message) => {
+                if (message.body) {
+                    const callData = JSON.parse(message.body);
+                    const reasonText = callData.reason === 'ORDER_SCREEN' ? '메뉴 주문 화면' : 
+                                       callData.reason === 'PAYMENT_ERROR' ? '결제 오류' : callData.reason;
+                    alert(`🔔 키오스크 ${callData.kioskNo}번에서 직원을 호출했습니다!\n사유: ${reasonText}`);
+                }
+            });
+        },
+        onStompError: (frame) => {
+            console.error('STOMP Broker Error', frame.headers['message']);
+        }
+    });
+    
+    stompClient.activate();
+}
+
 onMounted(() => {
 
     // 최초 조회
     loadOrders()
+
+    // 직원 호출 알림용 WebSocket 연결
+    if (user && user.storeId) {
+        connectWebSocket()
+    }
 
     // 5초마다 자동 새로고침
     intervalId = setInterval(() => {
@@ -143,6 +179,9 @@ onMounted(() => {
 
 onUnmounted(() => {
     clearInterval(intervalId)
+    if (stompClient) {
+        stompClient.deactivate()
+    }
 })
 
 // 주문 상태 색상

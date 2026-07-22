@@ -5,7 +5,8 @@
       <h2>결제에 실패했습니다</h2>
       <p class="desc">{{ errorMessage }}</p>
       
-      <button class="btn-home" @click="goBack">장바구니로 돌아가기</button>
+      <button class="btn-home" @click="goBack" style="margin-bottom: 10px;">장바구니로 돌아가기</button>
+      <button class="btn-call" @click="handleCallStaff">🔔 직원 호출하기</button>
     </div>
   </div>
 </template>
@@ -14,6 +15,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '@/api/axios';
+import { callStaff } from '@/api/customer/callApi';
 
 const route = useRoute();
 const router = useRouter();
@@ -38,6 +40,22 @@ onMounted(async () => {
 
 const goBack = () => {
   router.push('/menu');
+};
+
+const handleCallStaff = async () => {
+  try {
+    const storeId = Number(localStorage.getItem('storeId')) || 1;
+    const kioskNo = Number(localStorage.getItem('kioskId')) || 1;
+    
+    await callStaff({
+      storeId: storeId,
+      kioskNo: kioskNo,
+      reason: 'PAYMENT_ERROR'
+    });
+    alert('직원을 호출했습니다. 잠시만 기다려주세요.');
+  } catch (error) {
+    alert('직원 호출에 실패했습니다.');
+  }
 };
 </script>
 
@@ -92,5 +110,22 @@ h2 {
 
 .btn-home:hover {
   background: #e66885;
+}
+
+.btn-call {
+  background: #ff9800;
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  font-size: 1.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+  width: 100%;
+}
+
+.btn-call:hover {
+  background: #f57c00;
 }
 </style>

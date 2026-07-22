@@ -7,7 +7,10 @@
       </div>
       <div class="kiosk-title">{{ $t('주문하기') }}</div>
       <div class="header-right" style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
-        <button class="btn-home" @click="goHome">🏠 {{ $t('처음으로') }}</button>
+        <div style="display: flex; gap: 5px;">
+          <button class="btn-home" style="background-color: #ff9800; border-color: #f57c00; color: white;" @click="handleCallStaff">🔔 {{ $t('직원 호출') }}</button>
+          <button class="btn-home" @click="goHome">🏠 {{ $t('처음으로') }}</button>
+        </div>
         <span class="timer-text" v-if="timeoutStore && timeoutStore.timeLeft !== undefined">{{ $t('남은 시간') }}: {{ timeoutStore.timeLeft }}{{ $t('초') }}</span>
       </div>
     </header>
@@ -352,6 +355,7 @@ import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import axios from '@/api/axios'
+import { callStaff } from '@/api/customer/callApi'
 import { useBasketStore } from '@/stores/customer/basket'
 import { useTimeoutStore } from '@/stores/customer/timeout'
 
@@ -773,6 +777,20 @@ const goPayment = async () => {
   }
   // 바로 포인트/할인 화면으로 넘어갑니다. (DB 주문 생성은 결제 최종 단계로 지연)
   router.push(`/point-discount`);
+}
+
+const handleCallStaff = async () => {
+  try {
+    const kioskNo = Number(localStorage.getItem('kioskId')) || 1;
+    await callStaff({
+      storeId: currentStoreId.value,
+      kioskNo: kioskNo,
+      reason: 'ORDER_SCREEN'
+    });
+    displayToast(t('직원을 호출했습니다. 잠시만 기다려주세요.'));
+  } catch (error) {
+    displayToast(t('직원 호출에 실패했습니다.'));
+  }
 }
 </script>
 

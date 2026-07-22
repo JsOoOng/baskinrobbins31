@@ -175,7 +175,7 @@
   "응답이 없으면 처음 화면으로 돌아갑니다.": "If there is no response, it returns to the first screen.",
   "연장하기": "Extend time",
   "할인 및 포인트 적립": "Discounts and points earned",
-  "전화번호를 입력하고 포인트와 쿠폰을 확인하세요.":"Enter your phone number and check your points and coupons.",
+  "전화번호를 입력하고 포인트와 쿠폰을 확인하세요.": "Enter your phone number and check your points and coupons.",
   "전화번호 입력 / 조회": "Enter/Lookup Phone Number",
   "보유 포인트": "Available Points",
   "사용 가능한 쿠폰": "Available Coupons",
@@ -188,6 +188,9 @@
   "까지": "Until",
   "할인": "Discount",
   "사용할 포인트를 입력하세요": "Enter the number of points to use.",
-  "번호 재입력": "Re-enter Phone Number"
-  
+  "번호 재입력": "Re-enter Phone Number",
+  "직원 호출": "Call Staff",
+  "직원을 호출했습니다. 잠시만 기다려주세요.": "Called staff. Please wait a moment.",
+  "직원 호출에 실패했습니다.": "Failed to call staff.",
+  "이거 다 가져": "Take all of this"
 }
