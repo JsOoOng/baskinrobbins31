@@ -490,6 +490,7 @@ const openOptionModal = async (product) => {
   if (product.categoryId !== 1 && currentCategoryId.value !== 1) {
     const cartItem = {
       productId: product.productId,
+      categoryId: product.categoryId || currentCategoryId.value,
       productName: product.productName,
       unitPrice: product.finalPrice || product.basePrice,
       quantity: 1,
@@ -680,8 +681,9 @@ const addCurrentItemToCart = async () => {
 
   const requestData = {
     productId: selectedProduct.value.productId,
+    categoryId: currentCategoryId.value,
     productName: selectedProduct.value.productName + (isContainerSelectable.value && selectedContainer.value ? ` (${selectedContainer.value})` : ''),
-    quantity: editingCartIndex.value !== null ? basketStore.cartItems[editingCartIndex.value].quantity : 1, // 기존 수량 유지
+    quantity: editingCartIndex.value !== null ? basketStore.cartItems[editingCartIndex.value].quantity : 1, // 수량 유지
     unitPrice: calculatedItemPrice.value,
     flavors: flavorData,
     options: validOptions,

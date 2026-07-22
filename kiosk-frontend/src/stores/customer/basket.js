@@ -66,6 +66,8 @@ export const useBasketStore = defineStore('basket', {
       // 프론트엔드 메모리(Pinia)에 먼저 추가
       this.cartItems.push({
         productId: product.productId,
+        categoryId: product.categoryId,
+        productName: product.productName,
         quantity: product.quantity || 1,
         unitPrice: product.unitPrice,
         flavors: product.flavors || [], // [{ flavorId: 1, quantity: 1 }] 모양
