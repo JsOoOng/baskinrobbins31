@@ -85,17 +85,17 @@
       <div class="price-summary-box">
         <div class="summary-top">
           <span class="label">{{ $t('최종 결제금액') }}</span>
-          <span class="final-amount">{{ finalPrice.toLocaleString() }}원</span>
+          <span class="final-amount">₩{{ finalPrice.toLocaleString() }}</span>
         </div>
         <div class="summary-detail">
           <div class="col">
             <span class="sub-label">{{ $t('주문금액') }}</span>
-            <span class="sub-val">{{ basketStore.totalPrice.toLocaleString() }}원</span>
+            <span class="sub-val">₩{{ basketStore.totalPrice.toLocaleString() }}</span>
           </div>
           <span class="operator">-</span>
           <div class="col">
             <span class="sub-label">{{ $t('할인금액') }}</span>
-            <span class="sub-val">{{ totalDiscount.toLocaleString() }}원</span>
+            <span class="sub-val">₩{{ totalDiscount.toLocaleString() }}</span>
           </div>
         </div>
       </div>

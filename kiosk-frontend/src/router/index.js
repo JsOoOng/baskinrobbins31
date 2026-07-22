@@ -406,7 +406,7 @@ const router = createRouter({
         {
           path: 'inventory',
           name: 'head-inventory',
-          component: HeadInventory,
+          component: () => import('../views/head/HeadInventory.vue'),
           meta: {
             title: '재고 현황',
             description:
