@@ -172,5 +172,21 @@
   "장시간 입력이 없습니다": "No input for a long time",
   "계속하시겠습니까?": "Would you like to continue?",
   "응답이 없으면 처음 화면으로 돌아갑니다.": "If there is no response, it returns to the first screen.",
-  "연장하기": "Extend time"
+  "연장하기": "Extend time",
+  "할인 및 포인트 적립": "Discounts and points earned",
+  "전화번호를 입력하고 포인트와 쿠폰을 확인하세요.":"Enter your phone number and check your points and coupons.",
+  "전화번호 입력 / 조회": "Enter/Lookup Phone Number",
+  "보유 포인트": "Available Points",
+  "사용 가능한 쿠폰": "Available Coupons",
+  "사용": "Use",
+  "적립 예정": "Points to Earn",
+  "최종 결제 금액의 5%가 적립됩니다.": "5% of the final payment amount will be earned as points.",
+  "주문금액": "Order Amount",
+  "할인금액": "Discount Amount",
+  "만료일": "Expiration Date",
+  "까지": "Until",
+  "할인": "Discount",
+  "사용할 포인트를 입력하세요": "Enter the number of points to use.",
+  "번호 재입력": "Re-enter Phone Number"
+  
 }
