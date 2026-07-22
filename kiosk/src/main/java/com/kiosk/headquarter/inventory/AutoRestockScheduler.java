@@ -1,4 +1,4 @@
-package com.kiosk.common.inventory;
+package com.kiosk.headquarter.inventory;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -21,42 +21,53 @@ public class AutoRestockScheduler {
     private final FlavorRestockService flavorRestockService;
     
     /*
-     * 매일 오전 12시에 실행합니다.
+     * 테스트용
      *
-     * 초  분 시  일  월  요일
-     * 0  0  10  *  *  *
+     * 작업 완료 후 10초 뒤 다시 실행합니다.
      */
     
     /*
-    @Scheduled(
-            cron = "0 0 12 * * *",
-            zone = "Asia/Seoul"
-    )
-    public void runDailyRestock() {
+    @Scheduled(fixedDelay = 10000)
+    public void runAutoRestockTest() {
 
         log.info(
-                "정기 자동 재고 보충 작업을 시작합니다."
+                "전체 자동 재고 보충 테스트 실행"
         );
 
         try {
+            /*
+             * DAILY / BOTH
+             
             autoRestockService
                     .processDailyRestock();
 
+            /*
+             * THRESHOLD / BOTH
+             
+            autoRestockService
+                    .processThresholdRestockSweep();
+
         } catch (Exception exception) {
             log.error(
-                    "정기 자동 재고 보충 작업에 실패했습니다.",
+                    "전체 자동 재고 보충 테스트 실패",
                     exception
             );
         }
     }
-	*/
+    */
 
-    @Scheduled(fixedDelay = 10000)
+    /*
+     * 운영용 예시
+     *
+     * 테스트 완료 후 위 fixedDelay를 주석 처리하고
+     * 아래 스케줄을 사용합니다.
+     */
+    
+    @Scheduled(
+            cron = "0 0 11 * * *",
+            zone = "Asia/Seoul"
+    )
     public void runDailyRestock() {
-
-        log.info(
-                "자동 재고 보충 테스트 실행"
-        );
 
         autoRestockService
                 .processDailyRestock();
@@ -64,6 +75,9 @@ public class AutoRestockScheduler {
         service.processDailyRestock();
         
         flavorRestockService.processFlavorRestock();
+
+        autoRestockService
+                .processThresholdRestockSweep();
     }
 
 }
