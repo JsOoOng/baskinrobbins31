@@ -5,6 +5,7 @@ import {
   reactive,
   ref
 } from 'vue'
+import { useRouter } from 'vue-router'
 
 import {
   createHeadCategory,
@@ -14,7 +15,7 @@ import {
   updateHeadCategory
 } from '@/api/head/headCategoryApi'
 
-import P2ComingSoonModal from '@/components/head/P2ComingSoonModal.vue'
+import { headEventApi } from '@/api/headquarter/headEventApi'
 
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
@@ -27,6 +28,7 @@ const categories = ref([])
 /*
  * 화면 상태
  */
+const router = useRouter()
 const loading = ref(false)
 const saving = ref(false)
 const deletingId = ref(null)
@@ -37,6 +39,20 @@ const message = ref('')
 const messageType = ref('success')
 
 /*
+ * 현재 진행중인 이벤트 개수
+ */
+const activeEventCount = ref(0)
+
+const loadEventsCount = async () => {
+  try {
+    const events = await headEventApi.getAllEvents()
+    activeEventCount.value = events.filter(e => e.eventStatus === 'ACTIVE').length
+  } catch (error) {
+    console.error('이벤트 목록 조회 실패', error)
+  }
+}
+
+/*
  * 등록·수정 모달
  */
 const formModal = reactive({
@@ -45,15 +61,6 @@ const formModal = reactive({
   categoryId: null,
   categoryName: '',
   displayOrder: 0
-})
-
-/*
- * P2 안내 모달
- */
-const p2Modal = reactive({
-  open: false,
-  title: '',
-  description: ''
 })
 
 /*
@@ -323,17 +330,10 @@ const removeCategory = async (category) => {
 }
 
 /*
- * P2 기능 안내
+ * 이벤트 관리 페이지 이동
  */
 const openEventManagement = () => {
-  p2Modal.open = true
-  p2Modal.title = '이벤트 관리'
-  p2Modal.description =
-    '이벤트명, 대상 상품·카테고리, 시작일과 종료일을 관리하는 기능입니다.'
-}
-
-const closeP2Modal = () => {
-  p2Modal.open = false
+  router.push({ name: 'head-events' })
 }
 
 /*
@@ -353,6 +353,7 @@ const clearMessage = () => {
 
 onMounted(() => {
   loadCategories()
+  loadEventsCount()
 })
 </script>
 
@@ -425,11 +426,11 @@ onMounted(() => {
           <p>이벤트 카테고리</p>
 
           <strong>
-            P2
+            {{ activeEventCount }}
           </strong>
 
           <small>
-            기간형 이벤트 관리
+            현재 진행중인 이벤트
           </small>
         </div>
 
@@ -720,13 +721,6 @@ onMounted(() => {
         </div>
       </Transition>
     </Teleport>
-
-    <P2ComingSoonModal
-      :open="p2Modal.open"
-      :title="p2Modal.title"
-      :description="p2Modal.description"
-      @close="closeP2Modal"
-    />
   </section>
 </template>
 
