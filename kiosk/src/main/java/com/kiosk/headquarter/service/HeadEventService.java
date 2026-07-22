@@ -58,6 +58,10 @@ public class HeadEventService {
         event.setTargetType(requestDto.getTargetType());
         event.setDiscountValue(requestDto.getDiscountValue());
         
+        if (requestDto.getDiscountType() != null) {
+            event.setDiscountType(requestDto.getDiscountType());
+        }
+        
         if (requestDto.getIsVisible() != null) {
             event.setIsVisible(requestDto.getIsVisible());
         }

@@ -3,6 +3,11 @@
     <div class="header-section">
       <h2>🎉 이벤트 관리</h2>
       <div class="header-actions">
+        <select v-model="discountTypeFilter" class="status-filter">
+          <option value="ALL">전체 혜택</option>
+          <option value="AMOUNT">정액 할인 (원)</option>
+          <option value="RATE">정률 할인 (%)</option>
+        </select>
         <select v-model="statusFilter" class="status-filter">
           <option value="ALL">전체 상태</option>
           <option value="SCHEDULED">예정 (SCHEDULED)</option>
@@ -26,7 +31,7 @@
             <th>이벤트명</th>
             <th>상태</th>
             <th>적용 대상</th>
-            <th>할인(원)</th>
+            <th>할인 혜택</th>
             <th>시작일</th>
             <th>종료일</th>
             <th>노출 여부</th>
@@ -49,7 +54,7 @@
               </span>
             </td>
             <td>{{ event.targetType || '전체' }}</td>
-            <td>{{ event.discountValue ? event.discountValue.toLocaleString() + '원' : '-' }}</td>
+            <td>{{ event.discountType === 'RATE' ? (event.discountValue ? event.discountValue + '%' : '-') : (event.discountValue ? event.discountValue.toLocaleString() + '원' : '-') }}</td>
             <td>{{ formatDate(event.startDate) }}</td>
             <td>{{ formatDate(event.endDate) }}</td>
             <td>
@@ -111,8 +116,14 @@
           </div>
           <div class="form-row">
             <div class="form-group half">
-              <label>할인 금액</label>
-              <input type="number" v-model="formData.discountValue" />
+              <label>할인 혜택 (방식 / 수치)</label>
+              <div class="discount-input-group">
+                <select v-model="formData.discountType" class="discount-type-select">
+                  <option value="AMOUNT">원 (₩)</option>
+                  <option value="RATE">퍼센트 (%)</option>
+                </select>
+                <input type="number" v-model="formData.discountValue" class="discount-value-input" />
+              </div>
             </div>
             <div class="form-group half checkbox-group">
               <label>키오스크 노출</label>
@@ -141,12 +152,14 @@ const isModalOpen = ref(false);
 const isEditMode = ref(false);
 const currentEventId = ref(null);
 const statusFilter = ref('ALL');
+const discountTypeFilter = ref('ALL');
 
 const filteredEvents = computed(() => {
-  if (statusFilter.value === 'ALL') {
-    return eventStore.events;
-  }
-  return eventStore.events.filter(event => event.eventStatus === statusFilter.value);
+  return eventStore.events.filter(event => {
+    const matchStatus = statusFilter.value === 'ALL' || event.eventStatus === statusFilter.value;
+    const matchDiscountType = discountTypeFilter.value === 'ALL' || event.discountType === discountTypeFilter.value;
+    return matchStatus && matchDiscountType;
+  });
 });
 
 const defaultForm = {
@@ -156,6 +169,7 @@ const defaultForm = {
   endDate: '',
   eventStatus: 'SCHEDULED',
   targetType: 'ALL',
+  discountType: 'AMOUNT',
   discountValue: 0,
   isVisible: false
 };
@@ -194,6 +208,7 @@ const openModal = (event = null) => {
       endDate: formatToInputDateTime(event.endDate),
       eventStatus: event.eventStatus,
       targetType: event.targetType,
+      discountType: event.discountType || 'AMOUNT',
       discountValue: event.discountValue,
       isVisible: event.isVisible
     };
@@ -437,6 +452,17 @@ input:checked + .slider:before { transform: translateX(20px); }
   border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
+}
+
+.discount-input-group {
+  display: flex;
+  gap: 10px;
+}
+.discount-type-select {
+  flex: 1;
+}
+.discount-value-input {
+  flex: 2;
 }
 
 .checkbox-group {

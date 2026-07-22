@@ -21,6 +21,7 @@ public class EventResponseDto {
     private EventStatus eventStatus;
     private String targetType;
     private Integer discountValue;
+    private String discountType;
     private Boolean isVisible;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -34,6 +35,7 @@ public class EventResponseDto {
         this.eventStatus = event.getEventStatus();
         this.targetType = event.getTargetType();
         this.discountValue = event.getDiscountValue();
+        this.discountType = event.getDiscountType();
         this.isVisible = event.getIsVisible();
         this.createdAt = event.getCreatedAt();
         this.updatedAt = event.getUpdatedAt();
