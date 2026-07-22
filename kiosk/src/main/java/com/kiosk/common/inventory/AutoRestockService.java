@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.entity.StoreInventory;
+import com.kiosk.entity.enums.AutoRestockMode;
 import com.kiosk.headquarter.repository.HeadStoreInventoryMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -21,17 +22,20 @@ public class AutoRestockService {
             headStoreInventoryMapper;
 
     /*
-     * 매일 정해진 시각에 전체 지점 재고를 확인합니다.
-     *
-     * DAILY 또는 BOTH 방식이고
-     * 현재 재고가 목표 재고보다 적은 경우
+     * 정해진 시간에 DAILY 또는 BOTH 재고를
      * 목표 재고까지 자동 보충합니다.
      */
     @Transactional
     public void processDailyRestock() {
 
         List<StoreInventory> inventories =
-                headStoreInventoryMapper.findAll();
+                headStoreInventoryMapper
+                        .findByAutoRestockEnabledTrueAndRestockModeIn(
+                                List.of(
+                                        AutoRestockMode.DAILY,
+                                        AutoRestockMode.BOTH
+                                )
+                        );
 
         int processedCount = 0;
         int totalRestockQuantity = 0;
@@ -45,7 +49,10 @@ public class AutoRestockService {
             Integer restockQuantity =
                     inventory.autoRestock();
 
-            if (restockQuantity <= 0) {
+            if (
+                    restockQuantity == null ||
+                    restockQuantity <= 0
+            ) {
                 continue;
             }
 
@@ -78,7 +85,7 @@ public class AutoRestockService {
     }
 
     /*
-     * 판매 후 임계 재고 검사에 사용할 메서드
+     * 상품 판매 직후 임계 재고 검사
      */
     @Transactional
     public Integer processThresholdRestock(
@@ -94,6 +101,13 @@ public class AutoRestockService {
 
         Integer restockQuantity =
                 inventory.autoRestock();
+
+        if (
+                restockQuantity == null ||
+                restockQuantity <= 0
+        ) {
+            return 0;
+        }
 
         log.info(
                 "임계 재고 자동 보충: "

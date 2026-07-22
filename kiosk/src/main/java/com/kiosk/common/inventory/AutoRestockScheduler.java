@@ -21,7 +21,7 @@ public class AutoRestockScheduler {
      * 0  0  10  *  *  *
      */
     
-
+    /*
     @Scheduled(
             cron = "0 0 12 * * *",
             zone = "Asia/Seoul"
@@ -43,8 +43,8 @@ public class AutoRestockScheduler {
             );
         }
     }
+	*/
 
-    /*
     @Scheduled(fixedDelay = 10000)
     public void runDailyRestock() {
 
@@ -55,5 +55,5 @@ public class AutoRestockScheduler {
         autoRestockService
                 .processDailyRestock();
     }
-    */
+
 }

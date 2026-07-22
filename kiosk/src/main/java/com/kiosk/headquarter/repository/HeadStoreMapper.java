@@ -9,12 +9,16 @@ import com.kiosk.entity.Store;
 
 @Repository
 public interface HeadStoreMapper
-        extends JpaRepository<Store, Integer> {
+        extends JpaRepository<
+                Store,
+                Integer
+        > {
 
     /*
-     * 최신 등록 지점부터 조회
+     * 지점 번호 내림차순 목록
      */
-    List<Store> findAllByOrderByIdDesc();
+    List<Store>
+            findAllByOrderByIdDesc();
 
     /*
      * 사업자 번호 중복 확인

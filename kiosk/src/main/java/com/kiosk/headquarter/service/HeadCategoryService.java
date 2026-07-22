@@ -115,7 +115,7 @@ public class HeadCategoryService {
         Category category = headCategoryMapper.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
 
-        int productCount = headProductMapper.countByCategory_Id(categoryId);
+        long productCount = headProductMapper.countByCategory_Id(categoryId);
 
         if (productCount > 0) {
             throw new IllegalArgumentException("해당 카테고리를 사용하는 상품이 있어 삭제할 수 없습니다.");

@@ -242,7 +242,10 @@ public class HeadProductService {
         InventoryItem inventoryItem =
                 InventoryItem.builder()
                         .product(savedProduct)
-                        .unit("EA")
+                        .itemName(
+                                savedProduct.getProductName()
+                        )
+                        .unit("개")
                         .unitPrice(
                                 savedProduct.getBasePrice()
                         )
