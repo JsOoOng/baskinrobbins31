@@ -406,7 +406,7 @@ const router = createRouter({
         {
           path: 'inventory',
           name: 'head-inventory',
-          component: HeadInventory,
+          component: () => import('../views/head/HeadInventory.vue'),
           meta: {
             title: '재고 현황',
             description:
@@ -421,6 +421,12 @@ const router = createRouter({
           component: loadHeadTemporaryPage,
           meta: { title: '배송 관리', description: '재고 출고와 배송 진행 상태를 관리합니다.', phase: 'P2' }
         },
+        {
+          path: 'storeFlavor',
+          name: 'head-storeFlavor',
+          component: () => import('../views/head/HeadStoreFlavor.vue')
+        },
+
         /*
          * 존재하지 않는 /head 하위 주소 접근 시
          * 본사 대시보드로 리다이렉트

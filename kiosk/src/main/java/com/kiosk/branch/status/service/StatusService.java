@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.branch.inventory.repository.BranchInventoryMapper;
 import com.kiosk.branch.status.dto.FlavorResponse;
+import com.kiosk.branch.status.dto.StoreFlavorRestockRequest;
 import com.kiosk.branch.status.dto.StoreFlavorStatusResponse;
 import com.kiosk.branch.status.dto.StoreProductStatusResponse;
 import com.kiosk.branch.status.reopsitory.IcecreamFlavorMapper;
@@ -37,6 +38,7 @@ public class StatusService {
     private final StoreMapper storeMapper;
     private final StoreInventoryMapper storeInventoryMapper;
     private final BranchInventoryMapper inventoryMapper;
+    
     // 지점 메뉴 품절 상태 변경
     public StoreProductStatusResponse updateProductSoldOut(
             Integer storeProductId,
@@ -275,6 +277,31 @@ public class StatusService {
 	    return StoreFlavorStatusResponse
 	            .from(storeFlavor);
 
+	}
+	
+	@Transactional
+	public StoreFlavorStatusResponse updateFlavorRestockSetting(
+	        Integer storeFlavorId,
+	        StoreFlavorRestockRequest request
+	){
+
+	    StoreFlavor storeFlavor =
+	            storeFlavorMapper.findById(storeFlavorId)
+	            .orElseThrow(
+	                    () -> new IllegalArgumentException("맛 없음")
+	            );
+
+
+	    storeFlavor.updateAutoRestockSetting(
+	            request.getMinStock(),
+	            request.getTargetStock(),
+	            request.getAutoRestockEnabled(),
+	            request.getRestockMode()
+	    );
+
+
+	    return StoreFlavorStatusResponse
+	            .from(storeFlavor);
 	}
 
 }
