@@ -386,6 +386,12 @@ const router = createRouter({
           meta: { title: '설정', description: '본사 시스템의 공통 설정을 관리합니다.', phase: 'P1' }
         },
         {
+          path: 'logs',
+          name: 'head-logs',
+          component: () => import('../views/head/HeadActionLog.vue'),
+          meta: { title: '작업 내역', description: '관리자 작업 내역을 조회합니다.', phase: 'P1' }
+        },
+        {
           path: 'coupons',
           name: 'head-coupons',
           component: () => import('../views/head/HeadCoupon.vue'),

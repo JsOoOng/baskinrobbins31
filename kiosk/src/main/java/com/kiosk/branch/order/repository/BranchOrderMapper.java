@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.kiosk.entity.Order;
-import com.kiosk.entity.enums.OrderStatus;
 
 public interface BranchOrderMapper extends JpaRepository<Order, Integer> {
 

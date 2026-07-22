@@ -104,7 +104,7 @@
                 INTERVAL c.duration_days DAY
             ),
             CURDATE()
-        FROM USERS u
+        FROM users u
         INNER JOIN coupon c
             ON c.coupon_id = #{couponId}
         WHERE NOT EXISTS (

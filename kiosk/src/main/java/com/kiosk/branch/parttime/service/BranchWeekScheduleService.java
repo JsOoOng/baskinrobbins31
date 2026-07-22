@@ -6,7 +6,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kiosk.branch.kiosk.repository.StoreRepository;
 import com.kiosk.branch.parttime.dto.StoreWeekScheduleResponseDTO;
 import com.kiosk.branch.parttime.dto.WeekScheduleRequestDTO;
 import com.kiosk.branch.parttime.dto.WeekScheduleResponseDTO;
@@ -34,8 +33,6 @@ public class BranchWeekScheduleService {
     private final WorkHistoryRepository workHistoryRepository;
 
     private final StaffRepository staffRepository;
-
-    private final StoreRepository storeRepository;
 
 
 

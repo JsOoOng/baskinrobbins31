@@ -177,6 +177,12 @@ const menuGroups = computed(() => {
           icon: '⚙',
           routeName: 'head-settings',
           implemented: true
+        },
+        {
+          label: '작업 내역',
+          icon: '📝',
+          routeName: 'head-logs',
+          implemented: true
         }
       ]
     }

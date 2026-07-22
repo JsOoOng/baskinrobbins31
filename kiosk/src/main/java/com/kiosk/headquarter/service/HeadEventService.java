@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class HeadEventService {
 
     private final HeadEventRepository eventRepository;
+    private final AdminLogService adminLogService;
 
     @Transactional(readOnly = true)
     public List<EventResponseDto> getAllEvents() {
@@ -38,6 +39,9 @@ public class HeadEventService {
     public EventResponseDto createEvent(EventRequestDto requestDto) {
         Event event = requestDto.toEntity();
         Event savedEvent = eventRepository.save(event);
+        
+        adminLogService.logAction("이벤트", savedEvent.getEventName() + " 신규 등록");
+        
         return new EventResponseDto(savedEvent);
     }
 
@@ -66,15 +70,19 @@ public class HeadEventService {
             event.setIsVisible(requestDto.getIsVisible());
         }
 
+        adminLogService.logAction("이벤트", event.getEventName() + " 정보 수정");
+
         return new EventResponseDto(event);
     }
 
     @Transactional
     public void deleteEvent(Integer eventId) {
-        if (!eventRepository.existsById(eventId)) {
-            throw new IllegalArgumentException("이벤트를 찾을 수 없습니다.");
-        }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new IllegalArgumentException("이벤트를 찾을 수 없습니다."));
+                
         eventRepository.deleteById(eventId);
+        
+        adminLogService.logAction("이벤트", event.getEventName() + " 삭제");
     }
 
     @Transactional
@@ -83,6 +91,9 @@ public class HeadEventService {
                 .orElseThrow(() -> new IllegalArgumentException("이벤트를 찾을 수 없습니다."));
         
         event.setIsVisible(isVisible);
+        
+        adminLogService.logAction("이벤트", event.getEventName() + " 상태 변경 (" + (isVisible ? "노출" : "숨김") + ")");
+        
         return new EventResponseDto(event);
     }
 }

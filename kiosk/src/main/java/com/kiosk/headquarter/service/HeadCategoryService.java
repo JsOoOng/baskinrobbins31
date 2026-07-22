@@ -21,6 +21,7 @@ public class HeadCategoryService {
 
     private final HeadCategoryMapper headCategoryMapper;
     private final HeadProductMapper headProductMapper;
+    private final AdminLogService adminLogService;
 
     // 카테고리 등록
     @Transactional
@@ -51,6 +52,8 @@ public class HeadCategoryService {
                 .build();
 
         Category savedCategory = headCategoryMapper.save(category);
+
+        adminLogService.logAction("카테고리", savedCategory.getCategoryName() + " 카테고리 신규 등록");
 
         return toResponseDTO(savedCategory);
     }
@@ -105,6 +108,8 @@ public class HeadCategoryService {
                 requestDTO.getActive()
         );
 
+        adminLogService.logAction("카테고리", category.getCategoryName() + " 카테고리 정보 수정");
+
         return toResponseDTO(category);
     }
 
@@ -122,6 +127,8 @@ public class HeadCategoryService {
         }
 
         headCategoryMapper.delete(category);
+
+        adminLogService.logAction("카테고리", category.getCategoryName() + " 카테고리 삭제");
 
         return "카테고리 삭제 성공";
     }

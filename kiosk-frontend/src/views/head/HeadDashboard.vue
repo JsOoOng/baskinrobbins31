@@ -1,8 +1,9 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 import P2ComingSoonModal from '../../components/head/P2ComingSoonModal.vue'
+import { getHeadDashboardSummary } from '../../api/head/headDashboardApi'
 
 const router = useRouter()
 
@@ -20,162 +21,46 @@ const p2Modal = ref({
 })
 
 const statistics = ref([
-  {
-    key: 'stores',
-    label: '전체 지점 수',
-    value: '12',
-    subText: '이번 달 2개 신규',
-    trend: 'up',
-    icon: '⌂'
-  },
-  {
-    key: 'activeStores',
-    label: '운영 중인 지점 수',
-    value: '10',
-    subText: '정상 운영 중',
-    trend: 'success',
-    icon: '✓'
-  },
-  {
-    key: 'products',
-    label: '전체 상품 수',
-    value: '248',
-    subText: '지난주보다 12개 증가',
-    trend: 'up',
-    icon: '▣'
-  },
-  {
-    key: 'pendingInventory',
-    label: '처리 대기 재고 신청',
-    value: '18',
-    subText: '즉시 확인 필요',
-    trend: 'warning',
-    icon: '◷',
-    phase: 'P2'
-  },
-  {
-    key: 'discounts',
-    label: '진행 중인 할인 수',
-    value: '4',
-    subText: '지난주와 동일',
-    trend: 'same',
-    icon: '%'
-  },
-  {
-    key: 'banners',
-    label: '노출 중인 배너 수',
-    value: '3',
-    subText: '이번 달 1개 추가',
-    trend: 'up',
-    icon: '▤'
-  },
-  {
-    key: 'sales',
-    label: '오늘 전체 매출',
-    value: '3,250,000원',
-    subText: '전주 대비 12.4%',
-    trend: 'up',
-    icon: '₩'
-  },
-  {
-    key: 'orders',
-    label: '오늘 전체 주문 수',
-    value: '318건',
-    subText: '전주 대비 3.2% 감소',
-    trend: 'down',
-    icon: '▧'
-  }
+  { key: 'stores', label: '전체 지점 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '⌂' },
+  { key: 'activeStores', label: '운영 중인 지점 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '✓' },
+  { key: 'products', label: '전체 상품 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '▣' },
+  { key: 'pendingInventory', label: '처리 대기 재고 신청', value: '-', subText: '불러오는 중...', trend: 'same', icon: '◷', phase: 'P2' },
+  { key: 'discounts', label: '진행 중인 할인 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '%' },
+  { key: 'banners', label: '노출 중인 배너 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '▤' },
+  { key: 'sales', label: '오늘 전체 매출', value: '-', subText: '불러오는 중...', trend: 'same', icon: '₩' },
+  { key: 'orders', label: '오늘 전체 주문 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '▧' }
 ])
 
-const inventoryRequests = ref([
-  {
-    requestNumber: 'REQ-2024',
-    storeName: '강남점',
-    productName: '딸기 아이스크림 외 3종',
-    quantity: '150개',
-    requestDate: '2026.07.15',
-    status: '대기 중',
-    statusType: 'waiting'
-  },
-  {
-    requestNumber: 'REQ-2023',
-    storeName: '홍대점',
-    productName: '초코 아이스크림 외 5종',
-    quantity: '230개',
-    requestDate: '2026.07.14',
-    status: '배송 중',
-    statusType: 'shipping'
-  },
-  {
-    requestNumber: 'REQ-2022',
-    storeName: '신촌점',
-    productName: '바닐라 소프트콘 외 2종',
-    quantity: '80개',
-    requestDate: '2026.07.13',
-    status: '완료',
-    statusType: 'complete'
-  },
-  {
-    requestNumber: 'REQ-2021',
-    storeName: '수원점',
-    productName: '망고 샤베트 외 1종',
-    quantity: '60개',
-    requestDate: '2026.07.12',
-    status: '대기 중',
-    statusType: 'waiting'
-  },
-  {
-    requestNumber: 'REQ-2020',
-    storeName: '부산점',
-    productName: '레드벨벳 외 4종',
-    quantity: '120개',
-    requestDate: '2026.07.11',
-    status: '반려',
-    statusType: 'rejected'
-  }
-])
+const inventoryRequests = ref([])
+const storeSummary = ref([])
+const recentActions = ref([])
 
-const storeSummary = ref([
-  {
-    label: '정상 운영',
-    value: 10,
-    total: 12,
-    type: 'normal'
-  },
-  {
-    label: '승인 대기',
-    value: 2,
-    total: 12,
-    type: 'waiting'
-  },
-  {
-    label: '운영 중단',
-    value: 2,
-    total: 12,
-    type: 'stopped'
+const fetchDashboardData = async () => {
+  try {
+    const data = await getHeadDashboardSummary(comparisonPeriod.value)
+    
+    statistics.value = [
+      { key: 'stores', label: '전체 지점 수', value: data.totalStores.toString(), subText: '실시간 현황', trend: 'up', icon: '⌂' },
+      { key: 'activeStores', label: '운영 중인 지점 수', value: data.activeStores.toString(), subText: '정상 운영 중', trend: 'success', icon: '✓' },
+      { key: 'products', label: '전체 상품 수', value: data.totalProducts.toString(), subText: '등록된 전체 상품', trend: 'up', icon: '▣' },
+      { key: 'pendingInventory', label: '처리 대기 재고 신청', value: data.pendingInventory.toString(), subText: '처리 현황', trend: 'warning', icon: '◷', phase: 'P2' },
+      { key: 'discounts', label: '진행 중인 할인 수', value: data.activeDiscounts.toString(), subText: '할인 중인 상품', trend: 'same', icon: '%' },
+      { key: 'banners', label: '노출 중인 배너 수', value: data.activeBanners.toString(), subText: '활성화 배너', trend: 'up', icon: '▤' },
+      { key: 'sales', label: '오늘 전체 매출', value: data.todaySales.toLocaleString() + '원', subText: comparisonPeriod.value, trend: 'up', icon: '₩' },
+      { key: 'orders', label: '오늘 전체 주문 수', value: data.todayOrders.toLocaleString() + '건', subText: comparisonPeriod.value, trend: 'up', icon: '▧' }
+    ]
+    
+    storeSummary.value = data.storeSummary
+    inventoryRequests.value = data.inventoryRequests || []
+    recentActions.value = data.recentActions || []
+  } catch (error) {
+    console.error('대시보드 통계 조회 실패:', error)
   }
-])
+}
 
-const recentActions = ref([
-  {
-    administrator: '관리자',
-    action: '딸기 아이스크림 상품 정보 수정',
-    time: '오늘 오전 09:30',
-    type: '상품'
-  },
-  {
-    administrator: '관리자',
-    action: '강남점 지점 정보 수정',
-    time: '어제 오후 16:42',
-    type: '지점'
-  },
-  {
-    administrator: '최고 관리자',
-    action: '여름 시즌 카테고리 등록',
-    time: '2026.07.13 오후 14:10',
-    type: '카테고리'
-  }
-])
+onMounted(() => {
+  fetchDashboardData()
+})
 
 const filteredInventoryRequests = computed(() => {
   const keyword = searchKeyword.value.trim().toLowerCase()
@@ -258,21 +143,11 @@ const goTo = (path) => {
 
 <template>
   <section class="dashboard-page">
-    <!-- 예시 데이터 알림 -->
-    <div class="demo-notice">
-      <span class="demo-badge">
-        UI 예시
-      </span>
-
-      <p>
-        현재 표시된 수치는 화면 구성 확인용입니다.
-        대시보드 API 연결 후 실제 DB 수치로 교체됩니다.
-      </p>
-
+    <div class="dashboard-controls">
       <label class="comparison-select">
         <span>비교 기준</span>
 
-        <select v-model="comparisonPeriod">
+        <select v-model="comparisonPeriod" @change="fetchDashboardData">
           <option>전일 대비</option>
           <option>전주 대비</option>
           <option>전월 대비</option>
@@ -601,10 +476,13 @@ const goTo = (path) => {
               최근 본사 관리자 작업 기록입니다.
             </p>
           </div>
-
-          <span class="api-ready-badge">
-            API 연동 전
-          </span>
+          <button
+            type="button"
+            class="text-button"
+            @click="goTo('/head/logs')"
+          >
+            전체보기 →
+          </button>
         </div>
 
         <div class="recent-action-list">
@@ -688,16 +566,11 @@ const goTo = (path) => {
 
         <button
           type="button"
-          @click="
-            openP2(
-              '이벤트 관리',
-              '이벤트 대상과 기간을 관리하는 기능입니다.'
-            )
+          @click="goTo('/head/events')
           "
         >
           <span>★</span>
           이벤트 관리
-          <small>P2</small>
         </button>
       </div>
     </section>
@@ -717,35 +590,19 @@ const goTo = (path) => {
   gap: 20px;
 }
 
-.demo-notice {
+.dashboard-controls {
   display: flex;
-  gap: 12px;
-  align-items: center;
-
-  padding: 13px 16px;
-
+  justify-content: flex-end;
+  padding: 8px 16px;
+  background: #f8f6ff;
   border: 1px solid #e2defe;
   border-radius: 12px;
-
-  color: #6f678f;
-  background: #f8f6ff;
 }
 
-.demo-notice p {
-  flex: 1;
-  margin: 0;
-
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.demo-badge,
 .api-ready-badge,
 .phase-label {
   padding: 4px 7px;
-
   border-radius: 6px;
-
   font-size: 9px;
   font-weight: 900;
 }

@@ -11,6 +11,8 @@ import com.kiosk.entity.enums.RestockStatus;
 @Repository
 public interface HeadRestockRequestMapper extends JpaRepository<RestockRequest, Integer> {
 
+    long countByStatus(RestockStatus status);
+
     List<RestockRequest> findAllByOrderByIdDesc();
 
     List<RestockRequest> findByStatusOrderByIdDesc(RestockStatus status);
