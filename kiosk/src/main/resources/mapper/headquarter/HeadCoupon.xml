@@ -22,23 +22,17 @@
             duration_days AS durationDays,
             is_issued_all AS isIssuedAll,
             created_at AS createdAt
-        FROM Coupon
+        FROM coupon
         ORDER BY created_at DESC
 
     </select>
 
-    <!--
-        쿠폰 등록
-
-        MyBatis 등록은 Coupon 엔티티의
-        @PrePersist가 실행되지 않으므로
-        created_at을 SQL에서 직접 입력합니다.
-    -->
+    <!-- 쿠폰 등록 -->
     <insert id="insertCoupon"
             parameterType=
                     "com.kiosk.headquarter.dto.coupon.CouponRequestDto">
 
-        INSERT INTO Coupon (
+        INSERT INTO coupon (
             coupon_id,
             coupon_name,
             discount_type,
@@ -65,7 +59,7 @@
             parameterType=
                     "com.kiosk.headquarter.dto.coupon.CouponRequestDto">
 
-        UPDATE Coupon
+        UPDATE coupon
         SET
             coupon_name = #{couponName},
             discount_type = #{discountType},
@@ -81,7 +75,7 @@
     <delete id="deleteUserCouponsByCouponId"
             parameterType="java.lang.String">
 
-        DELETE FROM USER_COUPON
+        DELETE FROM user_coupon
         WHERE coupon_id = #{couponId}
 
     </delete>
@@ -92,7 +86,7 @@
     <delete id="deleteCoupon"
             parameterType="java.lang.String">
 
-        DELETE FROM Coupon
+        DELETE FROM coupon
         WHERE coupon_id = #{couponId}
 
     </delete>
@@ -106,7 +100,7 @@
     <insert id="insertCouponToAllUsers"
             parameterType="java.lang.String">
 
-        INSERT INTO USER_COUPON (
+        INSERT INTO user_coupon (
             user_id,
             coupon_id,
             is_used,
@@ -123,11 +117,11 @@
             ),
             CURDATE()
         FROM USERS u
-        INNER JOIN Coupon c
+        INNER JOIN coupon c
             ON c.coupon_id = #{couponId}
         WHERE NOT EXISTS (
             SELECT 1
-            FROM USER_COUPON uc
+            FROM user_coupon uc
             WHERE uc.user_id = u.user_id
               AND uc.coupon_id = c.coupon_id
         )
@@ -140,7 +134,7 @@
     <update id="updateCouponIssuedStatus"
             parameterType="java.lang.String">
 
-        UPDATE Coupon
+        UPDATE coupon
         SET is_issued_all = TRUE
         WHERE coupon_id = #{couponId}
 
