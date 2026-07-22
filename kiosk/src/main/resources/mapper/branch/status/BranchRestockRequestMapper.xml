@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.kiosk.branch.status.reopsitory.BranchRestockRequestMapper">
+
+
+<insert id="insert"
+        parameterType="com.kiosk.entity.RestockRequest">
+
+
+INSERT INTO restock_requests
+(
+    store_inventory_id,
+    store_flavor_id,
+    request_quantity,
+    status,
+    admin_id,
+    item_id,
+    store_id,
+    requested_at
+)
+
+
+VALUES
+(
+
+    <!-- 상품 재고 ID -->
+    <choose>
+
+        <when test="storeInventory != null">
+            #{storeInventory.id}
+        </when>
+
+        <otherwise>
+            NULL
+        </otherwise>
+
+    </choose>
+
+
+    ,
+
+
+    <!-- 맛 재고 ID -->
+    <choose>
+
+        <when test="storeFlavor != null">
+            #{storeFlavor.id}
+        </when>
+
+        <otherwise>
+            NULL
+        </otherwise>
+
+    </choose>
+
+
+    ,
+
+    #{requestQuantity}
+
+
+    ,
+
+    #{status}
+
+
+    ,
+
+    #{admin.id}
+
+
+    ,
+
+
+    <!-- 본사 재고 품목 ID -->
+    <choose>
+
+        <when test="storeInventory != null">
+
+            #{storeInventory.item.id}
+
+        </when>
+
+
+        <when test="storeFlavor != null">
+
+            #{storeFlavor.flavor.id}
+
+        </when>
+
+
+    </choose>
+
+
+    ,
+
+
+    <!-- 지점 ID -->
+    <choose>
+
+        <when test="storeInventory != null">
+
+            #{storeInventory.store.id}
+
+        </when>
+
+
+        <when test="storeFlavor != null">
+
+            #{storeFlavor.store.id}
+
+        </when>
+
+
+    </choose>
+
+
+    ,
+
+    NOW()
+
+)
+
+
+</insert>
+
+
+</mapper>

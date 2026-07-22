@@ -6,8 +6,23 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import com.kiosk.entity.enums.RestockStatus;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 
 @Entity
 @Table(name = "RESTOCK_REQUESTS")
@@ -17,33 +32,49 @@ import lombok.*;
 @Builder
 public class RestockRequest {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "request_id")
     private Integer id;
 
 
+
     /*
-     * 제품 재고 요청
+     * 제품 재고 발주
+     *
+     * 상품 발주일 경우 사용
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_inventory_id")
+    @JoinColumn(
+            name = "store_inventory_id"
+    )
     private StoreInventory storeInventory;
 
 
+
     /*
-     * 맛 재고 요청
+     * 맛 재고 발주
+     *
+     * 맛 발주일 경우 사용
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_flavor_id")
+    @JoinColumn(
+            name = "store_flavor_id"
+    )
     private StoreFlavor storeFlavor;
+
 
 
     /*
      * 요청 수량
      */
-    @Column(name = "request_quantity", nullable = false)
+    @Column(
+            name = "request_quantity",
+            nullable = false
+    )
     private Integer requestQuantity;
+
 
 
     /*
@@ -52,34 +83,44 @@ public class RestockRequest {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     @Builder.Default
-    private RestockStatus status = RestockStatus.WAITING;
+    private RestockStatus status =
+            RestockStatus.WAITING;
+
 
 
     /*
      * 처리 관리자
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "admin_id")
+    @JoinColumn(
+            name = "admin_id"
+    )
     private HeadquarterAdmin admin;
+
 
 
     /*
      * 요청 시간
      */
     @CreationTimestamp
-    @Column(name = "requested_at", updatable = false)
+    @Column(
+            name = "requested_at",
+            updatable = false
+    )
     private LocalDateTime requestedAt;
+
 
 
 
     /*
      * 제품 재고 ID 반환
-     * 값이 없으면 0 반환
+     *
+     * 제품 발주가 아니면 null
      */
     public Integer getStoreInventoryId() {
 
         if (storeInventory == null) {
-            return 0;
+            return null;
         }
 
         return storeInventory.getId();
@@ -89,12 +130,13 @@ public class RestockRequest {
 
     /*
      * 맛 재고 ID 반환
-     * 값이 없으면 0 반환
+     *
+     * 맛 발주가 아니면 null
      */
     public Integer getStoreFlavorId() {
 
         if (storeFlavor == null) {
-            return 0;
+            return null;
         }
 
         return storeFlavor.getId();
@@ -102,52 +144,101 @@ public class RestockRequest {
 
 
 
-    /*
-     * 승인
-     */
-    public void approve(HeadquarterAdmin admin) {
 
-        if (this.status != RestockStatus.WAITING) {
+    /*
+     * 관리자 지정
+     *
+     * 지점 발주 생성 시 사용
+     */
+    public void assignAdmin(
+            HeadquarterAdmin admin
+    ) {
+
+        this.admin = admin;
+    }
+
+
+
+
+    /*
+     * 승인 처리
+     */
+    public void approve(
+            HeadquarterAdmin admin
+    ) {
+
+        if (
+            this.status != RestockStatus.WAITING
+        ) {
+
             throw new IllegalStateException(
-                "대기 중인 발주 요청만 승인할 수 있습니다."
+                    "대기 중인 발주 요청만 승인할 수 있습니다."
             );
         }
 
-        this.status = RestockStatus.APPROVED;
-        this.admin = admin;
+
+        this.status =
+                RestockStatus.APPROVED;
+
+
+        this.admin =
+                admin;
     }
+
 
 
 
     /*
      * 배송 시작
      */
-    public void startShipping(HeadquarterAdmin admin) {
+    public void startShipping(
+            HeadquarterAdmin admin
+    ) {
 
-        if (this.status != RestockStatus.APPROVED) {
+        if (
+            this.status != RestockStatus.APPROVED
+        ) {
+
             throw new IllegalStateException(
-                "승인된 발주 요청만 배송 처리할 수 있습니다."
+                    "승인된 발주 요청만 배송 처리할 수 있습니다."
             );
         }
 
-        this.status = RestockStatus.SHIPPING;
-        this.admin = admin;
+
+        this.status =
+                RestockStatus.SHIPPING;
+
+
+        this.admin =
+                admin;
     }
+
 
 
 
     /*
      * 배송 완료
      */
-    public void complete(HeadquarterAdmin admin) {
+    public void complete(
+            HeadquarterAdmin admin
+    ) {
 
-        if (this.status != RestockStatus.SHIPPING) {
+        if (
+            this.status != RestockStatus.SHIPPING
+        ) {
+
             throw new IllegalStateException(
-                "배송 중인 발주 요청만 완료 처리할 수 있습니다."
+                    "배송 중인 발주 요청만 완료 처리할 수 있습니다."
             );
         }
 
-        this.status = RestockStatus.COMPLETED;
-        this.admin = admin;
+
+        this.status =
+                RestockStatus.COMPLETED;
+
+
+        this.admin =
+                admin;
     }
+
 }

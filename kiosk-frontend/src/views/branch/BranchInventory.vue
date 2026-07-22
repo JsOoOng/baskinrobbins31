@@ -19,7 +19,8 @@
                 <th>상품명</th>
                 <th>재고</th>
                 <th>상태</th>
-                
+                <th>발주</th>
+
             </tr>
 
         </thead>
@@ -55,7 +56,16 @@
                 </td>
 
 
-               
+               <td>
+
+                <button
+                    v-if="menu.storeInventoryId"
+                    @click="openRestockModal(menu,'PRODUCT')"
+                >
+                    재고 신청
+                </button>
+
+                </td>
 
 
             </tr>
@@ -89,6 +99,8 @@
                 <th>상태</th>
 
                 <th>변경</th>
+
+                <th>발주</th>
 
             </tr>
 
@@ -172,6 +184,16 @@
 
                 </td>
 
+                <td>
+
+                <button
+                    @click="openRestockModal(flavor,'FLAVOR')"
+                >
+                    재고 신청
+                </button>
+
+                </td>
+
 
             </tr>
 
@@ -185,6 +207,60 @@
 
 </div>
 
+<div
+v-if="showRestockModal"
+class="modal-background"
+>
+
+
+<div class="restock-modal">
+
+
+<h3>
+재고 신청
+</h3>
+
+
+
+<p>
+신청 수량
+</p>
+
+
+
+<input
+type="number"
+v-model="restockQuantity"
+min="1"
+/>
+
+
+
+<div class="modal-buttons">
+
+
+<button
+@click="submitRestock"
+>
+완료
+</button>
+
+
+
+<button
+@click="closeRestockModal"
+>
+취소
+</button>
+
+
+</div>
+
+
+</div>
+
+
+</div>
 
 </template>
 
@@ -196,6 +272,14 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/api/axios'
+import { requestRestock } from '@/api/branch/statusApi'
+
+// 발주 모달
+const showRestockModal = ref(false)
+
+const selectedRestock = ref(null)
+
+const restockQuantity = ref(0)
 
 const router = useRouter()
 
@@ -404,6 +488,175 @@ try {
     alert('재고 변경 실패')
 
 }
+
+}
+
+/*
+ * 발주창 열기
+ */
+ const openRestockModal = (item, type) => {
+
+
+console.log(
+    '발주 선택 데이터',
+    item
+)
+
+
+selectedRestock.value = {
+
+
+    type: type,
+
+
+    storeInventoryId:
+        type === 'PRODUCT'
+        ? item.storeInventoryId
+        : null,
+
+
+    storeFlavorId:
+        type === 'FLAVOR'
+        ? item.storeFlavorId
+        : null
+
+}
+
+
+
+console.log(
+    '발주 요청 데이터',
+    selectedRestock.value
+)
+
+
+
+restockQuantity.value = 0
+
+
+
+showRestockModal.value = true
+
+
+}
+
+
+
+
+
+/*
+* 발주 취소
+*/
+const closeRestockModal = () => {
+
+
+showRestockModal.value = false
+
+
+selectedRestock.value = null
+
+
+restockQuantity.value = 0
+
+
+}
+
+
+
+
+
+/*
+* 발주 신청
+*/
+const submitRestock = async()=>{
+
+
+if(!selectedRestock.value){
+
+    alert(
+        '발주 대상을 선택해주세요.'
+    )
+
+    return
+
+}
+
+
+
+if(
+    restockQuantity.value <= 0
+){
+
+    alert(
+        '발주 수량을 입력해주세요.'
+    )
+
+    return
+
+}
+
+
+
+const requestData = {
+
+
+    storeInventoryId:
+        selectedRestock.value.storeInventoryId ?? null,
+
+
+    storeFlavorId:
+        selectedRestock.value.storeFlavorId ?? null,
+
+
+    requestQuantity:
+        restockQuantity.value
+
+}
+
+
+
+console.log(
+    '최종 발주 요청',
+    requestData
+)
+
+
+
+try{
+
+
+    await requestRestock(
+        requestData
+    )
+
+
+
+    alert(
+        '재고 신청 완료'
+    )
+
+
+
+    closeRestockModal()
+
+
+
+}catch(e){
+
+
+    console.error(
+        '발주 신청 실패',
+        e
+    )
+
+
+
+    alert(
+        '재고 신청 실패'
+    )
+
+}
+
 
 }
 
@@ -792,6 +1045,96 @@ hr {
 .count-btn:hover{
 
     background:#555;
+
+}
+
+.modal-background{
+
+position:fixed;
+
+top:0;
+
+left:0;
+
+width:100%;
+
+height:100%;
+
+background:rgba(0,0,0,0.4);
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+}
+
+
+
+.restock-modal{
+
+
+background:white;
+
+padding:30px;
+
+border-radius:15px;
+
+width:300px;
+
+text-align:center;
+
+
+}
+
+
+
+.restock-modal input{
+
+
+width:80%;
+
+padding:10px;
+
+margin:20px 0;
+
+font-size:16px;
+
+
+}
+
+
+
+.modal-buttons{
+
+
+display:flex;
+
+justify-content:center;
+
+gap:15px;
+
+
+}
+
+
+
+.modal-buttons button{
+
+
+padding:10px 20px;
+
+border:none;
+
+border-radius:8px;
+
+background:#222;
+
+color:white;
+
+cursor:pointer;
+
 
 }
 
