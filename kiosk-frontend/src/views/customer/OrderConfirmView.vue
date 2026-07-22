@@ -112,7 +112,7 @@ const handlePayment = async (method) => {
   }
 
   try {
-    // 1. 주문 생성 API 호출
+    // 1. 주문 생성 API 호출 (orderItems 추가)
     const orderRes = await axios.post('/api/orders', {
       orderType: basketStore.orderType || 'TOGO',
       dryIceCount: basketStore.dryIceCount || 0,
@@ -121,15 +121,21 @@ const handlePayment = async (method) => {
       pointUsed: basketStore.usedPoints || 0,
       userCouponId: basketStore.usedCouponId || null,
       kioskId: 1,
-      storeId: 1
+      storeId: 1,
+      // 장바구니 상품 목록과 수량, 선택한 맛(옵션) 정보를 서버로 전달
+      orderItems: basketStore.cartItems.map(item => ({
+        productId: item.productId || item.id, // 장바구니 구조에 맞게 id 필드 확인
+        quantity: item.quantity,
+        flavors: item.flavors || [] // 선택한 맛 정보가 있다면 함께 전달
+      }))
     });
     const orderId = orderRes.data;
 
-    // 2. 결제 완료 API 호출 (⭐ 이 부분에 userCouponId 추가!)
+    // 2. 결제 완료 API 호출 
     await axios.post(`/api/orders/${orderId}/pay`, {
       paymentMethod: method,
       pointUsed: basketStore.usedPoints || 0,
-      userCouponId: basketStore.usedCouponId || null // ⭐ 여기 추가!
+      userCouponId: basketStore.usedCouponId || null
     });
     
     // 3. 결제 완료 화면으로 이동
@@ -149,7 +155,7 @@ const handleTossPayment = async () => {
   }
 
   try {
-    // 1. 토스 띄우기 전 주문 생성 API 호출 (DB 저장 및 포인트 적립, 할인 정보 포함)
+    // 1. 토스 띄우기 전 주문 생성 API 호출 (orderItems 추가)
     const orderRes = await axios.post('/api/orders', {
       orderType: basketStore.orderType || 'TOGO',
       dryIceCount: basketStore.dryIceCount || 0,
@@ -158,7 +164,13 @@ const handleTossPayment = async () => {
       pointUsed: basketStore.usedPoints || 0,
       userCouponId: basketStore.usedCouponId || null,
       kioskId: 1,
-      storeId: 1
+      storeId: 1,
+      // ⭐ [수정] 장바구니 상품 목록과 수량, 선택한 맛(옵션) 정보를 서버로 전달
+      orderItems: basketStore.cartItems.map(item => ({
+        productId: item.productId || item.id,
+        quantity: item.quantity,
+        flavors: item.flavors || []
+      }))
     });
     const orderId = orderRes.data;
 
@@ -176,7 +188,7 @@ const handleTossPayment = async () => {
     // 토스페이먼츠 결제창 호출 (파라미터 전달)
     await tossPayments.requestPayment('카드', {
       amount: basketStore.totalPrice - (basketStore.usedPoints || 0),
-      orderId: `kiosk_order_${orderId}`, // 토스는 최소 6자리 요구하여 prefix를 붙임
+      orderId: `kiosk_order_${orderId}`,
       orderName: orderName,
       customerName: '키오스크고객',
       successUrl: window.location.origin + `/toss/success?pointUsed=${basketStore.usedPoints || 0}`,

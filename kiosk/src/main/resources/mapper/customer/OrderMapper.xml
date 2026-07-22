@@ -84,7 +84,7 @@
     UPDATE orders
     SET payment_method = #{paymentMethod},
         total_price = #{finalAmount},
-        order_status = 'COMPLETED'
+        order_status = 'PREPARING'
     WHERE order_id = #{orderId}
 </update>
 
