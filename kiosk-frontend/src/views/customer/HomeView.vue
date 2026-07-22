@@ -151,6 +151,12 @@ const loadKiosks = async () => {
       selectedKioskId.value = fallback.kioskId
       
       handleKioskChange() // BUG FIX: 폴백 후 배너 이미지 갱신을 위해 반드시 호출
+    } else {
+      // 이미 선택된 키오스크가 유효하다면 storeId를 동기화
+      const selectedKiosk = kiosks.value.find(k => k.kioskId === selectedKioskId.value)
+      if (selectedKiosk) {
+        localStorage.setItem('storeId', selectedKiosk.storeId)
+      }
     }
   } catch (e) {
     console.error('키오스크 목록 조회 실패', e)
@@ -174,6 +180,10 @@ const connectKioskSSE = () => {
 
 const handleKioskChange = () => {
   localStorage.setItem('kioskId', selectedKioskId.value)
+  const selectedKiosk = kiosks.value.find(k => k.kioskId === selectedKioskId.value)
+  if (selectedKiosk) {
+    localStorage.setItem('storeId', selectedKiosk.storeId)
+  }
   loadBanner()
   connectSSE()
 }

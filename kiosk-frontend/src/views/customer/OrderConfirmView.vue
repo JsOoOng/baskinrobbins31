@@ -120,8 +120,9 @@ const handlePayment = async (method) => {
       phoneNumber: basketStore.phoneNumber || null,
       pointUsed: basketStore.usedPoints || 0,
       userCouponId: basketStore.usedCouponId || null,
-      kioskId: 1,
-      storeId: 1,
+      kioskId: Number(localStorage.getItem('kioskId')) || 1,
+      // storeId is no longer strictly used by backend (derived from kioskId) but let's pass null or 1
+      storeId: Number(localStorage.getItem('storeId')) || 1,
       // 장바구니 상품 목록과 수량, 선택한 맛(옵션) 정보를 서버로 전달
       orderItems: basketStore.cartItems.map(item => ({
         productId: item.productId || item.id, // 장바구니 구조에 맞게 id 필드 확인
@@ -163,8 +164,8 @@ const handleTossPayment = async () => {
       phoneNumber: basketStore.phoneNumber || null,
       pointUsed: basketStore.usedPoints || 0,
       userCouponId: basketStore.usedCouponId || null,
-      kioskId: 1,
-      storeId: 1,
+      kioskId: Number(localStorage.getItem('kioskId')) || 1,
+      storeId: Number(localStorage.getItem('storeId')) || 1,
       // ⭐ [수정] 장바구니 상품 목록과 수량, 선택한 맛(옵션) 정보를 서버로 전달
       orderItems: basketStore.cartItems.map(item => ({
         productId: item.productId || item.id,
