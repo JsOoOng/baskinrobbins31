@@ -17,18 +17,25 @@ import lombok.*;
 @Builder
 public class StoreFlavor {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "store_flavor_id")
     private Integer id;
 
+
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
+
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "flavor_id", nullable = false)
     private IcecreamFlavor flavor;
+
+
 
     /*
      * 현재 재고(Container)
@@ -37,12 +44,16 @@ public class StoreFlavor {
     @Builder.Default
     private Integer container = 0;
 
+
+
     /*
      * 품절 여부
      */
     @Column(name = "is_sold_out", nullable = false)
     @Builder.Default
     private Boolean isSoldOut = false;
+
+
 
     /*
      * 최소 재고
@@ -51,6 +62,8 @@ public class StoreFlavor {
     @Builder.Default
     private Integer minStock = 1;
 
+
+
     /*
      * 목표 재고
      */
@@ -58,12 +71,16 @@ public class StoreFlavor {
     @Builder.Default
     private Integer targetStock = 10;
 
+
+
     /*
-     * 자동 보충 사용 여부
+     * 자동 보충 여부
      */
     @Column(name = "auto_restock_enabled", nullable = false)
     @Builder.Default
     private Boolean autoRestockEnabled = true;
+
+
 
     /*
      * 자동 보충 방식
@@ -74,12 +91,16 @@ public class StoreFlavor {
     private AutoRestockMode restockMode =
             AutoRestockMode.THRESHOLD;
 
+
+
     /*
      * 마지막 수정 시간
      */
     @UpdateTimestamp
     @Column(name = "last_updated")
     private LocalDateTime lastUpdated;
+
+
 
     @PrePersist
     protected void initialize() {
@@ -109,26 +130,92 @@ public class StoreFlavor {
         }
     }
 
+
+
+    /*
+     * 품절 변경
+     */
     public void changeSoldOut(Boolean isSoldOut) {
+
         this.isSoldOut = isSoldOut;
     }
 
-    public void updateStoreFlavor(Boolean isSoldOut, Integer container) {
+
+
+    /*
+     * 지점 맛 재고 수정
+     */
+    public void updateStoreFlavor(
+            Boolean isSoldOut,
+            Integer container
+    ) {
+
         this.isSoldOut = isSoldOut;
         this.container = container;
     }
 
-    public void changeContainer(Integer amount) {
+
+
+    /*
+     * 재고 증가
+     *
+     * 본사 발주 완료 입고 처리용
+     */
+    public void increaseStock(Integer amount) {
+
+        if (
+            amount == null ||
+            amount <= 0
+        ) {
+            throw new IllegalArgumentException(
+                    "입고 수량은 1 이상이어야 합니다."
+            );
+        }
+
+
+        if (container == null) {
+            container = 0;
+        }
+
 
         this.container += amount;
+
+
+        // 재고가 들어오면 품절 해제
+        this.isSoldOut = false;
+    }
+
+
+
+    /*
+     * 재고 변경
+     *
+     * 기존 사용 유지
+     */
+    public void changeContainer(Integer amount) {
+
+        if (container == null) {
+            container = 0;
+        }
+
+
+        this.container += amount;
+
 
         if (this.container < 0) {
             this.container = 0;
         }
 
-        this.isSoldOut = (this.container <= 0);
+
+        this.isSoldOut =
+                (this.container <= 0);
     }
-    
+
+
+
+    /*
+     * 자동 보충 설정 변경
+     */
     public void updateAutoRestockSetting(
             Integer minStock,
             Integer targetStock,
@@ -137,24 +224,31 @@ public class StoreFlavor {
     ) {
 
         if(minStock == null || minStock < 0){
+
             throw new IllegalArgumentException(
                     "최소 재고는 0 이상이어야 합니다."
             );
         }
 
+
         if(targetStock == null || targetStock <= 0){
+
             throw new IllegalArgumentException(
                     "목표 재고는 1 이상이어야 합니다."
             );
         }
 
+
         if(targetStock < minStock){
+
             throw new IllegalArgumentException(
                     "목표 재고는 최소 재고보다 작을 수 없습니다."
             );
         }
 
+
         if(restockMode == null){
+
             throw new IllegalArgumentException(
                     "자동 보충 방식을 선택해주세요."
             );
@@ -166,13 +260,16 @@ public class StoreFlavor {
         this.targetStock = targetStock;
 
         this.autoRestockEnabled =
-                Boolean.TRUE.equals(
-                        autoRestockEnabled
-                );
+                Boolean.TRUE.equals(autoRestockEnabled);
 
         this.restockMode = restockMode;
     }
-    
+
+
+
+    /*
+     * 자동 보충 필요 수량 계산
+     */
     public Integer calculateRestockQuantity(){
 
         if(
@@ -186,7 +283,12 @@ public class StoreFlavor {
 
         return targetStock - container;
     }
-    
+
+
+
+    /*
+     * 자동 보충
+     */
     public Integer autoRestock(){
 
         Integer quantity =
@@ -205,13 +307,16 @@ public class StoreFlavor {
 
         return quantity;
     }
-    
+
+
+
+    /*
+     * 임계 재고 보충 대상 확인
+     */
     public boolean needsThresholdRestock() {
 
         if(
-            !Boolean.TRUE.equals(
-                autoRestockEnabled
-            )
+            !Boolean.TRUE.equals(autoRestockEnabled)
         ){
             return false;
         }
@@ -235,9 +340,11 @@ public class StoreFlavor {
 
         return container <= minStock;
     }
-    
+
+
+
     /*
-     * 목표 재고까지 보충 대상 확인
+     * 정기 보충 대상 확인
      */
     public boolean needsDailyRestock(){
 
@@ -257,8 +364,4 @@ public class StoreFlavor {
         return container < targetStock;
     }
 
-    
-    
-    
-  
 }
