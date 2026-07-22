@@ -123,12 +123,26 @@ const handlePayment = async (method) => {
       kioskId: Number(localStorage.getItem('kioskId')) || 1,
       // storeId is no longer strictly used by backend (derived from kioskId) but let's pass null or 1
       storeId: Number(localStorage.getItem('storeId')) || 1,
-      // 장바구니 상품 목록과 수량, 선택한 맛(옵션) 정보를 서버로 전달
-      orderItems: basketStore.cartItems.map(item => ({
-        productId: item.productId || item.id, // 장바구니 구조에 맞게 id 필드 확인
-        quantity: item.quantity,
-        flavors: item.flavors || [] // 선택한 맛 정보가 있다면 함께 전달
-      }))
+      // ⭐ 카테고리별로 유연하게 JSON 구조를 생성하여 서버로 전달
+      items: basketStore.cartItems.map(item => {
+        const baseItem = {
+          productId: item.productId || item.id,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice
+        };
+
+        if (item.categoryId === 1) {
+          // 아이스크림 카테고리일 경우 맛(flavors) 정보 포함
+          return {
+            ...baseItem,
+            flavors: item.flavors || []
+          };
+        } else {
+          // 그 외 카테고리 (현재는 다른 옵션이 없으므로 빈 옵션 혹은 제외)
+          // 향후 카테고리에 따라 options 배열 등을 확장 가능
+          return baseItem;
+        }
+      })
     });
     const orderId = orderRes.data;
 
@@ -166,12 +180,25 @@ const handleTossPayment = async () => {
       userCouponId: basketStore.usedCouponId || null,
       kioskId: Number(localStorage.getItem('kioskId')) || 1,
       storeId: Number(localStorage.getItem('storeId')) || 1,
-      // ⭐ [수정] 장바구니 상품 목록과 수량, 선택한 맛(옵션) 정보를 서버로 전달
-      orderItems: basketStore.cartItems.map(item => ({
-        productId: item.productId || item.id,
-        quantity: item.quantity,
-        flavors: item.flavors || []
-      }))
+      // ⭐ [수정] 카테고리별로 유연하게 JSON 구조를 생성하여 서버로 전달
+      items: basketStore.cartItems.map(item => {
+        const baseItem = {
+          productId: item.productId || item.id,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice
+        };
+
+        if (item.categoryId === 1) {
+          // 아이스크림 카테고리일 경우 맛(flavors) 정보 포함
+          return {
+            ...baseItem,
+            flavors: item.flavors || []
+          };
+        } else {
+          // 그 외 카테고리
+          return baseItem;
+        }
+      })
     });
     const orderId = orderRes.data;
 
