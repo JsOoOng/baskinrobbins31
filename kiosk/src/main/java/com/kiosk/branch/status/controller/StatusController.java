@@ -16,12 +16,12 @@ import com.kiosk.branch.status.dto.AddFlavorRequest;
 import com.kiosk.branch.status.dto.ContainerUpdateRequest;
 import com.kiosk.branch.status.dto.FlavorResponse;
 import com.kiosk.branch.status.dto.SoldOutRequest;
+import com.kiosk.branch.status.dto.StoreFlavorRestockRequest;
 import com.kiosk.branch.status.dto.StoreFlavorStatusResponse;
 import com.kiosk.branch.status.dto.StoreProductStatusResponse;
 import com.kiosk.branch.status.service.StatusService;
 
 import lombok.RequiredArgsConstructor;
-
 @RestController
 @RequestMapping("/branch/status")
 @RequiredArgsConstructor
@@ -127,6 +127,20 @@ public class StatusController {
                 storeFlavorId,
                 request.getAmount()
         );
+
+    }
+    
+    @PatchMapping("/flavor/{storeFlavorId}/restock")
+    public StoreFlavorStatusResponse updateFlavorRestock(
+            @PathVariable Integer storeFlavorId,
+            @RequestBody StoreFlavorRestockRequest request
+    ){
+
+        return statusService
+                .updateFlavorRestockSetting(
+                        storeFlavorId,
+                        request
+                );
 
     }
 

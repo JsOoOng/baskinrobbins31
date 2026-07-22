@@ -3,6 +3,8 @@ package com.kiosk.common.inventory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.kiosk.headquarter.service.StoreFlavorAutoRestockService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,7 +15,11 @@ public class AutoRestockScheduler {
 
     private final AutoRestockService
             autoRestockService;
+    
+    private final StoreFlavorAutoRestockService service;
 
+    private final FlavorRestockService flavorRestockService;
+    
     /*
      * 매일 오전 12시에 실행합니다.
      *
@@ -54,6 +60,10 @@ public class AutoRestockScheduler {
 
         autoRestockService
                 .processDailyRestock();
+        
+        service.processDailyRestock();
+        
+        flavorRestockService.processFlavorRestock();
     }
 
 }
