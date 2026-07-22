@@ -480,7 +480,6 @@ onMounted(() => {
             @click="openEventManagement"
           >
             ★ 이벤트 관리
-            <small>P2</small>
           </button>
 
           <button
