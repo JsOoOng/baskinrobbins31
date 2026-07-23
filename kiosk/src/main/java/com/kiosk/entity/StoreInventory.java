@@ -380,6 +380,9 @@ public class StoreInventory {
                 targetStock;
     }
     
+    /*
+     * 현재 재고가 최소 재고보다 적은지 확인
+     */
     public boolean isLowStock() {
 
         if (
@@ -389,6 +392,23 @@ public class StoreInventory {
             return false;
         }
 
-        return currentStock <= minStock;
+        return currentStock < minStock;
+    }
+
+    /*
+     * 최소 재고 기준 부족 수량 계산
+     *
+     * 예:
+     * currentStock = 6
+     * minStock = 10
+     * 결과 = 4
+     */
+    public int calculateShortageQuantity() {
+
+        if (!isLowStock()) {
+            return 0;
+        }
+
+        return minStock - currentStock;
     }
 }
