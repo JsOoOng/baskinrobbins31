@@ -192,18 +192,16 @@ public class HeadFlavorService {
                         "맛 이름을 입력해주세요."
                 );
 
+        String imageUrl = flavor.getImageUrl();
         MultipartFile imageFile = requestDTO.getImageFile();
-        if (imageFile == null || imageFile.isEmpty()) {
-            throw new IllegalArgumentException("이미지 파일을 첨부해주세요.");
-        }
         
-        String originalFilename = imageFile.getOriginalFilename();
-        if (originalFilename == null || originalFilename.isBlank()) {
-            throw new IllegalArgumentException("올바른 파일이 아닙니다.");
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String originalFilename = imageFile.getOriginalFilename();
+            if (originalFilename != null && !originalFilename.isBlank()) {
+                imageUrl = "/images/flavors/" + originalFilename;
+                saveImageFile(imageFile, originalFilename);
+            }
         }
-        
-        String imageUrl = "/images/flavors/" + originalFilename;
-
 
         boolean alreadyExists =
                 headFlavorMapper
