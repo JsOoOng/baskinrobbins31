@@ -59,14 +59,7 @@ public class HeadRestockController {
         return headRestockService.startShipping(requestId, requestDTO);
     }
 
-    // 완료 처리
-    @PutMapping("/head/restocks/{requestId}/complete")
-    public String completeRestock(
-            @PathVariable Integer requestId,
-            @RequestBody HeadRestockProcessRequestDTO requestDTO) {
-
-        return headRestockService.completeRestock(requestId, requestDTO);
-    }
+    
 
     // 반려 처리
     @PutMapping("/head/restocks/{requestId}/reject")

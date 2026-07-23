@@ -429,7 +429,7 @@ const router = createRouter({
         {
           path: 'deliveries',
           name: 'head-deliveries',
-          component: loadHeadTemporaryPage,
+          component: () => import('../views/head/HeadDelivery.vue'),
           meta: { title: '배송 관리', description: '재고 출고와 배송 진행 상태를 관리합니다.', phase: 'P2' }
         },
         {

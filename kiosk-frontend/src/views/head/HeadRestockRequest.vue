@@ -128,16 +128,7 @@
                 >
                   배송시작
                 </button>
-                <button
-                  v-if="item.status === 'SHIPPING'"
-                  type="button"
-                  class="save-button"
-                  style="background: #10b981"
-                  :disabled="processingId === item.requestId"
-                  @click="handleComplete(item)"
-                >
-                  배송완료
-                </button>
+                
               </td>
             </tr>
           </tbody>
@@ -287,26 +278,7 @@ const handleShipping = async (item) => {
   }
 }
 
-const handleComplete = async (item) => {
-  if (!confirm('배송 완료 처리하시겠습니까?')) return
-  
-  const adminId = headAuthStore.headUser?.employeeId
-  if (!adminId) {
-    showMessage('처리 권한이 없습니다. 다시 로그인해주세요.', 'error')
-    return
-  }
 
-  processingId.value = item.requestId
-  try {
-    await completeHeadRestock(item.requestId, { adminId })
-    showMessage('배송 완료 처리되었습니다.')
-    await loadRestocks()
-  } catch (error) {
-    showMessage(extractRestockErrorMessage(error, '완료 처리에 실패했습니다.'), 'error')
-  } finally {
-    processingId.value = null
-  }
-}
 
 const filteredRestocks = computed(() => {
   if (!filterStatus.value) return restocks.value

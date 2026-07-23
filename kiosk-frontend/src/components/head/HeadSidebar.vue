@@ -137,7 +137,8 @@ const menuGroups = computed(() => {
         {
           label: '배송 관리',
           icon: '▱',
-          implemented: false,
+          routeName: 'head-deliveries',
+          implemented: true,
           description:
             '출고, 배송 중, 배송 완료 상태를 관리하는 기능입니다.'
         }
