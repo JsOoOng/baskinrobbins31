@@ -18,6 +18,7 @@ public class HeadDashboardResponse {
     private long totalProducts;
     private long pendingInventory;
     private long activeDiscounts;
+    private long activeEvents;
     private long activeBanners;
     private long todaySales;
     private long todayOrders;
