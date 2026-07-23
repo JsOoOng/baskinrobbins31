@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.kiosk.entity.Event;
 
 public interface HeadEventRepository extends JpaRepository<Event, Integer> {
+    long countByEventStatus(com.kiosk.entity.enums.EventStatus eventStatus);
 }

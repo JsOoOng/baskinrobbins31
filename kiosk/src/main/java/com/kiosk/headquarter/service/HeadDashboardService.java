@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kiosk.entity.enums.EventStatus;
 import com.kiosk.entity.enums.RestockStatus;
 import com.kiosk.entity.enums.StoreStatus;
 import com.kiosk.entity.RestockRequest;
@@ -23,6 +24,7 @@ import com.kiosk.headquarter.repository.HeadBannerMapper;
 import com.kiosk.headquarter.repository.HeadProductMapper;
 import com.kiosk.headquarter.repository.HeadRestockRequestMapper;
 import com.kiosk.headquarter.repository.HeadStoreMapper;
+import com.kiosk.headquarter.repository.HeadEventRepository;
 import com.kiosk.headquarter.dto.dashboard.HeadDashboardResponse.RecentActionDto;
 
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,7 @@ public class HeadDashboardService {
     private final HeadBannerMapper headBannerMapper;
     private final HeadStatisticsService headStatisticsService;
     private final AdminActionLogRepository adminActionLogRepository;
+    private final HeadEventRepository headEventRepository;
 
     public HeadDashboardResponse getDashboardSummary(String comparisonPeriod) {
         // 비교 기준(comparisonPeriod)에 따른 로직은 현재 통계 요약 쿼리에서 당일 데이터를 기본으로 조회합니다.
@@ -59,6 +62,9 @@ public class HeadDashboardService {
 
         // 4. 진행 중인 할인 수 (할인율 0 초과인 상품 개수)
         long activeDiscounts = headProductMapper.countByDiscountRateGreaterThan(0);
+        
+        // 4-1. 진행 중인 이벤트 수
+        long activeEvents = headEventRepository.countByEventStatus(EventStatus.ACTIVE);
 
         // 5. 노출 중인 배너 수
         long activeBanners = headBannerMapper.countByIsActiveTrue();
@@ -130,6 +136,7 @@ public class HeadDashboardService {
                 .totalProducts(totalProducts)
                 .pendingInventory(pendingInventory)
                 .activeDiscounts(activeDiscounts)
+                .activeEvents(activeEvents)
                 .activeBanners(activeBanners)
                 .todaySales(todaySales)
                 .todayOrders(todayOrders)

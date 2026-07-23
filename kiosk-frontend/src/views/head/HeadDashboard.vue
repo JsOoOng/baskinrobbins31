@@ -25,7 +25,7 @@ const statistics = ref([
   { key: 'activeStores', label: '운영 중인 지점 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '✓' },
   { key: 'products', label: '전체 상품 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '▣' },
   { key: 'pendingInventory', label: '처리 대기 재고 신청', value: '-', subText: '불러오는 중...', trend: 'same', icon: '◷' },
-  { key: 'discounts', label: '진행 중인 할인 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '%' },
+  { key: 'events', label: '진행 중인 이벤트 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '★' },
   { key: 'banners', label: '노출 중인 배너 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '▤' },
   { key: 'sales', label: '오늘 전체 매출', value: '-', subText: '불러오는 중...', trend: 'same', icon: '₩' },
   { key: 'orders', label: '오늘 전체 주문 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '▧' }
@@ -44,7 +44,7 @@ const fetchDashboardData = async () => {
       { key: 'activeStores', label: '운영 중인 지점 수', value: data.activeStores.toString(), subText: '정상 운영 중', trend: 'success', icon: '✓' },
       { key: 'products', label: '전체 상품 수', value: data.totalProducts.toString(), subText: '등록된 전체 상품', trend: 'up', icon: '▣' },
       { key: 'pendingInventory', label: '처리 대기 재고 신청', value: data.pendingInventory.toString(), subText: '처리 현황', trend: 'warning', icon: '◷' },
-      { key: 'discounts', label: '진행 중인 할인 수', value: data.activeDiscounts.toString(), subText: '할인 중인 상품', trend: 'same', icon: '%' },
+      { key: 'events', label: '진행 중인 이벤트 수', value: (data.activeEvents || 0).toString(), subText: '진행 중인 이벤트', trend: 'same', icon: '★' },
       { key: 'banners', label: '노출 중인 배너 수', value: data.activeBanners.toString(), subText: '활성화 배너', trend: 'up', icon: '▤' },
       { key: 'sales', label: '오늘 전체 매출', value: data.todaySales.toLocaleString() + '원', subText: comparisonPeriod.value, trend: 'up', icon: '₩' },
       { key: 'orders', label: '오늘 전체 주문 수', value: data.todayOrders.toLocaleString() + '건', subText: comparisonPeriod.value, trend: 'up', icon: '▧' }
@@ -123,7 +123,7 @@ const handleStatisticClick = (statistic) => {
     stores: '/head/stores',
     activeStores: '/head/stores',
     products: '/head/products',
-    discounts: '/head/discounts',
+    events: '/head/events',
     banners: '/head/banners',
     sales: '/head/statistics',
     orders: '/head/statistics',
