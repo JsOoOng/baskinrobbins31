@@ -110,11 +110,7 @@ public class RestockRequest {
     private LocalDateTime requestedAt;
 
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-        name = "store_flavor_id",
-        nullable = false
-    )
+
     
     
     

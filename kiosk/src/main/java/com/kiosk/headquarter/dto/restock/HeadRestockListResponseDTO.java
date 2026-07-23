@@ -41,7 +41,10 @@ public class HeadRestockListResponseDTO {
      */
     private String itemName;
 
-
+    /*
+     * 지점명
+     */
+    private String storeName;
 
     /*
      * 단위
