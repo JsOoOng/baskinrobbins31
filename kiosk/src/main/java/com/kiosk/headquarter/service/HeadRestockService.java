@@ -253,13 +253,16 @@ public class HeadRestockService {
 
         String itemName = "";
         String unit = "";
+        String storeName = "";
 
         if (restockRequest.getStoreInventory() != null) {
             itemName = restockRequest.getStoreInventory().getItem().getProduct().getProductName();
             unit = restockRequest.getStoreInventory().getItem().getUnit();
+            storeName = restockRequest.getStoreInventory().getStore().getStoreName();
         } else if (restockRequest.getStoreFlavor() != null) {
             itemName = restockRequest.getStoreFlavor().getFlavor().getFlavorName();
             unit = "EA";
+            storeName = restockRequest.getStoreFlavor().getStore().getStoreName();
         }
 
         return HeadRestockListResponseDTO.builder()
@@ -267,6 +270,7 @@ public class HeadRestockService {
                         restockRequest.getId()
                 )
                 .itemName(itemName)
+                .storeName(storeName)
                 .unit(unit)
 
 
