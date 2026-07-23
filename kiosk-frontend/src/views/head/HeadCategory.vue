@@ -5,6 +5,7 @@ import {
   reactive,
   ref
 } from 'vue'
+import { useRouter } from 'vue-router'
 
 import {
   createHeadCategory,
@@ -13,6 +14,8 @@ import {
   getHeadCategories,
   updateHeadCategory
 } from '@/api/head/headCategoryApi'
+
+import { getHeadDashboardSummary } from '@/api/head/headDashboardApi'
 
 import P2ComingSoonModal from '@/components/head/P2ComingSoonModal.vue'
 
@@ -23,6 +26,9 @@ import AppMessageToast
  * 서버 데이터
  */
 const categories = ref([])
+const eventCount = ref(0)
+
+const router = useRouter()
 
 /*
  * 화면 상태
@@ -136,6 +142,13 @@ const loadCategories = async () => {
       Array.isArray(result)
         ? result
         : []
+
+    try {
+      const dashboard = await getHeadDashboardSummary('전주 대비')
+      eventCount.value = dashboard.activeEvents || 0
+    } catch (e) {
+      console.error('이벤트 수 조회 실패', e)
+    }
 
   } catch (error) {
     showMessage(
@@ -326,10 +339,7 @@ const removeCategory = async (category) => {
  * P2 기능 안내
  */
 const openEventManagement = () => {
-  p2Modal.open = true
-  p2Modal.title = '이벤트 관리'
-  p2Modal.description =
-    '이벤트명, 대상 상품·카테고리, 시작일과 종료일을 관리하는 기능입니다.'
+  router.push('/head/events')
 }
 
 const closeP2Modal = () => {
@@ -425,7 +435,7 @@ onMounted(() => {
           <p>이벤트 카테고리</p>
 
           <strong>
-            P2
+            {{ eventCount }}
           </strong>
 
           <small>
@@ -479,7 +489,6 @@ onMounted(() => {
             @click="openEventManagement"
           >
             ★ 이벤트 관리
-            <small>P2</small>
           </button>
 
           <button

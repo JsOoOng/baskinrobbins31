@@ -19,7 +19,9 @@
 
             si.store_inventory_id,
             si.store_id,
+            s.store_name,
             si.item_id,
+            ii.item_name,
             si.current_stock,
             si.min_stock,
             si.target_stock,
@@ -29,11 +31,11 @@
 
 
         FROM store_inventory si
-
+        LEFT JOIN stores s ON si.store_id = s.store_id
+        LEFT JOIN inventory_items ii ON si.item_id = ii.item_id
 
         WHERE si.store_inventory_id =
               #{storeInventoryId}
-
 
     </select>
 
@@ -75,6 +77,8 @@
             <id property="id"
                 column="store_id"/>
 
+            <result property="storeName"
+                    column="store_name"/>
 
         </association>
 
@@ -86,6 +90,8 @@
             <id property="id"
                 column="item_id"/>
 
+            <result property="itemName"
+                    column="item_name"/>
 
         </association>
 
@@ -106,7 +112,9 @@
 
             sf.store_flavor_id,
             sf.store_id,
+            s.store_name,
             sf.flavor_id,
+            f.flavor_name,
             sf.container,
             sf.is_sold_out,
             sf.min_stock,
@@ -117,11 +125,11 @@
 
 
         FROM store_flavors sf
-
+        LEFT JOIN stores s ON sf.store_id = s.store_id
+        LEFT JOIN icecream_flavors f ON sf.flavor_id = f.flavor_id
 
         WHERE sf.store_flavor_id =
               #{storeFlavorId}
-
 
     </select>
 
@@ -168,6 +176,8 @@
             <id property="id"
                 column="store_id"/>
 
+            <result property="storeName"
+                    column="store_name"/>
 
         </association>
 
@@ -180,6 +190,8 @@
             <id property="id"
                 column="flavor_id"/>
 
+            <result property="flavorName"
+                    column="flavor_name"/>
 
         </association>
 

@@ -445,38 +445,36 @@
         return
       }
   
+      let targetRouteName = notification.routeName
+      if (targetRouteName === 'head-restock') {
+        targetRouteName = 'head-inventory-requests'
+      }
+
       const targetQuery =
         getReferenceQuery(
           notification
         )
   
-      /*
-       * 이미 같은 화면인 경우
-       * Query만 교체합니다.
-       */
       if (
         route.name ===
-        notification.routeName
+        targetRouteName
       ) {
-        await router.replace({
-          name:
-            notification.routeName,
-  
-          query: {
-            ...route.query,
-            ...targetQuery
-          }
-        })
+        if (
+          Object.keys(targetQuery)
+            .length > 0
+        ) {
+          router.replace({
+            name: targetRouteName,
+            query: targetQuery
+          })
+        }
   
         return
       }
   
-      await router.push({
-        name:
-          notification.routeName,
-  
-        query:
-          targetQuery
+      router.push({
+        name: targetRouteName,
+        query: targetQuery
       })
     } catch (error) {
       console.error(
