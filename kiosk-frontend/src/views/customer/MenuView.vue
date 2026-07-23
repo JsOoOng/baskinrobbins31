@@ -218,17 +218,19 @@
             <div 
               v-for="flavor in paginatedFlavors" 
               :key="flavor.flavorId" 
-              :class="['flavor-card', { selected: selectedFlavors.includes(flavor.flavorId) }, { disabled: isFlavorMax }]"
-              @click="addFlavorSlot(flavor.flavorId)"
+              :class="['flavor-card', { selected: selectedFlavors.includes(flavor.flavorId) }, { disabled: isFlavorMax || flavor.isSoldOut }, { 'sold-out-card': flavor.isSoldOut }]"
+              @click="!flavor.isSoldOut && addFlavorSlot(flavor.flavorId)"
+              style="position: relative;"
             >
               <img v-if="flavor.imageUrl" :src="flavor.imageUrl" :alt="flavor.flavorName" class="flavor-image"/>
               <div v-else class="flavor-image-placeholder">🍦</div>
+              <img v-if="flavor.isSoldOut" src="/images/etc/flavor_sold_out.png" alt="sold out" class="sold-out-overlay" />
               <div class="flavor-name">{{ $t(flavor.flavorName) }}</div>
             </div>
           </div>
 
           <!-- Pagination -->
-          <div class="pagination-controls-pink">
+          <div class="pagination-controls-pink" style="margin-top: auto;">
             <button class="btn-arrow-pink" :disabled="currentPage === 1" @click="currentPage--">
               &lt;
             </button>
@@ -527,7 +529,11 @@ const openOptionModal = async (product) => {
 }
 
 const filteredProducts = computed(() => {
-  return dbProducts.value.filter(p => p.categoryId === currentCategoryId.value)
+  const products = dbProducts.value.filter(p => p.categoryId === currentCategoryId.value)
+  return products.sort((a, b) => {
+    if (a.isSoldOut === b.isSoldOut) return 0
+    return a.isSoldOut ? 1 : -1
+  })
 })
 
 const productTotalPages = computed(() => {
@@ -556,9 +562,13 @@ const totalPages = computed(() => {
 })
 
 const paginatedFlavors = computed(() => {
+  const sortedFlavors = [...dbFlavors.value].sort((a, b) => {
+    if (a.isSoldOut === b.isSoldOut) return 0
+    return a.isSoldOut ? 1 : -1
+  })
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
-  return dbFlavors.value.slice(start, end)
+  return sortedFlavors.slice(start, end)
 })
 
 const getFlavorName = (fId) => {
@@ -1331,11 +1341,13 @@ const handleCallStaff = async () => {
 
 /* Step 2: Flavor */
 .flavor-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  margin-bottom: 20px;
-}
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+    min-height: 420px;
+    align-content: start;
+  }
 .flavor-card {
   display: flex;
   flex-direction: column;
