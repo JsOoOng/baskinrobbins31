@@ -8,6 +8,13 @@ import org.springframework.http.HttpStatus;
 
 import com.kiosk.headquarter.dto.common.HeadApiResponse;
 
+/**
+ * [코드 흐름 안내] HeadExceptionHandler
+ *
+ * <p>역할: 본사 관리의 본사 공통 예외 HTTP 요청을 받는 진입점이다.</p>
+ * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러 -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @RestControllerAdvice(basePackages = "com.kiosk.headquarter.controller")
 public class HeadExceptionHandler {
 

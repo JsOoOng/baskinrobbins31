@@ -17,6 +17,13 @@ import com.kiosk.headquarter.service.HeadInventoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadInventoryController
+ *
+ * <p>역할: 본사 관리의 재고 HTTP 요청을 받는 진입점이다.</p>
+ * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러(/head/inventory) -> HeadInventoryService -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @RestController
 @RequestMapping("/head/inventory")
 @RequiredArgsConstructor
@@ -29,6 +36,10 @@ public class HeadInventoryController {
      * 전체 지점 재고 조회
      *
      * GET /head/inventory
+     */
+    /**
+     * [요청 흐름] GET /head/inventory
+     * 프론트 요청을 받아 getInventory() 메서드가 입력을 받고 HeadInventoryService 호출 후 결과를 응답한다.
      */
     @GetMapping
     public ResponseEntity<
@@ -48,6 +59,10 @@ public class HeadInventoryController {
      * 재고 상세 조회
      *
      * GET /head/inventory/{storeInventoryId}
+     */
+    /**
+     * [요청 흐름] GET /head/inventory/{storeInventoryId}
+     * 프론트 요청을 받아 getInventory() 메서드가 입력을 받고 HeadInventoryService 호출 후 결과를 응답한다.
      */
     @GetMapping("/{storeInventoryId}")
     public ResponseEntity<HeadInventoryResponse>
@@ -72,6 +87,10 @@ public class HeadInventoryController {
      *
      * PATCH
      * /head/inventory/{storeInventoryId}/restock-setting
+     */
+    /**
+     * [요청 흐름] PATCH /head/inventory
+     * 프론트 요청을 받아 updateRestockSetting() 메서드가 입력을 받고 HeadInventoryService 호출 후 결과를 응답한다.
      */
     @PatchMapping(
             "/{storeInventoryId}/restock-setting"

@@ -23,6 +23,13 @@ import lombok.RequiredArgsConstructor;
 
 
 
+/**
+ * [코드 흐름 안내] BranchKioskController
+ *
+ * <p>역할: 지점 운영의 키오스크 기기 HTTP 요청을 받는 진입점이다.</p>
+ * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러(/branch/kiosk) -> BranchKioskService -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/branch/kiosk")
@@ -35,6 +42,10 @@ public class BranchKioskController {
 
     /*
      * 지점 키오스크 조회
+     */
+    /**
+     * [요청 흐름] GET /branch/kiosk/{storeId}
+     * 프론트 요청을 받아 getKiosks() 메서드가 입력을 받고 BranchKioskService 호출 후 결과를 응답한다.
      */
     @GetMapping("/{storeId}")
     public ResponseEntity<List<BranchKioskResponse>> getKiosks(
@@ -50,6 +61,10 @@ public class BranchKioskController {
     /*
      * 전체 키오스크 조회 (전체 지점)
      */
+    /**
+     * [요청 흐름] GET /branch/kiosk/all
+     * 프론트 요청을 받아 getAllKiosks() 메서드가 입력을 받고 BranchKioskService 호출 후 결과를 응답한다.
+     */
     @GetMapping("/all")
     public ResponseEntity<List<BranchKioskResponse>> getAllKiosks(){
         return ResponseEntity.ok(
@@ -61,6 +76,10 @@ public class BranchKioskController {
 
     /*
      * 키오스크 상태 변경
+     */
+    /**
+     * [요청 흐름] PATCH /branch/kiosk/{kioskId}/status
+     * 프론트 요청을 받아 updateStatus() 메서드가 입력을 받고 BranchKioskService 호출 후 결과를 응답한다.
      */
     @PatchMapping("/{kioskId}/status")
     public ResponseEntity<Void> updateStatus(
@@ -78,6 +97,10 @@ public class BranchKioskController {
 
     }
     
+    /**
+     * [요청 흐름] POST /branch/kiosk
+     * 프론트 요청을 받아 createKiosk() 메서드가 입력을 받고 BranchKioskService 호출 후 결과를 응답한다.
+     */
     @PostMapping
     public ResponseEntity<Void> createKiosk(
             @RequestBody KioskCreateRequest request
@@ -90,6 +113,10 @@ public class BranchKioskController {
 
     }
 
+    /**
+     * [요청 흐름] GET /branch/kiosk/stream/{storeId}
+     * 프론트 요청을 받아 streamKiosks() 메서드가 입력을 받고 BranchKioskService 호출 후 결과를 응답한다.
+     */
     @GetMapping(value = "/stream/{storeId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamKiosks(@PathVariable Integer storeId) {
         return kioskService.subscribe(storeId);

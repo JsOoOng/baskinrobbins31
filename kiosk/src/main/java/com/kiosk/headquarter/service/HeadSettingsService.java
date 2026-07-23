@@ -9,6 +9,13 @@ import com.kiosk.headquarter.repository.SystemSettingRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadSettingsService
+ *
+ * <p>역할: 본사 관리의 환경 설정 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> SystemSettingRepository -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class HeadSettingsService {
@@ -16,6 +23,10 @@ public class HeadSettingsService {
     private final SystemSettingRepository systemSettingRepository;
 
     @Transactional
+    /**
+     * [메서드 흐름] getSettings
+     * Controller 또는 상위 서비스에서 호출되어 SystemSettingRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public SystemSettingDto getSettings() {
         SystemSetting setting = systemSettingRepository.findById(1)
                 .orElseGet(() -> systemSettingRepository.save(SystemSetting.builder().build()));
@@ -23,6 +34,10 @@ public class HeadSettingsService {
     }
 
     @Transactional
+    /**
+     * [메서드 흐름] updateSettings
+     * Controller 또는 상위 서비스에서 호출되어 SystemSettingRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public SystemSettingDto updateSettings(SystemSettingDto dto) {
         SystemSetting setting = systemSettingRepository.findById(1)
                 .orElseGet(() -> SystemSetting.builder().build());

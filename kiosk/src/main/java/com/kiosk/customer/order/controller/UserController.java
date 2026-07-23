@@ -13,6 +13,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * [코드 흐름 안내] UserController
+ *
+ * <p>역할: 고객 키오스크의 회원 HTTP 요청을 받는 진입점이다.</p>
+ * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러(/api/users) -> UserRepository, UserCouponRepository -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -21,6 +28,10 @@ public class UserController {
     private final UserRepository userRepository;
     private final UserCouponRepository userCouponRepository;
 
+    /**
+     * [요청 흐름] GET /api/users/points
+     * 프론트 요청을 받아 getUserPoints() 메서드가 입력을 받고 UserRepository, UserCouponRepository 호출 후 결과를 응답한다.
+     */
     @GetMapping("/points")
     public ResponseEntity<?> getUserPoints(@RequestParam(value = "phone") String phone) {
         try {

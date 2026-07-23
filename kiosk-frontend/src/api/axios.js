@@ -1,3 +1,9 @@
+/**
+ * [모듈 흐름 안내] axios
+ * 역할: 모든 프론트 API가 공유하는 Axios 주소·JSON 헤더·JWT·401/403 처리를 설정한다.
+ * 호출 흐름: Vue/API 모듈 -> 요청 인터셉터에서 JWT 추가 -> Vite proxy/백엔드 -> 응답 인터셉터에서 오류별 화면 이동
+ * 데이터 기준: 실제 요청 URL과 현재 백엔드 DTO 필드를 우선한다.
+ */
 // src/api/axios.js
 import axios from 'axios'; // 1. 라이브러리 로드
 

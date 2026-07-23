@@ -22,6 +22,13 @@ import com.kiosk.entity.enums.WorkDay;
 import lombok.RequiredArgsConstructor;
 
 
+/**
+ * [코드 흐름 안내] BranchWeekScheduleService
+ *
+ * <p>역할: 지점 운영의 근무 일정 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> WeekScheduleRepository, WorkHistoryRepository, StaffRepository -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -51,6 +58,10 @@ public class BranchWeekScheduleService {
      * 최초 스케줄 저장
      */
     @Transactional
+    /**
+     * [메서드 흐름] saveWeekSchedule
+     * Controller 또는 상위 서비스에서 호출되어 WeekScheduleRepository, WorkHistoryRepository, StaffRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void saveWeekSchedule(
             Integer staffId,
             WeekScheduleSaveRequestDTO requestDTO
@@ -229,6 +240,10 @@ public class BranchWeekScheduleService {
      * 기존 요일 수정 + 신규 요일 추가
      */
     @Transactional
+    /**
+     * [메서드 흐름] updateWeekSchedule
+     * Controller 또는 상위 서비스에서 호출되어 WeekScheduleRepository, WorkHistoryRepository, StaffRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void updateWeekSchedule(
             Integer staffId,
             WeekScheduleSaveRequestDTO requestDTO
@@ -310,6 +325,10 @@ public class BranchWeekScheduleService {
      * 미래 근무이력 수정 + 추가
      */
     @Transactional
+    /**
+     * [메서드 흐름] updateFutureWorkHistory
+     * Controller 또는 상위 서비스에서 호출되어 WeekScheduleRepository, WorkHistoryRepository, StaffRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void updateFutureWorkHistory(
             Staff staff
     ) {
@@ -386,6 +405,10 @@ public class BranchWeekScheduleService {
 
 
 
+    /**
+     * [메서드 흐름] getWeekSchedule
+     * Controller 또는 상위 서비스에서 호출되어 WeekScheduleRepository, WorkHistoryRepository, StaffRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<WeekScheduleResponseDTO> getWeekSchedule(
             Integer staffId
     ) {
@@ -425,6 +448,10 @@ public class BranchWeekScheduleService {
 
 
     @Transactional
+    /**
+     * [메서드 흐름] generateCurrentMonthHistory
+     * Controller 또는 상위 서비스에서 호출되어 WeekScheduleRepository, WorkHistoryRepository, StaffRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void generateCurrentMonthHistory(
             Integer staffId
     ) {
@@ -437,6 +464,10 @@ public class BranchWeekScheduleService {
 
     }
     
+    /**
+     * [메서드 흐름] getStoreSchedule
+     * Controller 또는 상위 서비스에서 호출되어 WeekScheduleRepository, WorkHistoryRepository, StaffRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<StoreWeekScheduleResponseDTO> getStoreSchedule(
             Integer storeId
     ){

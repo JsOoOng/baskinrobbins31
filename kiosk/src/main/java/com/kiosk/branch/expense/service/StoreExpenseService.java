@@ -18,6 +18,13 @@ import java.util.List;
 
 import com.kiosk.branch.expense.dto.ExpenseHistoryResponseDTO;
 
+/**
+ * [코드 흐름 안내] StoreExpenseService
+ *
+ * <p>역할: 지점 운영의 지출 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> BranchStoreExpenseRepository, StoreRepository, EmployeeRepository, StaffRepository -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class StoreExpenseService {
@@ -34,6 +41,10 @@ public class StoreExpenseService {
 
 
     @Transactional
+    /**
+     * [메서드 흐름] createExpense
+     * Controller 또는 상위 서비스에서 호출되어 BranchStoreExpenseRepository, StoreRepository, EmployeeRepository 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void createExpense(StoreExpenseRequestDTO dto) {
 
 
@@ -111,6 +122,10 @@ public class StoreExpenseService {
      * 지출 자동완성 목록 조회
      */
     @Transactional(readOnly = true)
+    /**
+     * [메서드 흐름] getExpenseHistory
+     * Controller 또는 상위 서비스에서 호출되어 BranchStoreExpenseRepository, StoreRepository, EmployeeRepository 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<ExpenseHistoryResponseDTO> getExpenseHistory(
             Integer storeId
     ) {

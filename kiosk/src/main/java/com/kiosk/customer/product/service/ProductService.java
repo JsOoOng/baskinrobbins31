@@ -8,6 +8,13 @@ import com.kiosk.customer.product.dto.ProductCreateRequest;
 import com.kiosk.customer.product.dto.ProductDetailResponse;
 import com.kiosk.customer.product.dto.ProductListResponse;
 
+/**
+ * [코드 흐름 안내] ProductService
+ *
+ * <p>역할: 고객 키오스크의 상품·메뉴 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 public interface ProductService {
     // 카테고리 전체 목록 조회
     List<com.kiosk.customer.category.dto.CategoryResponse> getAllCategories();

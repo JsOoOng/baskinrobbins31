@@ -1,3 +1,10 @@
+<!--
+  [화면 흐름 안내] BranchKiosk
+  역할: 지점 운영에서 사용자가 보는 화면이다.
+  진입: /branch/kiosk -> 이 Vue 파일 렌더링
+  데이터: 사용자 동작 -> @/api/axios -> 응답/상태 반영
+  다음 이동: /branch/main, /branch/kiosk/register
+-->
 <script setup>
 
 import { ref, onMounted } from 'vue'

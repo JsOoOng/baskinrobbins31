@@ -1,3 +1,10 @@
+<!--
+  [화면 흐름 안내] HeadStoreFlavor
+  역할: 본사 관리에서 사용자가 보는 화면이다.
+  진입: /head/storeFlavor -> 이 Vue 파일 렌더링
+  데이터: 사용자 동작 -> @/api/headquarter/headStoreFlavorApi -> 응답/상태 반영
+  다음 이동: 현재 상태를 갱신하거나 부모 화면에 이벤트를 전달
+-->
 <template>
 
     <AppMessageToast

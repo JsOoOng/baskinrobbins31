@@ -45,6 +45,13 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+/**
+ * [코드 흐름 안내] OrderService
+ *
+ * <p>역할: 고객 키오스크의 주문 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> OrderMapper, BasketService, EntityManager, OrderItemMapper 등 -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -64,6 +71,10 @@ public class OrderService {
     
     
     // 주문 상세 조회
+    /**
+     * [메서드 흐름] getOrderDetails
+     * Controller 또는 상위 서비스에서 호출되어 OrderMapper, BasketService, EntityManager 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public OrderResponse getOrderDetails(int orderId) {
         return orderMapper.selectOrderWithDetails(orderId);
     }
@@ -72,6 +83,10 @@ public class OrderService {
      * 주문 생성 로직
      */
     @Transactional
+    /**
+     * [메서드 흐름] createOrder
+     * Controller 또는 상위 서비스에서 호출되어 OrderMapper, BasketService, EntityManager 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public int createOrder(OrderCreateRequest request, HttpSession session) {
         // 1. 프론트엔드에서 보낸 아이템 목록이 비어있는지 검증
         if (request.getItems() == null || request.getItems().isEmpty()) {
@@ -208,6 +223,10 @@ public class OrderService {
      * 결제 처리 및 재고 차감 (통합 로직)
      */
     @Transactional
+    /**
+     * [메서드 흐름] processPayment
+     * Controller 또는 상위 서비스에서 호출되어 OrderMapper, BasketService, EntityManager 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void processPayment(int orderId, String paymentMethod, int userCouponId, int pointUsed, HttpSession session) {
         
         // 1. 주문 조회 (엔티티 기반)
@@ -332,6 +351,10 @@ public class OrderService {
     
     
     @Transactional
+    /**
+     * [메서드 흐름] cancelOrder
+     * Controller 또는 상위 서비스에서 호출되어 OrderMapper, BasketService, EntityManager 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void cancelOrder(int orderId) {
         // 1. 주문 상태를 CANCELED로 업데이트
         int updatedRows = orderMapper.updateOrderStatus(orderId, "CANCELED");

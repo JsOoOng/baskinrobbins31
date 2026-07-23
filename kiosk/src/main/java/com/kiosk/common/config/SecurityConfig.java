@@ -10,11 +10,22 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * [코드 흐름 안내] SecurityConfig
+ *
+ * <p>역할: 공통 기반 기능에서 사용하는 Spring 설정과 Bean 연결을 담당한다.</p>
+ * <p>호출 흐름: 애플리케이션 시작 -> 이 설정 로딩 -> Bean/필터/보안 규칙 등록 -> 요청 처리에 적용된다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Configuration // 이 클래스가 Spring의 설정(Configuration) 클래스임을 명시
 @EnableWebSecurity // Spring Security 기능을 활성화
 public class SecurityConfig {
 
     @Bean // 반환되는 객체를 Spring Bean으로 등록하여 컨테이너가 관리하게 함
+    /**
+     * [메서드 흐름] filterChain
+     * 애플리케이션 시작 과정에서 호출되어 필요한 Bean이나 프레임워크 설정을 등록한다.
+     */
     public SecurityFilterChain filterChain(
             HttpSecurity http, // HTTP 보안 설정을 구성할 수 있는 객체
             JwtUtil jwtUtil // JWT 토큰 생성 및 검증을 위한 커스텀 유틸리티 객체

@@ -1,3 +1,10 @@
+<!--
+  [화면 흐름 안내] MenuView
+  역할: 고객 키오스크에서 사용자가 보는 화면이다.
+  진입: /menu -> 이 Vue 파일 렌더링
+  데이터: 사용자 동작 -> @/api/axios, @/api/customer/callApi -> 응답/상태 반영
+  다음 이동: /kiosk
+-->
 <template>
   <div class="kiosk-menu-container">
     <!-- 1. 상단 헤더 바 -->

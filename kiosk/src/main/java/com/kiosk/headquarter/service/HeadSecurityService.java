@@ -18,6 +18,13 @@ import com.kiosk.headquarter.repository.HeadAdminMapper;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadSecurityService
+ *
+ * <p>역할: 본사 관리의 보안 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadAdminMapper, PasswordEncoder -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -30,6 +37,10 @@ public class HeadSecurityService {
     /*
      * 전체 관리자 목록 조회
      */
+    /**
+     * [메서드 흐름] getAdmins
+     * Controller 또는 상위 서비스에서 호출되어 HeadAdminMapper, PasswordEncoder을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<HeadAdminResponse> getAdmins() {
 
         return headAdminMapper
@@ -41,6 +52,10 @@ public class HeadSecurityService {
 
     /*
      * 관리자 상세 조회
+     */
+    /**
+     * [메서드 흐름] getAdmin
+     * Controller 또는 상위 서비스에서 호출되어 HeadAdminMapper, PasswordEncoder을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public HeadAdminResponse getAdmin(
             Integer adminId
@@ -56,6 +71,10 @@ public class HeadSecurityService {
      * 본사 관리자 계정 생성
      */
     @Transactional
+    /**
+     * [메서드 흐름] createAdmin
+     * Controller 또는 상위 서비스에서 호출되어 HeadAdminMapper, PasswordEncoder을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadAdminResponse createAdmin(
             HeadAdminCreateRequest request
     ) {
@@ -115,6 +134,10 @@ public class HeadSecurityService {
      * 관리자 정보 수정
      */
     @Transactional
+    /**
+     * [메서드 흐름] updateAdmin
+     * Controller 또는 상위 서비스에서 호출되어 HeadAdminMapper, PasswordEncoder을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadAdminResponse updateAdmin(
             Integer currentAdminId,
             Integer targetAdminId,
@@ -190,6 +213,10 @@ public class HeadSecurityService {
      * 관리자 활성·비활성 상태 변경
      */
     @Transactional
+    /**
+     * [메서드 흐름] changeStatus
+     * Controller 또는 상위 서비스에서 호출되어 HeadAdminMapper, PasswordEncoder을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadAdminResponse changeStatus(
             Integer currentAdminId,
             Integer targetAdminId,
@@ -249,6 +276,10 @@ public class HeadSecurityService {
      * 관리자 비밀번호 초기화
      */
     @Transactional
+    /**
+     * [메서드 흐름] resetPassword
+     * Controller 또는 상위 서비스에서 호출되어 HeadAdminMapper, PasswordEncoder을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void resetPassword(
             Integer targetAdminId,
             HeadAdminPasswordRequest request

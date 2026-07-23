@@ -22,6 +22,13 @@ import com.kiosk.branch.status.dto.StoreProductStatusResponse;
 import com.kiosk.branch.status.service.StatusService;
 
 import lombok.RequiredArgsConstructor;
+/**
+ * [코드 흐름 안내] StatusController
+ *
+ * <p>역할: 지점 운영의 재고 상태·재입고 HTTP 요청을 받는 진입점이다.</p>
+ * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러(/branch/status) -> StatusService -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @RestController
 @RequestMapping("/branch/status")
 @RequiredArgsConstructor
@@ -33,6 +40,10 @@ public class StatusController {
 
 
     // 품절 처리
+    /**
+     * [요청 흐름] PATCH /branch/status/product/{storeProductId}
+     * 프론트 요청을 받아 updateProductSoldOut() 메서드가 입력을 받고 StatusService 호출 후 결과를 응답한다.
+     */
     @PatchMapping("/product/{storeProductId}")
     public StoreProductStatusResponse updateProductSoldOut(
             @PathVariable Integer storeProductId,
@@ -46,6 +57,10 @@ public class StatusController {
 
     }
     
+    /**
+     * [요청 흐름] PATCH /branch/status/flavor/{storeFlavorId}
+     * 프론트 요청을 받아 updateFlavorSoldOut() 메서드가 입력을 받고 StatusService 호출 후 결과를 응답한다.
+     */
     @PatchMapping("/flavor/{storeFlavorId}")
     public StoreFlavorStatusResponse updateFlavorSoldOut(
             @PathVariable Integer storeFlavorId,
@@ -62,6 +77,10 @@ public class StatusController {
 
 
     // 지점 메뉴 조회
+    /**
+     * [요청 흐름] GET /branch/status/product/{storeId}
+     * 프론트 요청을 받아 getProducts() 메서드가 입력을 받고 StatusService 호출 후 결과를 응답한다.
+     */
     @GetMapping("/product/{storeId}")
     public List<StoreProductStatusResponse> getProducts(
             @PathVariable Integer storeId
@@ -72,6 +91,10 @@ public class StatusController {
     }
     
  // 지점 맛 조회
+    /**
+     * [요청 흐름] GET /branch/status/flavor/{storeId}
+     * 프론트 요청을 받아 getFlavors() 메서드가 입력을 받고 StatusService 호출 후 결과를 응답한다.
+     */
     @GetMapping("/flavor/{storeId}")
     public List<StoreFlavorStatusResponse> getFlavors(
             @PathVariable Integer storeId
@@ -81,6 +104,10 @@ public class StatusController {
 
     }
     
+    /**
+     * [요청 흐름] GET /branch/status/all-flavors
+     * 프론트 요청을 받아 getAllFlavors() 메서드가 입력을 받고 StatusService 호출 후 결과를 응답한다.
+     */
     @GetMapping("/all-flavors")
     public List<FlavorResponse> getAllFlavors(){
 
@@ -88,6 +115,10 @@ public class StatusController {
 
     }
     
+    /**
+     * [요청 흐름] POST /branch/status/flavor/{storeId}
+     * 프론트 요청을 받아 addFlavor() 메서드가 입력을 받고 StatusService 호출 후 결과를 응답한다.
+     */
     @PostMapping("/flavor/{storeId}")
     public StoreFlavorStatusResponse addFlavor(
 
@@ -104,6 +135,10 @@ public class StatusController {
 
     }
     
+    /**
+     * [요청 흐름] DELETE /branch/status/flavor/{storeFlavorId}
+     * 프론트 요청을 받아 deleteFlavor() 메서드가 입력을 받고 StatusService 호출 후 결과를 응답한다.
+     */
     @DeleteMapping("/flavor/{storeFlavorId}")
     public void deleteFlavor(
             @PathVariable Integer storeFlavorId
@@ -113,6 +148,10 @@ public class StatusController {
 
     }
     
+    /**
+     * [요청 흐름] PATCH /branch/status/flavor/{storeFlavorId}/container
+     * 프론트 요청을 받아 updateContainer() 메서드가 입력을 받고 StatusService 호출 후 결과를 응답한다.
+     */
     @PatchMapping("/flavor/{storeFlavorId}/container")
     public StoreFlavorStatusResponse updateContainer(
 
@@ -130,6 +169,10 @@ public class StatusController {
 
     }
     
+    /**
+     * [요청 흐름] PATCH /branch/status/flavor/{storeFlavorId}/restock
+     * 프론트 요청을 받아 updateFlavorRestock() 메서드가 입력을 받고 StatusService 호출 후 결과를 응답한다.
+     */
     @PatchMapping("/flavor/{storeFlavorId}/restock")
     public StoreFlavorStatusResponse updateFlavorRestock(
             @PathVariable Integer storeFlavorId,

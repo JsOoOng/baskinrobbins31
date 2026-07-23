@@ -10,6 +10,13 @@ import com.kiosk.headquarter.dto.auth.HeadLoginRequest;
 import com.kiosk.headquarter.dto.auth.HeadLoginResponse;
 import com.kiosk.headquarter.repository.HeadAuthMapper;
 
+/**
+ * [코드 흐름 안내] HeadAuthService
+ *
+ * <p>역할: 본사 관리의 본사 인증 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadAuthMapper, PasswordEncoder, JwtUtil -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @Transactional(readOnly = true)
 public class HeadAuthService {
@@ -32,6 +39,10 @@ public class HeadAuthService {
      * 본사 관리자 로그인
      */
     @Transactional
+    /**
+     * [메서드 흐름] login
+     * Controller 또는 상위 서비스에서 호출되어 HeadAuthMapper, PasswordEncoder, JwtUtil을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadLoginResponse login(
             HeadLoginRequest request
     ) {
@@ -152,6 +163,10 @@ public class HeadAuthService {
      * 현재 로그인 중인 본사 관리자 정보 조회
      *
      * GET /head/auth/me
+     */
+    /**
+     * [메서드 흐름] getLoginUser
+     * Controller 또는 상위 서비스에서 호출되어 HeadAuthMapper, PasswordEncoder, JwtUtil을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public HeadLoginResponse getLoginUser(
             Integer employeeId

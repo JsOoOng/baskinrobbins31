@@ -26,6 +26,13 @@ import com.kiosk.entity.StoreProduct;
 import lombok.RequiredArgsConstructor;
 
 
+/**
+ * [코드 흐름 안내] StatusService
+ *
+ * <p>역할: 지점 운영의 재고 상태·재입고 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> StoreProductMapper, StoreFlavorMapper, IcecreamFlavorMapper, StoreMapper 등 -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -50,6 +57,10 @@ public class StatusService {
 
     /*
      * 상품 수동 품절 변경
+     */
+    /**
+     * [메서드 흐름] updateProductSoldOut
+     * Controller 또는 상위 서비스에서 호출되어 StoreProductMapper, StoreFlavorMapper, IcecreamFlavorMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public StoreProductStatusResponse updateProductSoldOut(
             Integer storeProductId,
@@ -124,6 +135,10 @@ public class StatusService {
      * 상품 조회
      */
     @Transactional(readOnly = true)
+    /**
+     * [메서드 흐름] getProducts
+     * Controller 또는 상위 서비스에서 호출되어 StoreProductMapper, StoreFlavorMapper, IcecreamFlavorMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<StoreProductStatusResponse> getProducts(
             Integer storeId
     ){
@@ -222,6 +237,10 @@ public class StatusService {
     /*
      * 맛 품절 변경
      */
+    /**
+     * [메서드 흐름] updateFlavorSoldOut
+     * Controller 또는 상위 서비스에서 호출되어 StoreProductMapper, StoreFlavorMapper, IcecreamFlavorMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public StoreFlavorStatusResponse updateFlavorSoldOut(
             Integer storeFlavorId,
             Boolean soldOut
@@ -253,6 +272,10 @@ public class StatusService {
      * 맛 조회
      */
     @Transactional(readOnly = true)
+    /**
+     * [메서드 흐름] getFlavors
+     * Controller 또는 상위 서비스에서 호출되어 StoreProductMapper, StoreFlavorMapper, IcecreamFlavorMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<StoreFlavorStatusResponse> getFlavors(
             Integer storeId
     ){
@@ -272,6 +295,10 @@ public class StatusService {
 
 
     @Transactional(readOnly = true)
+    /**
+     * [메서드 흐름] getAllFlavors
+     * Controller 또는 상위 서비스에서 호출되어 StoreProductMapper, StoreFlavorMapper, IcecreamFlavorMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<FlavorResponse> getAllFlavors(){
 
 
@@ -293,6 +320,10 @@ public class StatusService {
      * 맛 추가
      */
     @Transactional
+    /**
+     * [메서드 흐름] addFlavor
+     * Controller 또는 상위 서비스에서 호출되어 StoreProductMapper, StoreFlavorMapper, IcecreamFlavorMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public StoreFlavorStatusResponse addFlavor(
             Integer storeId,
             Integer flavorId
@@ -355,6 +386,10 @@ public class StatusService {
      * 맛 삭제
      */
     @Transactional
+    /**
+     * [메서드 흐름] deleteFlavor
+     * Controller 또는 상위 서비스에서 호출되어 StoreProductMapper, StoreFlavorMapper, IcecreamFlavorMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void deleteFlavor(Integer storeFlavorId)
     {
 
@@ -380,6 +415,10 @@ public class StatusService {
 
     /*
      * 맛 통 수 변경
+     */
+    /**
+     * [메서드 흐름] updateContainer
+     * Controller 또는 상위 서비스에서 호출되어 StoreProductMapper, StoreFlavorMapper, IcecreamFlavorMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public StoreFlavorStatusResponse updateContainer(
             Integer storeFlavorId,
@@ -425,6 +464,10 @@ public class StatusService {
      * 맛 자동 발주 설정
      */
     @Transactional
+    /**
+     * [메서드 흐름] updateFlavorRestockSetting
+     * Controller 또는 상위 서비스에서 호출되어 StoreProductMapper, StoreFlavorMapper, IcecreamFlavorMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public StoreFlavorStatusResponse updateFlavorRestockSetting(
             Integer storeFlavorId,
             StoreFlavorRestockRequest request

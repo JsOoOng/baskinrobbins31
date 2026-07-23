@@ -18,6 +18,13 @@ import com.kiosk.headquarter.repository.InventoryShortageAlertRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] InventoryShortageAlertService
+ *
+ * <p>역할: 본사 관리의 재고 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> InventoryShortageAlertRepository, InventoryAlertSocketPublisher -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -84,6 +91,10 @@ public class InventoryShortageAlertService {
      * 재고 부족 감지 또는 기존 알람 갱신
      */
     @Transactional
+    /**
+     * [메서드 흐름] detectOrRefreshShortage
+     * Controller 또는 상위 서비스에서 호출되어 InventoryShortageAlertRepository, InventoryAlertSocketPublisher을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public Optional<InventoryShortageAlert>
             detectOrRefreshShortage(
                     StoreInventory inventory
@@ -204,6 +215,10 @@ public class InventoryShortageAlertService {
     /*
      * 특정 재고의 활성 알람 조회
      */
+    /**
+     * [메서드 흐름] getActiveAlert
+     * Controller 또는 상위 서비스에서 호출되어 InventoryShortageAlertRepository, InventoryAlertSocketPublisher을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public Optional<InventoryShortageAlert>
             getActiveAlert(
                     Integer storeInventoryId
@@ -222,6 +237,10 @@ public class InventoryShortageAlertService {
      * 본사 재고 현황에 표시할
      * 전체 활성 알람 조회
      */
+    /**
+     * [메서드 흐름] getAllActiveAlerts
+     * Controller 또는 상위 서비스에서 호출되어 InventoryShortageAlertRepository, InventoryAlertSocketPublisher을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<InventoryShortageAlert>
             getAllActiveAlerts() {
 
@@ -235,6 +254,10 @@ public class InventoryShortageAlertService {
      * 본사가 아직 지점에 보내지 않은
      * DETECTED 알람 조회
      */
+    /**
+     * [메서드 흐름] getDetectedAlerts
+     * Controller 또는 상위 서비스에서 호출되어 InventoryShortageAlertRepository, InventoryAlertSocketPublisher을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<InventoryShortageAlert>
             getDetectedAlerts() {
 
@@ -247,6 +270,10 @@ public class InventoryShortageAlertService {
     /*
      * 지점 관리자가 확인해야 하는
      * SENT 알람 조회
+     */
+    /**
+     * [메서드 흐름] getPendingBranchAlerts
+     * Controller 또는 상위 서비스에서 호출되어 InventoryShortageAlertRepository, InventoryAlertSocketPublisher을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public List<InventoryShortageAlert>
             getPendingBranchAlerts(
@@ -266,6 +293,10 @@ public class InventoryShortageAlertService {
 
     /*
      * 특정 지점의 특정 알람 조회
+     */
+    /**
+     * [메서드 흐름] getStoreAlert
+     * Controller 또는 상위 서비스에서 호출되어 InventoryShortageAlertRepository, InventoryAlertSocketPublisher을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public InventoryShortageAlert
             getStoreAlert(
@@ -420,6 +451,10 @@ public class InventoryShortageAlertService {
      * 본사 재고 현황 화면에 표시할
      * 활성 부족 알람 DTO 목록
      */
+    /**
+     * [메서드 흐름] getAllActiveAlertResponses
+     * Controller 또는 상위 서비스에서 호출되어 InventoryShortageAlertRepository, InventoryAlertSocketPublisher을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<HeadInventoryShortageSocketResponse>
             getAllActiveAlertResponses() {
 
@@ -437,6 +472,10 @@ public class InventoryShortageAlertService {
      * 해당 지점 관리자에게 전송합니다.
      */
     @Transactional
+    /**
+     * [메서드 흐름] sendAlertToStore
+     * Controller 또는 상위 서비스에서 호출되어 InventoryShortageAlertRepository, InventoryAlertSocketPublisher을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadInventoryShortageSocketResponse
             sendAlertToStore(
                     Integer alertId,
@@ -532,6 +571,10 @@ public class InventoryShortageAlertService {
      *
      * DETECTED와 SENT 상태를 모두 조회합니다.
      */
+    /**
+     * [메서드 흐름] getPendingBranchAlertSummary
+     * Controller 또는 상위 서비스에서 호출되어 InventoryShortageAlertRepository, InventoryAlertSocketPublisher을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public BranchInventoryShortageSummaryResponse
             getPendingBranchAlertSummary(
                     Integer storeId
@@ -563,6 +606,10 @@ public class InventoryShortageAlertService {
      * 전부 CONFIRMED로 변경합니다.
      */
     @Transactional
+    /**
+     * [메서드 흐름] confirmPendingBranchAlerts
+     * Controller 또는 상위 서비스에서 호출되어 InventoryShortageAlertRepository, InventoryAlertSocketPublisher을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public BranchInventoryShortageConfirmResponse
             confirmPendingBranchAlerts(
                     Integer storeId
@@ -633,6 +680,10 @@ public class InventoryShortageAlertService {
      * CONFIRMED → REQUESTED
      */
     @Transactional
+    /**
+     * [메서드 흐름] markRequested
+     * Controller 또는 상위 서비스에서 호출되어 InventoryShortageAlertRepository, InventoryAlertSocketPublisher을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public InventoryShortageAlert markRequested(
             Integer alertId,
             Integer storeInventoryId,

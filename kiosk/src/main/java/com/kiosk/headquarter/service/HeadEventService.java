@@ -13,6 +13,13 @@ import com.kiosk.headquarter.repository.HeadEventRepository;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadEventService
+ *
+ * <p>역할: 본사 관리의 이벤트 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadEventRepository, AdminLogService -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class HeadEventService {
@@ -21,6 +28,10 @@ public class HeadEventService {
     private final AdminLogService adminLogService;
 
     @Transactional(readOnly = true)
+    /**
+     * [메서드 흐름] getAllEvents
+     * Controller 또는 상위 서비스에서 호출되어 HeadEventRepository, AdminLogService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<EventResponseDto> getAllEvents() {
         return eventRepository.findAll()
                 .stream()
@@ -29,6 +40,10 @@ public class HeadEventService {
     }
 
     @Transactional(readOnly = true)
+    /**
+     * [메서드 흐름] getEvent
+     * Controller 또는 상위 서비스에서 호출되어 HeadEventRepository, AdminLogService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public EventResponseDto getEvent(Integer eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("이벤트를 찾을 수 없습니다."));
@@ -36,6 +51,10 @@ public class HeadEventService {
     }
 
     @Transactional
+    /**
+     * [메서드 흐름] createEvent
+     * Controller 또는 상위 서비스에서 호출되어 HeadEventRepository, AdminLogService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public EventResponseDto createEvent(EventRequestDto requestDto) {
         Event event = requestDto.toEntity();
         Event savedEvent = eventRepository.save(event);
@@ -46,6 +65,10 @@ public class HeadEventService {
     }
 
     @Transactional
+    /**
+     * [메서드 흐름] updateEvent
+     * Controller 또는 상위 서비스에서 호출되어 HeadEventRepository, AdminLogService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public EventResponseDto updateEvent(Integer eventId, EventRequestDto requestDto) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("이벤트를 찾을 수 없습니다."));
@@ -76,6 +99,10 @@ public class HeadEventService {
     }
 
     @Transactional
+    /**
+     * [메서드 흐름] deleteEvent
+     * Controller 또는 상위 서비스에서 호출되어 HeadEventRepository, AdminLogService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void deleteEvent(Integer eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("이벤트를 찾을 수 없습니다."));
@@ -86,6 +113,10 @@ public class HeadEventService {
     }
 
     @Transactional
+    /**
+     * [메서드 흐름] updateVisibility
+     * Controller 또는 상위 서비스에서 호출되어 HeadEventRepository, AdminLogService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public EventResponseDto updateVisibility(Integer eventId, Boolean isVisible) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("이벤트를 찾을 수 없습니다."));

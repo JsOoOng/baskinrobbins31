@@ -1,3 +1,10 @@
+<!--
+  [화면 흐름 안내] BranchInventory
+  역할: 지점 운영에서 사용자가 보는 화면이다.
+  진입: /branch/inventory -> 이 Vue 파일 렌더링
+  데이터: 사용자 동작 -> @/api/axios, @/api/branch/statusApi -> 응답/상태 반영
+  다음 이동: /branch/main
+-->
 <template>
 
 <div class="menu-page">

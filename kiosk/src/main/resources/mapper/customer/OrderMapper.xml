@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  [SQL 흐름 안내]
+  연결 인터페이스: com.kiosk.customer.order.repository.OrderMapper
+  호출 흐름: Service -> Mapper 인터페이스 -> 이 SQL -> MySQL -> 결과 반환
+  주요 테이블: order_items, orders, products, order_item_flavors, icecream_flavors, id 등
+-->
+
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.kiosk.customer.order.repository.OrderMapper">

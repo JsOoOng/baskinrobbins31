@@ -22,6 +22,13 @@ import com.kiosk.common.websocket.BranchRestockStatusSocketPublisher;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadRestockService
+ *
+ * <p>역할: 본사 관리의 재입고·발주 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadRestockRequestMapper, HeadquarterAdminMapper, AdminActionLogRepository, BranchRestockStatusSocketPublisher 등 -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -41,6 +48,10 @@ public class HeadRestockService {
 
 
     // 전체 발주 목록
+    /**
+     * [메서드 흐름] getRestockList
+     * Controller 또는 상위 서비스에서 호출되어 HeadRestockRequestMapper, HeadquarterAdminMapper, AdminActionLogRepository 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<HeadRestockListResponseDTO> getRestockList() {
 
         return headRestockRequestMapper
@@ -53,6 +64,10 @@ public class HeadRestockService {
 
 
     // 대기 발주 목록
+    /**
+     * [메서드 흐름] getWaitingRestockList
+     * Controller 또는 상위 서비스에서 호출되어 HeadRestockRequestMapper, HeadquarterAdminMapper, AdminActionLogRepository 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<HeadRestockListResponseDTO> getWaitingRestockList() {
 
         return headRestockRequestMapper
@@ -65,6 +80,10 @@ public class HeadRestockService {
 
 
     // 상세 조회
+    /**
+     * [메서드 흐름] getRestockDetail
+     * Controller 또는 상위 서비스에서 호출되어 HeadRestockRequestMapper, HeadquarterAdminMapper, AdminActionLogRepository 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadRestockDetailResponseDTO getRestockDetail(Integer requestId) {
 
         RestockRequest restockRequest =
@@ -82,6 +101,10 @@ public class HeadRestockService {
 
  // 승인
     @Transactional
+    /**
+     * [메서드 흐름] approveRestock
+     * Controller 또는 상위 서비스에서 호출되어 HeadRestockRequestMapper, HeadquarterAdminMapper, AdminActionLogRepository 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String approveRestock(
             Integer requestId,
             HeadRestockProcessRequestDTO requestDTO
@@ -120,6 +143,10 @@ public class HeadRestockService {
 
     // 배송
     @Transactional
+    /**
+     * [메서드 흐름] startShipping
+     * Controller 또는 상위 서비스에서 호출되어 HeadRestockRequestMapper, HeadquarterAdminMapper, AdminActionLogRepository 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String startShipping(
             Integer requestId,
             HeadRestockProcessRequestDTO requestDTO
@@ -286,6 +313,10 @@ public class HeadRestockService {
 
  // 반려
     @Transactional
+    /**
+     * [메서드 흐름] rejectRestock
+     * Controller 또는 상위 서비스에서 호출되어 HeadRestockRequestMapper, HeadquarterAdminMapper, AdminActionLogRepository 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String rejectRestock(
             Integer requestId,
             HeadRestockProcessRequestDTO requestDTO

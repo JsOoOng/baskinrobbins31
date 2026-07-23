@@ -12,6 +12,13 @@ import com.kiosk.customer.call.dto.CallRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * [코드 흐름 안내] CallController
+ *
+ * <p>역할: 고객 키오스크의 직원 호출 HTTP 요청을 받는 진입점이다.</p>
+ * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러(/api/calls) -> SimpMessagingTemplate -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Slf4j
 @RestController
 @RequestMapping("/api/calls")
@@ -20,6 +27,10 @@ public class CallController {
 
     private final SimpMessagingTemplate messagingTemplate;
 
+    /**
+     * [요청 흐름] POST /api/calls
+     * 프론트 요청을 받아 callStaff() 메서드가 입력을 받고 SimpMessagingTemplate 호출 후 결과를 응답한다.
+     */
     @PostMapping
     public ResponseEntity<String> callStaff(@RequestBody CallRequest request) {
         log.info("직원 호출 요청 수신: 지점 ID = {}, 키오스크 = {}, 사유 = {}", 

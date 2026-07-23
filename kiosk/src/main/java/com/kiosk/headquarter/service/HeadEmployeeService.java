@@ -13,6 +13,13 @@ import com.kiosk.headquarter.dto.employee.HeadEmployeeCreateResponse;
 import com.kiosk.headquarter.repository.HeadEmployeeMapper;
 import com.kiosk.headquarter.repository.HeadStoreMapper;
 
+/**
+ * [코드 흐름 안내] HeadEmployeeService
+ *
+ * <p>역할: 본사 관리의 직원 계정 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadEmployeeMapper, HeadStoreMapper, PasswordEncoder -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 public class HeadEmployeeService {
 
@@ -34,6 +41,10 @@ public class HeadEmployeeService {
      * 지점 관리자 계정 생성
      */
     @Transactional
+    /**
+     * [메서드 흐름] createStoreManager
+     * Controller 또는 상위 서비스에서 호출되어 HeadEmployeeMapper, HeadStoreMapper, PasswordEncoder을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadEmployeeCreateResponse createStoreManager(
             HeadEmployeeCreateRequest request
     ) {

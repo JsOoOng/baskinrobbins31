@@ -15,6 +15,13 @@ import com.kiosk.headquarter.service.HeadInquiryService;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadInquiryController
+ *
+ * <p>역할: 본사 관리의 문의 HTTP 요청을 받는 진입점이다.</p>
+ * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러 -> HeadInquiryService -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @RestController
 @RequiredArgsConstructor
 public class HeadInquiryController {
@@ -22,6 +29,10 @@ public class HeadInquiryController {
     private final HeadInquiryService headInquiryService;
 
     // 문의 전체 목록 조회
+    /**
+     * [요청 흐름] GET /head/inquiries
+     * 프론트 요청을 받아 getInquiryList() 메서드가 입력을 받고 HeadInquiryService 호출 후 결과를 응답한다.
+     */
     @GetMapping("/head/inquiries")
     public List<HeadInquiryListResponseDTO> getInquiryList() {
 
@@ -29,6 +40,10 @@ public class HeadInquiryController {
     }
 
     // 답변 대기 문의 목록 조회
+    /**
+     * [요청 흐름] GET /head/inquiries/waiting
+     * 프론트 요청을 받아 getWaitingInquiryList() 메서드가 입력을 받고 HeadInquiryService 호출 후 결과를 응답한다.
+     */
     @GetMapping("/head/inquiries/waiting")
     public List<HeadInquiryListResponseDTO> getWaitingInquiryList() {
 
@@ -36,6 +51,10 @@ public class HeadInquiryController {
     }
 
     // 문의 상세 조회
+    /**
+     * [요청 흐름] GET /head/inquiries/{inquiryId}
+     * 프론트 요청을 받아 getInquiryDetail() 메서드가 입력을 받고 HeadInquiryService 호출 후 결과를 응답한다.
+     */
     @GetMapping("/head/inquiries/{inquiryId}")
     public HeadInquiryDetailResponseDTO getInquiryDetail(
             @PathVariable Integer inquiryId) {
@@ -44,6 +63,10 @@ public class HeadInquiryController {
     }
 
     // 문의 답변 등록
+    /**
+     * [요청 흐름] PUT /head/inquiries/{inquiryId}/answer
+     * 프론트 요청을 받아 answerInquiry() 메서드가 입력을 받고 HeadInquiryService 호출 후 결과를 응답한다.
+     */
     @PutMapping("/head/inquiries/{inquiryId}/answer")
     public String answerInquiry(
             @PathVariable Integer inquiryId,

@@ -23,6 +23,13 @@ import com.kiosk.headquarter.repository.HeadFlavorMapper;
 import lombok.RequiredArgsConstructor;
 
 
+/**
+ * [코드 흐름 안내] HeadFlavorService
+ *
+ * <p>역할: 본사 관리의 아이스크림 맛 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> Pattern, HeadFlavorMapper -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -44,6 +51,10 @@ public class HeadFlavorService {
      * 아이스크림 맛 등록
      */
     @Transactional
+    /**
+     * [메서드 흐름] createFlavor
+     * Controller 또는 상위 서비스에서 호출되어 Pattern, HeadFlavorMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadFlavorResponseDTO createFlavor(
             HeadFlavorCreateRequestDTO requestDTO
     ) {
@@ -119,6 +130,10 @@ public class HeadFlavorService {
     /*
      * 아이스크림 맛 전체 목록 조회
      */
+    /**
+     * [메서드 흐름] getFlavorList
+     * Controller 또는 상위 서비스에서 호출되어 Pattern, HeadFlavorMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<HeadFlavorResponseDTO>
             getFlavorList() {
 
@@ -134,6 +149,10 @@ public class HeadFlavorService {
     /*
      * 운영 중인 아이스크림 맛 목록 조회
      */
+    /**
+     * [메서드 흐름] getActiveFlavorList
+     * Controller 또는 상위 서비스에서 호출되어 Pattern, HeadFlavorMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<HeadFlavorResponseDTO>
             getActiveFlavorList() {
 
@@ -148,6 +167,10 @@ public class HeadFlavorService {
 
     /*
      * 아이스크림 맛 상세 조회
+     */
+    /**
+     * [메서드 흐름] getFlavorDetail
+     * Controller 또는 상위 서비스에서 호출되어 Pattern, HeadFlavorMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public HeadFlavorResponseDTO
             getFlavorDetail(
@@ -168,6 +191,10 @@ public class HeadFlavorService {
      * 아이스크림 맛 수정
      */
     @Transactional
+    /**
+     * [메서드 흐름] updateFlavor
+     * Controller 또는 상위 서비스에서 호출되어 Pattern, HeadFlavorMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadFlavorResponseDTO updateFlavor(
             Integer flavorId,
             HeadFlavorUpdateRequestDTO requestDTO
@@ -235,6 +262,10 @@ public class HeadFlavorService {
      * 아이스크림 맛 비활성화
      */
     @Transactional
+    /**
+     * [메서드 흐름] deleteFlavor
+     * Controller 또는 상위 서비스에서 호출되어 Pattern, HeadFlavorMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String deleteFlavor(
             Integer flavorId
     ) {

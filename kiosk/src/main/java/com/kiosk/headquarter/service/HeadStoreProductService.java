@@ -22,6 +22,13 @@ import com.kiosk.headquarter.repository.HeadStoreProductMapper;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadStoreProductService
+ *
+ * <p>역할: 본사 관리의 지점 판매 상품 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadStoreProductMapper, HeadStoreMapper, HeadProductMapper, HeadInventoryItemMapper 등 -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -46,6 +53,10 @@ public class HeadStoreProductService {
      * 지점 판매 메뉴 등록
      */
     @Transactional
+    /**
+     * [메서드 흐름] addStoreProduct
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreProductMapper, HeadStoreMapper, HeadProductMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String addStoreProduct(
             Integer storeId,
             HeadStoreProductAddRequestDTO requestDTO
@@ -149,6 +160,10 @@ public class HeadStoreProductService {
     /*
      * 지점 판매 메뉴 목록 조회
      */
+    /**
+     * [메서드 흐름] getStoreProductList
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreProductMapper, HeadStoreMapper, HeadProductMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<HeadStoreProductListResponseDTO>
             getStoreProductList(
                     Integer storeId
@@ -176,6 +191,10 @@ public class HeadStoreProductService {
     /*
      * 지점 판매 메뉴 상세 조회
      */
+    /**
+     * [메서드 흐름] getStoreProductDetail
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreProductMapper, HeadStoreMapper, HeadProductMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadStoreProductDetailResponseDTO
             getStoreProductDetail(
                     Integer storeId,
@@ -197,6 +216,10 @@ public class HeadStoreProductService {
      * 지점 판매 메뉴 수정
      */
     @Transactional
+    /**
+     * [메서드 흐름] updateStoreProduct
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreProductMapper, HeadStoreMapper, HeadProductMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String updateStoreProduct(
             Integer storeId,
             Integer storeProductId,
@@ -234,6 +257,10 @@ public class HeadStoreProductService {
      * isDeleted를 true로 변경합니다.
      */
     @Transactional
+    /**
+     * [메서드 흐름] deleteStoreProduct
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreProductMapper, HeadStoreMapper, HeadProductMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String deleteStoreProduct(
             Integer storeId,
             Integer storeProductId

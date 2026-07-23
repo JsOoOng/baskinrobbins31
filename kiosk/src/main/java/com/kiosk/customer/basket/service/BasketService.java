@@ -8,12 +8,23 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * [코드 흐름 안내] BasketService
+ *
+ * <p>역할: 고객 키오스크의 장바구니 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 public class BasketService {
 
     private static final String BASKET_SESSION_KEY = "USER_BASKET";
 
     // 1. 장바구니에 상품 추가
+    /**
+     * [메서드 흐름] addItem
+     * Controller 또는 상위 서비스에서 호출되어 입력값을 현재 클래스의 규칙에 따라 처리하고 호출한 곳으로 결과를 반환한다.
+     */
     public void addItem(HttpSession session, BasketAddRequest request) {
         // 1. 세션에서 리스트를 꺼내되, 만약 없으면 새 리스트(ArrayList)를 생성해서 가져옴
         List<BasketAddRequest> basket = getBasketFromSession(session);
@@ -75,6 +86,10 @@ public class BasketService {
     }
 
     // 2. 현재 장바구니 조회
+    /**
+     * [메서드 흐름] getBasket
+     * Controller 또는 상위 서비스에서 호출되어 입력값을 현재 클래스의 규칙에 따라 처리하고 호출한 곳으로 결과를 반환한다.
+     */
     public BasketResponse getBasket(HttpSession session) {
         List<BasketAddRequest> basket = getBasketFromSession(session);
         
@@ -90,6 +105,10 @@ public class BasketService {
     }
 
     // 3. 장바구니 특정 상품 삭제
+    /**
+     * [메서드 흐름] removeItem
+     * Controller 또는 상위 서비스에서 호출되어 입력값을 현재 클래스의 규칙에 따라 처리하고 호출한 곳으로 결과를 반환한다.
+     */
     public void removeItem(HttpSession session, int index) {
         List<BasketAddRequest> basket = getBasketFromSession(session);
         if (index >= 0 && index < basket.size()) {
@@ -99,6 +118,10 @@ public class BasketService {
     }
 
     // 4. 장바구니 특정 상품 수량 변경
+    /**
+     * [메서드 흐름] updateItemQuantity
+     * Controller 또는 상위 서비스에서 호출되어 입력값을 현재 클래스의 규칙에 따라 처리하고 호출한 곳으로 결과를 반환한다.
+     */
     public void updateItemQuantity(HttpSession session, int index, int quantity) {
         List<BasketAddRequest> basket = getBasketFromSession(session);
         if (index >= 0 && index < basket.size()) {
@@ -110,6 +133,10 @@ public class BasketService {
     }
 
     // 5. 장바구니 초기화 (결제 완료 후 또는 전체 삭제 시)
+    /**
+     * [메서드 흐름] clearBasket
+     * Controller 또는 상위 서비스에서 호출되어 입력값을 현재 클래스의 규칙에 따라 처리하고 호출한 곳으로 결과를 반환한다.
+     */
     public void clearBasket(HttpSession session) {
         session.removeAttribute(BASKET_SESSION_KEY);
     }
@@ -125,6 +152,10 @@ public class BasketService {
     }
 
     // 6. 장바구니 특정 상품 옵션/맛 완전 변경
+    /**
+     * [메서드 흐름] updateItemOptions
+     * Controller 또는 상위 서비스에서 호출되어 입력값을 현재 클래스의 규칙에 따라 처리하고 호출한 곳으로 결과를 반환한다.
+     */
     public void updateItemOptions(HttpSession session, int index, BasketAddRequest request) {
         List<BasketAddRequest> basket = getBasketFromSession(session);
         if (index >= 0 && index < basket.size()) {

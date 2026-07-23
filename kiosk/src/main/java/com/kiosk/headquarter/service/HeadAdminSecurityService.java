@@ -20,6 +20,13 @@ import com.kiosk.headquarter.repository.HeadquarterAdminMapper;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadAdminSecurityService
+ *
+ * <p>역할: 본사 관리의 본사 관리자 계정 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadquarterAdminMapper, PasswordEncoder -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -28,6 +35,10 @@ public class HeadAdminSecurityService {
     private final HeadquarterAdminMapper headquarterAdminMapper;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * [메서드 흐름] getAdminList
+     * Controller 또는 상위 서비스에서 호출되어 HeadquarterAdminMapper, PasswordEncoder을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<HeadAdminResponseDTO> getAdminList() {
         getCurrentSuperAdmin();
 
@@ -37,6 +48,10 @@ public class HeadAdminSecurityService {
                 .toList();
     }
 
+    /**
+     * [메서드 흐름] getAdminDetail
+     * Controller 또는 상위 서비스에서 호출되어 HeadquarterAdminMapper, PasswordEncoder을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadAdminResponseDTO getAdminDetail(Integer adminId) {
         getCurrentSuperAdmin();
 
@@ -47,6 +62,10 @@ public class HeadAdminSecurityService {
     }
 
     @Transactional
+    /**
+     * [메서드 흐름] createAdmin
+     * Controller 또는 상위 서비스에서 호출되어 HeadquarterAdminMapper, PasswordEncoder을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String createAdmin(HeadAdminCreateRequestDTO requestDTO) {
         getCurrentSuperAdmin();
 
@@ -79,6 +98,10 @@ public class HeadAdminSecurityService {
     }
 
     @Transactional
+    /**
+     * [메서드 흐름] updateAdminRole
+     * Controller 또는 상위 서비스에서 호출되어 HeadquarterAdminMapper, PasswordEncoder을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String updateAdminRole(Integer adminId, HeadAdminRoleUpdateRequestDTO requestDTO) {
         getCurrentSuperAdmin();
 
@@ -97,6 +120,10 @@ public class HeadAdminSecurityService {
     }
 
     @Transactional
+    /**
+     * [메서드 흐름] updateAdminStatus
+     * Controller 또는 상위 서비스에서 호출되어 HeadquarterAdminMapper, PasswordEncoder을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String updateAdminStatus(Integer adminId, HeadAdminStatusUpdateRequestDTO requestDTO) {
         HeadquarterAdmin requester = getCurrentSuperAdmin();
 
@@ -120,6 +147,10 @@ public class HeadAdminSecurityService {
     }
 
     @Transactional
+    /**
+     * [메서드 흐름] updateAdminPassword
+     * Controller 또는 상위 서비스에서 호출되어 HeadquarterAdminMapper, PasswordEncoder을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String updateAdminPassword(Integer adminId, HeadAdminPasswordUpdateRequestDTO requestDTO) {
         HeadquarterAdmin requester = getCurrentActiveAdmin();
 

@@ -18,27 +18,50 @@ import com.kiosk.headquarter.service.HeadAdminSecurityService;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadAdminSecurityController
+ *
+ * <p>역할: 본사 관리의 본사 관리자 계정 HTTP 요청을 받는 진입점이다.</p>
+ * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러 -> HeadAdminSecurityService -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @RestController
 @RequiredArgsConstructor
 public class HeadAdminSecurityController {
 
     private final HeadAdminSecurityService headAdminSecurityService;
 
+    /**
+     * [요청 흐름] GET /head/admins
+     * 프론트 요청을 받아 getAdminList() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
+     */
     @GetMapping("/head/admins")
     public List<HeadAdminResponseDTO> getAdminList() {
         return headAdminSecurityService.getAdminList();
     }
 
+    /**
+     * [요청 흐름] GET /head/admins/{adminId}
+     * 프론트 요청을 받아 getAdminDetail() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
+     */
     @GetMapping("/head/admins/{adminId}")
     public HeadAdminResponseDTO getAdminDetail(@PathVariable Integer adminId) {
         return headAdminSecurityService.getAdminDetail(adminId);
     }
 
+    /**
+     * [요청 흐름] POST /head/admins
+     * 프론트 요청을 받아 createAdmin() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
+     */
     @PostMapping("/head/admins")
     public String createAdmin(@RequestBody HeadAdminCreateRequestDTO requestDTO) {
         return headAdminSecurityService.createAdmin(requestDTO);
     }
 
+    /**
+     * [요청 흐름] PUT /head/admins/{adminId}/role
+     * 프론트 요청을 받아 updateAdminRole() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
+     */
     @PutMapping("/head/admins/{adminId}/role")
     public String updateAdminRole(
             @PathVariable Integer adminId,
@@ -47,6 +70,10 @@ public class HeadAdminSecurityController {
         return headAdminSecurityService.updateAdminRole(adminId, requestDTO);
     }
 
+    /**
+     * [요청 흐름] PUT /head/admins/{adminId}/status
+     * 프론트 요청을 받아 updateAdminStatus() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
+     */
     @PutMapping("/head/admins/{adminId}/status")
     public String updateAdminStatus(
             @PathVariable Integer adminId,
@@ -55,6 +82,10 @@ public class HeadAdminSecurityController {
         return headAdminSecurityService.updateAdminStatus(adminId, requestDTO);
     }
 
+    /**
+     * [요청 흐름] PUT /head/admins/{adminId}/password
+     * 프론트 요청을 받아 updateAdminPassword() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
+     */
     @PutMapping("/head/admins/{adminId}/password")
     public String updateAdminPassword(
             @PathVariable Integer adminId,

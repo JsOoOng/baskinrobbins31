@@ -23,6 +23,13 @@ import com.kiosk.headquarter.service.HeadBannerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadBannerController
+ *
+ * <p>역할: 본사 관리의 배너 HTTP 요청을 받는 진입점이다.</p>
+ * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러(/head/banners) -> HeadBannerService -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @RestController
 @RequestMapping("/head/banners")
 @RequiredArgsConstructor
@@ -35,6 +42,10 @@ public class HeadBannerController {
      * 배너 목록
      *
      * GET /head/banners
+     */
+    /**
+     * [요청 흐름] GET /head/banners
+     * 프론트 요청을 받아 getBanners() 메서드가 입력을 받고 HeadBannerService 호출 후 결과를 응답한다.
      */
     @GetMapping
     public ResponseEntity<List<HeadBannerResponse>>
@@ -49,6 +60,10 @@ public class HeadBannerController {
      * 배너 상세
      *
      * GET /head/banners/{bannerId}
+     */
+    /**
+     * [요청 흐름] GET /head/banners/{bannerId}
+     * 프론트 요청을 받아 getBanner() 메서드가 입력을 받고 HeadBannerService 호출 후 결과를 응답한다.
      */
     @GetMapping("/{bannerId}")
     public ResponseEntity<HeadBannerResponse>
@@ -68,6 +83,10 @@ public class HeadBannerController {
      * 배너 등록
      *
      * POST /head/banners
+     */
+    /**
+     * [요청 흐름] POST /head/banners
+     * 프론트 요청을 받아 createBanner() 메서드가 입력을 받고 HeadBannerService 호출 후 결과를 응답한다.
      */
     @PostMapping
     public ResponseEntity<HeadBannerResponse>
@@ -91,6 +110,10 @@ public class HeadBannerController {
      * 배너 수정
      *
      * PUT /head/banners/{bannerId}
+     */
+    /**
+     * [요청 흐름] PUT /head/banners/{bannerId}
+     * 프론트 요청을 받아 updateBanner() 메서드가 입력을 받고 HeadBannerService 호출 후 결과를 응답한다.
      */
     @PutMapping("/{bannerId}")
     public ResponseEntity<HeadBannerResponse>
@@ -116,6 +139,10 @@ public class HeadBannerController {
      *
      * PATCH /head/banners/{bannerId}/active
      */
+    /**
+     * [요청 흐름] PATCH /head/banners/{bannerId}/active
+     * 프론트 요청을 받아 updateActive() 메서드가 입력을 받고 HeadBannerService 호출 후 결과를 응답한다.
+     */
     @PatchMapping("/{bannerId}/active")
     public ResponseEntity<HeadBannerResponse>
             updateActive(
@@ -139,6 +166,10 @@ public class HeadBannerController {
      * 배너 삭제
      *
      * DELETE /head/banners/{bannerId}
+     */
+    /**
+     * [요청 흐름] DELETE /head/banners/{bannerId}
+     * 프론트 요청을 받아 deleteBanner() 메서드가 입력을 받고 HeadBannerService 호출 후 결과를 응답한다.
      */
     @DeleteMapping("/{bannerId}")
     public ResponseEntity<Void>

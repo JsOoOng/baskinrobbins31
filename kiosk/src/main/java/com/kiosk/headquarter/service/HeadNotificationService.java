@@ -19,6 +19,13 @@ import org.springframework.transaction.annotation.Propagation;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadNotificationService
+ *
+ * <p>역할: 본사 관리의 알림 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadNotificationRepository, HeadNotificationReadRepository -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -37,6 +44,10 @@ public class HeadNotificationService {
      * 이 메서드를 호출하게 됩니다.
      */
     @Transactional
+    /**
+     * [메서드 흐름] createNotification
+     * Controller 또는 상위 서비스에서 호출되어 HeadNotificationRepository, HeadNotificationReadRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadNotificationResponse createNotification(
             NotificationCategory category,
             NotificationType notificationType,
@@ -72,6 +83,10 @@ public class HeadNotificationService {
     }
     
     @Transactional
+    /**
+     * [메서드 흐름] createLowStockNotification
+     * Controller 또는 상위 서비스에서 호출되어 HeadNotificationRepository, HeadNotificationReadRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadNotificationResponse
             createLowStockNotification(
                     Integer storeInventoryId,
@@ -110,6 +125,10 @@ public class HeadNotificationService {
     }
     
     @Transactional
+    /**
+     * [메서드 흐름] createRestockRequestNotification
+     * Controller 또는 상위 서비스에서 호출되어 HeadNotificationRepository, HeadNotificationReadRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadNotificationResponse
             createRestockRequestNotification(
                     String storeName,
@@ -141,6 +160,10 @@ public class HeadNotificationService {
     }
     
     @Transactional
+    /**
+     * [메서드 흐름] createAutoRestockSuccessNotification
+     * Controller 또는 상위 서비스에서 호출되어 HeadNotificationRepository, HeadNotificationReadRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadNotificationResponse
             createAutoRestockSuccessNotification(
                     Integer storeInventoryId,
@@ -181,6 +204,10 @@ public class HeadNotificationService {
     @Transactional(
             propagation = Propagation.REQUIRES_NEW
     )
+    /**
+     * [메서드 흐름] createAutoRestockFailureNotification
+     * Controller 또는 상위 서비스에서 호출되어 HeadNotificationRepository, HeadNotificationReadRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadNotificationResponse
             createAutoRestockFailureNotification(
                     Integer storeInventoryId,
@@ -220,6 +247,10 @@ public class HeadNotificationService {
      *
      * 최신 알림이 먼저 반환됩니다.
      */
+    /**
+     * [메서드 흐름] getNotifications
+     * Controller 또는 상위 서비스에서 호출되어 HeadNotificationRepository, HeadNotificationReadRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<HeadNotificationResponse>
             getNotifications(
                     Integer adminId
@@ -251,6 +282,10 @@ public class HeadNotificationService {
 
     /*
      * 읽지 않은 알림 개수 조회
+     */
+    /**
+     * [메서드 흐름] getUnreadCount
+     * Controller 또는 상위 서비스에서 호출되어 HeadNotificationRepository, HeadNotificationReadRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public HeadNotificationUnreadCountResponse
             getUnreadCount(
@@ -284,6 +319,10 @@ public class HeadNotificationService {
      * 개별 알림 읽음 처리
      */
     @Transactional
+    /**
+     * [메서드 흐름] markAsRead
+     * Controller 또는 상위 서비스에서 호출되어 HeadNotificationRepository, HeadNotificationReadRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadNotificationResponse markAsRead(
             Integer notificationId,
             Integer adminId
@@ -330,6 +369,10 @@ public class HeadNotificationService {
      * 전체 알림 읽음 처리
      */
     @Transactional
+    /**
+     * [메서드 흐름] markAllAsRead
+     * Controller 또는 상위 서비스에서 호출되어 HeadNotificationRepository, HeadNotificationReadRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadNotificationUnreadCountResponse
             markAllAsRead(
                     Integer adminId

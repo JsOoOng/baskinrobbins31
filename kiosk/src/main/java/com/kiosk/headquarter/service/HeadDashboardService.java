@@ -29,6 +29,13 @@ import com.kiosk.headquarter.dto.dashboard.HeadDashboardResponse.RecentActionDto
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadDashboardService
+ *
+ * <p>역할: 본사 관리의 대시보드 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadStoreMapper, HeadProductMapper, HeadRestockRequestMapper, HeadBannerMapper 등 -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -42,6 +49,10 @@ public class HeadDashboardService {
     private final AdminActionLogRepository adminActionLogRepository;
     private final HeadEventRepository headEventRepository;
 
+    /**
+     * [메서드 흐름] getDashboardSummary
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreMapper, HeadProductMapper, HeadRestockRequestMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadDashboardResponse getDashboardSummary(String comparisonPeriod) {
         // 비교 기준(comparisonPeriod)에 따른 로직은 현재 통계 요약 쿼리에서 당일 데이터를 기본으로 조회합니다.
         // 필요 시 comparisonPeriod 값(예: "전일 대비", "전주 대비")에 따라 증감률을 계산하는 로직을 추가할 수 있습니다.

@@ -1,3 +1,10 @@
+<!--
+  [화면 흐름 안내] HeadDelivery
+  역할: 본사 관리에서 사용자가 보는 화면이다.
+  진입: /head/deliveries -> 이 Vue 파일 렌더링
+  데이터: 사용자 동작 -> @/api/axios -> 응답/상태 반영
+  다음 이동: 현재 상태를 갱신하거나 부모 화면에 이벤트를 전달
+-->
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '@/api/axios'

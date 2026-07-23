@@ -1,3 +1,10 @@
+<!--
+  [화면 흐름 안내] HeadNotAuthorized
+  역할: 본사 관리에서 사용자가 보는 화면이다.
+  진입: /head/not-authorized -> 이 Vue 파일 렌더링
+  데이터: 사용자 동작 -> props·Pinia·상위 화면 상태 -> 응답/상태 반영
+  다음 이동: /head/dashboard, /head/login
+-->
 <script setup>
 import { useRouter } from 'vue-router'
 

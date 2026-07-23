@@ -17,6 +17,13 @@ import com.kiosk.headquarter.service.DeliveryService;
 import lombok.RequiredArgsConstructor;
 
 
+/**
+ * [코드 흐름 안내] DeliveryController
+ *
+ * <p>역할: 본사 관리의 배송 HTTP 요청을 받는 진입점이다.</p>
+ * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러(/head) -> DeliveryService -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/head")
@@ -29,6 +36,10 @@ public class DeliveryController {
 
     /**
      * 배송 목록 조회
+     */
+    /**
+     * [요청 흐름] GET /head/deliveries
+     * 프론트 요청을 받아 getDeliveries() 메서드가 입력을 받고 DeliveryService 호출 후 결과를 응답한다.
      */
     @GetMapping("/deliveries")
     public List<HeadDeliveryResponseDTO> getDeliveries() {
@@ -45,6 +56,10 @@ public class DeliveryController {
 
     /**
      * 배송 상태 변경
+     */
+    /**
+     * [요청 흐름] PUT /head/delivery/{deliveryId}/status
+     * 프론트 요청을 받아 changeStatus() 메서드가 입력을 받고 DeliveryService 호출 후 결과를 응답한다.
      */
     @PutMapping("/delivery/{deliveryId}/status")
     public String changeStatus(

@@ -1,3 +1,9 @@
+/**
+ * [모듈 흐름 안내] headEventStore
+ * 역할: 이벤트 화면들이 공유하는 Pinia 상태와 동작을 관리한다.
+ * 호출 흐름: Vue 화면 -> 이 store의 state/action -> API 또는 localStorage -> 반응형 화면 갱신
+ * 데이터 기준: 실제 요청 URL과 현재 백엔드 DTO 필드를 우선한다.
+ */
 import { defineStore } from 'pinia';
 import { headEventApi } from '@/api/headquarter/headEventApi';
 

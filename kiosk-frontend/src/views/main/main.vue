@@ -1,3 +1,10 @@
+<!--
+  [화면 흐름 안내] main
+  역할: 공통 시작에서 사용자가 보는 화면이다.
+  진입: / -> 이 Vue 파일 렌더링
+  데이터: 사용자 동작 -> props·Pinia·상위 화면 상태 -> 응답/상태 반영
+  다음 이동: 현재 상태를 갱신하거나 부모 화면에 이벤트를 전달
+-->
 <!-- src/views/main/main.vue -->
 <template>
   <div class="main-container">

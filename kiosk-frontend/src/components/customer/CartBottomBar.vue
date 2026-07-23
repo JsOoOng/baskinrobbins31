@@ -1,3 +1,10 @@
+<!--
+  [화면 흐름 안내] CartBottomBar
+  역할: 고객 키오스크 화면에서 재사용되는 UI 컴포넌트다.
+  진입: 상위 라우트 또는 부모 컴포넌트 -> 이 Vue 파일 렌더링
+  데이터: 사용자 동작 -> @/api/axios -> 응답/상태 반영
+  다음 이동: /order-confirm
+-->
 <template>
   <div class="cart-bottom-bar">
     <button class="cart-icon-btn" @click="isModalOpen = true">

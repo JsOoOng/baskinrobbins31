@@ -25,6 +25,13 @@ import com.kiosk.headquarter.repository.HeadStoreProductMapper;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadProductService
+ *
+ * <p>역할: 본사 관리의 상품·메뉴 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadProductMapper, HeadCategoryMapper, HeadInventoryItemMapper, HeadStoreMapper 등 -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -73,6 +80,10 @@ public class HeadProductService {
      * 별도로 등록합니다.
      */
     @Transactional
+    /**
+     * [메서드 흐름] createProduct
+     * Controller 또는 상위 서비스에서 호출되어 HeadProductMapper, HeadCategoryMapper, HeadInventoryItemMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadProductResponseDTO createProduct(
             HeadProductCreateRequestDTO requestDTO
     ) {
@@ -348,6 +359,10 @@ public class HeadProductService {
     /*
      * 본사 상품 목록 조회
      */
+    /**
+     * [메서드 흐름] getProductList
+     * Controller 또는 상위 서비스에서 호출되어 HeadProductMapper, HeadCategoryMapper, HeadInventoryItemMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<HeadProductResponseDTO>
             getProductList() {
 
@@ -362,6 +377,10 @@ public class HeadProductService {
 
     /*
      * 본사 상품 상세 조회
+     */
+    /**
+     * [메서드 흐름] getProductDetail
+     * Controller 또는 상위 서비스에서 호출되어 HeadProductMapper, HeadCategoryMapper, HeadInventoryItemMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public HeadProductResponseDTO
             getProductDetail(
@@ -388,6 +407,10 @@ public class HeadProductService {
      * 본사 상품 수정
      */
     @Transactional
+    /**
+     * [메서드 흐름] updateProduct
+     * Controller 또는 상위 서비스에서 호출되어 HeadProductMapper, HeadCategoryMapper, HeadInventoryItemMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadProductResponseDTO updateProduct(
             Integer productId,
             HeadProductCreateRequestDTO requestDTO
@@ -488,6 +511,10 @@ public class HeadProductService {
      * 본사 상품 삭제 처리
      */
     @Transactional
+    /**
+     * [메서드 흐름] deleteProduct
+     * Controller 또는 상위 서비스에서 호출되어 HeadProductMapper, HeadCategoryMapper, HeadInventoryItemMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void deleteProduct(
             Integer productId
     ) {

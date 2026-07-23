@@ -15,6 +15,13 @@ import com.kiosk.headquarter.repository.HeadProductOptionMapper;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadProductOptionService
+ *
+ * <p>역할: 본사 관리의 상품 옵션 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadProductOptionMapper, HeadProductMapper -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -25,6 +32,10 @@ public class HeadProductOptionService {
 
     // 상품 옵션 등록
     @Transactional
+    /**
+     * [메서드 흐름] createProductOption
+     * Controller 또는 상위 서비스에서 호출되어 HeadProductOptionMapper, HeadProductMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String createProductOption(
             Integer productId,
             HeadProductOptionCreateRequestDTO requestDTO) {
@@ -65,6 +76,10 @@ public class HeadProductOptionService {
     }
 
     // 상품 옵션 목록 조회
+    /**
+     * [메서드 흐름] getProductOptionList
+     * Controller 또는 상위 서비스에서 호출되어 HeadProductOptionMapper, HeadProductMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<HeadProductOptionResponseDTO> getProductOptionList(Integer productId) {
 
         return headProductOptionMapper.findByProduct_IdOrderByIdDesc(productId)
@@ -74,6 +89,10 @@ public class HeadProductOptionService {
     }
 
     // 상품 옵션 상세 조회
+    /**
+     * [메서드 흐름] getProductOptionDetail
+     * Controller 또는 상위 서비스에서 호출되어 HeadProductOptionMapper, HeadProductMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadProductOptionResponseDTO getProductOptionDetail(
             Integer productId,
             Integer optionId) {
@@ -87,6 +106,10 @@ public class HeadProductOptionService {
 
     // 상품 옵션 수정
     @Transactional
+    /**
+     * [메서드 흐름] updateProductOption
+     * Controller 또는 상위 서비스에서 호출되어 HeadProductOptionMapper, HeadProductMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String updateProductOption(
             Integer productId,
             Integer optionId,
@@ -108,6 +131,10 @@ public class HeadProductOptionService {
 
     // 상품 옵션 삭제
     @Transactional
+    /**
+     * [메서드 흐름] deleteProductOption
+     * Controller 또는 상위 서비스에서 호출되어 HeadProductOptionMapper, HeadProductMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String deleteProductOption(Integer productId, Integer optionId) {
 
         ProductOption productOption = headProductOptionMapper

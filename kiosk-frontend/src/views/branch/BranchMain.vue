@@ -1,3 +1,10 @@
+<!--
+  [화면 흐름 안내] BranchMain
+  역할: 지점 운영에서 사용자가 보는 화면이다.
+  진입: /branch/main -> 이 Vue 파일 렌더링
+  데이터: 사용자 동작 -> props·Pinia·상위 화면 상태 -> 응답/상태 반영
+  다음 이동: /branch/order, /branch/inventory, /branch/restock-history, /branch/menu, /branch/statistics 등
+-->
 <script setup>
 import { useRouter } from 'vue-router'
 

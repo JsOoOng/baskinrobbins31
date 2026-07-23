@@ -20,6 +20,13 @@ import com.kiosk.entity.enums.WorkStatus;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] BranchWorkHistoryService
+ *
+ * <p>역할: 지점 운영의 근무 이력 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> WorkHistoryRepository, StaffRepository -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -38,6 +45,10 @@ public class BranchWorkHistoryService {
 
     }
     
+    /**
+     * [메서드 흐름] getMonthHistory
+     * Controller 또는 상위 서비스에서 호출되어 WorkHistoryRepository, StaffRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<WorkHistoryResponseDTO> getMonthHistory(
             Integer staffId,
             Integer year,
@@ -78,6 +89,10 @@ public class BranchWorkHistoryService {
     }
     
     @Transactional
+    /**
+     * [메서드 흐름] updateHistory
+     * Controller 또는 상위 서비스에서 호출되어 WorkHistoryRepository, StaffRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void updateHistory(
             Integer historyId,
             WorkHistoryUpdateRequestDTO requestDTO
@@ -103,6 +118,10 @@ public class BranchWorkHistoryService {
     }
     
     @Transactional
+    /**
+     * [메서드 흐름] changeWorkStatus
+     * Controller 또는 상위 서비스에서 호출되어 WorkHistoryRepository, StaffRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void changeWorkStatus(
             Integer historyId,
             WorkStatus workStatus
@@ -118,6 +137,10 @@ public class BranchWorkHistoryService {
     }
     
     @Transactional
+    /**
+     * [메서드 흐름] changeHoliday
+     * Controller 또는 상위 서비스에서 호출되어 WorkHistoryRepository, StaffRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void changeHoliday(
             Integer historyId,
             Boolean isHoliday
@@ -136,6 +159,10 @@ public class BranchWorkHistoryService {
 
     }
     
+    /**
+     * [메서드 흐름] calculateSalary
+     * Controller 또는 상위 서비스에서 호출되어 WorkHistoryRepository, StaffRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public SalaryResponseDTO calculateSalary(
             Integer staffId,
             Integer year,

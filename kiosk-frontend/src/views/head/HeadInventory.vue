@@ -1,3 +1,10 @@
+<!--
+  [화면 흐름 안내] HeadInventory
+  역할: 본사 관리에서 사용자가 보는 화면이다.
+  진입: /head/inventory -> 이 Vue 파일 렌더링
+  데이터: 사용자 동작 -> @/api/headquarter/headInventoryApi, @/api/headquarter/headInventoryAlertApi -> 응답/상태 반영
+  다음 이동: 현재 상태를 갱신하거나 부모 화면에 이벤트를 전달
+-->
 <template>
   <AppMessageToast
     :message="message"

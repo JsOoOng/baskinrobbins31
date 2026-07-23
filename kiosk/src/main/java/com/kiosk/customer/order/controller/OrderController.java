@@ -24,6 +24,13 @@ import com.kiosk.customer.order.service.OrderService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] OrderController
+ *
+ * <p>역할: 고객 키오스크의 주문 HTTP 요청을 받는 진입점이다.</p>
+ * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러(/api/orders) -> OrderService, OrderMapper -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/orders")
@@ -33,6 +40,10 @@ public class OrderController {
 	private final OrderMapper orderMapper;
 
     // 0. 결제 버튼 클릭 시 장바구니 데이터를 실제 주문 DB에 저장
+    /**
+     * [요청 흐름] POST /api/orders
+     * 프론트 요청을 받아 createOrder() 메서드가 입력을 받고 OrderService, OrderMapper 호출 후 결과를 응답한다.
+     */
     @PostMapping
     public ResponseEntity<Integer> createOrder(@RequestBody OrderCreateRequest request, HttpSession session) {
         // 프론트엔드에서 넘어오지 않은 값이 있다면 기본값 세팅
@@ -47,6 +58,10 @@ public class OrderController {
     }
     
     // 1. 주문 내역 및 총금액 조회
+    /**
+     * [요청 흐름] GET /api/orders/{orderId}
+     * 프론트 요청을 받아 getOrderDetails() 메서드가 입력을 받고 OrderService, OrderMapper 호출 후 결과를 응답한다.
+     */
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderResponse> getOrderDetails(@PathVariable("orderId") int orderId) {
         OrderResponse response = orderService.getOrderDetails(orderId);
@@ -58,6 +73,10 @@ public class OrderController {
         return ResponseEntity.ok(response); // 주문이 있으면 데이터와 함께 200 반환
     }
 
+    /**
+     * [요청 흐름] POST /api/orders/{orderId}/pay
+     * 프론트 요청을 받아 completePayment() 메서드가 입력을 받고 OrderService, OrderMapper 호출 후 결과를 응답한다.
+     */
     @PostMapping("/{orderId}/pay")
     public ResponseEntity<String> completePayment(
             @PathVariable("orderId") int orderId, 
@@ -85,6 +104,10 @@ public class OrderController {
         return ResponseEntity.ok("결제 및 재고 차감 완료");
     }
     
+    /**
+     * [요청 흐름] POST /api/orders/{orderId}/cancel
+     * 프론트 요청을 받아 cancelOrder() 메서드가 입력을 받고 OrderService, OrderMapper 호출 후 결과를 응답한다.
+     */
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<String> cancelOrder(@PathVariable("orderId") int orderId) {
         // 주문 상태를 CANCELED로 변경하는 서비스 호출
@@ -102,6 +125,10 @@ public class OrderController {
     @org.springframework.beans.factory.annotation.Value("${server.printPort:8888}")
     private String printServerPort;
 
+    /**
+     * [요청 흐름] POST /api/orders/toss/confirm
+     * 프론트 요청을 받아 confirmTossPayment() 메서드가 입력을 받고 OrderService, OrderMapper 호출 후 결과를 응답한다.
+     */
     @PostMapping("/toss/confirm")
     public ResponseEntity<String> confirmTossPayment(@RequestBody TossConfirmRequest tossReq, HttpSession session) {
         String tossUrl = "https://api.tosspayments.com/v1/payments/confirm";
@@ -158,6 +185,10 @@ public class OrderController {
         }
     }
 
+    /**
+     * [요청 흐름] POST /api/orders/receipt
+     * 프론트 요청을 받아 printReceipt() 메서드가 입력을 받고 OrderService, OrderMapper 호출 후 결과를 응답한다.
+     */
     @PostMapping("/receipt")
     public ResponseEntity<String> printReceipt(@RequestBody java.util.Map<String, String> receiptData) {
         System.out.println("===============================================");

@@ -14,6 +14,13 @@ import com.kiosk.headquarter.repository.HeadStoreInventoryMapper;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadInventoryService
+ *
+ * <p>역할: 본사 관리의 재고 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadStoreInventoryMapper, AutoRestockService -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -29,6 +36,10 @@ public class HeadInventoryService {
      * 전체 지점 재고 조회
      *
      * 지점 번호와 재고 품목 번호 순서로 정렬합니다.
+     */
+    /**
+     * [메서드 흐름] getInventories
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreInventoryMapper, AutoRestockService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public List<HeadInventoryResponse>
 	    getInventories() {
@@ -60,6 +71,10 @@ public class HeadInventoryService {
     /*
      * 재고 상세 조회
      */
+    /**
+     * [메서드 흐름] getInventory
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreInventoryMapper, AutoRestockService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadInventoryResponse getInventory(
             Integer storeInventoryId
     ) {
@@ -78,6 +93,10 @@ public class HeadInventoryService {
      * 자동 재고 보충 설정 수정
      */
     @Transactional
+    /**
+     * [메서드 흐름] updateRestockSetting
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreInventoryMapper, AutoRestockService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadInventoryResponse
             updateRestockSetting(
                     Integer storeInventoryId,

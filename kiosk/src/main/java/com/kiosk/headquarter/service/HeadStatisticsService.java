@@ -24,6 +24,13 @@ import com.kiosk.headquarter.repository.HeadStatisticsMapper.FlavorSalesProjecti
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadStatisticsService
+ *
+ * <p>역할: 본사 관리의 통계 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadStatisticsMapper, HeadStoreMapper -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -37,6 +44,10 @@ public class HeadStatisticsService {
 
     /*
      * 통계 요약 조회
+     */
+    /**
+     * [메서드 흐름] getSummary
+     * Controller 또는 상위 서비스에서 호출되어 HeadStatisticsMapper, HeadStoreMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public HeadStatisticsSummaryResponse getSummary(
             LocalDate startDate,
@@ -92,6 +103,10 @@ public class HeadStatisticsService {
 
     /*
      * 기간별 추이
+     */
+    /**
+     * [메서드 흐름] getSalesTrend
+     * Controller 또는 상위 서비스에서 호출되어 HeadStatisticsMapper, HeadStoreMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public List<HeadSalesTrendResponse>
             getSalesTrend(
@@ -158,6 +173,10 @@ public class HeadStatisticsService {
 
     /*
      * 지점별 매출 순위
+     */
+    /**
+     * [메서드 흐름] getStoreSalesRanking
+     * Controller 또는 상위 서비스에서 호출되어 HeadStatisticsMapper, HeadStoreMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public List<HeadStoreSalesResponse>
             getStoreSalesRanking(
@@ -230,6 +249,10 @@ public class HeadStatisticsService {
     /*
      * 상품별 판매 순위
      */
+    /**
+     * [메서드 흐름] getProductSalesRanking
+     * Controller 또는 상위 서비스에서 호출되어 HeadStatisticsMapper, HeadStoreMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<HeadProductSalesResponse>
             getProductSalesRanking(
                     LocalDate startDate,
@@ -300,6 +323,10 @@ public class HeadStatisticsService {
     
     /*
      * 맛별 판매 순위
+     */
+    /**
+     * [메서드 흐름] getFlavorSalesRanking
+     * Controller 또는 상위 서비스에서 호출되어 HeadStatisticsMapper, HeadStoreMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public List<HeadFlavorSalesResponse>
             getFlavorSalesRanking(

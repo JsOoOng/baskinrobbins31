@@ -22,6 +22,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 
+/**
+ * [코드 흐름 안내] BranchKioskService
+ *
+ * <p>역할: 지점 운영의 키오스크 기기 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> BranchKioskRepository, StoreRepository, Map -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -33,6 +40,10 @@ public class BranchKioskService {
     
     private final Map<Integer, List<SseEmitter>> emitters = new ConcurrentHashMap<>();
 
+    /**
+     * [메서드 흐름] subscribe
+     * Controller 또는 상위 서비스에서 호출되어 BranchKioskRepository, StoreRepository, Map을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public SseEmitter subscribe(Integer storeId) {
         SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1시간
         emitters.computeIfAbsent(storeId, k -> new java.util.concurrent.CopyOnWriteArrayList<>()).add(emitter);
@@ -74,6 +85,10 @@ public class BranchKioskService {
     /*
      * 지점 키오스크 목록 조회
      */
+    /**
+     * [메서드 흐름] getKiosks
+     * Controller 또는 상위 서비스에서 호출되어 BranchKioskRepository, StoreRepository, Map을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<BranchKioskResponse> getKiosks(
             Integer storeId
     ){
@@ -88,6 +103,10 @@ public class BranchKioskService {
     /*
      * 전체 키오스크 목록 조회 (전체 지점)
      */
+    /**
+     * [메서드 흐름] getAllKiosks
+     * Controller 또는 상위 서비스에서 호출되어 BranchKioskRepository, StoreRepository, Map을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<BranchKioskResponse> getAllKiosks(){
         return kioskRepository.findAll()
                 .stream()
@@ -100,6 +119,10 @@ public class BranchKioskService {
      * 키오스크 상태 변경
      */
     @Transactional
+    /**
+     * [메서드 흐름] updateStatus
+     * Controller 또는 상위 서비스에서 호출되어 BranchKioskRepository, StoreRepository, Map을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void updateStatus(
             Integer kioskId,
             KioskStatusRequest request
@@ -123,6 +146,10 @@ public class BranchKioskService {
     }
     
     @Transactional
+    /**
+     * [메서드 흐름] createKiosk
+     * Controller 또는 상위 서비스에서 호출되어 BranchKioskRepository, StoreRepository, Map을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void createKiosk(
             KioskCreateRequest request
     ){

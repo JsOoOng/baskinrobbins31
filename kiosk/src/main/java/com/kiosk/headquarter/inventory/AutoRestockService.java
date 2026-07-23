@@ -14,6 +14,13 @@ import com.kiosk.headquarter.service.HeadNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * [코드 흐름 안내] AutoRestockService
+ *
+ * <p>역할: 본사 관리의 재입고·발주 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadStoreInventoryMapper, HeadNotificationService -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -33,6 +40,10 @@ public class AutoRestockService {
      * 목표 재고까지 보충합니다.
      */
     @Transactional
+    /**
+     * [메서드 흐름] processDailyRestock
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreInventoryMapper, HeadNotificationService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void processDailyRestock() {
 
         List<StoreInventory> inventories =
@@ -103,6 +114,10 @@ public class AutoRestockService {
      * 테스트 및 누락 복구용 전체 검사입니다.
      */
     @Transactional
+    /**
+     * [메서드 흐름] processThresholdRestockSweep
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreInventoryMapper, HeadNotificationService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void processThresholdRestockSweep() {
 
         List<StoreInventory> inventories =
@@ -177,6 +192,10 @@ public class AutoRestockService {
      * → 0 반환
      */
     @Transactional
+    /**
+     * [메서드 흐름] processThresholdRestock
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreInventoryMapper, HeadNotificationService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public Integer processThresholdRestock(
             StoreInventory inventory
     ) {

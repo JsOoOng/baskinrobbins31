@@ -16,12 +16,23 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] JwtFilter
+ *
+ * <p>역할: JWT 인증 요청이 Controller에 도달하기 전에 인증 정보와 접근 조건을 확인한다.</p>
+ * <p>호출 흐름: HTTP 요청 -> 이 필터 -> SecurityContext 설정/검사 -> 허용된 Controller로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
 
     @Override
+    /**
+     * [메서드 흐름] doFilterInternal
+     * HTTP 요청 필터 체인에서 호출되어 인증 정보를 확인한 뒤 다음 필터 또는 Controller로 요청을 넘긴다.
+     */
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,

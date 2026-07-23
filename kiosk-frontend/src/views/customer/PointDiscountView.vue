@@ -1,3 +1,10 @@
+<!--
+  [화면 흐름 안내] PointDiscountView
+  역할: 고객 키오스크에서 사용자가 보는 화면이다.
+  진입: /point-discount -> 이 Vue 파일 렌더링
+  데이터: 사용자 동작 -> @/api/axios -> 응답/상태 반영
+  다음 이동: /, /menu, /payment
+-->
 <template>
   <div class="kiosk-container">
     <!-- 상단 헤더 -->

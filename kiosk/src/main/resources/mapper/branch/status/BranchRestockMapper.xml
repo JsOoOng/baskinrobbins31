@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  [SQL 흐름 안내]
+  연결 인터페이스: com.kiosk.branch.status.reopsitory.BranchRestockMapper
+  호출 흐름: Service -> Mapper 인터페이스 -> 이 SQL -> MySQL -> 결과 반환
+  주요 테이블: store_inventory, stores, inventory_items, store_flavors, icecream_flavors
+-->
+
 
 
 <!DOCTYPE mapper

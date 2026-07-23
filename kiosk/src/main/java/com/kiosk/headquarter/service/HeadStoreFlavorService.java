@@ -18,6 +18,13 @@ import com.kiosk.headquarter.repository.HeadStoreMapper;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] HeadStoreFlavorService
+ *
+ * <p>역할: 본사 관리의 지점별 맛 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> HeadStoreFlavorMapper, HeadStoreMapper, HeadFlavorMapper -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -29,6 +36,10 @@ public class HeadStoreFlavorService {
 
     // 지점별 맛 배정
     @Transactional
+    /**
+     * [메서드 흐름] addStoreFlavor
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreFlavorMapper, HeadStoreMapper, HeadFlavorMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String addStoreFlavor(Integer storeId, HeadStoreFlavorAddRequestDTO requestDTO) {
 
         Store store = headStoreMapper.findById(storeId)
@@ -75,6 +86,10 @@ public class HeadStoreFlavorService {
     }
 
     // 지점별 맛 목록 조회
+    /**
+     * [메서드 흐름] getStoreFlavorList
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreFlavorMapper, HeadStoreMapper, HeadFlavorMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<HeadStoreFlavorListResponseDTO> getStoreFlavorList(Integer storeId) {
 
         headStoreMapper.findById(storeId)
@@ -87,6 +102,10 @@ public class HeadStoreFlavorService {
     }
 
     // 지점별 맛 상세 조회
+    /**
+     * [메서드 흐름] getStoreFlavorDetail
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreFlavorMapper, HeadStoreMapper, HeadFlavorMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public HeadStoreFlavorDetailResponseDTO getStoreFlavorDetail(
             Integer storeId,
             Integer storeFlavorId) {
@@ -99,6 +118,10 @@ public class HeadStoreFlavorService {
 
     // 지점별 맛 품절 여부 / 통 개수 수정
     @Transactional
+    /**
+     * [메서드 흐름] updateStoreFlavor
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreFlavorMapper, HeadStoreMapper, HeadFlavorMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String updateStoreFlavor(
             Integer storeId,
             Integer storeFlavorId,
@@ -122,6 +145,10 @@ public class HeadStoreFlavorService {
 
     // 지점별 맛 배정 삭제
     @Transactional
+    /**
+     * [메서드 흐름] deleteStoreFlavor
+     * Controller 또는 상위 서비스에서 호출되어 HeadStoreFlavorMapper, HeadStoreMapper, HeadFlavorMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public String deleteStoreFlavor(Integer storeId, Integer storeFlavorId) {
 
         StoreFlavor storeFlavor = headStoreFlavorMapper.findByStore_IdAndId(storeId, storeFlavorId)

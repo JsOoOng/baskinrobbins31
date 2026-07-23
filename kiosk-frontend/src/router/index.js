@@ -1,3 +1,9 @@
+/**
+ * [모듈 흐름 안내] index
+ * 역할: URL과 Vue 화면을 연결하고 로그인·권한에 따른 이동을 제어한다.
+ * 호출 흐름: 브라우저 URL -> route 매칭/가드 -> 대상 Vue 화면 또는 로그인 화면
+ * 데이터 기준: 실제 요청 URL과 현재 백엔드 DTO 필드를 우선한다.
+ */
 import { createRouter, createWebHistory } from 'vue-router'
 
 import pinia from '../stores/pinia'
@@ -8,7 +14,6 @@ import { useHeadAuthStore } from '../stores/head/headAuthStore'
 // ====================================================
 import HomeView from '@/views/customer/HomeView.vue'
 import MenuView from '@/views/customer/MenuView.vue'
-import HeadInventory from '@/views/head/HeadInventory.vue'
 
 // ====================================================
 // 본사 관리자 권한 및 유틸리티 설정

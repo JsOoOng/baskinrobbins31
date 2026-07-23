@@ -19,6 +19,13 @@ import com.kiosk.entity.Product;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * [코드 흐름 안내] ProductServiceImpl
+ *
+ * <p>역할: 고객 키오스크의 상품·메뉴 업무 규칙과 상태 변경을 처리한다.</p>
+ * <p>호출 흐름: Controller 호출 -> 이 서비스 -> ProductRepository, ProductOptionRepository, EntityManager -> Entity/DTO 변환 -> Controller 반환 순서로 동작한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Service
 @RequiredArgsConstructor // 💡 의존성 자동 주입을 위해 필수
 public class ProductServiceImpl implements ProductService {
@@ -29,6 +36,10 @@ public class ProductServiceImpl implements ProductService {
     private final EntityManager em;
     
     @Override
+    /**
+     * [메서드 흐름] getProductsByCategory
+     * Controller 또는 상위 서비스에서 호출되어 ProductRepository, ProductOptionRepository, EntityManager을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<ProductListResponse> getProductsByCategory(Long storeId, Long categoryId) {
         // 🌟 DB에서 지점별 상품 및 품절 여부 조회
         List<Object[]> results = productRepository.findProductsWithSoldOutStatus(storeId, categoryId);
@@ -58,6 +69,10 @@ public class ProductServiceImpl implements ProductService {
     }
     
     @Override
+    /**
+     * [메서드 흐름] getAllCategories
+     * Controller 또는 상위 서비스에서 호출되어 ProductRepository, ProductOptionRepository, EntityManager을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public List<CategoryResponse> getAllCategories() {
         // 🌟 DB에서 전체 카테고리 조회해서 반환
         List<Category> categories = em.createQuery("SELECT c FROM Category c ORDER BY c.displayOrder", Category.class)
@@ -74,6 +89,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    /**
+     * [메서드 흐름] getProductDetail
+     * Controller 또는 상위 서비스에서 호출되어 ProductRepository, ProductOptionRepository, EntityManager을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public ProductDetailResponse getProductDetail(Long storeId, Long productId) {
         Product product = productRepository.findById(productId.intValue())
             .orElseThrow(() -> new IllegalArgumentException("Product not found"));
@@ -106,6 +125,10 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
+    /**
+     * [메서드 흐름] addProduct
+     * Controller 또는 상위 서비스에서 호출되어 ProductRepository, ProductOptionRepository, EntityManager을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void addProduct(ProductCreateRequest request) {
         // TODO: 1. PRODUCTS 저장 -> 2. PRODUCT_OPTIONS 저장 -> 3. 모든 매장에 STORE_PRODUCTS 매핑 저장
     }
@@ -115,6 +138,10 @@ public class ProductServiceImpl implements ProductService {
     // =================================================================
     @Override
     @Transactional
+    /**
+     * [메서드 흐름] createOrder
+     * Controller 또는 상위 서비스에서 호출되어 ProductRepository, ProductOptionRepository, EntityManager을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
+     */
     public void createOrder(OrderCreateRequest request) {
         /*
         // 상세 주문 항목들을 하나씩 순회하며 검증 및 적재

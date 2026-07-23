@@ -18,6 +18,13 @@ import com.kiosk.common.config.JwtUtil;
 import lombok.RequiredArgsConstructor;
 
 
+/**
+ * [코드 흐름 안내] AuthController
+ *
+ * <p>역할: 지점 운영의 인증 HTTP 요청을 받는 진입점이다.</p>
+ * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러(/branch) -> AuthService, JwtUtil -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @RestController
 @RequestMapping("/branch")
 @RequiredArgsConstructor
@@ -30,6 +37,10 @@ public class AuthController {
 
 
     
+    /**
+     * [요청 흐름] POST /branch/login
+     * 프론트 요청을 받아 login() 메서드가 입력을 받고 AuthService, JwtUtil 호출 후 결과를 응답한다.
+     */
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @RequestBody AuthRequest request

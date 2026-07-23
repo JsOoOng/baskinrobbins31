@@ -8,6 +8,13 @@ import com.kiosk.headquarter.dto.auth.HeadLoginResponse;
 import com.kiosk.headquarter.dto.common.HeadApiResponse;
 import com.kiosk.headquarter.service.HeadAuthService;
 
+/**
+ * [코드 흐름 안내] HeadAuthController
+ *
+ * <p>역할: 본사 관리의 본사 인증 HTTP 요청을 받는 진입점이다.</p>
+ * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러(/head/auth) -> HeadAuthService -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @RestController
 @RequestMapping("/head/auth")
 public class HeadAuthController {
@@ -24,6 +31,10 @@ public class HeadAuthController {
      * 주소:
      * GET /head/auth
      */
+    /**
+     * [요청 흐름] GET /head/auth
+     * 프론트 요청을 받아 home() 메서드가 입력을 받고 HeadAuthService 호출 후 결과를 응답한다.
+     */
     @GetMapping({"", "/"})
     public String home() {
         return "headquarter auth api running";
@@ -34,6 +45,10 @@ public class HeadAuthController {
      *
      * 주소:
      * POST /head/auth/login
+     */
+    /**
+     * [요청 흐름] POST /head/auth/login
+     * 프론트 요청을 받아 login() 메서드가 입력을 받고 HeadAuthService 호출 후 결과를 응답한다.
      */
     @PostMapping("/login")
     public HeadApiResponse<HeadLoginResponse> login(
@@ -57,6 +72,10 @@ public class HeadAuthController {
      *
      * Authorization:
      * Bearer JWT토큰
+     */
+    /**
+     * [요청 흐름] GET /head/auth/me
+     * 프론트 요청을 받아 me() 메서드가 입력을 받고 HeadAuthService 호출 후 결과를 응답한다.
      */
     @GetMapping("/me")
     public HeadApiResponse<HeadLoginResponse> me(
@@ -109,6 +128,10 @@ public class HeadAuthController {
      *
      * 주소:
      * POST /head/auth/logout
+     */
+    /**
+     * [요청 흐름] POST /head/auth/logout
+     * 프론트 요청을 받아 logout() 메서드가 입력을 받고 HeadAuthService 호출 후 결과를 응답한다.
      */
     @PostMapping("/logout")
     public HeadApiResponse<Void> logout() {
