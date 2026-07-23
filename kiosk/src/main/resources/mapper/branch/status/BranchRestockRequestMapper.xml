@@ -19,11 +19,8 @@ INSERT INTO restock_requests
     request_quantity,
     status,
     admin_id,
-    item_id,
-    store_id,
     requested_at
 )
-
 
 VALUES
 (
@@ -76,56 +73,9 @@ VALUES
 
     ,
 
-
-    <!-- 본사 재고 품목 ID -->
-    <choose>
-
-        <when test="storeInventory != null">
-
-            #{storeInventory.item.id}
-
-        </when>
-
-
-        <when test="storeFlavor != null">
-
-            #{storeFlavor.flavor.id}
-
-        </when>
-
-
-    </choose>
-
-
-    ,
-
-
-    <!-- 지점 ID -->
-    <choose>
-
-        <when test="storeInventory != null">
-
-            #{storeInventory.store.id}
-
-        </when>
-
-
-        <when test="storeFlavor != null">
-
-            #{storeFlavor.store.id}
-
-        </when>
-
-
-    </choose>
-
-
-    ,
-
     NOW()
 
 )
-
 
 </insert>
 
