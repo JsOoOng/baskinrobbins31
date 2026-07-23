@@ -1,5 +1,6 @@
 package com.kiosk.headquarter.dto.flavor;
 
+import org.springframework.web.multipart.MultipartFile;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -9,20 +10,11 @@ import lombok.Setter;
 @NoArgsConstructor
 public class HeadFlavorCreateRequestDTO {
 
-    /*
-     * 아이스크림 맛 이름
-     *
-     * 예:
-     * 블랙 소르베
-     */
     private String flavorName;
+    
+    // 기본적으로 노출 상태
+    private Boolean isActive = true;
 
-    /*
-     * 아이스크림 맛 이미지 경로
-     *
-     * 반드시 다음 형식으로 입력합니다.
-     *
-     * /images/flavors/black_sorbet.png
-     */
-    private String imageUrl;
+    // 프론트엔드에서 전송하는 이미지 파일
+    private MultipartFile imageFile;
 }

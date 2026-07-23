@@ -62,6 +62,12 @@ const menuGroups = computed(() => {
           implemented: true
         },
         {
+          label: '아이스크림 관리',
+          icon: '🍦',
+          routeName: 'head-flavors',
+          implemented: true
+        },
+        {
           label: '카테고리 관리',
           icon: '◫',
           routeName: 'head-categories',

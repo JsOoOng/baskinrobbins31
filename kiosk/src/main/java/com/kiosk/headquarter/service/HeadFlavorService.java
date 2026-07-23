@@ -1,5 +1,13 @@
 package com.kiosk.headquarter.service;
 
+
+import org.springframework.web.multipart.MultipartFile;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -46,6 +54,7 @@ public class HeadFlavorService {
             );
         }
 
+
         String flavorName =
                 normalizeRequired(
                         requestDTO
@@ -53,16 +62,19 @@ public class HeadFlavorService {
                         "맛 이름을 입력해주세요."
                 );
 
-        String imageUrl =
-                normalizeRequired(
-                        requestDTO
-                                .getImageUrl(),
-                        "맛 이미지 URL을 입력해주세요."
-                );
+        MultipartFile imageFile = requestDTO.getImageFile();
+        if (imageFile == null || imageFile.isEmpty()) {
+            throw new IllegalArgumentException("이미지 파일을 첨부해주세요.");
+        }
+        
+        String originalFilename = imageFile.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            throw new IllegalArgumentException("올바른 파일이 아닙니다.");
+        }
+        
+        String imageUrl = "/images/flavors/" + originalFilename;
 
-        validateImageUrl(
-                imageUrl
-        );
+
 
         boolean alreadyExists =
                 headFlavorMapper
@@ -76,6 +88,8 @@ public class HeadFlavorService {
             );
         }
 
+        saveImageFile(imageFile, originalFilename);
+
         /*
          * 신규 맛은 항상 활성화 상태로 생성합니다.
          */
@@ -84,6 +98,12 @@ public class HeadFlavorService {
                         flavorName,
                         imageUrl
                 );
+        
+        // requestDTO.getIsActive()가 있으면 적용
+        if (requestDTO.getIsActive() != null) {
+            flavor.updateFlavor(flavorName, requestDTO.getIsActive(), imageUrl);
+        }
+
 
         IcecreamFlavor savedFlavor =
                 headFlavorMapper
@@ -164,6 +184,7 @@ public class HeadFlavorService {
                         flavorId
                 );
 
+
         String flavorName =
                 normalizeRequired(
                         requestDTO
@@ -171,16 +192,18 @@ public class HeadFlavorService {
                         "맛 이름을 입력해주세요."
                 );
 
-        String imageUrl =
-                normalizeRequired(
-                        requestDTO
-                                .getImageUrl(),
-                        "맛 이미지 URL을 입력해주세요."
-                );
+        MultipartFile imageFile = requestDTO.getImageFile();
+        if (imageFile == null || imageFile.isEmpty()) {
+            throw new IllegalArgumentException("이미지 파일을 첨부해주세요.");
+        }
+        
+        String originalFilename = imageFile.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            throw new IllegalArgumentException("올바른 파일이 아닙니다.");
+        }
+        
+        String imageUrl = "/images/flavors/" + originalFilename;
 
-        validateImageUrl(
-                imageUrl
-        );
 
         boolean alreadyExists =
                 headFlavorMapper
@@ -338,6 +361,22 @@ public class HeadFlavorService {
                     + "파일명은 영문 소문자, 숫자, "
                     + "언더스코어만 사용할 수 있습니다."
             );
+        }
+    }
+
+    private void saveImageFile(MultipartFile file, String filename) {
+        try {
+            String uploadDir = "F:/박지성/baskinrobbins31/kiosk-frontend/public/images/flavors";
+            Path uploadPath = Paths.get(uploadDir);
+            
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+            
+            Path filePath = uploadPath.resolve(filename);
+            file.transferTo(filePath.toFile());
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 파일 저장에 실패했습니다.", e);
         }
     }
 }

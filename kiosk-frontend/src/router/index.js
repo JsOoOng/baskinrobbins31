@@ -299,6 +299,16 @@ const router = createRouter({
           }
         },
         {
+          path: 'flavors',
+          name: 'head-flavors',
+          component: () => import('../views/head/HeadFlavor.vue'),
+          meta: {
+            title: '아이스크림 관리',
+            description: '아이스크림 맛을 등록하고 관리합니다.',
+            phase: 'P0'
+          }
+        },
+        {
           path: 'categories',
           name: 'head-categories',
           component: () => import('../views/head/HeadCategory.vue'),
