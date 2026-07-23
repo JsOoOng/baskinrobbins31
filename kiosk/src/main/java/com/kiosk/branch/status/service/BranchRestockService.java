@@ -12,6 +12,7 @@ import com.kiosk.entity.StoreFlavor;
 import com.kiosk.entity.StoreInventory;
 import com.kiosk.entity.enums.RestockStatus;
 import com.kiosk.headquarter.repository.HeadquarterAdminMapper;
+import com.kiosk.headquarter.service.HeadNotificationService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +28,8 @@ public class BranchRestockService {
     private final BranchRestockRequestMapper branchRestockRequestMapper;
 
     private final HeadquarterAdminMapper headquarterAdminMapper;
+
+    private final HeadNotificationService headNotificationService;
 
 
 
@@ -195,7 +198,31 @@ public class BranchRestockService {
                     restockRequest
                 );
 
+        /*
+         * 알림 발송
+         */
+        String storeName = "지점";
+        String productName = "상품";
+        
+        if (dto.getStoreInventoryId() != null) {
+            StoreInventory inventory = branchRestockMapper.findStoreInventoryById(dto.getStoreInventoryId());
+            if (inventory != null) {
+                storeName = inventory.getStore().getStoreName();
+                productName = inventory.getItem().getItemName();
+            }
+        } else if (dto.getStoreFlavorId() != null) {
+            StoreFlavor flavor = branchRestockMapper.findStoreFlavorById(dto.getStoreFlavorId());
+            if (flavor != null) {
+                storeName = flavor.getStore().getStoreName();
+                productName = flavor.getFlavor().getFlavorName();
+            }
+        }
 
+        headNotificationService.createRestockRequestNotification(
+                storeName,
+                productName,
+                dto.getRequestQuantity()
+        );
 
         return "발주 요청 완료";
     }
@@ -211,7 +238,7 @@ public class BranchRestockService {
                     String itemName = "";
                     String unit = "";
                     if (req.getStoreInventory() != null) {
-                        itemName = req.getStoreInventory().getItem().getProduct().getProductName();
+                        itemName = req.getStoreInventory().getItem().getItemName();
                         unit = req.getStoreInventory().getItem().getUnit();
                     } else if (req.getStoreFlavor() != null) {
                         itemName = req.getStoreFlavor().getFlavor().getFlavorName();
