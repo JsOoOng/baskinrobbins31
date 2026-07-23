@@ -28,8 +28,19 @@
       <input
         type="text"
         v-model="expense.description"
+        list="expense-history"
         placeholder="내용 입력"
       />
+
+      <datalist id="expense-history">
+
+        <option
+          v-for="history in histories"
+          :key="history.description"
+          :value="history.description"
+        ></option>
+
+      </datalist>
     </div>
 
 
@@ -118,69 +129,126 @@
 
 <script setup>
 
-import { reactive } from "vue";
+import { reactive, ref, onMounted, watch } from "vue";
 import axios from "@/api/axios";
 import { useRouter } from 'vue-router'
 
-// 뒤로가기
+// 뒤로가기onMounted
 const goBack = () => {
 
 router.push('/branch/main')
 
 }
 
+const branchUser = JSON.parse(
+  localStorage.getItem("branchUser") || "{}"
+);
+
 const router = useRouter()
 
 const expense = reactive({
 
-  storeId: 1,
+storeId: branchUser.storeId,
 
-  employeeId: 1,
+employeeId: branchUser.employeeId,
 
-  staffId: null,
+staffId: null,
 
-  amount: null,
+amount: null,
 
-  expenseDate: "",
+expenseDate: "",
 
-  description: "",
+description: "",
 
-  expenseCategory: "",
+expenseCategory: "",
 
-  paymentMethod: "",
+paymentMethod: "",
 
-  receiptUrl: null
+receiptUrl: null
 
 });
 
+const histories = ref([]);
+
+const loadExpenseHistory = async () => {
+
+try {
+
+  const response = await axios.get(
+    "/branch/expense/history",
+    {
+      params: {
+        storeId: expense.storeId
+      }
+    }
+  );
+
+  histories.value = response.data;
+
+} catch (error) {
+
+  console.error(error);
+
+}
+
+};
 
 
-const saveExpense = async()=>{
+onMounted(() => {
+  loadExpenseHistory();
+});
 
+watch(
+  () => expense.description,
+  (value) => {
 
-  try{
-
-
-    await axios.post(
-      "/branch/expense",
-      expense
+    const item = histories.value.find(
+      history => history.description === value
     );
 
+    if (item) {
 
-    alert("지출 등록 완료");
+      expense.expenseCategory = item.expenseCategory;
+      expense.paymentMethod = item.paymentMethod;
 
+    } else {
 
-    expense.amount = null;
-    expense.description = "";
+      expense.expenseCategory = "";
+      expense.paymentMethod = "";
 
-
-  }catch(error){
-
-    console.error(error);
-
-    alert("등록 실패");
+    }
 
   }
+);
+
+
+const saveExpense = async () => {
+
+try {
+
+  await axios.post(
+    "/branch/expense",
+    expense
+  );
+
+  // 자동완성 목록 새로고침
+  await loadExpenseHistory();
+
+  alert("지출 등록 완료");
+
+  expense.amount = null;
+  expense.description = "";
+  expense.expenseCategory = "";
+  expense.paymentMethod = "";
+  expense.receiptUrl = null;
+
+} catch (error) {
+
+  console.error(error);
+
+  alert("등록 실패");
+
+}
 
 }
 
