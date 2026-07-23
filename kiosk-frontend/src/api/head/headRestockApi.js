@@ -55,6 +55,15 @@ export const completeHeadRestock = async (requestId, requestDTO = {}) => {
 }
 
 /*
+ * 반려 처리
+ * PUT /head/restocks/{requestId}/reject
+ */
+export const rejectHeadRestock = async (requestId, requestDTO = {}) => {
+  const response = await api.put(`/head/restocks/${requestId}/reject`, requestDTO)
+  return response.data
+}
+
+/*
  * 재고 신청 API 오류 메시지 추출
  */
 export const extractRestockErrorMessage = (

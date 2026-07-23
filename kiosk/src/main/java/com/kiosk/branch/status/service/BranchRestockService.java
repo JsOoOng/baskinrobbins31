@@ -200,4 +200,57 @@ public class BranchRestockService {
         return "발주 요청 완료";
     }
 
+    private final com.kiosk.headquarter.repository.HeadRestockRequestMapper headRestockRequestMapper;
+
+    /*
+     * 지점별 발주 요청 내역 조회
+     */
+    public java.util.List<com.kiosk.branch.status.dto.BranchRestockListResponseDTO> getRestockList(Integer storeId) {
+        return headRestockRequestMapper.findByStoreIdOrderByIdDesc(storeId).stream()
+                .map(req -> {
+                    String itemName = "";
+                    String unit = "";
+                    if (req.getStoreInventory() != null) {
+                        itemName = req.getStoreInventory().getItem().getProduct().getProductName();
+                        unit = req.getStoreInventory().getItem().getUnit();
+                    } else if (req.getStoreFlavor() != null) {
+                        itemName = req.getStoreFlavor().getFlavor().getFlavorName();
+                        unit = "EA";
+                    }
+                    
+                    String adminName = null;
+                    if (req.getStatus() == RestockStatus.CANCELED) {
+                        adminName = "지점 취소";
+                    } else if (req.getAdmin() != null) {
+                        adminName = req.getAdmin().getName();
+                    }
+
+                    return com.kiosk.branch.status.dto.BranchRestockListResponseDTO.builder()
+                            .requestId(req.getId())
+                            .storeInventoryId(req.getStoreInventoryId())
+                            .storeFlavorId(req.getStoreFlavorId())
+                            .itemName(itemName)
+                            .unit(unit)
+                            .requestQuantity(req.getRequestQuantity())
+                            .status(req.getStatus())
+                            .adminId(req.getAdmin() != null ? req.getAdmin().getId() : null)
+                            .adminName(adminName)
+                            .requestedAt(req.getRequestedAt())
+                            .build();
+                })
+                .toList();
+    }
+
+    /*
+     * 지점 재고 신청 취소
+     */
+    public String cancelRestock(Integer requestId) {
+        RestockRequest request = headRestockRequestMapper.findById(requestId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 발주 요청입니다."));
+        
+        request.cancel();
+        
+        return "발주 요청 취소 성공";
+    }
+
 }

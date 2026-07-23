@@ -16,4 +16,7 @@ public interface HeadRestockRequestMapper extends JpaRepository<RestockRequest, 
     List<RestockRequest> findAllByOrderByIdDesc();
 
     List<RestockRequest> findByStatusOrderByIdDesc(RestockStatus status);
+
+    @org.springframework.data.jpa.repository.Query("SELECT r FROM RestockRequest r LEFT JOIN r.storeInventory si LEFT JOIN r.storeFlavor sf WHERE si.store.id = :storeId OR sf.store.id = :storeId ORDER BY r.id DESC")
+    List<RestockRequest> findByStoreIdOrderByIdDesc(@org.springframework.data.repository.query.Param("storeId") Integer storeId);
 }

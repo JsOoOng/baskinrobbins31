@@ -13,6 +13,10 @@ const goInventory = () => {
     router.push('/branch/inventory')
 }
 
+const goRestockHistory = () => {
+    router.push('/branch/restock-history')
+}
+
 const goMenu = () => {
     router.push('/branch/menu')
 }
@@ -87,6 +91,9 @@ const logout = () => {
             재고 관리
         </button>
 
+        <button @click="goRestockHistory">
+            재고 신청 현황
+        </button>
 
         <button @click="goStatistics">
             통계 관리

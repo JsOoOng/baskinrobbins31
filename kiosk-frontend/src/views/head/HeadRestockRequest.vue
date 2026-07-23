@@ -109,6 +109,16 @@
                   승인
                 </button>
                 <button
+                  v-if="item.status === 'WAITING'"
+                  type="button"
+                  class="save-button"
+                  style="background: #ef4444; margin-left: 5px;"
+                  :disabled="processingId === item.requestId"
+                  @click="handleReject(item)"
+                >
+                  반려
+                </button>
+                <button
                   v-if="item.status === 'APPROVED'"
                   type="button"
                   class="save-button"
@@ -146,6 +156,7 @@ import {
   approveHeadRestock,
   startHeadRestockShipping,
   completeHeadRestock,
+  rejectHeadRestock,
   extractRestockErrorMessage
 } from '@/api/head/headRestockApi'
 
@@ -229,6 +240,27 @@ const handleApprove = async (item) => {
     await loadRestocks()
   } catch (error) {
     showMessage(extractRestockErrorMessage(error, '승인 처리에 실패했습니다.'), 'error')
+  } finally {
+    processingId.value = null
+  }
+}
+
+const handleReject = async (item) => {
+  if (!confirm(`${item.itemName} 신청을 반려하시겠습니까?`)) return
+  
+  const adminId = headAuthStore.headUser?.employeeId
+  if (!adminId) {
+    showMessage('처리 권한이 없습니다. 다시 로그인해주세요.', 'error')
+    return
+  }
+  
+  processingId.value = item.requestId
+  try {
+    await rejectHeadRestock(item.requestId, { adminId })
+    showMessage('반려 처리되었습니다.')
+    await loadRestocks()
+  } catch (error) {
+    showMessage(extractRestockErrorMessage(error, '반려 처리에 실패했습니다.'), 'error')
   } finally {
     processingId.value = null
   }

@@ -244,4 +244,25 @@ public class RestockRequest {
                 admin;
     }
 
+    /*
+     * 지점 취소
+     */
+    public void cancel() {
+        if (this.status != RestockStatus.WAITING) {
+            throw new IllegalStateException("대기 중인 발주 요청만 취소할 수 있습니다.");
+        }
+        this.status = RestockStatus.CANCELED;
+    }
+
+    /*
+     * 반려 처리
+     */
+    public void reject(HeadquarterAdmin admin) {
+        if (this.status != RestockStatus.WAITING) {
+            throw new IllegalStateException("대기 중인 발주 요청만 반려할 수 있습니다.");
+        }
+        this.status = RestockStatus.REJECTED;
+        this.admin = admin;
+    }
+
 }

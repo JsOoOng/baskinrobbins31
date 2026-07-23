@@ -26,6 +26,7 @@ public class HeadRestockService {
 
     private final HeadRestockRequestMapper headRestockRequestMapper;
     private final HeadquarterAdminMapper headquarterAdminMapper;
+    private final com.kiosk.headquarter.repository.AdminActionLogRepository adminActionLogRepository;
 
 
 
@@ -238,15 +239,38 @@ public class HeadRestockService {
 
 
 
+    // 반려
+    @Transactional
+    public String rejectRestock(
+            Integer requestId,
+            HeadRestockProcessRequestDTO requestDTO
+    ) {
+        RestockRequest restockRequest = getRestock(requestId);
+        HeadquarterAdmin admin = getActiveAdmin(requestDTO.getAdminId());
+
+        restockRequest.reject(admin);
+
+        // 반려 작업 로그 기록
+        com.kiosk.entity.AdminActionLog log = com.kiosk.entity.AdminActionLog.builder()
+                .administrator(admin.getName())
+                .action("재고 신청 반려 (ID: " + requestId + ")")
+                .type("RESTOCK_REJECT")
+                .build();
+        adminActionLogRepository.save(log);
+
+        return "발주 요청 반려 성공";
+    }
+
     private HeadRestockListResponseDTO toListResponseDTO(
             RestockRequest restockRequest
     ) {
 
-
         Integer adminId = null;
         String adminName = null;
 
-        if(restockRequest.getAdmin()!=null) {
+        if (restockRequest.getStatus() == RestockStatus.CANCELED) {
+            adminName = "지점 취소";
+        } else if (restockRequest.getAdmin() != null) {
             adminId = restockRequest.getAdmin().getId();
             adminName = restockRequest.getAdmin().getName();
         }

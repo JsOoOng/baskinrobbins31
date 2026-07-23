@@ -142,6 +142,11 @@ const router = createRouter({
       component: () => import('../views/branch/BranchInventory.vue')
     },
     {
+      path: '/branch/restock-history',
+      name: 'branch-restock-history',
+      component: () => import('../views/branch/BranchRestockHistory.vue')
+    },
+    {
       path: '/branch/statistics',
       name: 'branch-statistics',
       component: () => import('../views/branch/statistics/BranchStatistics.vue')
