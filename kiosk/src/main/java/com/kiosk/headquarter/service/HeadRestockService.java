@@ -246,23 +246,28 @@ public class HeadRestockService {
         Integer adminId = null;
         String adminName = null;
 
-
         if(restockRequest.getAdmin()!=null) {
-
-            adminId =
-                    restockRequest.getAdmin().getId();
-
-            adminName =
-                    restockRequest.getAdmin().getName();
+            adminId = restockRequest.getAdmin().getId();
+            adminName = restockRequest.getAdmin().getName();
         }
 
+        String itemName = "";
+        String unit = "";
 
+        if (restockRequest.getStoreInventory() != null) {
+            itemName = restockRequest.getStoreInventory().getItem().getProduct().getProductName();
+            unit = restockRequest.getStoreInventory().getItem().getUnit();
+        } else if (restockRequest.getStoreFlavor() != null) {
+            itemName = restockRequest.getStoreFlavor().getFlavor().getFlavorName();
+            unit = "EA";
+        }
 
         return HeadRestockListResponseDTO.builder()
-
                 .requestId(
                         restockRequest.getId()
                 )
+                .itemName(itemName)
+                .unit(unit)
 
 
                 .storeInventoryId(

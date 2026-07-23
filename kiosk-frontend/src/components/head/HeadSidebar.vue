@@ -120,7 +120,8 @@ const menuGroups = computed(() => {
         {
           label: '재고 신청 관리',
           icon: '□',
-          implemented: false,
+          routeName: 'head-inventory-requests',
+          implemented: true,
           description:
             '지점의 재고 신청 내역을 승인하고 처리하는 기능입니다.'
         },

@@ -406,8 +406,8 @@ const router = createRouter({
         {
           path: 'inventory-requests',
           name: 'head-inventory-requests',
-          component: loadHeadTemporaryPage,
-          meta: { title: '재고 신청 관리', description: '지점의 재고 신청 내역을 확인하고 처리합니다.', phase: 'P2' }
+          component: () => import('../views/head/HeadRestockRequest.vue'),
+          meta: { title: '재고 신청 관리', description: '지점의 재고 신청 내역을 확인하고 처리합니다.', phase: 'P2', implemented: true }
         },
         {
           path: 'inventory',

@@ -24,7 +24,7 @@ const statistics = ref([
   { key: 'stores', label: '전체 지점 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '⌂' },
   { key: 'activeStores', label: '운영 중인 지점 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '✓' },
   { key: 'products', label: '전체 상품 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '▣' },
-  { key: 'pendingInventory', label: '처리 대기 재고 신청', value: '-', subText: '불러오는 중...', trend: 'same', icon: '◷', phase: 'P2' },
+  { key: 'pendingInventory', label: '처리 대기 재고 신청', value: '-', subText: '불러오는 중...', trend: 'same', icon: '◷' },
   { key: 'discounts', label: '진행 중인 할인 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '%' },
   { key: 'banners', label: '노출 중인 배너 수', value: '-', subText: '불러오는 중...', trend: 'same', icon: '▤' },
   { key: 'sales', label: '오늘 전체 매출', value: '-', subText: '불러오는 중...', trend: 'same', icon: '₩' },
@@ -43,7 +43,7 @@ const fetchDashboardData = async () => {
       { key: 'stores', label: '전체 지점 수', value: data.totalStores.toString(), subText: '실시간 현황', trend: 'up', icon: '⌂' },
       { key: 'activeStores', label: '운영 중인 지점 수', value: data.activeStores.toString(), subText: '정상 운영 중', trend: 'success', icon: '✓' },
       { key: 'products', label: '전체 상품 수', value: data.totalProducts.toString(), subText: '등록된 전체 상품', trend: 'up', icon: '▣' },
-      { key: 'pendingInventory', label: '처리 대기 재고 신청', value: data.pendingInventory.toString(), subText: '처리 현황', trend: 'warning', icon: '◷', phase: 'P2' },
+      { key: 'pendingInventory', label: '처리 대기 재고 신청', value: data.pendingInventory.toString(), subText: '처리 현황', trend: 'warning', icon: '◷' },
       { key: 'discounts', label: '진행 중인 할인 수', value: data.activeDiscounts.toString(), subText: '할인 중인 상품', trend: 'same', icon: '%' },
       { key: 'banners', label: '노출 중인 배너 수', value: data.activeBanners.toString(), subText: '활성화 배너', trend: 'up', icon: '▤' },
       { key: 'sales', label: '오늘 전체 매출', value: data.todaySales.toLocaleString() + '원', subText: comparisonPeriod.value, trend: 'up', icon: '₩' },
@@ -126,7 +126,8 @@ const handleStatisticClick = (statistic) => {
     discounts: '/head/discounts',
     banners: '/head/banners',
     sales: '/head/statistics',
-    orders: '/head/statistics'
+    orders: '/head/statistics',
+    pendingInventory: '/head/inventory-requests'
   }
 
   const path = paths[statistic.key]
@@ -207,10 +208,6 @@ const goTo = (path) => {
         <div>
           <div class="panel-title-line">
             <h2>재고 신청 현황</h2>
-
-            <span class="phase-label">
-              P2
-            </span>
           </div>
 
           <p>
@@ -232,12 +229,7 @@ const goTo = (path) => {
           <button
             type="button"
             class="secondary-button"
-            @click="
-              openP2(
-                '재고 신청 필터',
-                '지점, 상태, 신청 기간별 상세 필터 기능입니다.'
-              )
-            "
+            @click="goTo('/head/inventory-requests')"
           >
             필터
           </button>
@@ -245,12 +237,7 @@ const goTo = (path) => {
           <button
             type="button"
             class="primary-button"
-            @click="
-              openP2(
-                '재고 신청 등록',
-                '본사에서 직접 재고 출고 요청을 등록하는 기능입니다.'
-              )
-            "
+            @click="goTo('/head/inventory-requests')"
           >
             ＋ 신청 등록
           </button>
@@ -318,12 +305,7 @@ const goTo = (path) => {
                     <button
                       type="button"
                       class="approve-button"
-                      @click="
-                        openP2(
-                          '재고 신청 승인',
-                          `${request.storeName} 신청 건 승인 기능입니다.`
-                        )
-                      "
+                      @click="goTo('/head/inventory-requests')"
                     >
                       승인
                     </button>
@@ -331,12 +313,7 @@ const goTo = (path) => {
                     <button
                       type="button"
                       class="reject-button"
-                      @click="
-                        openP2(
-                          '재고 신청 반려',
-                          `${request.storeName} 신청 건 반려 기능입니다.`
-                        )
-                      "
+                      @click="goTo('/head/inventory-requests')"
                     >
                       반려
                     </button>
@@ -346,12 +323,7 @@ const goTo = (path) => {
                     v-else
                     type="button"
                     class="detail-button"
-                    @click="
-                      openP2(
-                        '재고 신청 상세',
-                        `${request.requestNumber} 상세 조회 기능입니다.`
-                      )
-                    "
+                    @click="goTo('/head/inventory-requests')"
                   >
                     상세 보기
                   </button>
@@ -390,24 +362,14 @@ const goTo = (path) => {
 
           <button
             type="button"
-            @click="
-              openP2(
-                '재고 신청 페이지 이동',
-                '전체 신청 내역 페이지 기능입니다.'
-              )
-            "
+            @click="goTo('/head/inventory-requests')"
           >
             2
           </button>
 
           <button
             type="button"
-            @click="
-              openP2(
-                '재고 신청 페이지 이동',
-                '전체 신청 내역 페이지 기능입니다.'
-              )
-            "
+            @click="goTo('/head/inventory-requests')"
           >
             ›
           </button>
