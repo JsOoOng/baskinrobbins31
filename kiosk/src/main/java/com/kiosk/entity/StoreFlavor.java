@@ -124,6 +124,7 @@ public class StoreFlavor {
             cascade = CascadeType.REMOVE,
             orphanRemoval = true
         )
+        @Builder.Default
         private List<RestockRequest> restockRequests =
                 new ArrayList<>();
 

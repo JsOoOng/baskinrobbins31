@@ -37,10 +37,6 @@ public class HeadRestockService {
 	 */
 	  private final BranchRestockStatusSocketPublisher
 	        branchRestockStatusSocketPublisher;
-
-    private final HeadRestockRequestMapper headRestockRequestMapper;
-    private final HeadquarterAdminMapper headquarterAdminMapper;
-    private final com.kiosk.headquarter.repository.AdminActionLogRepository adminActionLogRepository;
     private final DeliveryRepository deliveryRepository;
 
 

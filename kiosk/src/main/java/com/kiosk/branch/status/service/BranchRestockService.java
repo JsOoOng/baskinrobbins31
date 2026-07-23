@@ -59,7 +59,7 @@ public class BranchRestockService {
         RestockRequest restockRequest;
 
         Integer storeId;
-        String storeName;
+        String storeName = "지점";
         String itemName;
         String requestTargetType;
 
@@ -293,7 +293,6 @@ public class BranchRestockService {
         /*
          * 알림 발송
          */
-        String storeName = "지점";
         String productName = "상품";
         
         if (dto.getStoreInventoryId() != null) {
@@ -337,11 +336,11 @@ public class BranchRestockService {
 
                     String itemName = "";
                     String unit = "";
-                    if (req.getStoreInventory() != null) {
-                        itemName = req.getStoreInventory().getItem().getItemName();
-                        unit = req.getStoreInventory().getItem().getUnit();
-                    } else if (req.getStoreFlavor() != null) {
-                        itemName = req.getStoreFlavor().getFlavor().getFlavorName();
+                    if (request.getStoreInventory() != null) {
+                        itemName = request.getStoreInventory().getItem().getItemName();
+                        unit = request.getStoreInventory().getItem().getUnit();
+                    } else if (request.getStoreFlavor() != null) {
+                        itemName = request.getStoreFlavor().getFlavor().getFlavorName();
                         unit = "EA";
                     }
 

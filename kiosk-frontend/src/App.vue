@@ -447,6 +447,30 @@ const getWebSocketUrl = () => {
 let client = null
 let connectedStoreId = null
 
+let headClient = null
+
+/*
+ * 본사 WebSocket 연결 해제
+ */
+const disconnectHeadSocket = () => {
+
+  const currentClient = headClient
+
+  headClient = null
+
+  if (!currentClient) {
+    return
+  }
+
+  currentClient
+    .deactivate()
+    .then(() => {
+      console.log('본사 WebSocket 연결 해제')
+    })
+    .catch((error) => {
+      console.error('본사 WebSocket 연결 해제 실패', error)
+    })
+}
 
 /*
  * WebSocket 연결 해제
@@ -827,6 +851,78 @@ nextClient.subscribe(
 
 
 /*
+ * 본사 WebSocket 연결
+ */
+const connectHeadSocket = () => {
+
+  const isHeadPage = route.path.startsWith('/head')
+
+  if (!isHeadPage) {
+    disconnectHeadSocket()
+    return
+  }
+
+  if (headClient && headClient.active) {
+    return
+  }
+
+  disconnectHeadSocket()
+
+  const nextClient = new Client({
+    brokerURL: getWebSocketUrl(),
+    reconnectDelay: 5000,
+    heartbeatIncoming: 10000,
+    heartbeatOutgoing: 10000
+  })
+
+  headClient = nextClient
+
+  nextClient.onConnect = () => {
+
+    if (headClient !== nextClient) {
+      return
+    }
+
+    console.log('본사 WebSocket 연결 성공')
+
+    nextClient.subscribe(
+
+      '/topic/head/inventory-shortages',
+
+      (message) => {
+
+        if (!route.path.startsWith('/head')) {
+          return
+        }
+
+        const socketData = parseSocketMessage(message.body)
+
+        console.log('본사 재고 부족 WebSocket 수신', socketData)
+
+        showToast(
+          `[재고 부족 알람] 지점의 재고 부족 알람이 수신되었습니다.`
+        )
+      }
+    )
+  }
+
+  nextClient.onStompError = (frame) => {
+    console.error('본사 STOMP 오류', frame.headers?.message, frame.body)
+  }
+
+  nextClient.onWebSocketError = (error) => {
+    console.error('본사 WebSocket 연결 오류', error)
+  }
+
+  nextClient.onWebSocketClose = () => {
+    console.warn('본사 WebSocket 연결 종료')
+  }
+
+  nextClient.activate()
+}
+
+
+/*
  * 경로 변경 감시
  *
  * 로그인 후 /branch/main으로 이동할 때
@@ -842,6 +938,7 @@ watch(
   () => {
 
     connectBranchSocket()
+    connectHeadSocket()
   },
 
   {
@@ -853,6 +950,7 @@ watch(
 onBeforeUnmount(() => {
 
   disconnectBranchSocket()
+  disconnectHeadSocket()
 })
 </script>
 

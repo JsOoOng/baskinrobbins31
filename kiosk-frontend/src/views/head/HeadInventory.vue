@@ -346,6 +346,16 @@
                 >
                   설정
                 </button>
+                <button
+                  v-if="getActiveAlert(inventory.storeInventoryId)"
+                  type="button"
+                  class="send-alert-button"
+                  :disabled="sendingAlertId === getActiveAlert(inventory.storeInventoryId).alertId"
+                  @click="sendAlert(getActiveAlert(inventory.storeInventoryId).alertId)"
+                  style="margin-left: 5px; background: #e45151; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;"
+                >
+                  {{ sendingAlertId === getActiveAlert(inventory.storeInventoryId).alertId ? '전송 중...' : '알림 보내기' }}
+                </button>
               </td>
             </tr>
           </tbody>
@@ -573,10 +583,18 @@ import {
   updateHeadInventoryRestockSetting
 } from '@/api/headquarter/headInventoryApi'
 
+import {
+  getActiveInventoryShortageAlerts,
+  sendInventoryShortageAlertToStore
+} from '@/api/headquarter/headInventoryAlertApi'
+
 const inventories = ref([])
 const loading = ref(false)
 const saving = ref(false)
 const togglingInventoryId = ref(null)
+
+const activeAlerts = ref([])
+const sendingAlertId = ref(null)
 
 /*
  * 자동 갱신 설정
@@ -687,11 +705,16 @@ const extractItem = (response) => {
   }
 
   try {
-    const response =
-      await getHeadInventories()
+    const [inventoriesResponse, alertsResponse] = await Promise.all([
+      getHeadInventories(),
+      getActiveInventoryShortageAlerts()
+    ])
 
     inventories.value =
-      extractList(response)
+      extractList(inventoriesResponse)
+
+    activeAlerts.value =
+      extractList(alertsResponse)
   } catch (error) {
     /*
      * 자동 갱신 실패 시에는
@@ -721,6 +744,31 @@ const extractItem = (response) => {
     } else {
       loading.value = false
     }
+  }
+}
+
+const getActiveAlert = (storeInventoryId) => {
+  return activeAlerts.value.find(
+    alert => alert.storeInventoryId === storeInventoryId && alert.alertStatus === 'DETECTED'
+  )
+}
+
+const sendAlert = async (alertId) => {
+  if (!alertId || sendingAlertId.value) return
+
+  const headUser = JSON.parse(localStorage.getItem('headUser') || '{}')
+  const adminId = headUser.adminId || 1 
+
+  sendingAlertId.value = alertId
+
+  try {
+    await sendInventoryShortageAlertToStore(alertId, adminId)
+    showMessage('지점으로 재고 부족 알림을 전송했습니다.', 'success')
+    loadInventories(true) 
+  } catch (error) {
+    showMessage(extractErrorMessage(error, '알림 전송에 실패했습니다.'), 'error')
+  } finally {
+    sendingAlertId.value = null
   }
 }
 

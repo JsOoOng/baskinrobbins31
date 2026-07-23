@@ -379,6 +379,14 @@
         return {}
     }
 
+    const type = notification.notificationType
+
+    if (type === 'RESTOCK_REQUEST_CREATED' || type === 'FLAVOR_RESTOCK_REQUEST_CREATED') {
+        return { requestId: normalizedReferenceKey }
+    } else if (type === 'LOW_STOCK') {
+        return { storeInventoryId: normalizedReferenceKey }
+    }
+
     const queryKeyMap = {
         INVENTORY: 'inventoryId',
         COUPON: 'couponId',
