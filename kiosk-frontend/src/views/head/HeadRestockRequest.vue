@@ -71,7 +71,7 @@
         <table class="inventory-table">
           <thead>
             <tr>
-              <th>번호</th>
+              <th>지점명</th>
               <th>재고 품목</th>
               <th>단위</th>
               <th>신청 수량</th>
@@ -83,7 +83,7 @@
           </thead>
           <tbody>
             <tr v-for="item in filteredRestocks" :key="item.requestId">
-              <td>{{ item.requestId }}</td>
+              <td><strong>{{ item.storeName || '-' }}</strong></td>
               <td>
                 <div class="item-cell">
                   <strong>{{ item.itemName }}</strong>
