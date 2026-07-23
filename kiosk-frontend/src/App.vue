@@ -52,12 +52,13 @@ onMounted(() => {
   }
 
 
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+
   client = new Client({
-
-    brokerURL: `ws://${window.location.hostname}:8889/ws`,
-
+    brokerURL: wsUrl,
+    reconnectDelay: 5000,
   });
-
 
   client.onConnect = () => {
 
@@ -72,11 +73,25 @@ onMounted(() => {
     client.subscribe(
       `/topic/store/${branchUser.storeId}`,
       (message)=>{
-
+          if (!window.location.pathname.startsWith('/branch')) return;
           showToast(message.body);
-
       }
     );
+
+    client.subscribe(
+      `/topic/stores/${branchUser.storeId}/calls`,
+      (message) => {
+        if (message.body) {
+          if (!window.location.pathname.startsWith('/branch')) return;
+          
+          const callData = JSON.parse(message.body);
+          const reasonText = callData.reason === 'ORDER_SCREEN' ? '메뉴 주문 화면' : 
+                             callData.reason === 'PAYMENT_ERROR' ? '결제 오류' : callData.reason;
+          alert(`🔔 키오스크 ${callData.kioskNo}번에서 직원을 호출했습니다!\n사유: ${reasonText}`);
+        }
+      }
+    );
+
 
 
   };
