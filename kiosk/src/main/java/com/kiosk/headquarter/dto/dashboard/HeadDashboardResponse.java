@@ -23,7 +23,7 @@ public class HeadDashboardResponse {
     private long todayOrders;
 
     private List<StoreSummaryDto> storeSummary;
-    private List<Object> inventoryRequests;
+    private List<DashboardInventoryRequestDto> inventoryRequests;
     private List<RecentActionDto> recentActions;
 
     @Getter
@@ -35,6 +35,20 @@ public class HeadDashboardResponse {
         private long value;
         private long total;
         private String type; // normal, waiting, stopped
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DashboardInventoryRequestDto {
+        private Integer requestNumber;
+        private String storeName;
+        private String productName;
+        private Integer quantity;
+        private String requestDate;
+        private String status;
+        private String statusType;
     }
 
     @Getter

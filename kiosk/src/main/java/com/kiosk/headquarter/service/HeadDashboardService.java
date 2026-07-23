@@ -9,8 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.entity.enums.RestockStatus;
 import com.kiosk.entity.enums.StoreStatus;
+import com.kiosk.entity.RestockRequest;
 import com.kiosk.headquarter.dto.dashboard.HeadDashboardResponse;
 import com.kiosk.headquarter.dto.dashboard.HeadDashboardResponse.StoreSummaryDto;
+import com.kiosk.headquarter.dto.dashboard.HeadDashboardResponse.DashboardInventoryRequestDto;
 import com.kiosk.headquarter.dto.statistics.HeadStatisticsSummaryResponse;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
@@ -84,6 +86,44 @@ public class HeadDashboardService {
                 .build())
             .collect(Collectors.toList());
 
+        // 재고 신청 현황 (최근 5건)
+        List<RestockRequest> recentRequests = headRestockRequestMapper.findAllByOrderByIdDesc().stream().limit(5).collect(Collectors.toList());
+        List<DashboardInventoryRequestDto> inventoryRequests = recentRequests.stream().map(req -> {
+            String storeName = "";
+            String productName = "";
+            if (req.getStoreInventory() != null) {
+                storeName = req.getStoreInventory().getStore().getStoreName();
+                productName = req.getStoreInventory().getItem().getProduct().getProductName();
+            } else if (req.getStoreFlavor() != null) {
+                storeName = req.getStoreFlavor().getStore().getStoreName();
+                productName = req.getStoreFlavor().getFlavor().getFlavorName();
+            }
+            
+            String status = "";
+            String statusType = "";
+            if (req.getStatus() != null) {
+                switch(req.getStatus()) {
+                    case WAITING: status = "승인 대기"; statusType = "waiting"; break;
+                    case APPROVED: status = "승인 완료"; statusType = "approved"; break;
+                    case SHIPPING: status = "배송 중"; statusType = "shipping"; break;
+                    case COMPLETED: status = "배송 완료"; statusType = "completed"; break;
+                    default: status = req.getStatus().name(); statusType = "default"; break;
+                }
+            }
+            
+            String reqDate = req.getRequestedAt() != null ? req.getRequestedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : "";
+            
+            return DashboardInventoryRequestDto.builder()
+                .requestNumber(req.getId())
+                .storeName(storeName)
+                .productName(productName)
+                .quantity(req.getRequestQuantity())
+                .requestDate(reqDate)
+                .status(status)
+                .statusType(statusType)
+                .build();
+        }).collect(Collectors.toList());
+
         return HeadDashboardResponse.builder()
                 .totalStores(totalStores)
                 .activeStores(activeStores)
@@ -94,7 +134,7 @@ public class HeadDashboardService {
                 .todaySales(todaySales)
                 .todayOrders(todayOrders)
                 .storeSummary(storeSummary)
-                .inventoryRequests(Collections.emptyList()) // P2 기능이므로 빈 배열 반환
+                .inventoryRequests(inventoryRequests)
                 .recentActions(recentActions)
                 .build();
     }
