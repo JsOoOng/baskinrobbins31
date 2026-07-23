@@ -37,11 +37,10 @@ public class ProductServiceImpl implements ProductService {
         for (Object[] row : results) {
             Product product = (Product) row[0];
             Boolean isSoldOut = (Boolean) row[1];
+            Boolean manualSoldOut = (Boolean) row[2];
 
-            // 품절 처리된 상품은 키오스크 화면에 노출하지 않음
-            if (isSoldOut != null && isSoldOut) {
-                continue;
-            }
+            // 자동 품절 또는 수동 품절 여부 계산
+            boolean productSoldOut = (isSoldOut != null && isSoldOut) || (manualSoldOut != null && manualSoldOut);
 
             // DB 데이터를 프론트엔드가 요구하는 DTO 형식으로 변환
             ProductListResponse dto = new ProductListResponse();
@@ -50,7 +49,7 @@ public class ProductServiceImpl implements ProductService {
             dto.setProductName(product.getProductName());
             dto.setBasePrice(product.getBasePrice());
             dto.setFinalPrice(product.getFinalPrice());
-            dto.setIsSoldOut(isSoldOut);
+            dto.setIsSoldOut(productSoldOut);
             dto.setImageUrl(product.getImageUrl());
             
             responseList.add(dto);

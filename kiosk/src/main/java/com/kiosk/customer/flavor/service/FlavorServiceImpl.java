@@ -15,10 +15,10 @@ public class FlavorServiceImpl implements FlavorService {
 
     @Override
     public List<FlavorResponse> getAvailableFlavorsByStore(Long storeId) {
-        List<com.kiosk.entity.IcecreamFlavor> flavors = flavorRepository.findAvailableFlavorsByStoreId(storeId);
+        List<com.kiosk.entity.StoreFlavor> storeFlavors = flavorRepository.findAvailableFlavorsByStoreId(storeId);
         List<FlavorResponse> responses = new java.util.ArrayList<>();
-        for (com.kiosk.entity.IcecreamFlavor flavor : flavors) {
-            responses.add(new FlavorResponse(flavor.getId(), flavor.getFlavorName(), false, flavor.getImageUrl()));
+        for (com.kiosk.entity.StoreFlavor sf : storeFlavors) {
+            responses.add(new FlavorResponse(sf.getFlavor().getId(), sf.getFlavor().getFlavorName(), sf.getIsSoldOut(), sf.getFlavor().getImageUrl()));
         }
         return responses;
     }

@@ -12,15 +12,14 @@ import com.kiosk.entity.IcecreamFlavor;
 @Repository
 public interface FlavorRepository extends JpaRepository<IcecreamFlavor, Integer> {
 
-    // 특정 지점에서 판매 가능한 맛 조회
+    // 특정 지점에서 판매 가능한 맛 조회 (품절 포함)
     @Query("""
-        SELECT sf.flavor
+        SELECT sf
         FROM StoreFlavor sf
         WHERE sf.store.id = :storeId
-          AND sf.isSoldOut = false
           AND sf.flavor.isActive = true
     """)
-    List<IcecreamFlavor> findAvailableFlavorsByStoreId(
+    List<com.kiosk.entity.StoreFlavor> findAvailableFlavorsByStoreId(
             @Param("storeId") Long storeId
     );
 }
