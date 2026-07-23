@@ -47,7 +47,8 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+
+import { onMounted, ref, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useBasketStore } from '@/stores/customer/basket';
 import { useI18n } from 'vue-i18n';
@@ -58,6 +59,14 @@ const router = useRouter();
 const route = useRoute();
 const basketStore = useBasketStore();
 const { t } = useI18n({ useScope: 'global' });
+
+// 🚨 [여기에 추가] 장바구니가 0개로 떨어지는 순간을 감시하는 코드
+watch(() => basketStore.cartItems.length, (newLen, oldLen) => {
+  if (oldLen > 0 && newLen === 0) {
+    console.error('🚨 장바구니가 비워진 순간 포착!');
+    console.trace(); // 어떤 함수가 장바구니를 비웠는지 추적 스택 출력
+  }
+});
 
 const formatCartItemName = (name) => {
   if (name.includes(' (')) {
@@ -111,8 +120,11 @@ const handlePayment = async (method) => {
     return;
   }
 
+  // 💡 1. 결제 시도 전 현재 장바구니 내역을 안전하게 백업 (깊은 복사)
+  const backupCartItems = JSON.parse(JSON.stringify(basketStore.cartItems));
+
   try {
-    // 1. 주문 생성 API 호출 (orderItems 추가)
+    // 2. 주문 생성 API 호출 (이때 백엔드에서 재고 부족 검증 수행)
     const orderRes = await axios.post('/api/orders', {
       orderType: basketStore.orderType || 'TOGO',
       dryIceCount: basketStore.dryIceCount || 0,
@@ -121,9 +133,7 @@ const handlePayment = async (method) => {
       pointUsed: basketStore.usedPoints || 0,
       userCouponId: basketStore.usedCouponId || null,
       kioskId: Number(localStorage.getItem('kioskId')) || 1,
-      // storeId is no longer strictly used by backend (derived from kioskId) but let's pass null or 1
       storeId: Number(localStorage.getItem('storeId')) || 1,
-      // ⭐ 카테고리별로 유연하게 JSON 구조를 생성하여 서버로 전달
       items: basketStore.cartItems.map(item => {
         const baseItem = {
           productId: item.productId || item.id,
@@ -132,32 +142,48 @@ const handlePayment = async (method) => {
         };
 
         if (item.categoryId === 1) {
-          // 아이스크림 카테고리일 경우 맛(flavors) 정보 포함
           return {
             ...baseItem,
             flavors: item.flavors || []
           };
         } else {
-          // 그 외 카테고리 (현재는 다른 옵션이 없으므로 빈 옵션 혹은 제외)
-          // 향후 카테고리에 따라 options 배열 등을 확장 가능
           return baseItem;
         }
       })
     });
     const orderId = orderRes.data;
 
-    // 2. 결제 완료 API 호출 
+    // 3. 결제 완료 API 호출 
     await axios.post(`/api/orders/${orderId}/pay`, {
       paymentMethod: method,
       pointUsed: basketStore.usedPoints || 0,
       userCouponId: basketStore.usedCouponId || null
     });
     
-    // 3. 결제 완료 화면으로 이동
+    // 💡 4. 결제가 완전히 성공한 시점에만 장바구니 비우기 (필요한 경우)
+    // basketStore.clearCart(); 
+
+    // 5. 결제 완료 화면으로 이동
     router.push(`/order-complete?orderId=${orderId}`);
+
   } catch (error) {
     console.error('결제 처리 중 오류 발생:', error);
-    displayAlert(t('결제 처리 중 오류가 발생했습니다.'));
+
+    // 💡 1. 백업해둔 장바구니를 프론트에 되살림
+    basketStore.cartItems = backupCartItems;
+
+    // 💡 2. 꼬인 백엔드 세션도 프론트 상태에 맞춰 다시 동기화!
+    await basketStore.syncBasket();
+
+    let errorMessage = '결제 처리 중 오류가 발생했습니다.';
+    if (error.response && error.response.data) {
+      if (typeof error.response.data === 'string') {
+        errorMessage = error.response.data;
+      } else if (error.response.data.error) {
+        errorMessage = error.response.data.error;
+      }
+    }
+    displayAlert(errorMessage);
   }
 };
 
@@ -169,8 +195,11 @@ const handleTossPayment = async () => {
     return;
   }
 
+  // 💡 1. 토스 결제 시도 전 현재 장바구니 내역을 안전하게 백업 (깊은 복사)
+  const backupCartItems = JSON.parse(JSON.stringify(basketStore.cartItems));
+
   try {
-    // 1. 토스 띄우기 전 주문 생성 API 호출 (orderItems 추가)
+    // 2. 토스 띄우기 전 주문 생성 API 호출 (이때 백엔드에서 재고 부족 검증 수행)
     const orderRes = await axios.post('/api/orders', {
       orderType: basketStore.orderType || 'TOGO',
       dryIceCount: basketStore.dryIceCount || 0,
@@ -180,7 +209,6 @@ const handleTossPayment = async () => {
       userCouponId: basketStore.usedCouponId || null,
       kioskId: Number(localStorage.getItem('kioskId')) || 1,
       storeId: Number(localStorage.getItem('storeId')) || 1,
-      // ⭐ [수정] 카테고리별로 유연하게 JSON 구조를 생성하여 서버로 전달
       items: basketStore.cartItems.map(item => {
         const baseItem = {
           productId: item.productId || item.id,
@@ -189,13 +217,11 @@ const handleTossPayment = async () => {
         };
 
         if (item.categoryId === 1) {
-          // 아이스크림 카테고리일 경우 맛(flavors) 정보 포함
           return {
             ...baseItem,
             flavors: item.flavors || []
           };
         } else {
-          // 그 외 카테고리
           return baseItem;
         }
       })
@@ -222,9 +248,24 @@ const handleTossPayment = async () => {
       successUrl: window.location.origin + `/toss/success?pointUsed=${basketStore.usedPoints || 0}`,
       failUrl: window.location.origin + '/toss/fail',
     });
+
   } catch (error) {
     console.error('토스 결제창 호출 오류:', error);
-    displayAlert(t('토스 결제창을 열 수 없습니다.'));
+
+    // 💡 3. 토스 결제 실패(재고 부족 등) 시 백업해둔 장바구니를 강제로 되살림!
+    basketStore.cartItems = backupCartItems;
+
+    let errorMessage = '토스 결제창을 열 수 없습니다.';
+    
+    if (error.response && error.response.data) {
+      if (typeof error.response.data === 'string') {
+        errorMessage = error.response.data;
+      } else if (error.response.data.error) {
+        errorMessage = error.response.data.error;
+      }
+    }
+
+    displayAlert(errorMessage);
   }
 };
 </script>

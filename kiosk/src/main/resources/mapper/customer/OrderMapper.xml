@@ -40,13 +40,6 @@
         WHERE o.order_id = #{orderId}
     </select>
 
-    <update id="decreaseProductStock">
-        UPDATE store_inventory 
-        SET current_stock = current_stock - #{quantity}
-        WHERE item_id = #{productId} 
-        AND current_stock >= #{quantity}
-    </update>
-
    <update id="updateOrderStatus">
 	    UPDATE orders
 	    SET order_status = #{status}
@@ -122,6 +115,13 @@
     JOIN user u ON uc.user_id = u.id
     WHERE u.phone = #{phone}
       AND uc.is_used = 0
+</select>
+
+<!-- 재고 비교를 위함 -->
+<select id="selectProductStock" resultType="int">
+    SELECT current_stock 
+    FROM store_inventory 
+    WHERE item_id = #{productId}
 </select>
     
     </mapper>

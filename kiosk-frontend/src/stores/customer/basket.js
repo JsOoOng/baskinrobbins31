@@ -51,46 +51,72 @@ export const useBasketStore = defineStore('basket', {
     async fetchBasket() {
       try {
         const res = await axios.get('/api/customer/basket');
-        if (res.data && res.data.items) {
+        // 💡 서버가 유효한 아이템 목록을 줄 때만 갱신하고, 빈 값이면 기존 프론트엔드 장바구니를 지우지 않음!
+        if (res.data && res.data.items && res.data.items.length > 0) {
           this.cartItems = res.data.items;
-        } else {
-          this.cartItems = [];
         }
       } catch (error) {
         console.error('서버 장바구니 조회 실패:', error);
       }
     },
 
-    // ➕ 장바구니에 아이템 추가
-    async addToCart(product) {
-      // 프론트엔드 메모리(Pinia)에 먼저 추가
-      this.cartItems.push({
-        productId: product.productId,
-        categoryId: product.categoryId,
-        productName: product.productName,
-        quantity: product.quantity || 1,
-        unitPrice: product.unitPrice,
-        flavors: product.flavors || [], // [{ flavorId: 1, quantity: 1 }] 모양
-        options: product.options || [],  // [101, 201] 모양 (옵션 ID 숫자 배열)
-        extraSpoons: product.extraSpoons || false
-      });
+   // ➕ 장바구니에 아이템 추가 (기존 상품이 안 날아가도록 전체 목록 전송)
+   async addToCart(product) {
+    // 1. 프론트엔드 메모리(Pinia)에 먼저 추가
+    this.cartItems.push({
+      productId: product.productId,
+      categoryId: product.categoryId,
+      productName: product.productName,
+      quantity: product.quantity || 1,
+      unitPrice: product.unitPrice,
+      flavors: product.flavors || [], 
+      options: product.options || [],  
+      extraSpoons: product.extraSpoons || false
+    });
 
-      // 백엔드 세션 서버에 장바구니 저장 요청
-      try {
+    // 2. 백엔드 세션 서버에 "현재 장바구니 전체 목록"을 통째로 전송하여 덮어쓰기 방지
+    try {
+      await axios.post('/api/customer/basket', {
+        items: this.cartItems.map(item => ({
+          productId: item.productId,
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          flavors: item.flavors || [],
+          options: item.options || [],
+          extraSpoons: item.extraSpoons || false
+        }))
+      });
+      console.log('서버 장바구니 전체 동기화 완료');
+    } catch (error) {
+      console.error('서버 장바구니 동기화 실패 (프론트 데이터는 보호됨):', error);
+    }
+  },
+
+  // 🔄 프론트엔드 장바구니 전체를 백엔드 세션에 강제 동기화하는 함수
+  async syncBasket() {
+    try {
+      // 백엔드가 전체 배열을 받는 API가 없다면 기존 clear 후 하나씩 넣거나,
+      // 혹은 백엔드 컨트롤러에 전체 동기화용 API가 있다면 그것을 호출합니다.
+      // 가장 확실한 방법은 서버 세션을 비운 뒤 현재 프론트 목록을 다시 전송하는 것입니다.
+      await axios.delete('/api/customer/basket');
+      for (const item of this.cartItems) {
         await axios.post('/api/customer/basket', {
-          productId: product.productId,
-          productName: product.productName,
-          quantity: product.quantity || 1,
-          unitPrice: product.unitPrice,
-          flavors: product.flavors || [],
-          options: product.options || [],
-          extraSpoons: product.extraSpoons || false
+          productId: item.productId,
+          categoryId: item.categoryId,
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          flavors: item.flavors || [],
+          options: item.options || [],
+          extraSpoons: item.extraSpoons || false
         });
-        console.log('서버 장바구니 동기화 완료');
-      } catch (error) {
-        console.error('장바구니 조회 실패:', error);
       }
-    },
+      console.log('서프/프론트 장바구니 완벽 동기화 완료');
+    } catch (error) {
+      console.error('장바구니 동기화 실패:', error);
+    }
+  },
 
     // ❌ 장바구니 특정 인덱스 아이템 삭제
     async removeFromCart(index) {

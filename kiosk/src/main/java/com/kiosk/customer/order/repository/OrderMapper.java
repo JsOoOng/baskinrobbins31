@@ -31,6 +31,8 @@ public interface OrderMapper {
 	 void updatePaymentStatus(@Param("orderId") int orderId, 
              @Param("paymentMethod") String paymentMethod, 
              @Param("finalAmount") int finalAmount);
+	 
+	 int selectProductStock(@Param("productId") int productId);
 }
 
 
