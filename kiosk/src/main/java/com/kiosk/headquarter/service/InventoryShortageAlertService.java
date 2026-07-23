@@ -11,6 +11,9 @@ import com.kiosk.entity.InventoryShortageAlert;
 import com.kiosk.entity.StoreInventory;
 import com.kiosk.entity.enums.InventoryShortageAlertStatus;
 import com.kiosk.headquarter.dto.inventoryalert.HeadInventoryShortageSocketResponse;
+import com.kiosk.branch.inventory.dto.BranchInventoryShortageConfirmResponse;
+import com.kiosk.branch.inventory.dto.BranchInventoryShortageSummaryResponse;
+
 import com.kiosk.headquarter.repository.InventoryShortageAlertRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -52,12 +55,21 @@ public class InventoryShortageAlertService {
             );
 
     /*
-     * 지점 관리자가 확인해야 하는 상태
+     * 지점에서 확인해야 하는 부족 알림 상태
+     *
+     * DETECTED:
+     * 시스템이 자동으로 만든 지점 자체 알림
+     *
+     * SENT:
+     * 본사가 지점에 별도로 전송한 알림
      */
     private static final List<
             InventoryShortageAlertStatus
     > BRANCH_PENDING_STATUSES =
             List.of(
+                    InventoryShortageAlertStatus
+                            .DETECTED,
+
                     InventoryShortageAlertStatus
                             .SENT
             );
@@ -163,11 +175,24 @@ public class InventoryShortageAlertService {
                         );
 
         /*
-         * 신규 DETECTED 알람을
-         * 본사 재고 현황 화면으로 전송합니다.
+         * 1. 본사에 자동 부족 알림
+         *
+         * 예:
+         * 강남점에 부족한 재고가 있습니다.
          */
         inventoryAlertSocketPublisher
                 .publishToHead(
+                        savedAlert
+                );
+
+        /*
+         * 2. 해당 지점에 자체 부족 알림
+         *
+         * 예:
+         * 부족한 재고가 있습니다.
+         */
+        inventoryAlertSocketPublisher
+                .publishSelfAlertToStore(
                         savedAlert
                 );
 
@@ -459,10 +484,11 @@ public class InventoryShortageAlertService {
                 .flush();
 
         /*
-         * 1. 해당 지점에 모달 데이터 전송
+         * 본사 관리자가 직접 보내는
+         * 별도의 지점 알림입니다.
          */
         inventoryAlertSocketPublisher
-                .publishToStore(
+                .publishHeadReminderToStore(
                         alert
                 );
 
@@ -498,5 +524,183 @@ public class InventoryShortageAlertService {
                     "본사 관리자 번호가 올바르지 않습니다."
             );
         }
+    }
+    
+    /*
+     * 지점의 미확인 재고 부족 알림을
+     * 한 개의 묶음 응답으로 반환합니다.
+     *
+     * DETECTED와 SENT 상태를 모두 조회합니다.
+     */
+    public BranchInventoryShortageSummaryResponse
+            getPendingBranchAlertSummary(
+                    Integer storeId
+            ) {
+
+        validateStoreId(
+                storeId
+        );
+
+        List<InventoryShortageAlert> alerts =
+                inventoryShortageAlertRepository
+                        .findAllByStore_IdAndAlertStatusInOrderByDetectedAtDescIdDesc(
+                                storeId,
+                                BRANCH_PENDING_STATUSES
+                        );
+
+        return BranchInventoryShortageSummaryResponse
+                .from(
+                        storeId,
+                        alerts
+                );
+    }
+    
+    /*
+     * 지점 관리자가 부족 알림 모달의
+     * 확인 버튼을 눌렀을 때 실행합니다.
+     *
+     * 해당 지점의 DETECTED, SENT 알림을
+     * 전부 CONFIRMED로 변경합니다.
+     */
+    @Transactional
+    public BranchInventoryShortageConfirmResponse
+            confirmPendingBranchAlerts(
+                    Integer storeId
+            ) {
+
+        validateStoreId(
+                storeId
+        );
+
+        List<InventoryShortageAlert> alerts =
+                inventoryShortageAlertRepository
+                        .findAllByStore_IdAndAlertStatusInOrderByDetectedAtDescIdDesc(
+                                storeId,
+                                BRANCH_PENDING_STATUSES
+                        );
+
+        if (alerts.isEmpty()) {
+            return new BranchInventoryShortageConfirmResponse(
+                    storeId,
+                    0,
+                    "branch-inventory"
+            );
+        }
+
+        for (
+                InventoryShortageAlert alert
+                : alerts
+        ) {
+
+            /*
+             * DETECTED 또는 SENT
+             * → CONFIRMED
+             */
+            alert.confirm();
+        }
+
+        inventoryShortageAlertRepository
+                .flush();
+
+        /*
+         * 본사 화면에도 변경된 상태를 전송합니다.
+         *
+         * 본사 재고 현황에서
+         * 지점 확인 여부를 갱신할 수 있습니다.
+         */
+        for (
+                InventoryShortageAlert alert
+                : alerts
+        ) {
+
+            inventoryAlertSocketPublisher
+                    .publishToHead(
+                            alert
+                    );
+        }
+
+        return new BranchInventoryShortageConfirmResponse(
+                storeId,
+                alerts.size(),
+                "branch-inventory"
+        );
+    }
+    
+    /*
+     * 일반 재고 부족 알람을
+     * 생성된 발주 신청과 연결합니다.
+     *
+     * CONFIRMED → REQUESTED
+     */
+    @Transactional
+    public InventoryShortageAlert markRequested(
+            Integer alertId,
+            Integer storeInventoryId,
+            Integer restockRequestId
+    ) {
+
+        validateAlertId(
+                alertId
+        );
+
+        validateStoreInventoryId(
+                storeInventoryId
+        );
+
+        if (
+                restockRequestId == null ||
+                restockRequestId <= 0
+        ) {
+            throw new IllegalArgumentException(
+                    "재고 신청 번호가 올바르지 않습니다."
+            );
+        }
+
+        InventoryShortageAlert alert =
+                inventoryShortageAlertRepository
+                        .findById(
+                                alertId
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "재고 부족 알람이 없습니다."
+                                )
+                        );
+
+        if (
+                alert.getStoreInventory() == null ||
+                alert.getStoreInventory()
+                        .getId() == null ||
+                !alert.getStoreInventory()
+                        .getId()
+                        .equals(
+                                storeInventoryId
+                        )
+        ) {
+            throw new IllegalArgumentException(
+                    "재고 부족 알람과 신청 재고가 일치하지 않습니다."
+            );
+        }
+
+        /*
+         * 엔티티 내부에서 CONFIRMED 상태인지 검사합니다.
+         */
+        alert.markRequested(
+                restockRequestId
+        );
+
+        inventoryShortageAlertRepository
+                .flush();
+
+        /*
+         * 본사 재고 현황 화면에
+         * REQUESTED 상태를 실시간 반영합니다.
+         */
+        inventoryAlertSocketPublisher
+                .publishToHead(
+                        alert
+                );
+
+        return alert;
     }
 }

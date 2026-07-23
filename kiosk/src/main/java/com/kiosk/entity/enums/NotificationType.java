@@ -8,6 +8,9 @@ public enum NotificationType {
     LOW_STOCK,
     AUTO_RESTOCK_SUCCESS,
     AUTO_RESTOCK_FAILED,
+    
+    RESTOCK_REQUEST_CREATED,
+    FLAVOR_RESTOCK_REQUEST_CREATED,
 
     /*
      * 쿠폰

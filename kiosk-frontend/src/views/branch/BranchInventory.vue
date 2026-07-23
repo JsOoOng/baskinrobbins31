@@ -291,7 +291,10 @@ min="1"
 <script setup>
 
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import {
+  useRoute,
+  useRouter
+} from 'vue-router'
 import api from '@/api/axios'
 import { requestRestock } from '@/api/branch/statusApi'
 
@@ -303,6 +306,53 @@ const selectedRestock = ref(null)
 const restockQuantity = ref(0)
 
 const router = useRouter()
+const route = useRoute()
+
+/*
+ * 부족 알림에서 재고 관리 화면으로
+ * 이동한 경우 전달받은 정보입니다.
+ */
+ const shortageContext = ref(null)
+
+
+const readShortageContext = () => {
+
+  const alertId =
+    Number(route.query.alertId)
+
+  const storeInventoryId =
+    Number(route.query.storeInventoryId)
+
+  const shortageQuantity =
+    Number(route.query.shortageQuantity)
+
+
+  if (
+    !Number.isInteger(alertId) ||
+    alertId <= 0 ||
+    !Number.isInteger(storeInventoryId) ||
+    storeInventoryId <= 0
+  ) {
+
+    shortageContext.value = null
+
+    return
+  }
+
+
+  shortageContext.value = {
+
+    alertId,
+
+    storeInventoryId,
+
+    shortageQuantity:
+      Number.isInteger(shortageQuantity) &&
+      shortageQuantity > 0
+        ? shortageQuantity
+        : 1
+  }
+}
 
 let intervalId = null
 
@@ -451,24 +501,64 @@ const changeFlavorSoldOut = async(flavor)=>{
 
 
 
-onMounted(()=>{
+onMounted(async () => {
 
-// 최초 조회
-loadMenus()
+/*
+ * 재고와 맛 목록을 먼저 조회합니다.
+ */
+await Promise.all([
+  loadMenus(),
+  loadFlavors()
+])
 
-loadFlavors()
 
-// 5초마다 자동 새로고침
+/*
+ * 부족 알림에서 이동한 정보 확인
+ */
+readShortageContext()
+
+
+/*
+ * alertId와 storeInventoryId가 있으면
+ * 해당 일반 재고의 신청창을 자동으로 엽니다.
+ */
+if (shortageContext.value) {
+
+  const targetMenu =
+    menus.value.find(
+      (menu) =>
+        Number(menu.storeInventoryId) ===
+        shortageContext.value.storeInventoryId
+    )
+
+
+  if (targetMenu) {
+
+    openRestockModal(
+      targetMenu,
+      'PRODUCT',
+      shortageContext.value
+    )
+
+  } else {
+
+    console.error(
+      '부족 알림과 일치하는 재고를 찾을 수 없습니다.',
+      shortageContext.value
+    )
+  }
+}
+
+
+/*
+ * 5초마다 자동 갱신
+ */
 intervalId = setInterval(() => {
 
-
-    loadMenus()
-
-    loadFlavors()
+  loadMenus()
+  loadFlavors()
 
 }, 5000)
-
-
 })
 
 onUnmounted(() => {
@@ -509,56 +599,74 @@ try {
 
 /*
  * 발주창 열기
+ *
+ * shortageInfo가 있으면
+ * 재고 부족 알람과 연결된 신청입니다.
  */
- const openRestockModal = (item, type) => {
+ const openRestockModal = (
+  item,
+  type,
+  shortageInfo = null
+) => {
 
-
-console.log(
+  console.log(
     '발주 선택 데이터',
     item
-)
+  )
 
 
-selectedRestock.value = {
+  selectedRestock.value = {
 
+    type,
 
-    type: type,
-
+    /*
+     * 일반 수동 신청이면 null
+     *
+     * 부족 알람을 통해 신청하면
+     * 실제 alertId가 들어갑니다.
+     */
+    alertId:
+      type === 'PRODUCT'
+        ? shortageInfo?.alertId ?? null
+        : null,
 
     storeInventoryId:
-        type === 'PRODUCT'
+      type === 'PRODUCT'
         ? item.storeInventoryId
         : null,
 
-
     storeFlavorId:
-        type === 'FLAVOR'
+      type === 'FLAVOR'
         ? item.storeFlavorId
         : null
-
-}
-
+  }
 
 
-console.log(
+  /*
+   * 부족 수량이 전달됐다면
+   * 기본 신청 수량으로 표시합니다.
+   */
+  restockQuantity.value =
+
+    shortageInfo?.shortageQuantity > 0
+      ? shortageInfo.shortageQuantity
+      : 0
+
+
+  showRestockModal.value = true
+
+
+  console.log(
     '발주 요청 데이터',
     selectedRestock.value
-)
+  )
+
+  restockQuantity.value = 0
 
 
 
-restockQuantity.value = 0
-
-
-
-showRestockModal.value = true
-
-
+showRestockModal.value = true  
 }
-
-
-
-
 
 /*
 * 발주 취소
@@ -615,18 +723,21 @@ if(
 
 const requestData = {
 
+/*
+ * 부족 알람에서 신청한 경우에만
+ * 실제 alertId가 전달됩니다.
+ */
+alertId:
+  selectedRestock.value.alertId ?? null,
 
-    storeInventoryId:
-        selectedRestock.value.storeInventoryId ?? null,
+storeInventoryId:
+  selectedRestock.value.storeInventoryId ?? null,
 
+storeFlavorId:
+  selectedRestock.value.storeFlavorId ?? null,
 
-    storeFlavorId:
-        selectedRestock.value.storeFlavorId ?? null,
-
-
-    requestQuantity:
-        restockQuantity.value
-
+requestQuantity:
+  Number(restockQuantity.value)
 }
 
 
@@ -647,13 +758,30 @@ try{
 
 
 
+    const requestedAlertId =
+  selectedRestock.value.alertId
+
+
     alert(
-        '재고 신청 완료'
+    '재고 신청 완료'
     )
 
 
-
     closeRestockModal()
+
+
+    /*
+    * 부족 알람 연결 신청이었다면
+    * URL의 내부 식별값을 제거합니다.
+    */
+    if (requestedAlertId) {
+
+    shortageContext.value = null
+
+    await router.replace({
+        name: 'branch-inventory'
+    })
+    }
 
 }catch(e){
 

@@ -346,19 +346,21 @@ public class InventoryShortageAlert {
      * 지점 관리자가 부족 알림을 확인합니다.
      *
      * DETECTED:
-     * 지점 자체 부족 알림을 확인한 경우
+     * 시스템 자체 알림을 확인한 경우
      *
      * SENT:
-     * 본사가 전송한 부족 알림을 확인한 경우
+     * 본사가 따로 보낸 알림을 확인한 경우
      */
     public void confirm() {
 
         boolean confirmable =
                 alertStatus ==
-                        InventoryShortageAlertStatus.DETECTED
+                        InventoryShortageAlertStatus
+                                .DETECTED
                 ||
                 alertStatus ==
-                        InventoryShortageAlertStatus.SENT;
+                        InventoryShortageAlertStatus
+                                .SENT;
 
         if (!confirmable) {
             throw new IllegalStateException(
@@ -367,7 +369,8 @@ public class InventoryShortageAlert {
         }
 
         this.alertStatus =
-                InventoryShortageAlertStatus.CONFIRMED;
+                InventoryShortageAlertStatus
+                        .CONFIRMED;
 
         this.confirmedAt =
                 LocalDateTime.now();

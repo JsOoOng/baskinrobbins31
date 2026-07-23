@@ -1,241 +1,409 @@
 package com.kiosk.branch.status.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kiosk.branch.status.dto.BranchRestockListResponseDTO;
 import com.kiosk.branch.status.dto.BranchRestockRequestDTO;
 import com.kiosk.branch.status.reopsitory.BranchRestockMapper;
 import com.kiosk.branch.status.reopsitory.BranchRestockRequestMapper;
-import com.kiosk.entity.HeadquarterAdmin;
+import com.kiosk.common.websocket.RestockRequestSocketPublisher;
 import com.kiosk.entity.RestockRequest;
 import com.kiosk.entity.StoreFlavor;
 import com.kiosk.entity.StoreInventory;
+import com.kiosk.entity.enums.NotificationCategory;
+import com.kiosk.entity.enums.NotificationType;
 import com.kiosk.entity.enums.RestockStatus;
-import com.kiosk.headquarter.repository.HeadquarterAdminMapper;
+import com.kiosk.headquarter.repository.HeadRestockRequestMapper;
+import com.kiosk.headquarter.service.HeadNotificationService;
+import com.kiosk.headquarter.service.InventoryShortageAlertService;
 
 import lombok.RequiredArgsConstructor;
-
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class BranchRestockService {
 
+    private final BranchRestockMapper
+            branchRestockMapper;
 
-    private final BranchRestockMapper branchRestockMapper;
+    private final BranchRestockRequestMapper
+            branchRestockRequestMapper;
 
-    private final BranchRestockRequestMapper branchRestockRequestMapper;
+    private final HeadRestockRequestMapper
+            headRestockRequestMapper;
 
-    private final HeadquarterAdminMapper headquarterAdminMapper;
+    private final InventoryShortageAlertService
+            inventoryShortageAlertService;
 
+    private final HeadNotificationService
+            headNotificationService;
 
+    private final RestockRequestSocketPublisher
+            restockRequestSocketPublisher;
 
     /*
-     * 발주 요청 등록
+     * 지점 재고 신청
      */
     public String requestRestock(
             BranchRestockRequestDTO dto
     ) {
 
-
-        if (
-            dto.getRequestQuantity() == null ||
-            dto.getRequestQuantity() <= 0
-        ) {
-
-            throw new IllegalArgumentException(
-                    "발주 수량은 1개 이상이어야 합니다."
-            );
-        }
-        
-        /*
-         * 상품과 맛 동시 선택 방지
-         */
-        if (
-            dto.getStoreInventoryId() != null &&
-            dto.getStoreFlavorId() != null
-        ) {
-
-            throw new IllegalArgumentException(
-                    "상품과 맛 중 하나만 선택해야 합니다."
-            );
-        }
-
-
+        validateRequest(
+                dto
+        );
 
         RestockRequest restockRequest;
 
-
+        Integer storeId;
+        String storeName;
+        String itemName;
+        String requestTargetType;
 
         /*
-         * 상품 발주
+         * 일반 재고 신청
          */
         if (
-            dto.getStoreInventoryId() != null
+                dto.getStoreInventoryId()
+                        != null
         ) {
-
 
             StoreInventory inventory =
                     branchRestockMapper
-                    .findStoreInventoryById(
-                            dto.getStoreInventoryId()
-                    );
+                            .findStoreInventoryById(
+                                    dto.getStoreInventoryId()
+                            );
 
-
-            if(inventory == null) {
-
+            if (inventory == null) {
                 throw new IllegalArgumentException(
                         "상품 재고 정보가 없습니다."
                 );
             }
 
-
+            validateStoreInventory(
+                    inventory
+            );
 
             restockRequest =
-                    RestockRequest.builder()
+                    RestockRequest
+                            .builder()
+                            .storeInventory(
+                                    inventory
+                            )
+                            .requestQuantity(
+                                    dto.getRequestQuantity()
+                            )
+                            .status(
+                                    RestockStatus.WAITING
+                            )
+                            .build();
 
-                    .storeInventory(
+            storeId =
+                    inventory.getStore()
+                            .getId();
+
+            storeName =
+                    getStoreName(
                             inventory
-                    )
-
-                    .requestQuantity(
-                            dto.getRequestQuantity()
-                    )
-
-                    .status(
-                            RestockStatus.WAITING
-                    )
-
-                    .build();
-
-        }
-
-
-
-        /*
-         * 맛 발주
-         */
-        else if (
-            dto.getStoreFlavorId() != null
-        ) {
-
-
-            StoreFlavor flavor =
-                    branchRestockMapper
-                    .findStoreFlavorById(
-                            dto.getStoreFlavorId()
+                                    .getStore()
+                                    .getStoreName()
                     );
 
+            itemName =
+                    getItemName(
+                            inventory
+                                    .getItem()
+                                    .getItemName()
+                    );
 
-            if(flavor == null) {
+            requestTargetType =
+                    "INVENTORY";
 
+        } else {
+
+            /*
+             * 아이스크림 맛 재고 신청
+             */
+            StoreFlavor flavor =
+                    branchRestockMapper
+                            .findStoreFlavorById(
+                                    dto.getStoreFlavorId()
+                            );
+
+            if (flavor == null) {
                 throw new IllegalArgumentException(
                         "맛 재고 정보가 없습니다."
                 );
             }
 
+            validateStoreFlavor(
+                    flavor
+            );
 
+            /*
+             * 맛 알람과 alertId 연결은
+             * 2차 맛 부족 알람 기능에서 구현합니다.
+             */
+            if (dto.getAlertId() != null) {
+                throw new IllegalArgumentException(
+                        "맛 재고 부족 알람 연결은 "
+                        + "맛 부족 알람 기능에서 처리합니다."
+                );
+            }
 
             restockRequest =
-                    RestockRequest.builder()
+                    RestockRequest
+                            .builder()
+                            .storeFlavor(
+                                    flavor
+                            )
+                            .requestQuantity(
+                                    dto.getRequestQuantity()
+                            )
+                            .status(
+                                    RestockStatus.WAITING
+                            )
+                            .build();
 
-                    .storeFlavor(
-                            flavor
-                    )
+            storeId =
+                    flavor.getStore()
+                            .getId();
 
-                    .requestQuantity(
-                            dto.getRequestQuantity()
-                    )
+            storeName =
+                    getStoreName(
+                            flavor.getStore()
+                                    .getStoreName()
+                    );
 
-                    .status(
-                            RestockStatus.WAITING
-                    )
+            itemName =
+                    getItemName(
+                            flavor.getFlavor()
+                                    .getFlavorName()
+                    );
 
-                    .build();
-
+            requestTargetType =
+                    "FLAVOR";
         }
 
+        /*
+         * 지점 신청 시에는
+         * 처리 본사 관리자를 지정하지 않습니다.
+         *
+         * admin_id = NULL
+         */
+        int insertedRows =
+                branchRestockRequestMapper
+                        .insert(
+                                restockRequest
+                        );
 
-
-        else {
-
-            throw new IllegalArgumentException(
-                    "발주 대상이 없습니다."
+        if (insertedRows != 1) {
+            throw new IllegalStateException(
+                    "재고 신청 저장에 실패했습니다."
             );
         }
 
+        Integer requestId =
+                restockRequest.getId();
 
+        if (
+                requestId == null ||
+                requestId <= 0
+        ) {
+            throw new IllegalStateException(
+                    "생성된 재고 신청 번호를 확인할 수 없습니다."
+            );
+        }
 
         /*
-         * 현재 관리자 1번 고정
+         * 일반 재고 부족 알람에서 신청한 경우
+         *
+         * CONFIRMED → REQUESTED
          */
-        HeadquarterAdmin admin =
-                headquarterAdminMapper
-                .findById(1)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "기본 관리자가 없습니다."
+        if (
+                "INVENTORY".equals(
+                        requestTargetType
+                )
+                &&
+                dto.getAlertId() != null
+        ) {
+
+            inventoryShortageAlertService
+                    .markRequested(
+                            dto.getAlertId(),
+                            dto.getStoreInventoryId(),
+                            requestId
+                    );
+        }
+
+        /*
+         * 본사 상단 알림 DB 저장
+         */
+        NotificationType notificationType =
+                "FLAVOR".equals(
+                        requestTargetType
+                )
+                        ? NotificationType
+                                .FLAVOR_RESTOCK_REQUEST_CREATED
+                        : NotificationType
+                                .RESTOCK_REQUEST_CREATED;
+
+        String notificationTitle =
+                storeName
+                + "에서 "
+                + (
+                    "FLAVOR".equals(
+                            requestTargetType
+                    )
+                    ? "아이스크림 맛 재고"
+                    : "재고"
+                )
+                + " 부족 신청이 접수되었습니다.";
+
+        headNotificationService
+                .createNotification(
+                        NotificationCategory.INVENTORY,
+                        notificationType,
+                        notificationTitle,
+                        "재고 신청 관리 화면에서 "
+                        + "신청 내역을 확인해주세요.",
+                        "head-inventory-requests",
+                        String.valueOf(
+                                requestId
                         )
                 );
 
-
-
         /*
-         * 관리자 지정
+         * 본사 재고 신청 관리 화면에
+         * 실시간 WebSocket 전송
          */
-        restockRequest.assignAdmin(admin);
-
-
-
-        /*
-         * 저장
-         */
-        branchRestockRequestMapper
-                .insert(
-                    restockRequest
+        restockRequestSocketPublisher
+                .publishCreated(
+                        requestId,
+                        storeId,
+                        storeName,
+                        requestTargetType,
+                        itemName,
+                        dto.getRequestQuantity()
                 );
-
-
 
         return "발주 요청 완료";
     }
 
-    private final com.kiosk.headquarter.repository.HeadRestockRequestMapper headRestockRequestMapper;
-
     /*
-     * 지점별 발주 요청 내역 조회
+     * 지점별 발주 신청 내역
      */
-    public java.util.List<com.kiosk.branch.status.dto.BranchRestockListResponseDTO> getRestockList(Integer storeId) {
-        return headRestockRequestMapper.findByStoreIdOrderByIdDesc(storeId).stream()
-                .map(req -> {
+    @Transactional(readOnly = true)
+    public List<BranchRestockListResponseDTO>
+            getRestockList(
+                    Integer storeId
+            ) {
+
+        return headRestockRequestMapper
+                .findByStoreIdOrderByIdDesc(
+                        storeId
+                )
+                .stream()
+                .map(request -> {
+
                     String itemName = "";
                     String unit = "";
-                    if (req.getStoreInventory() != null) {
-                        itemName = req.getStoreInventory().getItem().getProduct().getProductName();
-                        unit = req.getStoreInventory().getItem().getUnit();
-                    } else if (req.getStoreFlavor() != null) {
-                        itemName = req.getStoreFlavor().getFlavor().getFlavorName();
+
+                    if (
+                            request.getStoreInventory()
+                                    != null
+                    ) {
+
+                        /*
+                         * Product.productName이 아니라
+                         * InventoryItem.itemName을 사용합니다.
+                         */
+                        itemName =
+                                request.getStoreInventory()
+                                        .getItem()
+                                        .getItemName();
+
+                        unit =
+                                request.getStoreInventory()
+                                        .getItem()
+                                        .getUnit();
+
+                    } else if (
+                            request.getStoreFlavor()
+                                    != null
+                    ) {
+
+                        itemName =
+                                request.getStoreFlavor()
+                                        .getFlavor()
+                                        .getFlavorName();
+
                         unit = "EA";
                     }
-                    
-                    String adminName = null;
-                    if (req.getStatus() == RestockStatus.CANCELED) {
-                        adminName = "지점 취소";
-                    } else if (req.getAdmin() != null) {
-                        adminName = req.getAdmin().getName();
+
+                    String adminName =
+                            null;
+
+                    if (
+                            request.getStatus()
+                                    == RestockStatus.CANCELED
+                    ) {
+
+                        adminName =
+                                "지점 취소";
+
+                    } else if (
+                            request.getAdmin()
+                                    != null
+                    ) {
+
+                        adminName =
+                                request.getAdmin()
+                                        .getName();
                     }
 
-                    return com.kiosk.branch.status.dto.BranchRestockListResponseDTO.builder()
-                            .requestId(req.getId())
-                            .storeInventoryId(req.getStoreInventoryId())
-                            .storeFlavorId(req.getStoreFlavorId())
-                            .itemName(itemName)
-                            .unit(unit)
-                            .requestQuantity(req.getRequestQuantity())
-                            .status(req.getStatus())
-                            .adminId(req.getAdmin() != null ? req.getAdmin().getId() : null)
-                            .adminName(adminName)
-                            .requestedAt(req.getRequestedAt())
+                    return BranchRestockListResponseDTO
+                            .builder()
+                            .requestId(
+                                    request.getId()
+                            )
+                            .storeInventoryId(
+                                    request
+                                            .getStoreInventoryId()
+                            )
+                            .storeFlavorId(
+                                    request
+                                            .getStoreFlavorId()
+                            )
+                            .itemName(
+                                    itemName
+                            )
+                            .unit(
+                                    unit
+                            )
+                            .requestQuantity(
+                                    request
+                                            .getRequestQuantity()
+                            )
+                            .status(
+                                    request.getStatus()
+                            )
+                            .adminId(
+                                    request.getAdmin()
+                                            != null
+                                            ? request.getAdmin()
+                                                    .getId()
+                                            : null
+                            )
+                            .adminName(
+                                    adminName
+                            )
+                            .requestedAt(
+                                    request.getRequestedAt()
+                            )
                             .build();
                 })
                 .toList();
@@ -244,13 +412,139 @@ public class BranchRestockService {
     /*
      * 지점 재고 신청 취소
      */
-    public String cancelRestock(Integer requestId) {
-        RestockRequest request = headRestockRequestMapper.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 발주 요청입니다."));
-        
+    public String cancelRestock(
+            Integer requestId
+    ) {
+
+        RestockRequest request =
+                headRestockRequestMapper
+                        .findById(
+                                requestId
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "존재하지 않는 발주 요청입니다."
+                                )
+                        );
+
         request.cancel();
-        
+
         return "발주 요청 취소 성공";
     }
 
+    private void validateRequest(
+            BranchRestockRequestDTO dto
+    ) {
+
+        if (dto == null) {
+            throw new IllegalArgumentException(
+                    "재고 신청 정보가 없습니다."
+            );
+        }
+
+        if (
+                dto.getRequestQuantity() == null ||
+                dto.getRequestQuantity() <= 0
+        ) {
+            throw new IllegalArgumentException(
+                    "발주 수량은 1개 이상이어야 합니다."
+            );
+        }
+
+        boolean hasInventory =
+                dto.getStoreInventoryId()
+                        != null;
+
+        boolean hasFlavor =
+                dto.getStoreFlavorId()
+                        != null;
+
+        if (
+                hasInventory ==
+                hasFlavor
+        ) {
+            throw new IllegalArgumentException(
+                    "상품 재고와 맛 재고 중 "
+                    + "하나만 선택해야 합니다."
+            );
+        }
+    }
+
+    private void validateStoreInventory(
+            StoreInventory inventory
+    ) {
+
+        if (
+                inventory.getStore() == null ||
+                inventory.getStore()
+                        .getId() == null
+        ) {
+            throw new IllegalArgumentException(
+                    "상품 재고의 지점 정보가 없습니다."
+            );
+        }
+
+        if (
+                inventory.getItem() == null ||
+                inventory.getItem()
+                        .getId() == null
+        ) {
+            throw new IllegalArgumentException(
+                    "상품 재고 품목 정보가 없습니다."
+            );
+        }
+    }
+
+    private void validateStoreFlavor(
+            StoreFlavor flavor
+    ) {
+
+        if (
+                flavor.getStore() == null ||
+                flavor.getStore()
+                        .getId() == null
+        ) {
+            throw new IllegalArgumentException(
+                    "맛 재고의 지점 정보가 없습니다."
+            );
+        }
+
+        if (
+                flavor.getFlavor() == null ||
+                flavor.getFlavor()
+                        .getId() == null
+        ) {
+            throw new IllegalArgumentException(
+                    "맛 재고 품목 정보가 없습니다."
+            );
+        }
+    }
+
+    private String getStoreName(
+            String storeName
+    ) {
+
+        if (
+                storeName == null ||
+                storeName.isBlank()
+        ) {
+            return "지점";
+        }
+
+        return storeName.trim();
+    }
+
+    private String getItemName(
+            String itemName
+    ) {
+
+        if (
+                itemName == null ||
+                itemName.isBlank()
+        ) {
+            return "재고 품목";
+        }
+
+        return itemName.trim();
+    }
 }
