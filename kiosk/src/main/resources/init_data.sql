@@ -55,7 +55,7 @@ INSERT INTO products (category_id, product_name, description, base_price, discou
 (1, '파인트', '세 가지 맛을 골라 먹는 사이즈', 8900, 0, 65, 14700, 14700, 1, NOW()),
 (1, '쿼터', '네 가지 맛을 골라 먹는 사이즈', 17000, 0, 65, 28000, 28000, 1, NOW()),
 (1, '패밀리', '다섯 가지 맛을 나눠 먹는 사이즈', 24000, 0, 65, 39600, 39600, 1, NOW()),
-(1, '하프갤런', '여섯 가지 맛을 넉넉하게 나눠 먹는 사이즈', 29000, 0, 65, 47800, 47800, 1, NOW())
+(1, '하프갤런', '여섯 가지 맛을 넉넉하게 나눠 먹는 사이즈', 29000, 0, 65, 47800, 47800, 1, NOW());
 
 -- 4. 상품 옵션 테이블
 INSERT INTO product_options (product_id, option_type, option_name, extra_price, max_flavor_count) VALUES
@@ -77,7 +77,7 @@ INSERT INTO categories (category_name, display_order, active)
 SELECT '커피', 5, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM categories WHERE category_name = '커피');
 
--- 25. 추�? ?�품 ?�록 (?��??? ?�료, 커피)
+-- 25. 추가 상품 목록
 INSERT INTO products (category_id, product_name, description, base_price, discount_rate, margin_rate, regular_price, final_price, is_display, created_at) VALUES
 ((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '소금 우유 아이스 모찌', '달콤 짭짤한 소금 우유 맛 아이스 모찌', 3000, 0, 65, 5000, 5000, 1, NOW()),
 ((SELECT category_id FROM categories WHERE category_name = '디저트' LIMIT 1), '그린티 아이스 모찌', '녹차의 진한 맛을 담은 모찌', 3000, 0, 65, 5000, 5000, 1, NOW()),
@@ -90,7 +90,7 @@ INSERT INTO products (category_id, product_name, description, base_price, discou
 ((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '카푸치노 블라스트 오리지널', '커피 아이스크림 블라스트', 4500, 0, 65, 7400, 7400, 1, NOW()),
 ((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '아이스 아메리카노', '시원한 아메리카노', 2500, 0, 65, 4100, 4100, 1, NOW()),
 ((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '카페라떼', '부드러운 카페라떼', 3000, 0, 65, 5000, 5000, 1, NOW()),
-((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '연유 라떼', '달콤한 연유가 들어간 라떼', 3500, 0, 65, 5800, 5800, 1, NOW())
+((SELECT category_id FROM categories WHERE category_name = '커피' LIMIT 1), '연유 라떼', '달콤한 연유가 들어간 라떼', 3500, 0, 65, 5800, 5800, 1, NOW());
 
 -- 26. 추가 상품 목록
 INSERT INTO product_options (product_id, option_type, option_name, extra_price, max_flavor_count)
@@ -107,19 +107,19 @@ INSERT INTO stores (store_name, business_number, region, address, phone, busines
 ('베스킨라빈스 강남점', '123-45-67890', '서울', '서울특별시 강남구 역삼동', '02-123-4567', '10:00 - 23:00', 'OPEN', NOW());
 
 -- 6. 지역별 품목 매핑 테이블
-INSERT INTO store_products (store_id, product_id, is_sold_out, is_deleted) VALUES
-(1, 1, 0, 0),
-(1, 2, 0, 0),
-(1, 3, 0, 0),
-(1, 4, 0, 0),
-(1, 5, 0, 0),
-(1, 6, 0, 0),
-(1, 7, 0, 0),
-(1, 8, 0, 0);
+INSERT INTO store_products (store_id, product_id, store_product_price, is_sold_out, manual_sold_out, is_deleted) VALUES
+(1, 1, 5800, 0, 0, 0),
+(1, 2, 7100, 0, 0, 0),
+(1, 3, 7800, 0, 0, 0),
+(1, 4, 11100, 0, 0, 0),
+(1, 5, 14700, 0, 0, 0),
+(1, 6, 28000, 0, 0, 0),
+(1, 7, 39600, 0, 0, 0),
+(1, 8, 47800, 0, 0, 0);
 
 -- 27. 지역별 품목 매핑 테이블 추가 (강남점 store_id=1)
-INSERT INTO store_products (store_id, product_id, is_sold_out, is_deleted)
-SELECT 1, product_id, 0, 0
+INSERT INTO store_products (store_id, product_id, store_product_price, is_sold_out, manual_sold_out, is_deleted)
+SELECT 1, product_id, final_price, 0, 0, 0
 FROM products
 WHERE product_name IN (
 '소금 우유 아이스 모찌', '그린티 아이스 모찌', '체리쥬빌레 마카롱', '바닐라 아이스크림 롤',
@@ -128,15 +128,15 @@ WHERE product_name IN (
 );
 
 -- 7. 지역별 판매 아이스크림 매핑
-INSERT INTO store_flavors (store_id, flavor_id, container, is_sold_out) VALUES
-(1, 1, 6, 0), (1, 2, 6, 0), (1, 3, 6, 0), (1, 4, 6, 0), (1, 5, 6, 0),
-(1, 6, 6, 0), (1, 7, 6, 0), (1, 8, 6, 0), (1, 9, 6, 0), (1, 10, 6, 0),
-(1, 11, 6, 0), (1, 12, 6, 0), (1, 13, 6, 0), (1, 14, 6, 0), (1, 15, 6, 0),
-(1, 16, 6, 0), (1, 17, 6, 0), (1, 18, 6, 0), (1, 19, 6, 0), (1, 20, 6, 0),
-(1, 21, 6, 0), (1, 22, 6, 0), (1, 23, 6, 0), (1, 24, 6, 0), (1, 25, 6, 0),
-(1, 26, 6, 0), (1, 27, 6, 0), (1, 28, 6, 0), (1, 29, 6, 0), (1, 30, 6, 0),
-(1, 31, 6, 0), (1, 32, 6, 0), (1, 33, 6, 0), (1, 34, 6, 0), (1, 35, 6, 0),
-(1, 36, 6, 0), (1, 37, 6, 0);
+INSERT INTO store_flavors (store_id, flavor_id, container, is_sold_out, min_stock, target_stock, auto_restock_enabled, restock_mode) VALUES
+(1, 1, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 2, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 3, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 4, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 5, 6, 0, 1, 10, 1, 'THRESHOLD'),
+(1, 6, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 7, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 8, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 9, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 10, 6, 0, 1, 10, 1, 'THRESHOLD'),
+(1, 11, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 12, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 13, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 14, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 15, 6, 0, 1, 10, 1, 'THRESHOLD'),
+(1, 16, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 17, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 18, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 19, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 20, 6, 0, 1, 10, 1, 'THRESHOLD'),
+(1, 21, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 22, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 23, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 24, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 25, 6, 0, 1, 10, 1, 'THRESHOLD'),
+(1, 26, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 27, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 28, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 29, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 30, 6, 0, 1, 10, 1, 'THRESHOLD'),
+(1, 31, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 32, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 33, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 34, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 35, 6, 0, 1, 10, 1, 'THRESHOLD'),
+(1, 36, 6, 0, 1, 10, 1, 'THRESHOLD'), (1, 37, 6, 0, 1, 10, 1, 'THRESHOLD');
 
 -- 8. BANNERS (배너)
 INSERT INTO banners (title, image_url, is_active) VALUES
@@ -169,50 +169,50 @@ INSERT INTO kiosk_banner (kiosk_id, banner_id) VALUES
 (2, 2);
 
 -- 13. INVENTORY_ITEMS (본사 ?�록 물품/?�모??
-INSERT INTO inventory_items (product_id, unit, unit_price) VALUES
-((SELECT product_id FROM products WHERE product_name = '싱글레귤러'), 'EA', 1750),
-((SELECT product_id FROM products WHERE product_name = '싱글킹'), 'EA', 2150),
-((SELECT product_id FROM products WHERE product_name = '더블주니어'), 'EA', 2350),
-((SELECT product_id FROM products WHERE product_name = '더블레귤러'), 'EA', 3350),
-((SELECT product_id FROM products WHERE product_name = '파인트'), 'EA', 4450),
-((SELECT product_id FROM products WHERE product_name = '쿼터'), 'EA', 8500),
-((SELECT product_id FROM products WHERE product_name = '패밀리'), 'EA', 12000),
-((SELECT product_id FROM products WHERE product_name = '하프갤런'), 'EA', 14500),
-((SELECT product_id FROM products WHERE product_name = '소금 우유 아이스 모찌'), 'EA', 1500),
-((SELECT product_id FROM products WHERE product_name = '그린티 아이스 모찌'), 'EA', 1500),
-((SELECT product_id FROM products WHERE product_name = '체리쥬빌레 마카롱'), 'EA', 1750),
-((SELECT product_id FROM products WHERE product_name = '바닐라 아이스크림 롤'), 'EA', 1000),
-((SELECT product_id FROM products WHERE product_name = '엄마는 외계인 블라스트'), 'EA', 2750),
-((SELECT product_id FROM products WHERE product_name = '아몬드 봉봉 블라스트'), 'EA', 2750),
-((SELECT product_id FROM products WHERE product_name = '딸기 연유 쉐이크'), 'EA', 2500),
-((SELECT product_id FROM products WHERE product_name = '오레오 쉐이크'), 'EA', 2500),
-((SELECT product_id FROM products WHERE product_name = '카푸치노 블라스트 오리지널'), 'EA', 2250),
-((SELECT product_id FROM products WHERE product_name = '아이스 아메리카노'), 'EA', 1250),
-((SELECT product_id FROM products WHERE product_name = '카페라떼'), 'EA', 1500),
-((SELECT product_id FROM products WHERE product_name = '연유 라떼'), 'EA', 1750);
+INSERT INTO inventory_items (product_id, item_name, unit, unit_price) VALUES
+((SELECT product_id FROM products WHERE product_name = '싱글레귤러'), '싱글레귤러', 'EA', 1750),
+((SELECT product_id FROM products WHERE product_name = '싱글킹'), '싱글킹', 'EA', 2150),
+((SELECT product_id FROM products WHERE product_name = '더블주니어'), '더블주니어', 'EA', 2350),
+((SELECT product_id FROM products WHERE product_name = '더블레귤러'), '더블레귤러', 'EA', 3350),
+((SELECT product_id FROM products WHERE product_name = '파인트'), '파인트', 'EA', 4450),
+((SELECT product_id FROM products WHERE product_name = '쿼터'), '쿼터', 'EA', 8500),
+((SELECT product_id FROM products WHERE product_name = '패밀리'), '패밀리', 'EA', 12000),
+((SELECT product_id FROM products WHERE product_name = '하프갤런'), '하프갤런', 'EA', 14500),
+((SELECT product_id FROM products WHERE product_name = '소금 우유 아이스 모찌'), '소금 우유 아이스 모찌', 'EA', 1500),
+((SELECT product_id FROM products WHERE product_name = '그린티 아이스 모찌'), '그린티 아이스 모찌', 'EA', 1500),
+((SELECT product_id FROM products WHERE product_name = '체리쥬빌레 마카롱'), '체리쥬빌레 마카롱', 'EA', 1750),
+((SELECT product_id FROM products WHERE product_name = '바닐라 아이스크림 롤'), '바닐라 아이스크림 롤', 'EA', 1000),
+((SELECT product_id FROM products WHERE product_name = '엄마는 외계인 블라스트'), '엄마는 외계인 블라스트', 'EA', 2750),
+((SELECT product_id FROM products WHERE product_name = '아몬드 봉봉 블라스트'), '아몬드 봉봉 블라스트', 'EA', 2750),
+((SELECT product_id FROM products WHERE product_name = '딸기 연유 쉐이크'), '딸기 연유 쉐이크', 'EA', 2500),
+((SELECT product_id FROM products WHERE product_name = '오레오 쉐이크'), '오레오 쉐이크', 'EA', 2500),
+((SELECT product_id FROM products WHERE product_name = '카푸치노 블라스트 오리지널'), '카푸치노 블라스트 오리지널', 'EA', 2250),
+((SELECT product_id FROM products WHERE product_name = '아이스 아메리카노'), '아이스 아메리카노', 'EA', 1250),
+((SELECT product_id FROM products WHERE product_name = '카페라떼'), '카페라떼', 'EA', 1500),
+((SELECT product_id FROM products WHERE product_name = '연유 라떼'), '연유 라떼', 'EA', 1750);
 
 -- 14. STORE_INVENTORY (지점 재고 현황)
-INSERT INTO store_inventory (store_id, item_id, current_stock, last_updated) VALUES
-(1, 1, 30, NOW()),
-(1, 2, 30, NOW()),
-(1, 3, 30, NOW()), 
-(1, 4, 30, NOW()), 
-(1, 5, 30, NOW()), 
-(1, 6, 30, NOW()), 
-(1, 7, 30, NOW()), 
-(1, 8, 30, NOW()), 
-(1, 9, 20, NOW()), 
-(1, 10, 20, NOW()),
-(1, 11, 20, NOW()),
-(1, 12, 20, NOW()),
-(1, 13, 15, NOW()),
-(1, 14, 15, NOW()),
-(1, 15, 15, NOW()),
-(1, 16, 15, NOW()),
-(1, 17, 15, NOW()),
-(1, 18, 15, NOW()),
-(1, 19, 15, NOW()),
-(1, 20, 15, NOW()); 
+INSERT INTO store_inventory (store_id, item_id, current_stock, min_stock, target_stock, auto_restock_enabled, restock_mode, last_updated) VALUES
+(1, 1, 30, 10, 50, 1, 'THRESHOLD', NOW()),
+(1, 2, 30, 10, 50, 1, 'THRESHOLD', NOW()),
+(1, 3, 30, 10, 50, 1, 'THRESHOLD', NOW()), 
+(1, 4, 30, 10, 50, 1, 'THRESHOLD', NOW()), 
+(1, 5, 30, 10, 50, 1, 'THRESHOLD', NOW()), 
+(1, 6, 30, 10, 50, 1, 'THRESHOLD', NOW()), 
+(1, 7, 30, 10, 50, 1, 'THRESHOLD', NOW()), 
+(1, 8, 30, 10, 50, 1, 'THRESHOLD', NOW()), 
+(1, 9, 20, 10, 50, 1, 'THRESHOLD', NOW()), 
+(1, 10, 20, 10, 50, 1, 'THRESHOLD', NOW()),
+(1, 11, 20, 10, 50, 1, 'THRESHOLD', NOW()),
+(1, 12, 20, 10, 50, 1, 'THRESHOLD', NOW()),
+(1, 13, 15, 10, 50, 1, 'THRESHOLD', NOW()),
+(1, 14, 15, 10, 50, 1, 'THRESHOLD', NOW()),
+(1, 15, 15, 10, 50, 1, 'THRESHOLD', NOW()),
+(1, 16, 15, 10, 50, 1, 'THRESHOLD', NOW()),
+(1, 17, 15, 10, 50, 1, 'THRESHOLD', NOW()),
+(1, 18, 15, 10, 50, 1, 'THRESHOLD', NOW()),
+(1, 19, 15, 10, 50, 1, 'THRESHOLD', NOW()),
+(1, 20, 15, 10, 50, 1, 'THRESHOLD', NOW()); 
 
 -- 15. STORE_EXPENSES (지점 지출 내역)
 INSERT INTO store_expenses (store_id, employee_id, expense_category, payment_method, expense_date, amount, description, receipt_url, created_at) VALUES
@@ -220,9 +220,9 @@ INSERT INTO store_expenses (store_id, employee_id, expense_category, payment_met
 (1, 1, 'UTILITY', 'TRANSFER', '2026-07-10', 150000, '전기요금 납부', NULL, NOW());
 
 -- 16. RESTOCK_REQUESTS (발주 요청)
-INSERT INTO restock_requests (store_id, item_id, admin_id, request_quantity, status, requested_at) VALUES
-(1, 3, 2, 5, 'WAITING', NOW()),
-(1, 1, NULL, 10, 'WAITING', NOW());
+INSERT INTO restock_requests (store_inventory_id, store_flavor_id, admin_id, request_quantity, status, requested_at) VALUES
+(3, NULL, 2, 5, 'WAITING', NOW()),
+(NULL, 1, NULL, 10, 'WAITING', NOW());
 
 -- 17. INQUIRIES (문의 내역)
 INSERT INTO inquiries (inquiry_type, store_id, admin_id, title, content, answer, status, created_at) VALUES
@@ -827,9 +827,11 @@ INSERT INTO order_item_flavors (order_item_id, flavor_id, quantity) VALUES
 (217, 30, 2),
 (217, 34, 2);
 
-INSERT INTO payments (payment_id, order_id, payment_method, base_amount, coupon_discount, point_used, final_amount, payment_status, payment_date) VALUES
+INSERT INTO payments (payment_id, order_id, payment_method, base_amount, product_discount, coupon_discount, point_used, total_discount, final_amount, payment_status, payment_date) VALUES
   (100, 100, 'CARD', 12900, 0, 0, 0, 0, 12900, 'PAID', '2026-07-09 19:36:00'),
-  (101, 101, 'E_PAY', 6700, 0, 0, 0, 0, 6700, 'PAID', '2026-07-04 13:59:00'),
+  (101, 101, 'E_PAY', 6700, 0, 0, 0, 0, 6700, 'PAID', '2026-07-04 13:59:00');
+
+INSERT INTO payments (payment_id, order_id, payment_method, base_amount, coupon_discount, point_used, final_amount, payment_status, payment_date) VALUES
 (102, 102, 'TOSS', 174000, 0, 0, 174000, 'PAID', '2026-06-23 12:35:00'),
 (103, 103, 'CARD', 46000, 0, 0, 46000, 'PAID', '2026-06-16 21:25:00'),
 (104, 104, 'E_PAY', 17000, 0, 0, 17000, 'PAID', '2026-07-14 16:38:00'),
