@@ -77,8 +77,8 @@
               <th>신청 수량</th>
               <th>상태</th>
               <th>신청일시</th>
-              <th>처리자</th>
               <th>관리</th>
+              <th>처리자</th>
             </tr>
           </thead>
           <tbody>
@@ -89,7 +89,7 @@
                   <strong>{{ item.itemName }}</strong>
                 </div>
               </td>
-              <td>{{ item.unit }}</td>
+              <td>{{ item.unit === '개' ? 'EA' : (item.unit || 'EA') }}</td>
               <td><strong>{{ formatNumber(item.requestQuantity) }}</strong></td>
               <td>
                 <span class="status-badge" :class="getStatusClass(item.status)">
@@ -97,48 +97,50 @@
                 </span>
               </td>
               <td>{{ formatDate(item.requestedAt) }}</td>
-              <td>{{ item.adminName || '-' }}</td>
               <td>
-                <button
-                  v-if="item.status === 'WAITING'"
-                  type="button"
-                  class="save-button"
-                  :disabled="processingId === item.requestId"
-                  @click="handleApprove(item)"
-                >
-                  승인
-                </button>
-                <button
-                  v-if="item.status === 'WAITING'"
-                  type="button"
-                  class="save-button"
-                  style="background: #ef4444; margin-left: 5px;"
-                  :disabled="processingId === item.requestId"
-                  @click="handleReject(item)"
-                >
-                  반려
-                </button>
-                <button
-                  v-if="item.status === 'APPROVED'"
-                  type="button"
-                  class="save-button"
-                  style="background: #3b82f6"
-                  :disabled="processingId === item.requestId"
-                  @click="handleShipping(item)"
-                >
-                  배송시작
-                </button>
-                <button
-                  v-if="item.status === 'SHIPPING'"
-                  type="button"
-                  class="save-button"
-                  style="background: #10b981"
-                  :disabled="processingId === item.requestId"
-                  @click="handleComplete(item)"
-                >
-                  배송완료
-                </button>
+                <div class="action-buttons">
+                  <button
+                    v-if="item.status === 'WAITING'"
+                    type="button"
+                    class="save-button"
+                    :disabled="processingId === item.requestId"
+                    @click="handleApprove(item)"
+                  >
+                    승인
+                  </button>
+                  <button
+                    v-if="item.status === 'WAITING'"
+                    type="button"
+                    class="save-button"
+                    style="background: #ef4444;"
+                    :disabled="processingId === item.requestId"
+                    @click="handleReject(item)"
+                  >
+                    반려
+                  </button>
+                  <button
+                    v-if="item.status === 'APPROVED'"
+                    type="button"
+                    class="save-button"
+                    style="background: #3b82f6"
+                    :disabled="processingId === item.requestId"
+                    @click="handleShipping(item)"
+                  >
+                    배송시작
+                  </button>
+                  <button
+                    v-if="item.status === 'SHIPPING'"
+                    type="button"
+                    class="save-button"
+                    style="background: #10b981"
+                    :disabled="processingId === item.requestId"
+                    @click="handleComplete(item)"
+                  >
+                    배송완료
+                  </button>
+                </div>
               </td>
+              <td>{{ item.adminName || '-' }}</td>
             </tr>
           </tbody>
         </table>
@@ -287,26 +289,7 @@ const handleShipping = async (item) => {
   }
 }
 
-const handleComplete = async (item) => {
-  if (!confirm('배송 완료 처리하시겠습니까?')) return
-  
-  const adminId = headAuthStore.headUser?.employeeId
-  if (!adminId) {
-    showMessage('처리 권한이 없습니다. 다시 로그인해주세요.', 'error')
-    return
-  }
 
-  processingId.value = item.requestId
-  try {
-    await completeHeadRestock(item.requestId, { adminId })
-    showMessage('배송 완료 처리되었습니다.')
-    await loadRestocks()
-  } catch (error) {
-    showMessage(extractRestockErrorMessage(error, '완료 처리에 실패했습니다.'), 'error')
-  } finally {
-    processingId.value = null
-  }
-}
 
 const filteredRestocks = computed(() => {
   if (!filterStatus.value) return restocks.value
@@ -486,7 +469,7 @@ onMounted(() => {
   color: #676d7d;
   font-size: 11px;
   font-weight: 700;
-  text-align: left;
+  text-align: center;
   white-space: nowrap;
   background: #fbfbfc;
 }
@@ -497,12 +480,15 @@ onMounted(() => {
   color: #4b5263;
   font-size: 13px;
   vertical-align: middle;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .item-cell {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  align-items: center;
 }
 
 .item-cell strong {
@@ -543,6 +529,14 @@ onMounted(() => {
   background: #fee2e2;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
 .save-button {
   display: inline-flex;
   align-items: center;
@@ -557,6 +551,8 @@ onMounted(() => {
   font-weight: 700;
   background: #f59e0b;
   transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .save-button:hover:not(:disabled) {

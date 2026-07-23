@@ -146,7 +146,12 @@ export const createHeadFlavor =
     const response =
       await api.post(
         '/head/flavors',
-        request
+        request,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
       )
 
     return response.data
@@ -180,7 +185,12 @@ export const updateHeadFlavor =
     const response =
       await api.put(
         `/head/flavors/${flavorId}`,
-        request
+        request,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
       )
 
     return response.data

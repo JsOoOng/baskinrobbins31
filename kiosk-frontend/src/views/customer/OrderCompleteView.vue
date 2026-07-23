@@ -40,14 +40,14 @@ const fetchOrderNumber = async () => {
   
   try {
     const res = await axios.get(`/api/orders/${orderId}`);
-    if (res.data && res.data.orderNumber) {
+    if (res.data && res.data.orderId) {
       orderNumber.value = res.data.orderNumber;
     } else {
-      orderNumber.value = orderId; // fallback
+      orderNumber.value = t('오류'); // fallback
     }
   } catch (err) {
     console.error('주문 정보 조회 실패:', err);
-    orderNumber.value = orderId; // fallback
+    orderNumber.value = t('오류'); // fallback
   }
 };
 

@@ -23,25 +23,18 @@ import {
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
 
-import {
-  createHeadFlavor,
-  extractFlavorData,
-  getHeadFlavors
-} from '@/api/head/headFlavorApi'
 
 /*
  * 서버 데이터
  */
 const products = ref([])
 const categories = ref([])
-const flavors = ref([])
 
 /*
  * 화면 상태
  */
 const loading = ref(false)
 const saving = ref(false)
-const flavorSaving = ref(false)
 const detailLoading = ref(false)
 const displayUpdatingId = ref(null)
 
@@ -49,12 +42,6 @@ const searchKeyword = ref('')
 const categoryFilter = ref('ALL')
 const displayFilter = ref('ALL')
 
-/*
- * 아이스크림 맛은 상품과 별도로
- * icecream_flavors에 등록합니다.
- */
-const newFlavorName = ref('')
-const newFlavorImageUrl = ref('')
 
 const message = ref('')
 const messageType = ref('success')
@@ -319,9 +306,7 @@ const resetForm = () => {
   form.discountRate = 0
   form.isDisplay = true
   form.storeIdsText = ''
-  newFlavorName.value = ''
-  newFlavorImageUrl.value = ''
-}
+  }
 
 /*
  * 상품 등록 모달
@@ -728,70 +713,6 @@ const clearMessage = () => {
   message.value = ''
 }
 
-/*
- * 맛 목록 조회
- *
- * 화면에 맛 선택 버튼을 표시하기 위한 것이 아니라
- * 등록 전 중복 검사를 위해 사용합니다.
- */
- const loadFlavors = async (
-  showError = true
-) => {
-  try {
-    const responseBody =
-      await getHeadFlavors()
-
-    const responseData =
-      extractFlavorData(
-        responseBody
-      )
-
-    const flavorList =
-      Array.isArray(responseData)
-        ? responseData
-        : []
-
-    flavors.value =
-      flavorList.map(
-        (flavor) => ({
-          flavorId:
-            flavor.flavorId ??
-            flavor.id ??
-            null,
-
-          flavorName:
-            flavor.flavorName ??
-            flavor.name ??
-            '',
-
-          imageUrl:
-            flavor.imageUrl ??
-            flavor.image ??
-            '',
-
-          isActive:
-            flavor.isActive ??
-            flavor.active ??
-            true
-        })
-      )
-
-    return true
-
-  } catch (error) {
-    if (showError) {
-      showMessage(
-        extractProductErrorMessage(
-          error,
-          '맛 목록을 불러오지 못했습니다.'
-        ),
-        'error'
-      )
-    }
-
-    return false
-  }
-}
 
 /*
  * 선택된 카테고리
@@ -893,101 +814,11 @@ const validateFlavorInput = () => {
   return true
 }
 
-/*
- * 아이스크림 맛 등록 요청 데이터 생성
- *
- * 상품 등록 요청과 완전히 별도입니다.
- */
- const createFlavorRequestPayload = () => {
-  return {
-    flavorName:
-      newFlavorName.value.trim(),
-
-    imageUrl:
-      newFlavorImageUrl.value.trim()
-  }
-}
-
-/*
- * 아이스크림 맛 단독 등록
- *
- * 상품 등록 요청과 분리되어 있으며,
- * 이 버튼을 눌렀을 때만
- * icecream_flavors에 저장됩니다.
- */
-const addNewFlavor = async () => {
-  if (
-    flavorSaving.value ||
-    !validateFlavorInput()
-  ) {
-    return
-  }
-
-  flavorSaving.value = true
-  clearMessage()
-
-  try {
-    /*
-     * 저장 직전에 최신 맛 목록을 불러와
-     * 프론트 중복 검사를 수행합니다.
-     */
-    await loadFlavors()
-
-    const flavorPayload =
-      createFlavorRequestPayload()
-
-    if (
-      isDuplicateFlavorName(
-        flavorPayload.flavorName
-      )
-    ) {
-      showMessage(
-        '이미 등록된 아이스크림 맛입니다.',
-        'error'
-      )
-
-      return
-    }
-
-    /*
-     * POST /head/flavors
-     *
-     * 상품 등록 API와 관계없이
-     * icecream_flavors에만 저장됩니다.
-     */
-    await createHeadFlavor(
-      flavorPayload
-    )
-
-    newFlavorName.value = ''
-    newFlavorImageUrl.value = ''
-
-    await loadFlavors()
-
-    showMessage(
-      '아이스크림 맛이 등록되었습니다.',
-      'success'
-    )
-
-  } catch (error) {
-    showMessage(
-      extractProductErrorMessage(
-        error,
-        '아이스크림 맛 등록에 실패했습니다.'
-      ),
-      'error'
-    )
-
-  } finally {
-    flavorSaving.value = false
-  }
-}
 
 onMounted(async () => {
   await Promise.all([
     loadCategories(),
-    loadProducts(),
-    loadFlavors()
+    loadProducts()
   ])
 })
 </script>

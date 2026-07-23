@@ -331,6 +331,7 @@ public class StatusService {
                 StoreFlavor.builder()
                 .store(store)
                 .flavor(flavor)
+                .container(5)
                 .build();
 
 

@@ -5,14 +5,17 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kiosk.entity.Delivery;
 import com.kiosk.entity.HeadquarterAdmin;
 import com.kiosk.entity.RestockRequest;
 import com.kiosk.entity.StoreFlavor;
 import com.kiosk.entity.StoreInventory;
+import com.kiosk.entity.enums.DeliveryStatus;
 import com.kiosk.entity.enums.RestockStatus;
 import com.kiosk.headquarter.dto.restock.HeadRestockDetailResponseDTO;
 import com.kiosk.headquarter.dto.restock.HeadRestockListResponseDTO;
 import com.kiosk.headquarter.dto.restock.HeadRestockProcessRequestDTO;
+import com.kiosk.headquarter.repository.DeliveryRepository;
 import com.kiosk.headquarter.repository.HeadRestockRequestMapper;
 import com.kiosk.headquarter.repository.HeadquarterAdminMapper;
 import com.kiosk.common.websocket.BranchRestockStatusSocketPublisher;
@@ -32,9 +35,13 @@ public class HeadRestockService {
 	/*
 	 * 추가
 	 */
-	private final BranchRestockStatusSocketPublisher
+	  private final BranchRestockStatusSocketPublisher
 	        branchRestockStatusSocketPublisher;
 
+    private final HeadRestockRequestMapper headRestockRequestMapper;
+    private final HeadquarterAdminMapper headquarterAdminMapper;
+    private final com.kiosk.headquarter.repository.AdminActionLogRepository adminActionLogRepository;
+    private final DeliveryRepository deliveryRepository;
 
 
     // 전체 발주 목록
@@ -133,12 +140,28 @@ public class HeadRestockService {
         restockRequest.startShipping(admin);
 
 
+
+        if(!deliveryRepository.existsByRestockRequestId(requestId)) {
+
+
+            Delivery delivery =
+                    Delivery.builder()
+                    .restockRequest(restockRequest)
+                    .status(DeliveryStatus.READY)
+                    .build();
+
+
+            deliveryRepository.save(delivery);
+        }
+
+
+
         return "발주 요청 배송 처리 성공";
     }
 
 
 
-
+/*
     // 완료 및 재고 증가
     @Transactional
     public String completeRestock(
@@ -165,6 +188,7 @@ public class HeadRestockService {
         /*
          * 제품 재고 입고
          */
+    /*
         if (restockRequest.getStoreInventory() != null) {
 
 
@@ -183,6 +207,8 @@ public class HeadRestockService {
         /*
          * 맛 재고 입고
          */
+    
+    /*
         else if (restockRequest.getStoreFlavor() != null) {
 
 
@@ -210,7 +236,7 @@ public class HeadRestockService {
     }
 
 
-
+*/
 
     private RestockRequest getRestock(Integer requestId) {
 

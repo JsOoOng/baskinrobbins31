@@ -15,11 +15,9 @@
         <result property="quantity" column="quantity" />
         <result property="unitPrice" column="unit_price" />
         
-        <!-- 💡 맛을 문자열이 아니라 FlavorResponse 객체 리스트로 매핑 -->
-        <collection property="flavors" ofType="com.kiosk.customer.flavor.dto.FlavorResponse" javaType="java.util.List">
-            <result property="flavorId" column="flavor_id"/>
-            <result property="flavorName" column="flavor_name"/>
-            <result property="quantity" column="flavor_quantity"/>
+        <!-- 💡 맛을 문자열 리스트로 매핑 -->
+        <collection property="flavors" ofType="java.lang.String" javaType="java.util.List">
+            <result column="flavor_name"/>
         </collection>
     </collection>
 </resultMap>

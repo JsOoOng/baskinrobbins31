@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kiosk.headquarter.dto.flavor.HeadFlavorCreateRequestDTO;
@@ -26,7 +26,7 @@ public class HeadFlavorController {
     // 아이스크림 맛 등록
     @PostMapping("/head/flavors")
     public HeadFlavorResponseDTO createFlavor(
-            @RequestBody HeadFlavorCreateRequestDTO requestDTO) {
+            @ModelAttribute HeadFlavorCreateRequestDTO requestDTO) {
 
         return headFlavorService.createFlavor(requestDTO);
     }
@@ -57,7 +57,7 @@ public class HeadFlavorController {
     @PutMapping("/head/flavors/{flavorId}")
     public HeadFlavorResponseDTO updateFlavor(
             @PathVariable Integer flavorId,
-            @RequestBody HeadFlavorUpdateRequestDTO requestDTO) {
+            @ModelAttribute HeadFlavorUpdateRequestDTO requestDTO) {
 
         return headFlavorService.updateFlavor(flavorId, requestDTO);
     }

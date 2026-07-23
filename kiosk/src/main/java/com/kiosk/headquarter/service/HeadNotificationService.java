@@ -111,6 +111,37 @@ public class HeadNotificationService {
     
     @Transactional
     public HeadNotificationResponse
+            createRestockRequestNotification(
+                    String storeName,
+                    String productName,
+                    Integer requestQuantity
+            ) {
+
+        return createNotification(
+                NotificationCategory.INVENTORY,
+                NotificationType.RESTOCK_REQUEST,
+                "재고 신청 발생",
+                String.format(
+                        "%s에서 %s(을)를 %d개 신청했습니다.",
+                        normalizeDisplayName(
+                                storeName,
+                                "지점명 없음"
+                        ),
+                        normalizeDisplayName(
+                                productName,
+                                "상품명 없음"
+                        ),
+                        requestQuantity == null
+                                ? 0
+                                : requestQuantity
+                ),
+                "head-inventory-requests",
+                null
+        );
+    }
+    
+    @Transactional
+    public HeadNotificationResponse
             createAutoRestockSuccessNotification(
                     Integer storeInventoryId,
                     String storeName,

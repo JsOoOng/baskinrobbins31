@@ -290,6 +290,32 @@ public class BranchRestockService {
                         dto.getRequestQuantity()
                 );
 
+        /*
+         * 알림 발송
+         */
+        String storeName = "지점";
+        String productName = "상품";
+        
+        if (dto.getStoreInventoryId() != null) {
+            StoreInventory inventory = branchRestockMapper.findStoreInventoryById(dto.getStoreInventoryId());
+            if (inventory != null) {
+                storeName = inventory.getStore().getStoreName();
+                productName = inventory.getItem().getItemName();
+            }
+        } else if (dto.getStoreFlavorId() != null) {
+            StoreFlavor flavor = branchRestockMapper.findStoreFlavorById(dto.getStoreFlavorId());
+            if (flavor != null) {
+                storeName = flavor.getStore().getStoreName();
+                productName = flavor.getFlavor().getFlavorName();
+            }
+        }
+
+        headNotificationService.createRestockRequestNotification(
+                storeName,
+                productName,
+                dto.getRequestQuantity()
+        );
+
         return "발주 요청 완료";
     }
 
@@ -311,36 +337,11 @@ public class BranchRestockService {
 
                     String itemName = "";
                     String unit = "";
-
-                    if (
-                            request.getStoreInventory()
-                                    != null
-                    ) {
-
-                        /*
-                         * Product.productName이 아니라
-                         * InventoryItem.itemName을 사용합니다.
-                         */
-                        itemName =
-                                request.getStoreInventory()
-                                        .getItem()
-                                        .getItemName();
-
-                        unit =
-                                request.getStoreInventory()
-                                        .getItem()
-                                        .getUnit();
-
-                    } else if (
-                            request.getStoreFlavor()
-                                    != null
-                    ) {
-
-                        itemName =
-                                request.getStoreFlavor()
-                                        .getFlavor()
-                                        .getFlavorName();
-
+                    if (req.getStoreInventory() != null) {
+                        itemName = req.getStoreInventory().getItem().getItemName();
+                        unit = req.getStoreInventory().getItem().getUnit();
+                    } else if (req.getStoreFlavor() != null) {
+                        itemName = req.getStoreFlavor().getFlavor().getFlavorName();
                         unit = "EA";
                     }
 
