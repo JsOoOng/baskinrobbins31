@@ -67,4 +67,13 @@ public class HeadRestockController {
 
         return headRestockService.completeRestock(requestId, requestDTO);
     }
+
+    // 반려 처리
+    @PutMapping("/head/restocks/{requestId}/reject")
+    public String rejectRestock(
+            @PathVariable Integer requestId,
+            @RequestBody HeadRestockProcessRequestDTO requestDTO) {
+
+        return headRestockService.rejectRestock(requestId, requestDTO);
+    }
 }

@@ -222,6 +222,10 @@
 
 
 
+
+
+
+
 </div>
 
 <div
@@ -312,11 +316,8 @@ JSON.parse(
 // 상품 목록
 const menus = ref([])
 
-
-
 // 맛 목록
 const flavors = ref([])
-
 
 
 
@@ -327,6 +328,8 @@ const goBack = () => {
     router.push('/branch/main')
 
 }
+
+
 
 
 
@@ -450,13 +453,10 @@ const changeFlavorSoldOut = async(flavor)=>{
 
 onMounted(()=>{
 
-
 // 최초 조회
 loadMenus()
 
 loadFlavors()
-
-
 
 // 5초마다 자동 새로고침
 intervalId = setInterval(() => {
@@ -465,7 +465,6 @@ intervalId = setInterval(() => {
     loadMenus()
 
     loadFlavors()
-
 
 }, 5000)
 
@@ -655,8 +654,6 @@ try{
 
 
     closeRestockModal()
-
-
 
 }catch(e){
 

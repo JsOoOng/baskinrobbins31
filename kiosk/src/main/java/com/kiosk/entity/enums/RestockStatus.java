@@ -4,5 +4,7 @@ public enum RestockStatus {
     WAITING,
     APPROVED,
     SHIPPING,
-    COMPLETED
+    COMPLETED,
+    CANCELED,
+    REJECTED
 }
