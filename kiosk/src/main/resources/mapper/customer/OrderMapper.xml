@@ -4,41 +4,47 @@
 <mapper namespace="com.kiosk.customer.order.repository.OrderMapper">
 
     <resultMap id="orderDetailMap" type="com.kiosk.customer.order.dto.OrderResponse">
-        <id property="orderId" column="order_id" />
-        <result property="orderNumber" column="order_number" />
-        <result property="totalPrice" column="total_price" />
+    <id property="orderId" column="order_id" />
+    <result property="orderNumber" column="order_number" />
+    <result property="totalPrice" column="total_price" />
+    
+    <collection property="orderItems" ofType="com.kiosk.customer.order.dto.OrderItemDTO">
+        <id property="id" column="order_item_id" />
+        <result property="productId" column="product_id" />
+        <result property="productName" column="product_name" />
+        <result property="quantity" column="quantity" />
+        <result property="unitPrice" column="unit_price" />
         
-        <collection property="orderItems" ofType="com.kiosk.customer.order.dto.OrderItemDTO">
-            <id property="id" column="order_item_id" />
-            <result property="productId" column="product_id" />
-            <result property="productName" column="product_name" />
-            <result property="quantity" column="quantity" />
-            <result property="unitPrice" column="unit_price" />
-            
-            <collection property="flavors" ofType="string" javaType="list">
-                <result column="flavor_name" />
-            </collection>
+        <!-- 💡 맛을 문자열이 아니라 FlavorResponse 객체 리스트로 매핑 -->
+        <collection property="flavors" ofType="com.kiosk.customer.flavor.dto.FlavorResponse" javaType="java.util.List">
+            <result property="flavorId" column="flavor_id"/>
+            <result property="flavorName" column="flavor_name"/>
+            <result property="quantity" column="flavor_quantity"/>
         </collection>
-    </resultMap>
+    </collection>
+</resultMap>
 
-    <select id="selectOrderWithDetails" resultMap="orderDetailMap">
-        SELECT 
-            o.order_id, 
-            o.order_number,
-            (SELECT COALESCE(SUM(oi2.unit_price * oi2.quantity), 0) FROM order_items oi2 WHERE oi2.order_id = o.order_id) as total_price,
-            oi.order_item_id, 
-            oi.product_id,
-            p.product_name, 
-            oi.quantity, 
-            oi.unit_price,
-            f.flavor_name
-        FROM orders o
-        LEFT JOIN order_items oi ON o.order_id = oi.order_id
-        LEFT JOIN products p ON oi.product_id = p.product_id
-        LEFT JOIN order_item_flavors oif ON oi.order_item_id = oif.order_item_id
-        LEFT JOIN icecream_flavors f ON oif.flavor_id = f.flavor_id
-        WHERE o.order_id = #{orderId}
-    </select>
+<!-- 💡 select 쿼리에서 flavor_quantity 별칭 부여하기 -->
+<select id="selectOrderWithDetails" resultMap="orderDetailMap">
+    SELECT 
+        o.order_id, 
+        o.order_number,
+        (SELECT COALESCE(SUM(oi2.unit_price * oi2.quantity), 0) FROM order_items oi2 WHERE oi2.order_id = o.order_id) as total_price,
+        oi.order_item_id, 
+        oi.product_id,
+        p.product_name, 
+        oi.quantity, 
+        oi.unit_price,
+        f.flavor_id,
+        CONCAT(f.flavor_name, ' (', oif.quantity, ')') as flavor_name,
+        oif.quantity as flavor_quantity
+    FROM orders o
+    LEFT JOIN order_items oi ON o.order_id = oi.order_id
+    LEFT JOIN products p ON oi.product_id = p.product_id
+    LEFT JOIN order_item_flavors oif ON oi.order_item_id = oif.order_item_id
+    LEFT JOIN icecream_flavors f ON oif.flavor_id = f.flavor_id
+    WHERE o.order_id = #{orderId}
+</select>
 
    <update id="updateOrderStatus">
 	    UPDATE orders

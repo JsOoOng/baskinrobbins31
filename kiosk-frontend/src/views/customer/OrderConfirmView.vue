@@ -48,7 +48,7 @@
 
 <script setup>
 
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref} from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useBasketStore } from '@/stores/customer/basket';
 import { useI18n } from 'vue-i18n';
@@ -60,13 +60,6 @@ const route = useRoute();
 const basketStore = useBasketStore();
 const { t } = useI18n({ useScope: 'global' });
 
-// 🚨 [여기에 추가] 장바구니가 0개로 떨어지는 순간을 감시하는 코드
-watch(() => basketStore.cartItems.length, (newLen, oldLen) => {
-  if (oldLen > 0 && newLen === 0) {
-    console.error('🚨 장바구니가 비워진 순간 포착!');
-    console.trace(); // 어떤 함수가 장바구니를 비웠는지 추적 스택 출력
-  }
-});
 
 const formatCartItemName = (name) => {
   if (name.includes(' (')) {
@@ -141,14 +134,15 @@ const handlePayment = async (method) => {
           unitPrice: item.unitPrice
         };
 
-        if (item.categoryId === 1) {
-          return {
-            ...baseItem,
-            flavors: item.flavors || []
-          };
-        } else {
-          return baseItem;
-        }
+        // 💡 기존 맛 데이터 구조({ flavorName, quantity })에 맞춰 flavorId도 유연하게 찾아서 전송
+        return {
+          ...baseItem,
+          flavors: item.flavors ? item.flavors.map(f => ({
+            flavorId: f.flavorId || f.id || 0, // flavorId가 없다면 id나 기본값 처리
+            flavorName: f.flavorName,          // 맛 이름도 함께 전달 필요할 수 있음
+            quantity: f.quantity || 1
+          })) : []
+        };
       })
     });
     const orderId = orderRes.data;
@@ -161,7 +155,7 @@ const handlePayment = async (method) => {
     });
     
     // 💡 4. 결제가 완전히 성공한 시점에만 장바구니 비우기 (필요한 경우)
-    // basketStore.clearCart(); 
+    basketStore.clearCart(); 
 
     // 5. 결제 완료 화면으로 이동
     router.push(`/order-complete?orderId=${orderId}`);
