@@ -27,7 +27,11 @@ public enum NotificationType {
     BANNER_STARTED,
     BANNER_EXPIRING,
     BANNER_ENDED,
-
+    
+    // 재고
+    RESTOCK_REQUEST_CREATED,
+    FLAVOR_RESTOCK_REQUEST_CREATED,
+    
     // 공통
     SYSTEM
 }

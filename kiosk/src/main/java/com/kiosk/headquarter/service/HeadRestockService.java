@@ -18,6 +18,7 @@ import com.kiosk.headquarter.dto.restock.HeadRestockProcessRequestDTO;
 import com.kiosk.headquarter.repository.DeliveryRepository;
 import com.kiosk.headquarter.repository.HeadRestockRequestMapper;
 import com.kiosk.headquarter.repository.HeadquarterAdminMapper;
+import com.kiosk.common.websocket.BranchRestockStatusSocketPublisher;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,6 +27,16 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class HeadRestockService {
 
+
+	private final HeadRestockRequestMapper headRestockRequestMapper;
+	private final HeadquarterAdminMapper headquarterAdminMapper;
+	private final com.kiosk.headquarter.repository.AdminActionLogRepository adminActionLogRepository;
+
+	/*
+	 * 추가
+	 */
+	  private final BranchRestockStatusSocketPublisher
+	        branchRestockStatusSocketPublisher;
 
     private final HeadRestockRequestMapper headRestockRequestMapper;
     private final HeadquarterAdminMapper headquarterAdminMapper;
@@ -73,7 +84,7 @@ public class HeadRestockService {
 
 
 
-    // 승인
+ // 승인
     @Transactional
     public String approveRestock(
             Integer requestId,
@@ -81,14 +92,30 @@ public class HeadRestockService {
     ) {
 
         RestockRequest restockRequest =
-                getRestock(requestId);
+                getRestock(
+                        requestId
+                );
 
         HeadquarterAdmin admin =
-                getActiveAdmin(requestDTO.getAdminId());
+                getActiveAdmin(
+                        requestDTO.getAdminId()
+                );
 
+        /*
+         * WAITING → APPROVED
+         */
+        restockRequest.approve(
+                admin
+        );
 
-        restockRequest.approve(admin);
-
+        /*
+         * DB 커밋 성공 후 해당 지점에
+         * 승인 알림을 보냅니다.
+         */
+        branchRestockStatusSocketPublisher
+                .publishAfterCommit(
+                        restockRequest
+                );
 
         return "발주 요청 승인 성공";
     }
@@ -261,24 +288,62 @@ public class HeadRestockService {
 
 
 
-    // 반려
+ // 반려
     @Transactional
     public String rejectRestock(
             Integer requestId,
             HeadRestockProcessRequestDTO requestDTO
     ) {
-        RestockRequest restockRequest = getRestock(requestId);
-        HeadquarterAdmin admin = getActiveAdmin(requestDTO.getAdminId());
 
-        restockRequest.reject(admin);
+        RestockRequest restockRequest =
+                getRestock(
+                        requestId
+                );
 
-        // 반려 작업 로그 기록
-        com.kiosk.entity.AdminActionLog log = com.kiosk.entity.AdminActionLog.builder()
-                .administrator(admin.getName())
-                .action("재고 신청 반려 (ID: " + requestId + ")")
-                .type("RESTOCK_REJECT")
-                .build();
-        adminActionLogRepository.save(log);
+        HeadquarterAdmin admin =
+                getActiveAdmin(
+                        requestDTO.getAdminId()
+                );
+
+        /*
+         * WAITING → REJECTED
+         */
+        restockRequest.reject(
+                admin
+        );
+
+        /*
+         * 반려 작업 로그
+         */
+        com.kiosk.entity.AdminActionLog actionLog =
+                com.kiosk.entity.AdminActionLog
+                        .builder()
+                        .administrator(
+                                admin.getName()
+                        )
+                        .action(
+                                "재고 신청 반려 (ID: "
+                                + requestId
+                                + ")"
+                        )
+                        .type(
+                                "RESTOCK_REJECT"
+                        )
+                        .build();
+
+        adminActionLogRepository
+                .save(
+                        actionLog
+                );
+
+        /*
+         * 상태 변경과 작업 로그가 모두 커밋된 후
+         * 해당 지점에 반려 알림을 보냅니다.
+         */
+        branchRestockStatusSocketPublisher
+                .publishAfterCommit(
+                        restockRequest
+                );
 
         return "발주 요청 반려 성공";
     }
@@ -302,7 +367,11 @@ public class HeadRestockService {
         String storeName = "";
 
         if (restockRequest.getStoreInventory() != null) {
-            itemName = restockRequest.getStoreInventory().getItem().getProduct().getProductName();
+        	itemName =
+        	        restockRequest
+        	                .getStoreInventory()
+        	                .getItem()
+        	                .getItemName();
             unit = restockRequest.getStoreInventory().getItem().getUnit();
             storeName = restockRequest.getStoreInventory().getStore().getStoreName();
         } else if (restockRequest.getStoreFlavor() != null) {
@@ -398,11 +467,9 @@ public class HeadRestockService {
 
             name =
                     restockRequest
-                    .getStoreInventory()
-                    .getItem()
-                    .getProduct()
-                    .getProductName();
-
+                            .getStoreInventory()
+                            .getItem()
+                            .getItemName();
 
             unit =
                     restockRequest

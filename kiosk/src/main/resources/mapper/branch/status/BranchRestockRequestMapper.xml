@@ -2,82 +2,71 @@
 
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.kiosk.branch.status.reopsitory.BranchRestockRequestMapper">
 
+    <!--
+        지점 재고 신청 저장
 
-<insert id="insert"
-        parameterType="com.kiosk.entity.RestockRequest">
+        상품 재고 신청:
+        store_inventory_id 값 존재
+        store_flavor_id NULL
 
+        맛 재고 신청:
+        store_inventory_id NULL
+        store_flavor_id 값 존재
 
-INSERT INTO restock_requests
-(
-    store_inventory_id,
-    store_flavor_id,
-    request_quantity,
-    status,
-    admin_id,
-    requested_at
-)
+        useGeneratedKeys:
+        INSERT 후 생성된 request_id를
+        RestockRequest.id에 저장합니다.
+    -->
+    <insert
+            id="insert"
+            parameterType="com.kiosk.entity.RestockRequest"
+            useGeneratedKeys="true"
+            keyProperty="id"
+            keyColumn="request_id">
 
-VALUES
-(
+        INSERT INTO restock_requests
+        (
+            store_inventory_id,
+            store_flavor_id,
+            request_quantity,
+            status,
+            requested_at
+        )
+        VALUES
+        (
+            <!-- 일반 상품·원부자재 재고 ID -->
+            <choose>
+                <when test="storeInventory != null">
+                    #{storeInventory.id, jdbcType=INTEGER}
+                </when>
 
-    <!-- 상품 재고 ID -->
-    <choose>
+                <otherwise>
+                    NULL
+                </otherwise>
+            </choose>,
 
-        <when test="storeInventory != null">
-            #{storeInventory.id}
-        </when>
+            <!-- 아이스크림 맛 재고 ID -->
+            <choose>
+                <when test="storeFlavor != null">
+                    #{storeFlavor.id, jdbcType=INTEGER}
+                </when>
 
-        <otherwise>
-            NULL
-        </otherwise>
+                <otherwise>
+                    NULL
+                </otherwise>
+            </choose>,
 
-    </choose>
+            #{requestQuantity, jdbcType=INTEGER},
 
+            #{status, jdbcType=VARCHAR},
 
-    ,
+            CURRENT_TIMESTAMP
+        )
 
-
-    <!-- 맛 재고 ID -->
-    <choose>
-
-        <when test="storeFlavor != null">
-            #{storeFlavor.id}
-        </when>
-
-        <otherwise>
-            NULL
-        </otherwise>
-
-    </choose>
-
-
-    ,
-
-    #{requestQuantity}
-
-
-    ,
-
-    #{status}
-
-
-    ,
-
-    #{admin.id}
-
-
-    ,
-
-    NOW()
-
-)
-
-</insert>
-
+    </insert>
 
 </mapper>
