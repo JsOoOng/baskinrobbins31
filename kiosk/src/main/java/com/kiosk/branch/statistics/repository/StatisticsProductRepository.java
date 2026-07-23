@@ -1,6 +1,6 @@
 package com.kiosk.branch.statistics.repository;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,179 +13,251 @@ import com.kiosk.entity.OrderItem;
 
 @Repository
 public interface StatisticsProductRepository
-extends JpaRepository<OrderItem, Integer>{
+extends JpaRepository<OrderItem, Integer> {
 
 
 
-    /*
-     * ==================================
-     * 베스트 판매 상품 TOP N
-     * 판매 수량 기준
-     * ==================================
-     */
-    @Query("""
-        SELECT
-            oi.product.productName,
-            SUM(oi.quantity)
+/*
+ * ==================================
+ * 베스트 판매 상품 TOP N
+ * 판매 수량 기준
+ * ==================================
+ */
+@Query("""
+    SELECT
 
-        FROM OrderItem oi
+        oi.product.productName,
 
-        JOIN oi.order o
+        SUM(oi.quantity)
 
 
-        WHERE o.store.id = :storeId
+    FROM OrderItem oi
 
-        AND o.orderStatus = 'COMPLETED'
 
+    JOIN oi.order o
 
-        AND FUNCTION('DATE',o.createdAt)
-        BETWEEN :startDate AND :endDate
 
+    WHERE o.store.id = :storeId
 
-        GROUP BY
-            oi.product.id,
-            oi.product.productName
 
+    AND o.orderStatus = 'COMPLETED'
 
-        ORDER BY
-            SUM(oi.quantity) DESC
 
-    """)
-    List<Object[]> findTopSellingProducts(
+    AND o.createdAt
+    BETWEEN :startDateTime AND :endDateTime
 
-            @Param("storeId") Integer storeId,
 
-            @Param("startDate") LocalDate startDate,
+    GROUP BY
 
-            @Param("endDate") LocalDate endDate
+        oi.product.id,
 
-    );
+        oi.product.productName
 
 
+    ORDER BY
 
+        SUM(oi.quantity) DESC
 
+""")
+List<Object[]> findTopSellingProducts(
 
+        @Param("storeId")
+        Integer storeId,
 
+        @Param("startDateTime")
+        LocalDateTime startDateTime,
 
+        @Param("endDateTime")
+        LocalDateTime endDateTime
 
-    /*
-     * ==================================
-     * 상품별 매출
-     * ==================================
-     */
-    @Query("""
-        SELECT
-            oi.product.productName,
-            SUM(oi.quantity * oi.unitPrice)
+);
 
-        FROM OrderItem oi
 
-        JOIN oi.order o
 
 
-        WHERE o.store.id = :storeId
 
-        AND o.orderStatus = 'COMPLETED'
 
+/*
+ * ==================================
+ * 상품별 매출
+ * ==================================
+ */
+@Query("""
+    SELECT
 
-        AND FUNCTION('DATE',o.createdAt)
-        BETWEEN :startDate AND :endDate
+        oi.product.productName,
 
+        SUM(
+            oi.quantity * oi.unitPrice
+        )
 
-        GROUP BY
-            oi.product.id,
-            oi.product.productName
 
+    FROM OrderItem oi
 
-        ORDER BY
-            SUM(oi.quantity * oi.unitPrice) DESC
 
-    """)
-    List<Object[]> findProductSales(
+    JOIN oi.order o
 
-            @Param("storeId") Integer storeId,
 
-            @Param("startDate") LocalDate startDate,
+    WHERE o.store.id = :storeId
 
-            @Param("endDate") LocalDate endDate
 
-    );
+    AND o.orderStatus = 'COMPLETED'
 
 
+    AND o.createdAt
+    BETWEEN :startDateTime AND :endDateTime
 
 
+    GROUP BY
 
+        oi.product.id,
 
+        oi.product.productName
 
 
+    ORDER BY
 
-    /*
-     * ==================================
-     * 카테고리별 매출
-     * ==================================
-     */
-    @Query("""
-        SELECT
-            oi.product.category.categoryName,
-            SUM(oi.quantity * oi.unitPrice)
+        SUM(
+            oi.quantity * oi.unitPrice
+        )
+        DESC
 
-        FROM OrderItem oi
+""")
+List<Object[]> findProductSales(
 
-        JOIN oi.order o
+        @Param("storeId")
+        Integer storeId,
 
+        @Param("startDateTime")
+        LocalDateTime startDateTime,
 
-        WHERE o.store.id = :storeId
+        @Param("endDateTime")
+        LocalDateTime endDateTime
 
-        AND o.orderStatus = 'COMPLETED'
+);
 
 
-        AND FUNCTION('DATE',o.createdAt)
-        BETWEEN :startDate AND :endDate
 
 
-        GROUP BY
-            oi.product.category.id,
-            oi.product.category.categoryName
 
 
-        ORDER BY
-            SUM(oi.quantity * oi.unitPrice) DESC
 
-    """)
-    List<Object[]> findCategorySales(
 
-            @Param("storeId") Integer storeId,
+/*
+ * ==================================
+ * 카테고리별 매출
+ * ==================================
+ */
+@Query("""
+    SELECT
 
-            @Param("startDate") LocalDate startDate,
+        oi.product.category.categoryName,
 
-            @Param("endDate") LocalDate endDate
+        SUM(
+            oi.quantity * oi.unitPrice
+        )
 
-    );
 
-    
-    @Query("""
-    		SELECT
-    		    oi.product.category.categoryName,
-    		    SUM(oi.quantity * oi.unitPrice)
+    FROM OrderItem oi
 
-    		FROM OrderItem oi
 
-    		JOIN oi.order o
+    JOIN oi.order o
 
-    		WHERE o.store.id = :storeId
 
-    		AND o.orderStatus = 'COMPLETED'
+    WHERE o.store.id = :storeId
 
-    		GROUP BY
-    		    oi.product.category.id,
-    		    oi.product.category.categoryName
 
-    		ORDER BY
-    		    SUM(oi.quantity * oi.unitPrice) DESC
+    AND o.orderStatus = 'COMPLETED'
 
-    		""")
-    		List<Object[]> findCategorySales(
-    		        @Param("storeId") Integer storeId
-    		);
+
+    AND o.createdAt
+    BETWEEN :startDateTime AND :endDateTime
+
+
+    GROUP BY
+
+        oi.product.category.id,
+
+        oi.product.category.categoryName
+
+
+    ORDER BY
+
+        SUM(
+            oi.quantity * oi.unitPrice
+        )
+        DESC
+
+""")
+List<Object[]> findCategorySales(
+
+        @Param("storeId")
+        Integer storeId,
+
+        @Param("startDateTime")
+        LocalDateTime startDateTime,
+
+        @Param("endDateTime")
+        LocalDateTime endDateTime
+
+);
+
+
+
+
+
+
+/*
+ * ==================================
+ * 대시보드용 카테고리 매출
+ *
+ * 전체 누적
+ * ==================================
+ */
+@Query("""
+    SELECT
+
+        oi.product.category.categoryName,
+
+        SUM(
+            oi.quantity * oi.unitPrice
+        )
+
+
+    FROM OrderItem oi
+
+
+    JOIN oi.order o
+
+
+    WHERE o.store.id = :storeId
+
+
+    AND o.orderStatus = 'COMPLETED'
+
+
+    GROUP BY
+
+        oi.product.category.id,
+
+        oi.product.category.categoryName
+
+
+    ORDER BY
+
+        SUM(
+            oi.quantity * oi.unitPrice
+        )
+        DESC
+
+""")
+List<Object[]> findCategorySales(
+
+        @Param("storeId")
+        Integer storeId
+
+);
+
+
 
 }

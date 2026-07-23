@@ -59,7 +59,9 @@ const startDate = ref("");
 
 const endDate = ref("");
 
+const startTime = ref("");
 
+const endTime = ref("");
 
 
 
@@ -97,7 +99,9 @@ function setDefaultDate(){
         .toISOString()
         .substring(0,10);
 
+    startTime.value = "00:00";
 
+    endTime.value = "23:59";
 
 }
 
@@ -126,12 +130,20 @@ async function getStatistics(){
                     params:{
 
 
-                        startDate:
-                            startDate.value,
+                    startDate:
+                        startDate.value,
 
 
-                        endDate:
-                            endDate.value
+                    endDate:
+                        endDate.value,
+
+
+                    startTime:
+                        startTime.value,
+
+
+                    endTime:
+                        endTime.value
 
 
                     }
@@ -314,49 +326,48 @@ onMounted(()=>{
 
 
                 <input
-
                     type="date"
-
                     v-model="startDate"
+                />
 
+
+                <input
+                    type="time"
+                    v-model="startTime"
                 />
 
 
 
                 <span>
-
                     ~
-
                 </span>
 
 
 
+                <input
+                    type="date"
+                    v-model="endDate"
+                />
+
 
                 <input
-
-                    type="date"
-
-                    v-model="endDate"
-
+                    type="time"
+                    v-model="endTime"
                 />
 
 
 
 
                 <button
-
                     @click="searchStatistics"
-
                 >
 
                     조회
 
-
                 </button>
 
 
-
-            </div>
+                </div>
 
 
 
@@ -586,7 +597,7 @@ onMounted(()=>{
 
 
     border-radius:6px;
-
+   
 
 }
 

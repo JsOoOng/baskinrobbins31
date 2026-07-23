@@ -1,14 +1,16 @@
 package com.kiosk.branch.statistics.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import com.kiosk.branch.statistics.dto.BranchStatisticsResponse;
 import com.kiosk.branch.statistics.dto.CategorySalesDto;
-import com.kiosk.branch.statistics.dto.DashboardStatisticsDto;
 import com.kiosk.branch.statistics.dto.DaySalesDto;
+import com.kiosk.branch.statistics.dto.DashboardStatisticsDto;
 import com.kiosk.branch.statistics.dto.ExpenseCategoryDto;
 import com.kiosk.branch.statistics.dto.ExpenseDetailDto;
 import com.kiosk.branch.statistics.dto.ExpensePaymentDto;
@@ -30,547 +32,730 @@ import lombok.RequiredArgsConstructor;
 public class BranchStatisticsService {
 
 
-    private final StatisticsOrderRepository orderRepository;
 
-    private final StatisticsProductRepository productRepository;
+private final StatisticsOrderRepository orderRepository;
 
-    private final StatisticsExpenseRepository expenseRepository;
+private final StatisticsProductRepository productRepository;
 
+private final StatisticsExpenseRepository expenseRepository;
 
 
 
-    public BranchStatisticsResponse getStatistics(
-    	    Integer storeId,
-    	    LocalDate startDate,
-    	    LocalDate endDate
-    	){
 
 
-        /*
-         * =========================
-         * 기본 매출 / 지출
-         * =========================
-         */
+public BranchStatisticsResponse getStatistics(
 
+        Integer storeId,
 
-        Integer sales =
-                safeInteger(
-                    orderRepository.findTotalSales(storeId, startDate, endDate)
-                );
+        LocalDate startDate,
 
+        LocalDate endDate,
 
-        Integer orderCount =
-                safeInteger(
-                    orderRepository.countCompletedOrders(storeId, startDate, endDate)
-                );
+        LocalTime startTime,
 
+        LocalTime endTime
 
-        Integer totalOrderCount =
-                safeInteger(
-                    orderRepository.countAllOrders(storeId, startDate, endDate)
-                );
+){
 
 
+    LocalDateTime startDateTime =
+            startDate.atTime(
+                    startTime == null
+                    ? LocalTime.MIN
+                    : startTime
+            );
 
-        Integer expense =
-                safeInteger(
-                    expenseRepository.findTotalExpense(storeId, startDate, endDate)
-                );
 
+    LocalDateTime endDateTime =
+            endDate.atTime(
+                    endTime == null
+                    ? LocalTime.MAX
+                    : endTime
+            );
 
-
-        Integer averageOrderPrice = 0;
-
-
-        if(orderCount > 0){
-
-            averageOrderPrice =
-                    sales / orderCount;
-
-        }
-
-
-
-
-        Integer canceledOrders =
-                safeInteger(
-                    orderRepository.countCanceledOrders(storeId, startDate, endDate)
-                );
-
-
-
-
-        Double cancelRate = 0.0;
-
-
-        if(totalOrderCount > 0){
-
-            cancelRate =
-                    ((double)canceledOrders 
-                    / totalOrderCount)
-                    * 100;
-
-        }
-
-
-        /*
-         * =========================
-         * 결제 / 할인 / 마일리지
-         * =========================
-         */
-
-        Integer totalPaymentAmount =
-                safeInteger(
-                        orderRepository.findTotalPaymentAmount(
-                                storeId,
-                                startDate,
-                                endDate
-                        )
-                );
-
-
-        Integer couponDiscountAmount =
-                safeInteger(
-                        orderRepository.findCouponDiscountAmount(
-                                storeId,
-                                startDate,
-                                endDate
-                        )
-                );
-
-
-        Integer pointAmount =
-                safeInteger(
-                        orderRepository.findPointAmount(
-                                storeId,
-                                startDate,
-                                endDate
-                        )
-                );
-
-
-        Integer finalPaymentAmount =
-                safeInteger(
-                        orderRepository.findFinalPaymentAmount(
-                                storeId,
-                                startDate,
-                                endDate
-                        )
-                );
-        
-        
-
-
-
-
-        /*
-         * =========================
-         * 매출 기간 통계
-         * =========================
-         */
-
-
-
-        List<SalesPeriodDto> dailySales =
-                orderRepository.findDailySales(storeId, startDate, endDate)
-                .stream()
-                .map(row ->
-                    new SalesPeriodDto(
-                        String.valueOf(row[0]),
-                        ((Number)row[1]).intValue()
-                    )
-                )
-                .toList();
-
-
-
-
-
-        List<SalesPeriodDto> monthlySales =
-                orderRepository.findMonthlySales(storeId, startDate, endDate)
-                .stream()
-                .map(row ->
-                    new SalesPeriodDto(
-                        row[0]+"-"+row[1],
-                        ((Number)row[2]).intValue()
-                    )
-                )
-                .toList();
-
-
-
-
-
-        List<SalesPeriodDto> yearlySales =
-                orderRepository.findYearlySales(storeId, startDate, endDate)
-                .stream()
-                .map(row ->
-                    new SalesPeriodDto(
-                        String.valueOf(row[0]),
-                        ((Number)row[1]).intValue()
-                    )
-                )
-                .toList();
-
-
-
-
-
-
-
-        /*
-         * =========================
-         * 시간 / 요일 통계
-         * =========================
-         */
-
-
-
-        List<TimeSalesDto> hourlySales =
-                orderRepository.findHourlySales(storeId, startDate, endDate)
-                .stream()
-                .map(row ->
-                    new TimeSalesDto(
-                        ((Number)row[0]).intValue(),
-                        ((Number)row[1]).intValue()
-                    )
-                )
-                .toList();
-
-
-
-
-
-        List<DaySalesDto> dayOfWeekSales =
-                orderRepository.findDayOfWeekSales(storeId, startDate, endDate)
-                .stream()
-                .map(row ->
-                    new DaySalesDto(
-                        ((Number)row[0]).intValue(),
-                        ((Number)row[1]).intValue()
-                    )
-                )
-                .toList();
-
-
-
-
-
-        List<TimeOrderDto> hourlyOrderCount =
-                orderRepository.findHourlyOrderCount(storeId, startDate, endDate)
-                .stream()
-                .map(row ->
-                    new TimeOrderDto(
-                        ((Number)row[0]).intValue(),
-                        ((Number)row[1]).intValue()
-                    )
-                )
-                .toList();
-
-
-
-
-
-
-
-        /*
-         * =========================
-         * 상품 통계
-         * =========================
-         */
-
-
-
-        List<ProductRankDto> topProducts =
-                productRepository.findTopSellingProducts(storeId, startDate, endDate)
-                .stream()
-                .map(row ->
-                    new ProductRankDto(
-                        String.valueOf(row[0]),
-                        ((Number)row[1]).intValue()
-                    )
-                )
-                .toList();
-
-
-
-
-
-
-        List<ProductSalesDto> productSales =
-                productRepository.findProductSales(storeId, startDate, endDate)
-                .stream()
-                .map(row ->
-                    new ProductSalesDto(
-                        String.valueOf(row[0]),
-                        ((Number)row[1]).intValue()
-                    )
-                )
-                .toList();
-
-
-
-
-
-
-        List<CategorySalesDto> categorySales =
-                productRepository.findCategorySales(storeId, startDate, endDate)
-                .stream()
-                .map(row ->
-                    new CategorySalesDto(
-                        String.valueOf(row[0]),
-                        ((Number)row[1]).intValue()
-                    )
-                )
-                .toList();
-
-
-
-
-
-
-
-
-        /*
-         * =========================
-         * 지출 통계
-         * =========================
-         */
-
-
-
-        List<ExpensePeriodDto> expensePeriod =
-                expenseRepository.findDailyExpense(storeId, startDate, endDate)
-                .stream()
-                .map(row ->
-                    new ExpensePeriodDto(
-                        String.valueOf(row[0]),
-                        ((Number)row[1]).intValue()
-                    )
-                )
-                .toList();
-
-
-
-
-
-
-        List<ExpenseCategoryDto> expenseCategory =
-                expenseRepository.findExpenseByCategory(storeId, startDate, endDate)
-                .stream()
-                .map(row ->
-                    new ExpenseCategoryDto(
-                        String.valueOf(row[0]),
-                        ((Number)row[1]).intValue()
-                    )
-                )
-                .toList();
-
-
-
-
-
-
-        List<ExpensePaymentDto> expensePayment =
-                expenseRepository.findExpenseByPaymentMethod(storeId, startDate, endDate)
-                .stream()
-                .map(row ->
-                    new ExpensePaymentDto(
-                        String.valueOf(row[0]),
-                        ((Number)row[1]).intValue()
-                    )
-                )
-                .toList();
-
-
-
-        List<ExpenseDetailDto> expenseDetail =
-                expenseRepository.findExpenseDetail(
-                        storeId,
-                        startDate,
-                        endDate
-                )
-                .stream()
-                .map(e ->
-                    ExpenseDetailDto.builder()
-
-                        .expenseId(e.getId())
-
-                        .expenseDate(
-                            e.getExpenseDate()
-                        )
-
-                        .description(
-                            e.getDescription()
-                        )
-
-                        .amount(
-                            e.getAmount()
-                        )
-
-                        .expenseCategory(
-                            e.getExpenseCategory()
-                        )
-
-                        .paymentMethod(
-                            e.getPaymentMethod()
-                        )
-
-                        .build()
-                )
-                .toList();
-        
-
-
-
-
-        /*
-         * =========================
-         * 최종 Response
-         * =========================
-         */
-
-
-        return BranchStatisticsResponse.builder()
-
-
-                .totalSales(sales)
-
-                .orderCount(orderCount)
-
-                .averageOrderPrice(averageOrderPrice)
-
-                .totalExpense(expense)
-
-                .profit(
-                    sales - expense
-                )
-                
-                .totalPaymentAmount(totalPaymentAmount)
-
-                .couponDiscountAmount(couponDiscountAmount)
-
-                .pointAmount(pointAmount)
-
-                .finalPaymentAmount(finalPaymentAmount)
-
-
-
-                .dailySales(dailySales)
-
-                .monthlySales(monthlySales)
-
-                .yearlySales(yearlySales)
-
-
-
-                .hourlySales(hourlySales)
-
-                .dayOfWeekSales(dayOfWeekSales)
-
-                .hourlyOrderCount(hourlyOrderCount)
-
-
-
-                .topProducts(topProducts)
-
-                .productSales(productSales)
-
-                .categorySales(categorySales)
-
-
-
-                .canceledOrders(canceledOrders)
-
-                .cancelRate(cancelRate)
-
-
-
-                .expensePeriod(expensePeriod)
-
-                .expenseCategory(expenseCategory)
-
-                .expensePayment(expensePayment)
-
-                .expenseDetail(expenseDetail)
-                
-                .build();
-
-    }
 
 
 
 
     /*
-     * null 방지
+     * =========================
+     * 기본 매출 / 주문
+     * =========================
      */
-    private Integer safeInteger(Integer value){
 
-        return value == null ? 0 : value;
+
+    Integer sales =
+            safeInteger(
+                    orderRepository.findTotalSales(
+                            storeId,
+                            startDateTime,
+                            endDateTime
+                    )
+            );
+
+
+
+    Integer orderCount =
+            safeInteger(
+                    orderRepository.countCompletedOrders(
+                            storeId,
+                            startDateTime,
+                            endDateTime
+                    )
+            );
+
+
+
+    Integer totalOrderCount =
+            safeInteger(
+                    orderRepository.countAllOrders(
+                            storeId,
+                            startDateTime,
+                            endDateTime
+                    )
+            );
+
+
+
+    Integer canceledOrders =
+            safeInteger(
+                    orderRepository.countCanceledOrders(
+                            storeId,
+                            startDateTime,
+                            endDateTime
+                    )
+            );
+
+
+
+
+
+    Integer averageOrderPrice = 0;
+
+
+    if(orderCount > 0){
+
+        averageOrderPrice =
+                sales / orderCount;
 
     }
+
+
+
+
+
+    Double cancelRate = 0.0;
+
+
+    if(totalOrderCount > 0){
+
+        cancelRate =
+                ((double)canceledOrders
+                /
+                totalOrderCount)
+                * 100;
+
+    }
+
+
+
+
+
+    /*
+     * =========================
+     * 결제 / 할인
+     * =========================
+     */
+
+
+    Integer totalPaymentAmount =
+            safeInteger(
+                    orderRepository.findTotalPaymentAmount(
+                            storeId,
+                            startDateTime,
+                            endDateTime
+                    )
+            );
+
+
+
+    Integer couponDiscountAmount =
+            safeInteger(
+                    orderRepository.findCouponDiscountAmount(
+                            storeId,
+                            startDateTime,
+                            endDateTime
+                    )
+            );
+
+
+
+    Integer pointAmount =
+            safeInteger(
+                    orderRepository.findPointAmount(
+                            storeId,
+                            startDateTime,
+                            endDateTime
+                    )
+            );
+
+
+
+    Integer finalPaymentAmount =
+            safeInteger(
+                    orderRepository.findFinalPaymentAmount(
+                            storeId,
+                            startDateTime,
+                            endDateTime
+                    )
+            );
+
+
+
+
+
+    /*
+     * =========================
+     * 매출 기간 통계
+     * =========================
+     */
+
+
+    List<SalesPeriodDto> dailySales =
+            orderRepository.findDailySales(
+                    storeId,
+                    startDateTime,
+                    endDateTime
+            )
+            .stream()
+            .map(row ->
+                    new SalesPeriodDto(
+                            String.valueOf(row[0]),
+                            ((Number)row[1]).intValue()
+                    )
+            )
+            .toList();
+
+
+
+
+
+    List<SalesPeriodDto> monthlySales =
+            orderRepository.findMonthlySales(
+                    storeId,
+                    startDateTime,
+                    endDateTime
+            )
+            .stream()
+            .map(row ->
+                    new SalesPeriodDto(
+                            row[0]+"-"+row[1],
+                            ((Number)row[2]).intValue()
+                    )
+            )
+            .toList();
+
+
+
+
+
+    List<SalesPeriodDto> yearlySales =
+            orderRepository.findYearlySales(
+                    storeId,
+                    startDateTime,
+                    endDateTime
+            )
+            .stream()
+            .map(row ->
+                    new SalesPeriodDto(
+                            String.valueOf(row[0]),
+                            ((Number)row[1]).intValue()
+                    )
+            )
+            .toList();
     
-    public DashboardStatisticsDto getDashboard(
-            Integer storeId
-    ){
+    /*
+     * =========================
+     * 시간 / 요일 통계
+     * =========================
+     */
 
 
-        Integer todaySales =
-                safeInteger(
-                    orderRepository.findTodaySales(storeId)
-                );
-
-
-        Integer todayOrders =
-                safeInteger(
-                    orderRepository.countTodayOrders(storeId)
-                );
-
-
-
-        List<TimeSalesDto> hourlySales =
-                orderRepository.findTodayHourlySales(storeId)
-                .stream()
-                .map(row ->
+    List<TimeSalesDto> hourlySales =
+            orderRepository.findHourlySales(
+                    storeId,
+                    startDateTime,
+                    endDateTime
+            )
+            .stream()
+            .map(row ->
                     new TimeSalesDto(
-                        ((Number)row[0]).intValue(),
-                        ((Number)row[1]).intValue()
+                            ((Number)row[0]).intValue(),
+                            ((Number)row[1]).intValue()
                     )
-                )
-                .toList();
+            )
+            .toList();
 
 
 
-        List<CategorySalesDto> categorySales =
-                productRepository.findCategorySales(storeId)
-                .stream()
-                .map(row ->
+
+    List<DaySalesDto> dayOfWeekSales =
+            orderRepository.findDayOfWeekSales(
+                    storeId,
+                    startDateTime,
+                    endDateTime
+            )
+            .stream()
+            .map(row ->
+                    new DaySalesDto(
+                            ((Number)row[0]).intValue(),
+                            ((Number)row[1]).intValue()
+                    )
+            )
+            .toList();
+
+
+
+
+    List<TimeOrderDto> hourlyOrderCount =
+            orderRepository.findHourlyOrderCount(
+                    storeId,
+                    startDateTime,
+                    endDateTime
+            )
+            .stream()
+            .map(row ->
+                    new TimeOrderDto(
+                            ((Number)row[0]).intValue(),
+                            ((Number)row[1]).intValue()
+                    )
+            )
+            .toList();
+
+
+
+
+
+
+    /*
+     * =========================
+     * 상품 통계
+     * =========================
+     */
+
+
+    List<ProductRankDto> topProducts =
+            productRepository.findTopSellingProducts(
+                    storeId,
+                    startDateTime,
+                    endDateTime
+            )
+            .stream()
+            .map(row ->
+                    new ProductRankDto(
+                            String.valueOf(row[0]),
+                            ((Number)row[1]).intValue()
+                    )
+            )
+            .toList();
+
+
+
+
+
+    List<ProductSalesDto> productSales =
+            productRepository.findProductSales(
+                    storeId,
+                    startDateTime,
+                    endDateTime
+            )
+            .stream()
+            .map(row ->
+                    new ProductSalesDto(
+                            String.valueOf(row[0]),
+                            ((Number)row[1]).intValue()
+                    )
+            )
+            .toList();
+
+
+
+
+
+    List<CategorySalesDto> categorySales =
+            productRepository.findCategorySales(
+                    storeId,
+                    startDateTime,
+                    endDateTime
+            )
+            .stream()
+            .map(row ->
                     new CategorySalesDto(
-                        String.valueOf(row[0]),
-                        ((Number)row[1]).intValue()
+                            String.valueOf(row[0]),
+                            ((Number)row[1]).intValue()
                     )
-                )
-                .toList();
+            )
+            .toList();
 
 
 
-        return DashboardStatisticsDto.builder()
 
-                .todaySales(todaySales)
 
-                .todayOrderCount(todayOrders)
 
-                .todayHourlySales(hourlySales)
+    /*
+     * =========================
+     * 지출 통계
+     *
+     * StoreExpense는 현재
+     * LocalDate 기준 유지
+     * =========================
+     */
 
-                .categorySales(categorySales)
 
-                .build();
+    Integer expense =
+            safeInteger(
+                    expenseRepository.findTotalExpense(
+                            storeId,
+                            startDate,
+                            endDate
+                    )
+            );
 
-    }
-    
-    
-    
-    
 
+
+
+    List<ExpensePeriodDto> expensePeriod =
+            expenseRepository.findDailyExpense(
+                    storeId,
+                    startDate,
+                    endDate
+            )
+            .stream()
+            .map(row ->
+                    new ExpensePeriodDto(
+                            String.valueOf(row[0]),
+                            ((Number)row[1]).intValue()
+                    )
+            )
+            .toList();
+
+
+
+
+
+    List<ExpenseCategoryDto> expenseCategory =
+            expenseRepository.findExpenseByCategory(
+                    storeId,
+                    startDate,
+                    endDate
+            )
+            .stream()
+            .map(row ->
+                    new ExpenseCategoryDto(
+                            String.valueOf(row[0]),
+                            ((Number)row[1]).intValue()
+                    )
+            )
+            .toList();
+
+
+
+
+
+    List<ExpensePaymentDto> expensePayment =
+            expenseRepository.findExpenseByPaymentMethod(
+                    storeId,
+                    startDate,
+                    endDate
+            )
+            .stream()
+            .map(row ->
+                    new ExpensePaymentDto(
+                            String.valueOf(row[0]),
+                            ((Number)row[1]).intValue()
+                    )
+            )
+            .toList();
+
+
+
+
+
+    List<ExpenseDetailDto> expenseDetail =
+            expenseRepository.findExpenseDetail(
+                    storeId,
+                    startDate,
+                    endDate
+            )
+            .stream()
+            .map(e ->
+                    ExpenseDetailDto.builder()
+
+                    .expenseId(e.getId())
+
+                    .expenseDate(
+                            e.getExpenseDate()
+                    )
+
+                    .description(
+                            e.getDescription()
+                    )
+
+                    .amount(
+                            e.getAmount()
+                    )
+
+                    .expenseCategory(
+                            e.getExpenseCategory()
+                    )
+
+                    .paymentMethod(
+                            e.getPaymentMethod()
+                    )
+
+                    .build()
+            )
+            .toList();
+
+
+
+
+
+
+
+    /*
+     * =========================
+     * Response
+     * =========================
+     */
+
+
+    return BranchStatisticsResponse.builder()
+
+
+            .totalSales(sales)
+
+            .orderCount(orderCount)
+
+            .averageOrderPrice(
+                    averageOrderPrice
+            )
+
+
+            .totalExpense(expense)
+
+
+            .profit(
+                    sales - expense
+            )
+
+
+
+            .totalPaymentAmount(
+                    totalPaymentAmount
+            )
+
+
+            .couponDiscountAmount(
+                    couponDiscountAmount
+            )
+
+
+            .pointAmount(
+                    pointAmount
+            )
+
+
+            .finalPaymentAmount(
+                    finalPaymentAmount
+            )
+
+
+
+            .dailySales(
+                    dailySales
+            )
+
+
+            .monthlySales(
+                    monthlySales
+            )
+
+
+            .yearlySales(
+                    yearlySales
+            )
+
+
+
+            .hourlySales(
+                    hourlySales
+            )
+
+
+            .dayOfWeekSales(
+                    dayOfWeekSales
+            )
+
+
+            .hourlyOrderCount(
+                    hourlyOrderCount
+            )
+
+
+
+            .topProducts(
+                    topProducts
+            )
+
+
+            .productSales(
+                    productSales
+            )
+
+
+            .categorySales(
+                    categorySales
+            )
+
+
+
+            .canceledOrders(
+                    canceledOrders
+            )
+
+
+            .cancelRate(
+                    cancelRate
+            )
+
+
+
+            .expensePeriod(
+                    expensePeriod
+            )
+
+
+            .expenseCategory(
+                    expenseCategory
+            )
+
+
+            .expensePayment(
+                    expensePayment
+            )
+
+
+            .expenseDetail(
+                    expenseDetail
+            )
+
+
+            .build();
+
+}
+
+
+
+
+
+/*
+ * null 방지
+ */
+private Integer safeInteger(Integer value){
+
+    return value == null
+            ? 0
+            : value;
+
+}
+
+
+
+
+
+/*
+ * =========================
+ * 대시보드
+ * 기존 유지
+ * =========================
+ */
+
+public DashboardStatisticsDto getDashboard(
+        Integer storeId
+){
+
+
+    Integer todaySales =
+            safeInteger(
+                    orderRepository.findTodaySales(
+                            storeId
+                    )
+            );
+
+
+
+    Integer todayOrders =
+            safeInteger(
+                    orderRepository.countTodayOrders(
+                            storeId
+                    )
+            );
+
+
+
+    List<TimeSalesDto> hourlySales =
+            orderRepository.findTodayHourlySales(
+                    storeId
+            )
+            .stream()
+            .map(row ->
+                    new TimeSalesDto(
+                            ((Number)row[0]).intValue(),
+                            ((Number)row[1]).intValue()
+                    )
+            )
+            .toList();
+
+
+
+
+    List<CategorySalesDto> categorySales =
+            productRepository.findCategorySales(
+                    storeId
+            )
+            .stream()
+            .map(row ->
+                    new CategorySalesDto(
+                            String.valueOf(row[0]),
+                            ((Number)row[1]).intValue()
+                    )
+            )
+            .toList();
+
+
+
+
+    return DashboardStatisticsDto.builder()
+
+            .todaySales(
+                    todaySales
+            )
+
+            .todayOrderCount(
+                    todayOrders
+            )
+
+            .todayHourlySales(
+                    hourlySales
+            )
+
+            .categorySales(
+                    categorySales
+            )
+
+            .build();
+
+}
 
 }

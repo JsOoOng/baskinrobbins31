@@ -1,7 +1,7 @@
 package com.kiosk.branch.statistics.controller;
 
-
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 public class BranchStatisticsController {
 
 
-
     private final BranchStatisticsService statisticsService;
 
 
@@ -31,44 +30,92 @@ public class BranchStatisticsController {
     @GetMapping("/{storeId}")
     public BranchStatisticsResponse getStatistics(
 
-            @PathVariable Integer storeId,
+
+            @PathVariable
+            Integer storeId,
 
 
-            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false)
+            LocalDate startDate,
 
 
-            @RequestParam(required = false) LocalDate endDate
+            @RequestParam(required = false)
+            LocalDate endDate,
+
+
+            @RequestParam(required = false)
+            LocalTime startTime,
+
+
+            @RequestParam(required = false)
+            LocalTime endTime
+
 
     ){
 
 
+
+        /*
+         * 날짜 기본값
+         */
         if(startDate == null){
 
             startDate =
-                LocalDate.now()
-                .minusMonths(1);
+                    LocalDate.now()
+                    .minusMonths(1);
 
         }
+
 
 
         if(endDate == null){
 
             endDate =
-                LocalDate.now();
+                    LocalDate.now();
 
         }
 
 
 
+
+        /*
+         * 시간 기본값
+         */
+        if(startTime == null){
+
+            startTime =
+                    LocalTime.of(0,0,0);
+
+        }
+
+
+
+        if(endTime == null){
+
+            endTime =
+                    LocalTime.of(23,59,59);
+
+        }
+
+
+
+
+
         return statisticsService.getStatistics(
+
                 storeId,
+
                 startDate,
-                endDate
+
+                endDate,
+
+                startTime,
+
+                endTime
+
         );
 
-
     }
-
 
 
 }
