@@ -51,9 +51,6 @@ const selectOrder = async (orderId) => {
 
         selectedOrder.value = response.data
 
-        // 💡 이 부분을 추가해서 F12 콘솔창에서 JSON 구조를 확인하세요!
-        console.log("🔍 받아온 주문 상세 데이터:", JSON.parse(JSON.stringify(response.data)));
-
 
         const available =
             getAvailableStatuses(response.data.orderStatus)
