@@ -728,7 +728,16 @@ const processAddToCart = async (requestData) => {
       displayToast(t('{product} 상품이 장바구니에 담겼습니다!', { product: t(selectedProduct.value.productName) }));
     }
     
-    await basketStore.fetchBasket();
+    // 💡 [수정] 서버 동기화 시 데이터가 비어있다면 프론트 내역을 지우지 않도록 예외 처리
+    try {
+      const res = await axios.get('/api/customer/basket');
+      if (res.data && Array.isArray(res.data.items) && res.data.items.length > 0) {
+        basketStore.cartItems = res.data.items;
+      }
+    } catch (syncError) {
+      console.error('장바구니 동기화 스킵:', syncError);
+    }
+
     closeModal();
     if (editingCartIndex.value !== null) {
       isCartModalOpen.value = true;

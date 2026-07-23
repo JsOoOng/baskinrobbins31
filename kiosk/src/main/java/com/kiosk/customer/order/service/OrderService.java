@@ -10,6 +10,7 @@ import com.kiosk.customer.basket.dto.BasketAddRequest;
 import com.kiosk.customer.basket.dto.BasketResponse;
 import com.kiosk.customer.basket.service.BasketService;
 import com.kiosk.customer.order.dto.OrderCreateRequest;
+import com.kiosk.customer.order.dto.OrderCreateRequest.OrderFlavorDto;
 import com.kiosk.customer.order.dto.OrderItemDTO;
 import com.kiosk.customer.order.dto.OrderResponse;
 import com.kiosk.customer.order.dto.Payment;
@@ -21,6 +22,9 @@ import com.kiosk.customer.order.repository.OrderRepository;
 import com.kiosk.customer.order.repository.UserCouponRepository;
 import com.kiosk.customer.order.repository.UserRepository;
 import com.kiosk.entity.Coupon;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import com.kiosk.entity.IcecreamFlavor;
 import com.kiosk.entity.Kiosk;
@@ -69,8 +73,8 @@ public class OrderService {
      */
     @Transactional
     public int createOrder(OrderCreateRequest request, HttpSession session) {
-        BasketResponse basket = basketService.getBasket(session);
-        if (basket == null || basket.getItems().isEmpty()) {
+        // 1. 프론트엔드에서 보낸 아이템 목록이 비어있는지 검증
+        if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new IllegalArgumentException("장바구니가 비어 있습니다.");
         }
 
@@ -83,17 +87,44 @@ public class OrderService {
             throw new IllegalArgumentException("키오스크에 연결된 지점이 없습니다.");
         }
 
-        User user = null;
-        
-        // 장바구니 총 금액 계산
-        int totalPrice = 0;
-        for (BasketAddRequest basketItem : basket.getItems()) {
-            totalPrice += basketItem.getUnitPrice() * basketItem.getQuantity();
+        // ==========================================
+        // 2. 주문 생성 직전, 프론트엔드가 보낸 상품들의 재고 부족 검증 수행
+        // ==========================================
+        List<String> outOfStockItems = new ArrayList<>();
+
+        for (OrderCreateRequest.ItemDto itemDto : request.getItems()) {
+            int currentStock = orderMapper.selectProductStock(itemDto.getProductId());
+            
+            if (currentStock - itemDto.getQuantity() < 0) {
+                Product product = em.find(Product.class, itemDto.getProductId());
+                String productName = (product != null) ? product.getProductName() : "상품(ID:" + itemDto.getProductId() + ")";
+                
+                String msg = String.format("• %s (주문: %d개 / 잔여: %d개)", 
+                                           productName, 
+                                           itemDto.getQuantity(), 
+                                           currentStock);
+                outOfStockItems.add(msg);
+            }
         }
 
-        // 전화번호가 넘어왔다면 유저 맵핑 (포인트 로직은 processPayment로 이관)
+        // 재고가 부족한 상품이 하나라도 있으면 즉시 예외 발생 (주문 생성 안 됨)
+        if (!outOfStockItems.isEmpty()) {
+            String errorMessage = "재고가 부족한 상품이 있습니다:\n\n" + String.join("\n", outOfStockItems);
+            throw new RuntimeException(errorMessage);
+        }
+        // ==========================================
+
+        User user = null;
+        
+        // 총 금액 계산 (프론트엔드가 보낸 itemDto 기준)
+        int totalPrice = 0;
+        for (OrderCreateRequest.ItemDto itemDto : request.getItems()) {
+            totalPrice += itemDto.getUnitPrice() * itemDto.getQuantity();
+        }
+
+        // 전화번호가 넘어왔다면 유저 맵핑
         if (request.getPhoneNumber() != null && !request.getPhoneNumber().trim().isEmpty()) {
-        	Optional<User> optionalUser = userRepository.findByPhoneIgnoringHyphen(request.getPhoneNumber());
+            Optional<User> optionalUser = userRepository.findByPhoneIgnoringHyphen(request.getPhoneNumber());
             
             if (optionalUser.isPresent()) {
                 user = optionalUser.get();
@@ -105,11 +136,10 @@ public class OrderService {
                 userRepository.save(user);
             }
         } else if (request.getUserId() != null) {
-            // 예외적으로 기존처럼 userId가 직접 넘어온 경우
             user = em.getReference(User.class, request.getUserId());
         }
 
-        // 💡 지점별 및 오늘 날짜 기준으로 가장 높은 주문 번호를 가져와서 1을 더함 (없으면 1부터 시작)
+        // 지점별 및 오늘 날짜 기준으로 가장 높은 주문 번호 가져오기
         java.time.LocalDateTime startOfDay = java.time.LocalDate.now().atStartOfDay();
         int maxOrderNumber = orderRepository.findMaxOrderNumberByStoreAndDate(store.getId(), startOfDay);
         int nextOrderNumber = maxOrderNumber + 1;
@@ -125,22 +155,23 @@ public class OrderService {
                 .orderStatus(OrderStatus.WAITING)
                 .build();
         
-        orderRepository.save(order); // 여기서 order.getId()가 생성됨
+        orderRepository.save(order); // orderId 생성
         
-        
-        for (BasketAddRequest basketItem : basket.getItems()) {
-            Product product = em.getReference(Product.class, basketItem.getProductId());
+        // 프론트엔드가 보낸 아이템 리스트를 반복돌며 DB에 저장
+        for (OrderCreateRequest.ItemDto itemDto : request.getItems()) {
+            Product product = em.getReference(Product.class, itemDto.getProductId());
             OrderItem orderItem = OrderItem.builder()
                     .order(order)
                     .product(product)
-                    .quantity(basketItem.getQuantity())
-                    .unitPrice(basketItem.getUnitPrice())
+                    .quantity(itemDto.getQuantity())
+                    .unitPrice(itemDto.getUnitPrice())
                     .build();
 
             orderItemRepository.save(orderItem);
 
-            if (basketItem.getFlavors() != null) {
-                for (BasketAddRequest.FlavorDto flavorDto : basketItem.getFlavors()) {
+            // 맛(flavors) 저장
+            if (itemDto.getFlavors() != null) {
+                for (OrderFlavorDto flavorDto : itemDto.getFlavors()) {
                     IcecreamFlavor flavor = em.getReference(IcecreamFlavor.class, flavorDto.getFlavorId());
                     OrderItemFlavor itemFlavor = OrderItemFlavor.builder()
                             .orderItem(orderItem)
@@ -151,8 +182,9 @@ public class OrderService {
                 }
             }
 
-            if (basketItem.getOptions() != null) {
-                for (Integer optionId : basketItem.getOptions()) {
+            // 옵션(options) 저장
+            if (itemDto.getOptions() != null) {
+                for (Integer optionId : itemDto.getOptions()) {
                     ProductOption option = em.getReference(ProductOption.class, optionId);
                     OrderItemOption itemOption = OrderItemOption.builder()
                             .orderItem(orderItem)
@@ -163,14 +195,13 @@ public class OrderService {
             }
         }
         
-     // 지점에 새 주문 알림 전송
+        // 지점에 새 주문 알림 전송
         messagingTemplate.convertAndSend(
                 "/topic/store/" + store.getId(),
                 "새 주문이 들어왔습니다."
         );
 
-        // 장바구니 초기화는 결제 성공 시점(processPayment)으로 이동
-        return order.getId(); // 생성된 PK(orderId)를 반환
+        return order.getId();
     }
 
     /**
@@ -236,12 +267,27 @@ public class OrderService {
             userRepository.save(user);
         }
 
-        // 4. 재고 차감
+     // 4. 재고 부족 검증 (여러 개일 경우 모두 모아서 한 번에 메시지 생성)
+        List<String> outOfStockItems = new ArrayList<>();
+
         for (OrderItem item : order.getOrderItems()) {
-            int updatedRows = orderMapper.decreaseProductStock(item.getProduct().getId(), item.getQuantity());
-            if (updatedRows == 0) {
-                throw new RuntimeException("상품 [" + item.getProduct().getProductName() + "] 재고 부족");
+            int currentStock = orderMapper.selectProductStock(item.getProduct().getId());
+            
+            if (currentStock - item.getQuantity() < 0) {
+                // 부족한 상품명과 재고 상태를 리스트에 담음
+                String msg = String.format("• %s (주문: %d개 / 잔여: %d개)", 
+                                           item.getProduct().getProductName(), 
+                                           item.getQuantity(), 
+                                           currentStock);
+                outOfStockItems.add(msg);
             }
+        }
+
+        // 부족한 상품이 하나라도 존재한다면
+        if (!outOfStockItems.isEmpty()) {
+            // 키오스크 화면에 보기 좋게 줄바꿈(\n)으로 합쳐서 한 번에 던짐
+            String errorMessage = "재고가 부족한 상품이 있습니다:\n\n" + String.join("\n", outOfStockItems);
+            throw new RuntimeException(errorMessage);
         }
 
         int totalDiscount = productDiscount + couponDiscount + pointUsed;

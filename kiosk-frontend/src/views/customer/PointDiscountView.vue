@@ -24,35 +24,35 @@
           <button class="reset-btn" @click="resetUser">{{ $t('번호 재입력') }}</button>
         </div>
 
-        <!-- 쿠폰 목록 섹션 -->
-<div class="section-box">
-  <h3>{{ $t('사용 가능한 쿠폰') }}</h3>
-  <div v-if="coupons.length > 0" class="coupon-list">
-    <div 
-      v-for="coupon in coupons" 
-      v-key="coupon.userCouponId" 
-      class="coupon-card"
-      :class="{ selected: selectedCoupon?.userCouponId === coupon.userCouponId }"
-      @click="selectCoupon(coupon)"
-    >
-      <div class="coupon-info">
-        <div class="c-name">{{ coupon.couponName }}</div>
-        <div class="c-disc">
-          {{ coupon.discountValue }}{{ coupon.discountType === 'PERCENT' ? '%' : '원' }} {{ $t('할인') }}
+       <!-- 쿠폰 목록 섹션 -->
+      <div class="section-box">
+        <h3>{{ $t('사용 가능한 쿠폰') }}</h3>
+        <div v-if="coupons.length > 0" class="coupon-list">
+          <div 
+            v-for="coupon in coupons" 
+            :key="coupon.userCouponId" 
+            class="coupon-card"
+            :class="{ selected: selectedCoupon?.userCouponId === coupon.userCouponId }"
+            @click="selectCoupon(coupon)"
+          >
+            <div class="coupon-info">
+              <div class="c-name">{{ coupon.couponName }}</div>
+              <div class="c-disc">
+                {{ coupon.discountValue }}{{ coupon.discountType === 'PERCENT' ? '%' : '원' }} {{ $t('할인') }}
+              </div>
+              <div class="c-duration" v-if="coupon.expiryDate">
+                {{ $t('만료일') }}: {{ coupon.expiryDate.substring(0, 10) }} {{ $t('까지') }}
+              </div>
+            </div>
+            <div class="radio-icon">
+              {{ selectedCoupon?.userCouponId === coupon.userCouponId ? 'V' : '' }}
+            </div>
+          </div>
         </div>
-        <div class="c-duration" v-if="coupon.expiryDate">
-          {{ $t('만료일') }}: {{ coupon.expiryDate.substring(0, 10) }} {{ $t('까지') }}
+        <div v-else class="empty-msg">
+          {{ $t('사용 가능한 쿠폰이 없습니다.') }}
         </div>
       </div>
-      <div class="radio-icon">
-        {{ selectedCoupon?.userCouponId === coupon.userCouponId ? 'V' : '' }}
-      </div>
-    </div>
-  </div>
-  <div v-else class="empty-msg">
-    {{ $t('사용 가능한 쿠폰이 없습니다.') }}
-  </div>
-</div>
 
         <!-- 포인트 사용 섹션 -->
         <div class="section-box">
