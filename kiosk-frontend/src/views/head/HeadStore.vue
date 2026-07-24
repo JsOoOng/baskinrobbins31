@@ -25,6 +25,7 @@ import {
 
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
+import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
 
 const stores = ref([])
 
@@ -34,6 +35,8 @@ const saving = ref(false)
 const employeeSaving = ref(false)
 
 const searchKeyword = ref('')
+const currentPage = ref(1)
+const pageSize = ref(10)
 const statusFilter = ref('ALL')
 
 const message = ref('')
@@ -175,6 +178,13 @@ const filteredStores = computed(() => {
       matchesStatus
     )
   })
+})
+/*
+ * 운영 상태·검색 조건을 반영한 지점 목록을 현재 페이지 범위로 자릅니다.
+ */
+const paginatedStores = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return filteredStores.value.slice(start, start + pageSize.value)
 })
 
 const openStoreCount = computed(() => {
@@ -830,7 +840,7 @@ onMounted(() => {
 
           <tbody>
             <tr
-              v-for="store in filteredStores"
+              v-for="store in paginatedStores"
               :key="store.storeId"
             >
               <td>
@@ -943,6 +953,11 @@ onMounted(() => {
             </tr>
           </tbody>
         </table>
+        <HeadTablePagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total-items="filteredStores.length"
+        />
       </div>
 
       <footer class="panel-footer">

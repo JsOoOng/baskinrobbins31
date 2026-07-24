@@ -11,6 +11,11 @@ import { useRouter } from 'vue-router'
 
 import P2ComingSoonModal from '../../components/head/P2ComingSoonModal.vue'
 import { getHeadDashboardSummary } from '../../api/head/headDashboardApi'
+import {
+  getActiveInventoryShortageAlerts,
+  sendInventoryShortageAlertToStore
+} from '../../api/headquarter/headInventoryAlertApi'
+import { useHeadAuthStore } from '../../stores/head/headAuthStore'
 
 const router = useRouter()
 
@@ -39,12 +44,22 @@ const statistics = ref([
 ])
 
 const inventoryRequests = ref([])
+const shortageAlerts = ref([])
+const sendingAlertId = ref(null)
+const headAuthStore = useHeadAuthStore()
 const storeSummary = ref([])
 const recentActions = ref([])
 
+/*
+ * 본사 대시보드 진입 시 요약 통계·재고 신청·부족 알림을 조회해
+ * 카드, 진행률, 최근 처리 목록에 각각 분배합니다.
+ */
 const fetchDashboardData = async () => {
   try {
-    const data = await getHeadDashboardSummary(comparisonPeriod.value)
+    const [data, alertResponse] = await Promise.all([
+      getHeadDashboardSummary(comparisonPeriod.value),
+      getActiveInventoryShortageAlerts()
+    ])
     
     statistics.value = [
       { key: 'stores', label: '전체 지점 수', value: data.totalStores.toString(), subText: '실시간 현황', trend: 'up', icon: '⌂' },
@@ -59,9 +74,43 @@ const fetchDashboardData = async () => {
     
     storeSummary.value = data.storeSummary
     inventoryRequests.value = data.inventoryRequests || []
+    shortageAlerts.value = Array.isArray(alertResponse.data) ? alertResponse.data : []
     recentActions.value = data.recentActions || []
   } catch (error) {
     console.error('대시보드 통계 조회 실패:', error)
+  }
+}
+
+/*
+ * 대시보드의 재고 신청 행과 서버의 활성 부족 알림을
+ * 지점명·품목명으로 연결해 실제 전송 대상 alertId를 찾습니다.
+ */
+const findShortageAlert = (request) => shortageAlerts.value.find((alert) =>
+  alert.storeName === request.storeName && alert.itemName === request.productName
+)
+
+/*
+ * 대시보드 알림 버튼
+ * 행 선택 → 활성 alertId 확인 → 본사 관리자 ID와 함께 전송 API 호출
+ * → 성공 후 대시보드 데이터를 다시 조회해 버튼 상태를 동기화합니다.
+ */
+const sendShortageAlert = async (request) => {
+  const shortageAlert = findShortageAlert(request)
+  const adminId = headAuthStore.headUser?.employeeId
+  if (!shortageAlert || !adminId) {
+    alert('전송 가능한 부족 알림 또는 관리자 정보가 없습니다.')
+    return
+  }
+  if (!confirm(`${request.storeName}에 ${request.productName} 재고 부족 알림을 보내시겠습니까?`)) return
+  sendingAlertId.value = shortageAlert.alertId
+  try {
+    await sendInventoryShortageAlertToStore(shortageAlert.alertId, adminId)
+    alert('지점에 재고 부족 알림을 전송했습니다.')
+    await fetchDashboardData()
+  } catch (error) {
+    alert(error.response?.data?.message || '지점 알림 전송에 실패했습니다.')
+  } finally {
+    sendingAlertId.value = null
   }
 }
 
@@ -88,6 +137,7 @@ const filteredInventoryRequests = computed(() => {
   })
 })
 
+/* 통계 증감 방향을 대시보드 카드의 화살표 문자로 변환합니다. */
 const getTrendIcon = (trend) => {
   if (trend === 'up') return '↗'
   if (trend === 'down') return '↘'
@@ -96,6 +146,7 @@ const getTrendIcon = (trend) => {
   return '→'
 }
 
+/* 지점별 수치를 최대값 대비 백분율로 바꿔 진행 막대 너비를 계산합니다. */
 const getProgressWidth = (item) => {
   if (!item.total) {
     return '0%'
@@ -112,10 +163,15 @@ const openP2 = (title, description) => {
   }
 }
 
+/* 준비 중 기능 안내 모달의 열림 상태와 내용을 초기화합니다. */
 const closeP2 = () => {
   p2Modal.value.open = false
 }
 
+/*
+ * 요약 카드의 key에 따라 관련 본사 관리 화면으로 이동합니다.
+ * 아직 구현되지 않은 카드는 이동 대신 준비 중 안내 모달을 엽니다.
+ */
 const handleStatisticClick = (statistic) => {
   if (statistic.phase === 'P2') {
     openP2(
@@ -144,6 +200,7 @@ const handleStatisticClick = (statistic) => {
   }
 }
 
+/* 대시보드 바로가기 버튼에서 Vue Router 경로로 이동합니다. */
 const goTo = (path) => {
   router.push(path)
 }
@@ -325,6 +382,16 @@ const goTo = (path) => {
                       반려
                     </button>
                   </template>
+
+                  <button
+                    v-if="findShortageAlert(request)"
+                    type="button"
+                    class="alert-button"
+                    :disabled="sendingAlertId === findShortageAlert(request).alertId"
+                    @click="sendShortageAlert(request)"
+                  >
+                    {{ sendingAlertId === findShortageAlert(request).alertId ? '전송 중' : '지점 알림' }}
+                  </button>
 
                   <button
                     v-else
@@ -1037,6 +1104,20 @@ const goTo = (path) => {
 
   color: #ffffff;
   background: #705fe8;
+}
+
+.alert-button {
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: #f59e0b;
+  color: #fff;
+  cursor: pointer;
+}
+
+.alert-button:disabled {
+  cursor: not-allowed;
+  opacity: .6;
 }
 
 .bottom-grid {

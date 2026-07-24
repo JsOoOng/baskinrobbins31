@@ -6,7 +6,7 @@
   다음 이동: 현재 상태를 갱신하거나 부모 화면에 이벤트를 전달
 -->
 <script setup>
-import { onMounted, reactive, ref, computed } from 'vue'
+import { onMounted, reactive, ref, computed, watch } from 'vue'
 
 import {
   createHeadFlavor,
@@ -15,10 +15,34 @@ import {
 } from '@/api/head/headFlavorApi'
 
 import AppMessageToast from '@/components/common/AppMessageToast.vue'
+import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
 
 const flavors = ref([])
 const loading = ref(false)
 const saving = ref(false)
+const searchKeyword = ref('')
+const currentPage = ref(1)
+const pageSize = ref(10)
+/*
+ * 맛 이름·영문명·ID를 하나의 검색어로 검사해
+ * 등록된 맛 원본 목록에서 화면 표시 대상만 만듭니다.
+ */
+const filteredFlavors = computed(() => {
+  const keyword = searchKeyword.value.trim().toLowerCase()
+  if (!keyword) return flavors.value
+  return flavors.value.filter((flavor) =>
+    [flavor.flavorName, flavor.name, flavor.imageUrl, flavor.image]
+      .some((value) => String(value ?? '').toLowerCase().includes(keyword))
+  )
+})
+/*
+ * 검색된 맛 목록 중 현재 페이지에 해당하는 행만 표에 전달합니다.
+ */
+const paginatedFlavors = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return filteredFlavors.value.slice(start, start + pageSize.value)
+})
+watch([searchKeyword, pageSize], () => { currentPage.value = 1 })
 
 const message = ref('')
 const messageType = ref('success')
@@ -159,6 +183,7 @@ onMounted(() => {
       </div>
 
       <div class="header-actions">
+        <input v-model="searchKeyword" class="table-search" type="search" placeholder="맛 이름·이미지 경로 검색" />
         <button
           type="button"
           class="create-button"
@@ -190,7 +215,7 @@ onMounted(() => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="flavor in flavors" :key="flavor.flavorId || flavor.id">
+            <tr v-for="flavor in paginatedFlavors" :key="flavor.flavorId || flavor.id">
               <td class="td-image">
                 <img :src="flavor.imageUrl || flavor.image" :alt="flavor.flavorName || flavor.name" class="flavor-img" />
               </td>
@@ -217,6 +242,11 @@ onMounted(() => {
             </tr>
           </tbody>
         </table>
+        <HeadTablePagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total-items="filteredFlavors.length"
+        />
       </div>
     </section>
 
@@ -283,6 +313,16 @@ onMounted(() => {
 .page-header p {
   font-size: 14px;
   color: #656f85;
+  margin: 0;
+}
+.header-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.header-actions .table-search {
   margin: 0;
 }
 .create-button {

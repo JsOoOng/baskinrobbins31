@@ -84,71 +84,6 @@
       </div>
     </main>
 
-    <!-- 5. 상품 상세 옵션 모달 팝업 -->
-    <div v-if="isModalOpen" class="modal-overlay">
-      <div class="modal-content">
-        <header class="modal-header">
-          <h3>{{ $t(selectedProduct.productName) }} 옵션 선택</h3>
-          <button class="btn-close" @click="closeModal">❌</button>
-        </header>
-
-        <main class="modal-body">
-          <!-- 아이스크림 맛 선택 제약 조건 화면 -->
-          <div v-if="currentMaxFlavors > 0" class="option-section">
-            <h4>🍦 아이스크림 맛 선택 (최대 {{ currentMaxFlavors }}가지)</h4>
-            <div class="flavor-counter-header">
-              <p class="flavor-counter">선택된 맛: <strong>{{ selectedFlavors.length }} / {{ currentMaxFlavors }}</strong></p>
-            </div>
-            
-            <div class="selected-flavor-badges" v-if="selectedFlavors.length > 0">
-              <span v-for="(fId, idx) in selectedFlavors" :key="idx" class="flavor-badge" @click="removeFlavorSlot(idx)">
-                {{ $t(getFlavorName(fId)) }} <span class="badge-remove">✖</span>
-              </span>
-            </div>
-            
-            <div class="flavor-selection-grid-with-images">
-              <div 
-                v-for="flavor in paginatedFlavors" 
-                :key="flavor.flavorId" 
-                :class="['flavor-card', { selected: selectedFlavors.includes(flavor.flavorId) }, { disabled: isFlavorMax || flavor.isSoldOut }, { 'sold-out-card': flavor.isSoldOut }]"
-                @click="!flavor.isSoldOut && addFlavorSlot(flavor.flavorId)"
-                style="position: relative;"
-              >
-                <img v-if="flavor.imageUrl" :src="flavor.imageUrl" :alt="flavor.flavorName" class="flavor-image"/>
-                <div v-else class="flavor-image-placeholder">🍦</div>
-                <img v-if="flavor.isSoldOut" src="/images/etc/flavor_sold_out.png" alt="sold out" class="sold-out-overlay" />
-                <div class="flavor-name">{{ $t(flavor.flavorName) }}</div>
-              </div>
-            </div>
-
-            <div class="pagination-controls">
-              <button class="btn-page" :disabled="currentPage === 1" @click="currentPage--">이전</button>
-              <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-              <button class="btn-page" :disabled="currentPage === totalPages" @click="currentPage++">다음</button>
-            </div>
-          </div>
-
-          <!-- 스푼 선택 화면 -->
-          <div class="option-section">
-            <h4>🥄 스푼 선택</h4>
-            <p class="spoon-guide">4개까지 무료, 이후 1개당 50원 추가</p>
-            <div class="spoon-counter">
-              <button class="btn-count" @click="changeSpoon(-1)">-</button>
-              <span class="spoon-text">{{ spoonCount }}개</span>
-              <button class="btn-count" @click="changeSpoon(1)">+</button>
-            </div>
-          </div>
-        </main>
-
-        <footer class="modal-footer">
-          <div class="realtime-price">금액: {{ formatPrice(calculatedItemPrice) }}원</div>
-          <button class="btn-add-cart" @click="addCurrentItemToCart">
-            {{ editingCartIndex !== null ? '수정 완료 ✏️' : '장바구니 담기 🛒' }}
-          </button>
-        </footer>
-      </div>
-    </div>
-
     <!-- 4. 플로팅 장바구니 바 -->
     <footer class="floating-cart-bar">
       <button class="cart-icon-btn" @click="openCartModal">
@@ -169,7 +104,7 @@
         <!-- 모달 탭 -->
         <div class="modal-tabs">
           <button :class="['modal-tab-btn', {active: currentModalTab === 'INFO'}]" @click="currentModalTab = 'INFO'">{{ $t('상품정보') }}</button>
-          <button :class="['modal-tab-btn', {active: currentModalTab === 'FLAVOR'}]" @click="currentModalTab = 'FLAVOR'">{{ $t('플레이버') }}</button>
+          <button v-if="currentMaxFlavors > 0" :class="['modal-tab-btn', {active: currentModalTab === 'FLAVOR'}]" @click="currentModalTab = 'FLAVOR'">{{ $t('플레이버') }}</button>
         </div>
 
         <!-- STEP 1: 상품 정보 탭 -->
@@ -186,26 +121,17 @@
           <p class="warning-text" v-if="isContainerSelectable">{{ $t('★★ 본 제품은 포장이 불가합니다 ★★') }}</p>
 
           <div class="container-options" v-if="isContainerSelectable">
-            <div class="container-card" :class="{selected: selectedContainer === 'CUP'}" @click="selectedContainer = 'CUP'">
+            <div class="container-card" :class="{selected: selectedContainer === 'CUP'}" @click="selectContainer('CUP')">
               <div class="container-img-wrap"><span class="container-emoji">🥤</span></div>
               <span class="container-name">{{ $t('컵') }}<br/><span class="sub-text">{{ $t('(포장불가)') }}</span></span>
-              <div class="qty-control-simple">
-                <span>-</span><span>{{ selectedContainer === 'CUP' ? '1' : '0' }}</span><span>+</span>
-              </div>
             </div>
-            <div class="container-card" :class="{selected: selectedContainer === 'CONE'}" @click="selectedContainer = 'CONE'">
+            <div class="container-card" :class="{selected: selectedContainer === 'CONE'}" @click="selectContainer('CONE')">
               <div class="container-img-wrap"><span class="container-emoji">🍦</span></div>
               <span class="container-name">{{ $t('콘') }}<br/><span class="sub-text">{{ $t('(포장불가)') }}</span></span>
-              <div class="qty-control-simple">
-                <span>-</span><span>{{ selectedContainer === 'CONE' ? '1' : '0' }}</span><span>+</span>
-              </div>
             </div>
-            <div class="container-card" :class="{selected: selectedContainer === 'WAFFLE'}" @click="selectedContainer = 'WAFFLE'">
+            <div class="container-card" :class="{selected: selectedContainer === 'WAFFLE'}" @click="selectContainer('WAFFLE')">
               <div class="container-img-wrap"><span class="container-emoji">🧇</span></div>
               <span class="container-name">{{ $t('와플콘') }}<br/><span class="sub-text">{{ $t('(포장불가)') }}</span></span>
-              <div class="qty-control-simple">
-                <span>-</span><span>{{ selectedContainer === 'WAFFLE' ? '1' : '0' }}</span><span>+</span>
-              </div>
             </div>
           </div>
 
@@ -213,8 +139,8 @@
             <button class="btn-prev-outline" @click="closeModal">
               <svg viewBox="0 0 24 24" width="20" height="20" stroke="#e91e63" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg> {{ $t('이전') }}
             </button>
-            <button class="btn-next-pink" @click="currentModalTab = 'FLAVOR'">
-              {{ $t('플레이버(맛) 선택') }}
+            <button class="btn-next-pink" @click="currentMaxFlavors > 0 ? currentModalTab = 'FLAVOR' : addCurrentItemToCart()">
+              {{ currentMaxFlavors > 0 ? $t('플레이버(맛) 선택') : $t('장바구니 담기') }}
             </button>
           </div>
         </div>
@@ -414,6 +340,10 @@ const showToast = ref(false)
 const toastText = ref('')
 let toastTimeout = null
 
+/*
+ * 메뉴 화면의 공통 안내 문구를 잠시 표시합니다.
+ * 상품 담기·수정·삭제 결과가 이 함수로 모이며 일정 시간이 지나면 자동으로 사라집니다.
+ */
 const displayToast = (msg) => {
   toastText.value = msg;
   showToast.value = true;
@@ -431,6 +361,9 @@ const isContainerSelectable = computed(() => {
 const cartCount = computed(() => basketStore.totalCount)
 const totalPrice = computed(() => basketStore.totalPrice)
 
+/*
+ * 상품 이미지 로딩 실패 시 깨진 이미지 대신 기본 이미지를 보여줍니다.
+ */
 const handleProductImgError = (e) => {
   e.target.style.display = 'none';
   if (e.target.nextElementSibling) {
@@ -502,22 +435,6 @@ const selectCategory = async (id) => {
 
 // [API 통신 3]: 상품을 클릭했을 때 해당 상품의 사이즈 및 최대 선택 맛 수(옵션) 조회
 const openOptionModal = async (product) => {
-  // 아이스크림(카테고리 ID 1)이 아니면 모달을 띄우지 않고 바로 장바구니에 담기
-  if (product.categoryId !== 1 && currentCategoryId.value !== 1) {
-    const cartItem = {
-      productId: product.productId,
-      categoryId: product.categoryId || currentCategoryId.value,
-      productName: product.productName,
-      unitPrice: product.finalPrice || product.basePrice,
-      quantity: 1,
-      flavors: [],
-      options: [],
-      extraSpoons: false
-    }
-    await basketStore.addToCart(cartItem)
-    return
-  }
-
   editingCartIndex.value = null
   selectedProduct.value = product
   selectedFlavors.value = []
@@ -555,6 +472,7 @@ const paginatedProducts = computed(() => {
 
 const currentMaxFlavors = computed(() => {
   if (!selectedProduct.value) return 0
+  if (Number(selectedProduct.value.categoryId || currentCategoryId.value) !== 1) return 0
   const opt = dbOptions.value.find(o => o.productId === selectedProduct.value.productId)
   // 강제로 1 이상으로 설정하여 UI가 표시되게 함 (옵션 데이터가 없을 경우 방어)
   return opt ? opt.maxFlavorCount : 1
@@ -583,11 +501,17 @@ const getFlavorName = (fId) => {
   return f ? f.flavorName : '알 수 없는 맛';
 }
 
+/*
+ * 맛 ID로 현재 지점 맛 목록을 찾아 카드와 장바구니에 표시할 이미지 URL을 반환합니다.
+ */
 const getFlavorImage = (fId) => {
   const f = dbFlavors.value.find(x => x.flavorId === fId);
   return f ? f.imageUrl : null;
 }
 
+/*
+ * 옵션 때문에 상품명 뒤에 붙은 괄호 문자열을 제거해 장바구니 기본 상품명만 표시합니다.
+ */
 const formatCartItemName = (name) => {
   if (name.includes(' (')) {
     const parts = name.split(' (');
@@ -601,12 +525,19 @@ const formatCartItemName = (name) => {
   return t(name);
 }
 
+/*
+ * 아이스크림 상품의 맛 선택 슬롯에 맛 ID를 추가합니다.
+ * 선택 결과는 장바구니 BasketAddRequest의 flavors 배열로 이동합니다.
+ */
 const addFlavorSlot = (id) => {
   if (!isFlavorMax.value) {
     selectedFlavors.value.push(id)
   }
 }
 
+/*
+ * 선택된 맛 슬롯 한 칸을 제거해 상품별 허용 맛 개수 상태를 다시 계산합니다.
+ */
 const removeFlavorSlot = (idx) => {
   selectedFlavors.value.splice(idx, 1)
 }
@@ -626,6 +557,11 @@ const closeModal = () => {
   editingCartIndex.value = null
 }
 
+/*
+ * 장바구니 항목 수정 흐름
+ * 장바구니 행 클릭 → 상품 상세 API 재조회 → 기존 맛·옵션 복원
+ * → 같은 옵션 모달을 수정 모드로 엽니다.
+ */
 const openEditOptionModal = async (index, cartItem) => {
   editingCartIndex.value = index
   
@@ -661,11 +597,46 @@ const openEditOptionModal = async (index, cartItem) => {
   isModalOpen.value = true;
 }
 
+/*
+ * 추가 스푼 수량을 증감하되 0 미만이 되지 않도록 제한합니다.
+ */
 const changeSpoon = (amount) => {
   const next = spoonCount.value + amount
   if (next >= 0 && next <= 10) spoonCount.value = next
 }
 
+/*
+ * 컵·콘·와플콘 선택 처리
+ *
+ * 상품 상세 모달 → 용기 버튼 클릭 → selectedContainer 갱신
+ * → 장바구니 요청을 만들 때 선택한 용기 옵션으로 전달됩니다.
+ */
+const selectContainer = (container) => {
+  selectedContainer.value = container
+}
+
+/*
+ * 기존 템플릿 호출과의 호환용 진입점입니다.
+ * 용기는 수량 품목이 아니므로 증가하지 않고 선택 상태만 변경합니다.
+ */
+const increaseContainer = (container) => {
+  selectedContainer.value = container
+}
+
+/*
+ * 선택된 용기를 다시 해제하는 호환 처리입니다.
+ * 현재 화면에서는 +/- 버튼을 노출하지 않지만 기존 호출 경로를 안전하게 유지합니다.
+ */
+const decreaseContainer = (container) => {
+  if (selectedContainer.value === container) {
+    selectedContainer.value = null
+  }
+}
+
+/*
+ * 맛 버튼 클릭 시 빈 슬롯에 추가하거나 이미 선택된 맛을 해제합니다.
+ * 상품이 요구하는 맛 개수를 넘지 않도록 선택 배열을 관리합니다.
+ */
 const toggleFlavorSlot = (id) => {
   const idx = selectedFlavors.value.indexOf(id);
   if (idx > -1) {
@@ -677,7 +648,12 @@ const toggleFlavorSlot = (id) => {
 
 
 
-const addCurrentItemToCart = async () => { 
+/*
+ * 옵션 모달의 최종 확인 처리
+ * 필수 맛·용기·옵션 검증 → Basket 요청 DTO 생성
+ * → 신규 항목은 POST, 수정 항목은 PUT 경로로 전달합니다.
+ */
+const addCurrentItemToCart = async () => {
   if (currentMaxFlavors.value > 0 && selectedFlavors.value.length < currentMaxFlavors.value) {
     displayToast(t('아이스크림 맛을 {count}가지 모두 선택해주세요.', { count: currentMaxFlavors.value }));
     return;
@@ -724,6 +700,10 @@ const addCurrentItemToCart = async () => {
   await processAddToCart(requestData);
 }
 
+/*
+ * 포장 주문의 드라이아이스 시간을 선택하고 Pinia 주문 상태에 저장한 뒤
+ * 할인 선택 화면(/point-discount)으로 이동합니다.
+ */
 const selectPackingTime = async (mins, count) => {
   basketStore.setDryIceMins(mins);
   basketStore.setDryIceCount(count);
@@ -735,6 +715,10 @@ const selectPackingTime = async (mins, count) => {
   }
 }
 
+/*
+ * 완성된 장바구니 요청을 백엔드 세션 장바구니에 반영합니다.
+ * 편집 인덱스가 있으면 기존 항목 PUT, 없으면 신규 POST 후 목록을 다시 조회합니다.
+ */
 const processAddToCart = async (requestData) => {
   try {
     if (editingCartIndex.value !== null) {
@@ -765,25 +749,37 @@ const processAddToCart = async (requestData) => {
   }
 }
 
+/*
+ * 플로팅 장바구니 버튼에서 최신 세션 장바구니를 조회한 뒤 상세 모달을 엽니다.
+ */
 const openCartModal = async () => {
-  await basketStore.fetchBasket();
-  isCartModalOpen.value = true;
+  try {
+    await basketStore.fetchBasket();
+  } catch (error) {
+    console.error('서버 장바구니 조회 실패, 현재 장바구니를 표시합니다.', error);
+  } finally {
+    isCartModalOpen.value = true;
+  }
 }
 
+/* 장바구니 상세 모달만 닫고 세션 장바구니 데이터는 유지합니다. */
 const closeCartModal = () => {
   isCartModalOpen.value = false;
 }
 
+/* 장바구니 행의 수량을 1 증가시키는 백엔드 PUT 요청을 Store에 위임합니다. */
 const increaseCartQty = (index, currentQty) => {
   basketStore.updateQuantity(index, currentQty + 1);
 }
 
+/* 수량이 1보다 큰 경우에만 장바구니 행 수량을 1 감소시킵니다. */
 const decreaseCartQty = (index, currentQty) => {
   if (currentQty > 1) {
     basketStore.updateQuantity(index, currentQty - 1);
   }
 }
 
+/* 선택한 장바구니 인덱스를 세션 장바구니에서 삭제합니다. */
 const deleteCartItem = (index) => {
   basketStore.removeFromCart(index);
   displayToast(t("상품이 장바구니에서 삭제되었습니다."));
@@ -792,7 +788,10 @@ const deleteCartItem = (index) => {
   }
 }
 
-const goHome = async () => { 
+/*
+ * 주문을 중단하고 장바구니를 비운 뒤 키오스크 시작 화면으로 돌아갑니다.
+ */
+const goHome = async () => {
   if (basketStore.cartItems.length > 0) {
     await basketStore.clearCart();
     router.push('/kiosk');
@@ -801,7 +800,12 @@ const goHome = async () => {
   }
 }
 
-const goPayment = async () => { 
+/*
+ * 장바구니 주문 버튼 처리
+ * 빈 장바구니 검증 → 매장/포장 선택 → 포장은 드라이아이스 선택
+ * → 최종적으로 /point-discount 화면으로 이동합니다.
+ */
+const goPayment = async () => {
   if (basketStore.cartItems.length === 0) {
     displayToast(t('결제를 진행할 수 없습니다. (장바구니가 비어있는지 확인해주세요)'));
     return;
@@ -1344,7 +1348,17 @@ const handleCallStaff = async () => {
 .emoji-placeholder { font-size: 4rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 .emoji-placeholder-big { font-size: 6rem; width: 120px; display: flex; align-items: center; justify-content: center; }
 .sub-text { font-size: 0.75rem; color:#e91e63; font-weight:normal;}
-.qty-control-simple { display: flex; gap: 10px; color: #333; font-size: 1rem; font-weight: bold; }
+.qty-control-simple { display: flex; align-items: center; gap: 10px; color: #333; font-size: 1rem; font-weight: bold; }
+.qty-control-simple button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e91e63;
+  border-radius: 50%;
+  background: #fff;
+  color: #e91e63;
+  cursor: pointer;
+  font-weight: 700;
+}
 
 /* Step 2: Flavor */
 .flavor-grid {

@@ -26,9 +26,14 @@
           </p>
     
     
-          <h1>
-            전체 맛 재고 현황
-          </h1>
+          <div class="inventory-title-row">
+            <h1>전체 맛 재고 현황</h1>
+            <!-- 상품 수량 재고와 아이스크림 통 재고를 서로 다른 화면·API로 분리합니다. -->
+            <nav class="inventory-tabs">
+              <RouterLink to="/head/inventory">상품</RouterLink>
+              <RouterLink class="active" to="/head/storeFlavor">아이스크림 맛</RouterLink>
+            </nav>
+          </div>
     
     
           <p class="page-description">
@@ -553,21 +558,30 @@
                 <td>
     
     
-                  <span
-                    class="enabled-badge"
+                  <button
+                    type="button"
+                    class="enabled-toggle-button"
                     :class="{
                       active:
                         flavor.autoRestockEnabled
                     }"
+                    :disabled="
+                      togglingFlavorId ===
+                        flavor.storeFlavorId
+                    "
+                    @click="toggleAutoRestock(flavor)"
                   >
     
                     {{
-                      flavor.autoRestockEnabled
+                      togglingFlavorId ===
+                        flavor.storeFlavorId
+                      ? '변경 중...'
+                      : flavor.autoRestockEnabled
                       ? '사용'
                       : '중지'
                     }}
     
-                  </span>
+                  </button>
     
     
                 </td>
@@ -588,15 +602,22 @@
     
                 <td>
     
-                  <button
-                    type="button"
-                    class="setting-button"
-                    @click="openSettingModal(flavor)"
-                  >
-    
-                    설정
-    
-                  </button>
+                  <div class="action-buttons">
+                    <button
+                      type="button"
+                      class="stock-in-button"
+                      @click="openStockInModal(flavor)"
+                    >
+                      통 입고
+                    </button>
+                    <button
+                      type="button"
+                      class="setting-button"
+                      @click="openSettingModal(flavor)"
+                    >
+                      설정
+                    </button>
+                  </div>
     
     
                 </td>
@@ -945,6 +966,70 @@
     
     
     </Teleport>
+
+    <Teleport to="body">
+      <div
+        v-if="stockInModalOpen"
+        class="modal-backdrop"
+        @click.self="closeStockInModal"
+      >
+        <section class="setting-modal stock-in-modal">
+          <header class="modal-header">
+            <div>
+              <p class="modal-eyebrow">FLAVOR STOCK IN</p>
+              <h2>아이스크림 맛 통 입고</h2>
+            </div>
+            <button
+              type="button"
+              class="modal-close"
+              @click="closeStockInModal"
+            >
+              ×
+            </button>
+          </header>
+
+          <div v-if="selectedStockInFlavor" class="selected-summary">
+            <strong>{{ selectedStockInFlavor.storeName }}</strong>
+            <span>{{ selectedStockInFlavor.flavorName }}</span>
+            <span>현재 재고: {{ formatNumber(selectedStockInFlavor.container) }}통</span>
+          </div>
+
+          <form class="setting-form" @submit.prevent="submitStockIn">
+            <div class="form-field">
+              <label for="stock-in-container">입고할 통 수</label>
+              <input
+                id="stock-in-container"
+                v-model.number="stockInQuantity"
+                type="number"
+                min="1"
+                step="1"
+                required
+              />
+              <small class="field-help">
+                일반 상품 개수가 아닌 아이스크림 컨테이너(통) 단위로 반영됩니다.
+              </small>
+            </div>
+
+            <footer class="modal-actions">
+              <button
+                type="button"
+                class="cancel-button"
+                @click="closeStockInModal"
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                class="save-button"
+                :disabled="stockingIn"
+              >
+                {{ stockingIn ? '입고 중...' : '입고 처리' }}
+              </button>
+            </footer>
+          </form>
+        </section>
+      </div>
+    </Teleport>
     
     
     </template>
@@ -966,6 +1051,7 @@ import AppMessageToast
 
 import {
     getHeadStoreFlavorInventories,
+    stockInHeadStoreFlavor,
     updateHeadStoreFlavorRestockSetting
 } from '@/api/headquarter/headStoreFlavorApi'
 
@@ -976,6 +1062,11 @@ const inventories = ref([])
 const loading = ref(false)
 
 const saving = ref(false)
+const togglingFlavorId = ref(null)
+const stockInModalOpen = ref(false)
+const selectedStockInFlavor = ref(null)
+const stockInQuantity = ref(1)
+const stockingIn = ref(false)
 
 
 
@@ -1555,6 +1646,156 @@ const closeSettingModal=()=>{
 
 }
 
+/*
+ * PATCH 응답으로 받은 최신 맛 재고 한 건을 현재 표의 같은 ID 위치에 교체합니다.
+ * 전체 GET 재조회 없이 자동 보충·입고 결과가 즉시 화면에 반영됩니다.
+ */
+const replaceInventory = (updatedFlavor) => {
+    if (!updatedFlavor?.storeFlavorId) return
+
+    const index = inventories.value.findIndex(
+        flavor =>
+            flavor.storeFlavorId ===
+            updatedFlavor.storeFlavorId
+    )
+
+    if (index >= 0) {
+        inventories.value.splice(index, 1, updatedFlavor)
+    }
+}
+
+/*
+ * 목록의 자동 보충 사용/중지 버튼 처리
+ *
+ * 현재 행의 설정을 유지한 채 autoRestockEnabled만 반전
+ * → PATCH /head/flavor-inventory/{storeFlavorId}
+ * → 응답 DTO로 해당 행 교체 순서로 동작합니다.
+ * 설정값이 잘못된 상태에서 켜려 하면 설정 모달로 이동합니다.
+ */
+const toggleAutoRestock = async (flavor) => {
+    if (!flavor || togglingFlavorId.value !== null) return
+
+    const nextEnabled = !flavor.autoRestockEnabled
+    const minStock = Number(flavor.minStock ?? 0)
+    const targetStock = Number(flavor.targetStock ?? 0)
+
+    if (
+        nextEnabled &&
+        (targetStock < 1 || targetStock <= minStock)
+    ) {
+        openSettingModal(flavor)
+        settingForm.autoRestockEnabled = true
+        showMessage(
+            '자동 보충을 사용하려면 최소 통 수와 목표 통 수를 먼저 설정해주세요.',
+            'info'
+        )
+        return
+    }
+
+    togglingFlavorId.value = flavor.storeFlavorId
+
+    try {
+        const response =
+            await updateHeadStoreFlavorRestockSetting(
+                flavor.storeFlavorId,
+                {
+                    minStock,
+                    targetStock,
+                    autoRestockEnabled: nextEnabled,
+                    restockMode:
+                        flavor.restockMode ?? 'THRESHOLD'
+                }
+            )
+
+        replaceInventory(response.data)
+        showMessage(
+            nextEnabled
+                ? '맛 자동 보충을 사용하도록 변경했습니다.'
+                : '맛 자동 보충을 중지했습니다.'
+        )
+    } catch (error) {
+        showMessage(
+            extractErrorMessage(
+                error,
+                '맛 자동 보충 상태를 변경하지 못했습니다.'
+            ),
+            'error'
+        )
+    } finally {
+        togglingFlavorId.value = null
+    }
+}
+
+/*
+ * 선택한 지점·맛 정보를 보관하고 통 단위 입고 모달을 엽니다.
+ */
+const openStockInModal = (flavor) => {
+    selectedStockInFlavor.value = flavor
+    stockInQuantity.value = 1
+    stockInModalOpen.value = true
+}
+
+/*
+ * 입고 요청 중에는 중복 조작을 막고, 닫을 때 선택 행과 입력 수량을 초기화합니다.
+ */
+const closeStockInModal = () => {
+    if (stockingIn.value) return
+
+    stockInModalOpen.value = false
+    selectedStockInFlavor.value = null
+    stockInQuantity.value = 1
+}
+
+/*
+ * 맛 재고 통 입고 처리
+ *
+ * 입력값 정수 검증 → PATCH /head/flavor-inventory/{id}/stock-in
+ * → 백엔드 StoreFlavor.increaseStock() → 응답 행 교체 → 모달 종료 순서입니다.
+ */
+const submitStockIn = async () => {
+    const quantity = Number(stockInQuantity.value)
+
+    if (
+        !selectedStockInFlavor.value ||
+        !Number.isInteger(quantity) ||
+        quantity < 1
+    ) {
+        showMessage(
+            '입고할 통 수는 1 이상의 정수여야 합니다.',
+            'error'
+        )
+        return
+    }
+
+    stockingIn.value = true
+
+    try {
+        const response =
+            await stockInHeadStoreFlavor(
+                selectedStockInFlavor.value.storeFlavorId,
+                quantity
+            )
+
+        replaceInventory(response.data)
+        stockInModalOpen.value = false
+        selectedStockInFlavor.value = null
+        stockInQuantity.value = 1
+        showMessage(
+            `${quantity.toLocaleString('ko-KR')}통 입고 처리가 완료되었습니다.`
+        )
+    } catch (error) {
+        showMessage(
+            extractErrorMessage(
+                error,
+                '맛 재고 입고 처리에 실패했습니다.'
+            ),
+            'error'
+        )
+    } finally {
+        stockingIn.value = false
+    }
+}
+
 
 
 
@@ -1582,7 +1823,8 @@ const saveRestockSetting=async()=>{
     try{
 
 
-        await updateHeadStoreFlavorRestockSetting(
+        const response =
+            await updateHeadStoreFlavorRestockSetting(
 
             selectedFlavor.value.storeFlavorId,
 
@@ -1607,6 +1849,7 @@ const saveRestockSetting=async()=>{
 
         )
 
+        replaceInventory(response.data)
 
 
         showMessage(
@@ -1615,10 +1858,6 @@ const saveRestockSetting=async()=>{
 
 
         settingModalOpen.value=false
-
-
-        await loadInventories()
-
 
 
     }catch(error){
@@ -1834,6 +2073,10 @@ onMounted(()=>{
     font-size:30px;
 
 }
+.inventory-title-row { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+.inventory-tabs { display:flex; gap:6px; }
+.inventory-tabs a { padding:8px 14px; border:1px solid #dfe3ea; border-radius:8px; color:#697083; background:#fff; text-decoration:none; font-size:13px; font-weight:700; }
+.inventory-tabs a.active { border-color:#6d5de2; background:#6d5de2; color:#fff; }
 
 
 
@@ -2249,7 +2492,8 @@ onMounted(()=>{
 /* Badge */
 
 .status-badge,
-.enabled-badge {
+.enabled-badge,
+.enabled-toggle-button {
 
     display:inline-flex;
 
@@ -2267,6 +2511,23 @@ onMounted(()=>{
 
     font-weight:800;
 
+}
+
+.enabled-toggle-button {
+    border:0;
+    cursor:pointer;
+    color:#8b93a3;
+    background:#eceef3;
+}
+
+.enabled-toggle-button.active {
+    color:#159b68;
+    background:#dff9ed;
+}
+
+.enabled-toggle-button:disabled {
+    cursor:wait;
+    opacity:.65;
 }
 
 
@@ -2331,6 +2592,29 @@ onMounted(()=>{
 
     font-size:12px;
 
+}
+
+.action-buttons {
+    display:flex;
+    justify-content:center;
+    gap:7px;
+}
+
+.stock-in-button {
+    padding:7px 12px;
+    border:0;
+    border-radius:8px;
+    cursor:pointer;
+    color:#fff;
+    background:#6d5de2;
+    font-size:12px;
+    font-weight:700;
+}
+
+.field-help {
+    color:#858c9b;
+    font-size:11px;
+    line-height:1.5;
 }
 
 

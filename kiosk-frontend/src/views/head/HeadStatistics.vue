@@ -10,7 +10,8 @@ import {
   computed,
   onMounted,
   reactive,
-  ref
+  ref,
+  watch
 } from 'vue'
 
 import {
@@ -39,6 +40,16 @@ const message = ref('')
 
 const stores = ref([])
 const trend = ref([])
+const graphDisplayCount = ref('ALL')
+const graphAnimationKey = ref(0)
+/*
+ * 그래프 표시 개수 선택값에 따라 최신 데이터 N개만 잘라냅니다.
+ * ALL은 조회된 전체 기간을 그대로 사용하고 차트 템플릿이 이 값을 렌더링합니다.
+ */
+const displayedTrend = computed(() => {
+  if (graphDisplayCount.value === 'ALL') return trend.value
+  return trend.value.slice(-Number(graphDisplayCount.value))
+})
 const storeRanking = ref([])
 const productRanking = ref([])
 const flavorRanking = ref([])
@@ -58,18 +69,17 @@ const summary = reactive({
  * DONUT: 맛 비율
  */
 const popularityView = ref('PRODUCT')
+const popularityPageSize = ref(5)
 
 /*
  * 상품 순위 페이지
  */
 const productRankingPage = ref(1)
-const productRankingPageSize = 5
 
 /*
  * 맛 순위 페이지
  */
 const flavorRankingPage = ref(1)
-const flavorRankingPageSize = 5
 
 /*
  * 도넛 오른쪽 순위 목록 전용 페이지
@@ -77,7 +87,23 @@ const flavorRankingPageSize = 5
  * 왼쪽 도넛 그래프와 독립적으로 동작합니다.
  */
 const donutLegendPage = ref(1)
-const donutLegendPageSize = 5
+
+/*
+ * 인기 분석 페이지당 개수가 바뀌면 모든 순위 페이지를 첫 페이지로 돌리고,
+ * key를 변경해 막대·도넛 그래프 애니메이션을 처음부터 다시 실행합니다.
+ */
+watch(popularityPageSize, () => {
+  productRankingPage.value = 1
+  flavorRankingPage.value = 1
+  donutLegendPage.value = 1
+  graphAnimationKey.value += 1
+})
+/*
+ * 매출 그래프 표시 개수 변경 시 Vue key를 갱신해 막대 요소를 재생성합니다.
+ */
+watch(graphDisplayCount, () => {
+  graphAnimationKey.value += 1
+})
 
 /*
  * 도넛 색상
@@ -112,7 +138,7 @@ const productRankingTotalPages =
       1,
       Math.ceil(
         productRanking.value.length /
-        productRankingPageSize
+        popularityPageSize.value
       )
     )
   })
@@ -122,12 +148,12 @@ const pagedProductRanking =
     const startIndex =
       (
         productRankingPage.value - 1
-      ) * productRankingPageSize
+      ) * popularityPageSize.value
 
     return productRanking.value.slice(
       startIndex,
       startIndex +
-        productRankingPageSize
+        popularityPageSize.value
     )
   })
 
@@ -137,7 +163,7 @@ const getProductRankingNumber = (
   return (
     (
       productRankingPage.value - 1
-    ) * productRankingPageSize
+    ) * popularityPageSize.value
   ) + index + 1
 }
 
@@ -150,7 +176,7 @@ const flavorRankingTotalPages =
       1,
       Math.ceil(
         flavorRanking.value.length /
-        flavorRankingPageSize
+        popularityPageSize.value
       )
     )
   })
@@ -160,12 +186,12 @@ const pagedFlavorRanking =
     const startIndex =
       (
         flavorRankingPage.value - 1
-      ) * flavorRankingPageSize
+      ) * popularityPageSize.value
 
     return flavorRanking.value.slice(
       startIndex,
       startIndex +
-        flavorRankingPageSize
+        popularityPageSize.value
     )
   })
 
@@ -175,7 +201,7 @@ const getFlavorRankingNumber = (
   return (
     (
       flavorRankingPage.value - 1
-    ) * flavorRankingPageSize
+    ) * popularityPageSize.value
   ) + index + 1
 }
 
@@ -204,7 +230,7 @@ const donutTopFlavors =
   computed(() => {
     return flavorRanking.value.slice(
       0,
-      10
+      popularityPageSize.value
     )
   })
 
@@ -214,7 +240,7 @@ const donutTopFlavors =
 const otherFlavorSalesQuantity =
   computed(() => {
     return flavorRanking.value
-      .slice(10)
+      .slice(popularityPageSize.value)
       .reduce(
         (total, flavor) => {
           return (
@@ -354,7 +380,7 @@ const donutLegendTotalPages =
       1,
       Math.ceil(
         flavorRanking.value.length /
-        donutLegendPageSize
+        popularityPageSize.value
       )
     )
   })
@@ -364,13 +390,13 @@ const pagedDonutLegend =
     const startIndex =
       (
         donutLegendPage.value - 1
-      ) * donutLegendPageSize
+      ) * popularityPageSize.value
 
     return flavorRanking.value
       .slice(
         startIndex,
         startIndex +
-          donutLegendPageSize
+          popularityPageSize.value
       )
       .map(
         (flavor, index) => {
@@ -656,7 +682,7 @@ const selectedStoreName = computed(() => {
 })
 
 const maxTrendSales = computed(() => {
-  const values = trend.value.map(
+  const values = displayedTrend.value.map(
     (item) =>
       Number(item.totalSales ?? 0)
   )
@@ -1206,6 +1232,18 @@ onMounted(async () => {
             실제 결제 완료 시간을 기준으로 집계합니다.
           </p>
         </div>
+        <label class="graph-count-control">
+          그래프 표시
+          <select v-model="graphDisplayCount">
+            <option value="5">5개</option>
+            <option value="10">10개</option>
+            <option value="50">50개</option>
+            <option value="100">100개</option>
+            <option value="500">500개</option>
+            <option value="1000">1000개</option>
+            <option value="ALL">전체</option>
+          </select>
+        </label>
 
         <div class="period-buttons">
           <button
@@ -1232,12 +1270,12 @@ onMounted(async () => {
       </div>
 
       <div
-        v-else-if="trend.length > 0"
+        v-else-if="displayedTrend.length > 0"
         class="chart-scroll"
       >
-        <div class="chart-bars">
+        <div :key="graphAnimationKey" class="chart-bars">
           <article
-            v-for="item in trend"
+            v-for="(item, index) in displayedTrend"
             :key="item.periodLabel"
             class="chart-item"
           >
@@ -1254,7 +1292,9 @@ onMounted(async () => {
                 class="bar"
                 :style="{
                   height:
-                    `${getBarHeight(item)}%`
+                    `${getBarHeight(item)}%`,
+                  animationDelay:
+                    `${(displayedTrend.length - index - 1) * 70}ms`
                 }"
               />
             </div>
@@ -1386,6 +1426,15 @@ onMounted(async () => {
           </div>
 
           <div class="popularity-tabs">
+            <label class="popularity-page-size">
+              페이지당
+              <select v-model.number="popularityPageSize">
+                <option :value="5">5개</option>
+                <option :value="10">10개</option>
+                <option :value="20">20개</option>
+                <option :value="50">50개</option>
+              </select>
+            </label>
             <button
               type="button"
               :class="{
@@ -1737,6 +1786,7 @@ onMounted(async () => {
             <!-- 왼쪽: 상위 10개 + 기타 고정 도넛 -->
             <div class="donut-chart-wrapper">
               <div
+                :key="graphAnimationKey"
                 class="donut-chart"
                 :style="{
                   background:
@@ -1758,7 +1808,7 @@ onMounted(async () => {
 
               <div class="donut-summary">
                 <span>
-                  상위 10개 맛
+                  상위 {{ popularityPageSize }}개 맛
                 </span>
 
                 <span
@@ -2154,6 +2204,8 @@ onMounted(async () => {
   bottom: 0;
   left: 0;
   min-height: 4px;
+  transform-origin: bottom;
+  animation: grow-stat-bar .75s cubic-bezier(.2,.8,.2,1) both;
   border-radius: 7px 7px 3px 3px;
   background:
     linear-gradient(
@@ -2396,6 +2448,7 @@ td small {
 
 .donut-chart {
   position: relative;
+  animation: reveal-stat-donut .8s cubic-bezier(.2,.8,.2,1) both;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2524,6 +2577,60 @@ td small {
   color: #969dab;
   font-size: 9px;
   text-align: center;
+}
+
+.popularity-page-size {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: 6px;
+  color: #6c7482;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.popularity-page-size select {
+  padding: 7px 9px;
+  border: 1px solid #dfe3ea;
+  border-radius: 7px;
+  background: #fff;
+  color: #4f5665;
+}
+.graph-count-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6c7482;
+  font-size: 10px;
+  font-weight: 700;
+}
+.graph-count-control select {
+  padding: 7px 9px;
+  border: 1px solid #dfe3ea;
+  border-radius: 7px;
+  background: #fff;
+}
+
+@keyframes grow-stat-bar {
+  from {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes reveal-stat-donut {
+  from {
+    opacity: 0;
+    transform: scale(.72) rotate(55deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
 }
 
 @keyframes spin {

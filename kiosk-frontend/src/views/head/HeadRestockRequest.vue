@@ -89,7 +89,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in filteredRestocks" :key="item.requestId">
+            <tr v-for="item in paginatedRestocks" :key="item.requestId">
               <td><strong>{{ item.storeName || '-' }}</strong></td>
               <td>
                 <div class="item-cell">
@@ -145,6 +145,15 @@
                   >
                     배송완료
                   </button>
+                  <button
+                    v-if="findShortageAlert(item)"
+                    type="button"
+                    class="notify-button"
+                    :disabled="sendingAlertId === findShortageAlert(item).alertId"
+                    @click="handleSendAlert(item)"
+                  >
+                    {{ sendingAlertId === findShortageAlert(item).alertId ? '알림 전송 중' : '지점 알림' }}
+                  </button>
                 </div>
               </td>
               <td>{{ item.adminName || '-' }}</td>
@@ -152,13 +161,19 @@
           </tbody>
         </table>
       </div>
+      <HeadTablePagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total-items="filteredRestocks.length"
+      />
     </section>
   </section>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import AppMessageToast from '@/components/common/AppMessageToast.vue'
+import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
 import { useHeadAuthStore } from '@/stores/head/headAuthStore'
 import {
   getHeadRestocks,
@@ -168,6 +183,10 @@ import {
   rejectHeadRestock,
   extractRestockErrorMessage
 } from '@/api/head/headRestockApi'
+import {
+  getActiveInventoryShortageAlerts,
+  sendInventoryShortageAlertToStore
+} from '@/api/headquarter/headInventoryAlertApi'
 
 const headAuthStore = useHeadAuthStore()
 
@@ -175,24 +194,32 @@ const restocks = ref([])
 
 const loading = ref(false)
 const processingId = ref(null)
+const sendingAlertId = ref(null)
+const shortageAlerts = ref([])
 const filterStatus = ref('')
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 const message = ref('')
 const messageType = ref('success')
 
+/* 신청 처리 결과를 성공·오류 유형과 함께 토스트에 표시합니다. */
 const showMessage = (text, type = 'success') => {
   message.value = text
   messageType.value = type
 }
 
+/* 토스트 닫기 이벤트에서 현재 안내 문구를 초기화합니다. */
 const clearMessage = () => {
   message.value = ''
 }
 
+/* 신청 수량과 전체 건수를 천 단위 구분 형식으로 표시합니다. */
 const formatNumber = (num) => {
   return Number(num || 0).toLocaleString()
 }
 
+/* 신청 일시를 한국 지역 날짜·시간 문자열로 변환합니다. */
 const formatDate = (dateString) => {
   if (!dateString) return '-'
   const date = new Date(dateString)
@@ -204,6 +231,7 @@ const formatDate = (dateString) => {
   return `${yyyy}-${mm}-${dd} ${hh}:${min}`
 }
 
+/* RestockStatus enum을 표와 버튼에서 사용할 한글 상태명으로 바꿉니다. */
 const getStatusLabel = (status) => {
   const labels = {
     WAITING: '승인 대기',
@@ -215,17 +243,26 @@ const getStatusLabel = (status) => {
   return labels[status] || status
 }
 
+/* 신청 상태별 배지 색상을 적용할 CSS 클래스명을 만듭니다. */
 const getStatusClass = (status) => {
   return `status-${status.toLowerCase()}`
 }
 
+/*
+ * 본사 재고 신청 목록과 활성 부족 알림을 함께 조회합니다.
+ * 신청 데이터는 최신 요청이 먼저 보이도록 신청 시각 내림차순으로 정렬합니다.
+ */
 const loadRestocks = async () => {
   loading.value = true
   clearMessage()
   try {
-    const data = await getHeadRestocks()
+    const [data, alertResponse] = await Promise.all([
+      getHeadRestocks(),
+      getActiveInventoryShortageAlerts()
+    ])
     // Sort by requestedAt descending
     restocks.value = data.sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt))
+    shortageAlerts.value = Array.isArray(alertResponse.data) ? alertResponse.data : []
   } catch (error) {
     showMessage(extractRestockErrorMessage(error, '신청 내역을 불러오지 못했습니다.'), 'error')
   } finally {
@@ -233,6 +270,10 @@ const loadRestocks = async () => {
   }
 }
 
+/*
+ * WAITING 신청 승인 처리
+ * 관리자 ID와 함께 승인 API 호출 → 상태 변경 알림 발행 → 목록 재조회 순서입니다.
+ */
 const handleApprove = async (item) => {
   if (!confirm(`${item.itemName} 신청을 승인하시겠습니까?`)) return
   
@@ -254,6 +295,10 @@ const handleApprove = async (item) => {
   }
 }
 
+/*
+ * WAITING 신청 반려 처리
+ * 반려 사유를 입력받아 API로 전달하고 지점 상태 알림과 목록을 갱신합니다.
+ */
 const handleReject = async (item) => {
   if (!confirm(`${item.itemName} 신청을 반려하시겠습니까?`)) return
   
@@ -275,6 +320,10 @@ const handleReject = async (item) => {
   }
 }
 
+/*
+ * 승인된 신청을 배송 단계로 이동합니다.
+ * APPROVED → SHIPPING 상태 변경 API 호출 후 표의 최신 상태를 다시 조회합니다.
+ */
 const handleShipping = async (item) => {
   if (!confirm('배송을 시작하시겠습니까?')) return
   
@@ -302,6 +351,51 @@ const filteredRestocks = computed(() => {
   if (!filterStatus.value) return restocks.value
   return restocks.value.filter((r) => r.status === filterStatus.value)
 })
+/*
+ * 상태 필터가 적용된 재고 신청을 공통 페이징 컴포넌트와 연결합니다.
+ * 페이지당 건수가 바뀌거나 결과가 줄면 watch에서 유효한 마지막 페이지로 보정합니다.
+ */
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredRestocks.value.length / pageSize.value)))
+const paginatedRestocks = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return filteredRestocks.value.slice(start, start + pageSize.value)
+})
+watch([filterStatus, pageSize], () => { currentPage.value = 1 })
+watch(totalPages, (pages) => {
+  if (currentPage.value > pages) currentPage.value = pages
+})
+
+/*
+ * 재고 신청 행과 활성 재고 부족 알림을 지점·품목 기준으로 연결합니다.
+ * 반환된 alertId는 지점 알림 전송 API의 식별자로 사용됩니다.
+ */
+const findShortageAlert = (item) => shortageAlerts.value.find((alert) =>
+  alert.storeName === item.storeName && alert.itemName === item.itemName
+)
+
+/*
+ * 재고 신청 관리의 '알림 보내기' 처리
+ * 신청 행 → 활성 부족 알림 조회 → 지점 알림 API → 목록 재조회 순으로 이동합니다.
+ */
+const handleSendAlert = async (item) => {
+  const shortageAlert = findShortageAlert(item)
+  const adminId = headAuthStore.headUser?.employeeId
+  if (!shortageAlert || !adminId) {
+    showMessage('전송 가능한 부족 알림 또는 관리자 정보가 없습니다.', 'error')
+    return
+  }
+  if (!confirm(`${item.storeName}에 ${item.itemName} 재고 부족 알림을 보내시겠습니까?`)) return
+  sendingAlertId.value = shortageAlert.alertId
+  try {
+    await sendInventoryShortageAlertToStore(shortageAlert.alertId, adminId)
+    showMessage(`${item.storeName}에 재고 부족 알림을 전송했습니다.`)
+    await loadRestocks()
+  } catch (error) {
+    showMessage(error.response?.data?.message || '지점 알림 전송에 실패했습니다.', 'error')
+  } finally {
+    sendingAlertId.value = null
+  }
+}
 
 const waitingCount = computed(() => restocks.value.filter(r => r.status === 'WAITING').length)
 const approvedCount = computed(() => restocks.value.filter(r => r.status === 'APPROVED').length)
@@ -315,6 +409,15 @@ onMounted(() => {
 <style scoped>
 .restock-page {
   padding: 30px;
+}
+
+.notify-button {
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: #f59e0b;
+  color: #fff;
+  cursor: pointer;
 }
 
 .page-header {

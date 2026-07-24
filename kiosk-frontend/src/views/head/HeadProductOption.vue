@@ -16,6 +16,7 @@ import {
 
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
+import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
 
 import {
   extractProductData,
@@ -37,6 +38,8 @@ const options = ref([])
 
 const selectedProductId = ref('')
 const searchKeyword = ref('')
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 const loadingProducts = ref(false)
 const loadingOptions = ref(false)
@@ -105,6 +108,13 @@ return [...result].sort(
     Number(b.optionId)
 )
 
+})
+/*
+ * 상품·검색 필터가 적용된 옵션 목록에서 현재 페이지 행만 추출합니다.
+ */
+const paginatedOptions = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return filteredOptions.value.slice(start, start + pageSize.value)
 })
 
 const normalizeProduct = (product = {}) => {
@@ -597,7 +607,7 @@ onMounted(async () => {
 
           <tbody>
             <tr
-              v-for="option in filteredOptions"
+              v-for="option in paginatedOptions"
               :key="option.optionId"
             >
               <td class="id-cell">
@@ -676,6 +686,11 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
+        <HeadTablePagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total-items="filteredOptions.length"
+        />
       </div>
 
       <div class="panel-footer">

@@ -102,6 +102,41 @@ public class StoreFlavorAutoRestockService {
 
     }
 
+    /*
+     * 설정 저장 직후 한 건의 임계 재고를 검사합니다.
+     *
+     * HeadStoreFlavorInventoryService.updateRestockSetting()
+     * → needsThresholdRestock() 조건 확인
+     * → autoRestock()으로 목표 통 수까지 증가
+     * → 실제 증가한 통 수 반환 순서입니다.
+     * 맛 재고의 단위는 상품 수량이 아닌 아이스크림 통입니다.
+     */
+    @Transactional
+    public Integer processThresholdRestock(
+            StoreFlavor flavor
+    ) {
+        if (
+                flavor == null ||
+                !flavor.needsThresholdRestock()
+        ) {
+            return 0;
+        }
+
+        Integer quantity =
+                flavor.autoRestock();
+
+        if (quantity > 0) {
+            log.info(
+                    "맛 임계 자동 보충: storeFlavorId={}, flavor={}, +{}통",
+                    flavor.getId(),
+                    flavor.getFlavor().getFlavorName(),
+                    quantity
+            );
+        }
+
+        return quantity;
+    }
+
 
 
 

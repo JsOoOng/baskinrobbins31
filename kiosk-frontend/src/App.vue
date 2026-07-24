@@ -1295,10 +1295,10 @@ body,
 .main-content {
 
   width: 100%;
-  max-width: 1400px;
+  max-width: 1800px;
   min-height: 100vh;
 
-  padding: 20px;
+  padding: 14px;
 }
 
 

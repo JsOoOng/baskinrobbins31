@@ -177,7 +177,7 @@ onBeforeUnmount(() => {
 }
 
 .head-content {
-  padding: 25px 28px 42px;
+  padding: 22px 20px 38px;
 }
 
 .mobile-overlay {

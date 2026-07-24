@@ -122,6 +122,18 @@ public class Product {
     public void hideProduct() {
         this.isDisplay = false;
     }
+
+    /*
+     * 본사 상품 관리 화면의 고객 노출 상태 변경용 도메인 메서드입니다.
+     * Controller → HeadProductService → 이 메서드 순서로 호출되며,
+     * null 입력은 잘못된 요청으로 처리합니다.
+     */
+    public void changeDisplay(Boolean isDisplay) {
+        if (isDisplay == null) {
+            throw new IllegalArgumentException("상품 노출 상태가 없습니다.");
+        }
+        this.isDisplay = isDisplay;
+    }
     
     @OneToMany(
             mappedBy = "product",
