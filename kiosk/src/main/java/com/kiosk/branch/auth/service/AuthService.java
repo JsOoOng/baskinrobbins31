@@ -53,11 +53,10 @@ public class AuthService {
                         new IllegalArgumentException(LOGIN_FAILED_MESSAGE)
                 );
 
-        if (!isBCrypt(employee.getPassword())
-                || !passwordEncoder.matches(
-                        request.getPassword(),
-                        employee.getPassword()
-                )) {
+        if (!matchesPassword(
+                request.getPassword(),
+                employee.getPassword()
+        )) {
             throw new IllegalArgumentException(LOGIN_FAILED_MESSAGE);
         }
 
@@ -78,12 +77,42 @@ public class AuthService {
                 .build();
     }
 
+    /*
+     * employees.password가 BCrypt 해시인지 접두사로 판별합니다.
+     * 로그인 요청 → login() → matchesPassword()에서 비교 방식을 선택할 때 사용합니다.
+     */
     private boolean isBCrypt(String password) {
 
         return password != null
                 && (password.startsWith("$2a$")
                     || password.startsWith("$2b$")
                     || password.startsWith("$2y$"));
+    }
+
+    /*
+     * 지점 로그인 비밀번호 호환 비교
+     *
+     * BCrypt 저장값은 PasswordEncoder로 검증하고,
+     * 학교 DB에 남아 있는 기존 평문만 임시로 문자열 비교합니다.
+     * 모든 비밀번호 마이그레이션이 끝나면 평문 분기를 제거해야 합니다.
+     */
+    private boolean matchesPassword(
+            String rawPassword,
+            String storedPassword
+    ) {
+        if (isBCrypt(storedPassword)) {
+            return passwordEncoder.matches(
+                    rawPassword,
+                    storedPassword
+            );
+        }
+
+        /*
+         * TODO: 학교 DB의 기존 평문 비밀번호를 BCrypt로 전환한 뒤
+         * 아래 하위 호환 비교 로직을 제거한다.
+         */
+        return storedPassword != null
+                && storedPassword.equals(rawPassword);
     }
 
 }

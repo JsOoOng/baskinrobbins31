@@ -9,6 +9,7 @@
     <div class="coupon-dashboard">
  
         <div class="top-actions">
+            <input v-model="searchKeyword" class="table-search" type="search" placeholder="쿠폰명·유형 검색" />
             <button @click="openIssueAllModal" class="btn-secondary">🎁 쿠폰 발급</button>
             <button @click="openCreateModal" class="btn-primary">＋ 새 쿠폰 등록</button>    
         </div>
@@ -60,7 +61,7 @@
           <tr v-if="filteredCoupons.length === 0">
             <td colspan="8" class="no-data">조건에 맞는 쿠폰이 없습니다.</td>
           </tr>
-          <tr v-for="coupon in filteredCoupons" :key="coupon.couponId">
+          <tr v-for="coupon in paginatedCoupons" :key="coupon.couponId">
             <td>{{ coupon.couponId }}</td>
             <td>{{ coupon.couponName }}</td>
             <td>
@@ -94,6 +95,11 @@
           </tr>
         </tbody>
       </table>
+      <HeadTablePagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total-items="filteredCoupons.length"
+      />
  
       <!-- 등록 / 수정 모달 -->
       <div v-if="isModalOpen" class="modal-overlay">
@@ -178,14 +184,18 @@
   </template>
   
   <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import HeadTablePagination from '@/components/head/HeadTablePagination.vue';
 
 const router = useRouter();
 
 // 상태 정의
 const coupons = ref([]);          
+const searchKeyword = ref('');
+const currentPage = ref(1);
+const pageSize = ref(10);
 const isModalOpen = ref(false);   
 const isEditMode = ref(false);    
 
@@ -252,8 +262,22 @@ const filteredCoupons = computed(() => {
       return false;
     }
 
-    return true;
+    const keyword = searchKeyword.value.trim().toLowerCase();
+    return !keyword || [
+      coupon.couponId, coupon.couponName, coupon.discountType
+    ].some(value => String(value ?? '').toLowerCase().includes(keyword));
   });
+});
+/*
+ * 발급·할인 유형·검색 필터가 적용된 쿠폰에서
+ * 현재 페이지 범위만 추출해 쿠폰 관리 테이블에 표시합니다.
+ */
+const paginatedCoupons = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return filteredCoupons.value.slice(start, start + pageSize.value);
+});
+watch([searchKeyword, issueFilter, discountTypeFilter, pageSize], () => {
+  currentPage.value = 1;
 });
 
 // 폼 데이터 초기값

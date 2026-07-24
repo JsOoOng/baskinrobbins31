@@ -301,31 +301,6 @@ public class BranchRestockService {
                         dto.getRequestQuantity()
                 );
 
-        /*
-         * 알림 발송
-         */
-        String productName = "상품";
-        
-        if (dto.getStoreInventoryId() != null) {
-            StoreInventory inventory = branchRestockMapper.findStoreInventoryById(dto.getStoreInventoryId());
-            if (inventory != null) {
-                storeName = inventory.getStore().getStoreName();
-                productName = inventory.getItem().getItemName();
-            }
-        } else if (dto.getStoreFlavorId() != null) {
-            StoreFlavor flavor = branchRestockMapper.findStoreFlavorById(dto.getStoreFlavorId());
-            if (flavor != null) {
-                storeName = flavor.getStore().getStoreName();
-                productName = flavor.getFlavor().getFlavorName();
-            }
-        }
-
-        headNotificationService.createRestockRequestNotification(
-                storeName,
-                productName,
-                dto.getRequestQuantity()
-        );
-
         return "발주 요청 완료";
     }
 

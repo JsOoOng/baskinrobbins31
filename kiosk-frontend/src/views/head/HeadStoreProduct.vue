@@ -26,6 +26,7 @@ import {
 
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
+import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
 
 import {
   createHeadStoreProduct,
@@ -42,6 +43,8 @@ const storeProducts = ref([])
 
 const selectedStoreId = ref('')
 const searchKeyword = ref('')
+const currentPage = ref(1)
+const pageSize = ref(10)
 const soldOutFilter = ref('ALL')
 
 const loading = ref(false)
@@ -186,6 +189,14 @@ const filteredStoreProducts = computed(() => {
       )
     }
   )
+})
+/*
+ * 지점·품절·검색 필터 결과를 현재 페이지 범위로 잘라
+ * 지점별 판매 상품 테이블에 전달합니다.
+ */
+const paginatedStoreProducts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return filteredStoreProducts.value.slice(start, start + pageSize.value)
 })
 
 const soldOutCount = computed(() => {
@@ -738,7 +749,7 @@ onMounted(async () => {
 
           <tbody>
             <tr
-              v-for="product in filteredStoreProducts"
+              v-for="product in paginatedStoreProducts"
               :key="product.storeProductId"
             >
               <td>
@@ -847,6 +858,11 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
+        <HeadTablePagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total-items="filteredStoreProducts.length"
+        />
       </div>
     </section>
 

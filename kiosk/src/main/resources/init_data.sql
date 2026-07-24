@@ -143,7 +143,7 @@ INSERT INTO banners (title, image_url, is_active) VALUES
 ('여름 신메뉴 출시!', '/images/banners/summer_new.png', 1),
 ('이달의 맛 31% 할인', '/images/banners/flavor_of_month.png', 1);
 
--- 9. USERS (?�원)
+-- 9. USERS (회원)
 INSERT INTO users (phone, point_balance, created_at) VALUES
 ('010-1111-2222', 1500, NOW()),
 ('010-3333-4444', 0, NOW());
@@ -168,7 +168,7 @@ INSERT INTO kiosk_banner (kiosk_id, banner_id) VALUES
 (1, 1),
 (2, 2);
 
--- 13. INVENTORY_ITEMS (본사 ?�록 물품/?�모??
+-- 13. INVENTORY_ITEMS (본사 등록 물품/소모품)
 INSERT INTO inventory_items (product_id, item_name, unit, unit_price) VALUES
 ((SELECT product_id FROM products WHERE product_name = '싱글레귤러'), '싱글레귤러', 'EA', 1750),
 ((SELECT product_id FROM products WHERE product_name = '싱글킹'), '싱글킹', 'EA', 2150),

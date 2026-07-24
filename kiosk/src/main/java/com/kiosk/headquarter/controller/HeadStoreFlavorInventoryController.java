@@ -14,7 +14,12 @@ import com.kiosk.headquarter.dto.storeFlavor.HeadStoreFlavorInventoryResponse;
 import com.kiosk.headquarter.dto.storeFlavor.UpdateStoreFlavorRestockRequest;
 import com.kiosk.headquarter.service.HeadStoreFlavorInventoryService;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 
 /**
@@ -82,20 +87,54 @@ public class HeadStoreFlavorInventoryController {
      * 프론트 요청을 받아 updateRestockSetting() 메서드가 입력을 받고 HeadStoreFlavorInventoryService 호출 후 결과를 응답한다.
      */
     @PatchMapping("/{storeFlavorId}")
-    public ResponseEntity<Void> updateRestockSetting(
+    public ResponseEntity<HeadStoreFlavorInventoryResponse> updateRestockSetting(
             @PathVariable Integer storeFlavorId,
             @RequestBody UpdateStoreFlavorRestockRequest request
     ) {
 
-
-        service.updateRestockSetting(
-                storeFlavorId,
-                request
+        return ResponseEntity.ok(
+                service.updateRestockSetting(
+                        storeFlavorId,
+                        request
+                )
         );
 
+    }
 
-        return ResponseEntity.ok().build();
+    /*
+     * 아이스크림 맛 재고 통 입고 HTTP 진입점
+     *
+     * HeadStoreFlavor.vue의 입고 모달
+     * → PATCH /head/flavor-inventory/{storeFlavorId}/stock-in
+     * → Service.stockIn()
+     * → StoreFlavor.container 증가
+     * → 최신 재고 DTO 반환 순서로 이동합니다.
+     */
+    @PatchMapping("/{storeFlavorId}/stock-in")
+    public ResponseEntity<HeadStoreFlavorInventoryResponse>
+            stockIn(
+                    @PathVariable Integer storeFlavorId,
+                    @Valid @RequestBody
+                    StoreFlavorStockInRequest request
+            ) {
+        return ResponseEntity.ok(
+                service.stockIn(
+                        storeFlavorId,
+                        request.getContainerQuantity()
+                )
+        );
+    }
 
+    /*
+     * 입고 요청 JSON의 containerQuantity를 받는 전용 DTO입니다.
+     * 상품 개수가 아닌 아이스크림 통 수이며 1통 이상만 허용합니다.
+     */
+    @Getter
+    @NoArgsConstructor
+    public static class StoreFlavorStockInRequest {
+        @NotNull(message = "입고할 통 수를 입력해주세요.")
+        @Min(value = 1, message = "입고할 통 수는 1 이상이어야 합니다.")
+        private Integer containerQuantity;
     }
 
 }

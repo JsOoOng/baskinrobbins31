@@ -10,6 +10,7 @@
     <div class="header-section">
       <h2>🎉 이벤트 관리</h2>
       <div class="header-actions">
+        <input v-model="searchKeyword" class="table-search" type="search" placeholder="이벤트명·대상 검색" />
         <select v-model="discountTypeFilter" class="status-filter">
           <option value="ALL">전체 혜택</option>
           <option value="AMOUNT">정액 할인 (원)</option>
@@ -52,7 +53,7 @@
           <tr v-else-if="filteredEvents.length === 0">
             <td colspan="9" class="text-center">조회된 이벤트가 없습니다.</td>
           </tr>
-          <tr v-else v-for="event in filteredEvents" :key="event.eventId">
+          <tr v-else v-for="event in paginatedEvents" :key="event.eventId">
             <td>{{ event.eventId }}</td>
             <td class="event-name">{{ event.eventName }}</td>
             <td>
@@ -81,6 +82,11 @@
           </tr>
         </tbody>
       </table>
+      <HeadTablePagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total-items="filteredEvents.length"
+      />
     </div>
 
     <!-- 이벤트 등록/수정 모달 -->
@@ -150,8 +156,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useHeadEventStore } from '@/stores/head/headEventStore';
+import HeadTablePagination from '@/components/head/HeadTablePagination.vue';
 
 const eventStore = useHeadEventStore();
 
@@ -160,13 +167,31 @@ const isEditMode = ref(false);
 const currentEventId = ref(null);
 const statusFilter = ref('ALL');
 const discountTypeFilter = ref('ALL');
+const searchKeyword = ref('');
+const currentPage = ref(1);
+const pageSize = ref(10);
 
 const filteredEvents = computed(() => {
   return eventStore.events.filter(event => {
     const matchStatus = statusFilter.value === 'ALL' || event.eventStatus === statusFilter.value;
     const matchDiscountType = discountTypeFilter.value === 'ALL' || event.discountType === discountTypeFilter.value;
-    return matchStatus && matchDiscountType;
+    const keyword = searchKeyword.value.trim().toLowerCase();
+    const matchKeyword = !keyword || [
+      event.eventId, event.eventName, event.targetType, event.eventStatus
+    ].some(value => String(value ?? '').toLowerCase().includes(keyword));
+    return matchStatus && matchDiscountType && matchKeyword;
   });
+});
+/*
+ * 상태·할인 유형·검색 필터 결과를 현재 페이지 범위로 잘라
+ * 이벤트 관리 테이블에 전달합니다.
+ */
+const paginatedEvents = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return filteredEvents.value.slice(start, start + pageSize.value);
+});
+watch([searchKeyword, statusFilter, discountTypeFilter, pageSize], () => {
+  currentPage.value = 1;
 });
 
 const defaultForm = {

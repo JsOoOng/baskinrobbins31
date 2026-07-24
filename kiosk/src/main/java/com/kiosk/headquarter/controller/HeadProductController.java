@@ -1,10 +1,12 @@
 package com.kiosk.headquarter.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -74,6 +76,22 @@ public class HeadProductController {
             @RequestBody HeadProductCreateRequestDTO requestDTO) {
 
         return headProductService.updateProduct(productId, requestDTO);
+    }
+
+    /*
+     * 본사 상품 목록의 '고객 노출' 토글 진입점
+     * PATCH 요청의 isDisplay → Service → Product.changeDisplay()
+     * → 변경된 상품 DTO 반환 순서로 처리합니다.
+     */
+    @PatchMapping("/head/products/{productId}/display")
+    public HeadProductResponseDTO updateProductDisplay(
+            @PathVariable Integer productId,
+            @RequestBody Map<String, Boolean> request) {
+
+        return headProductService.updateProductDisplay(
+                productId,
+                request == null ? null : request.get("isDisplay")
+        );
     }
 
     // 본사 상품 삭제 처리

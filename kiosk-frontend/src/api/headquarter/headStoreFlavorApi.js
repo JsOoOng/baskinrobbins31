@@ -43,3 +43,17 @@ export const updateHeadStoreFlavorRestockSetting = (
     )
 
 }
+
+/*
+ * 본사 맛 재고 화면 → 통 입고 모달 → PATCH API
+ * 일반 상품 개수가 아닌 아이스크림 컨테이너 수량을 백엔드에 전달합니다.
+ */
+export const stockInHeadStoreFlavor = (
+    storeFlavorId,
+    containerQuantity
+) => {
+    return api.patch(
+        `/head/flavor-inventory/${storeFlavorId}/stock-in`,
+        { containerQuantity }
+    )
+}

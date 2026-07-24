@@ -19,7 +19,14 @@
           INVENTORY MANAGEMENT
         </p>
 
-        <h1>전체 재고 현황</h1>
+        <div class="inventory-title-row">
+          <h1>전체 재고 현황</h1>
+          <!-- 같은 본사 재고 영역에서 상품 재고와 맛(통) 재고 화면을 전환합니다. -->
+          <nav class="inventory-tabs">
+            <RouterLink class="active" to="/head/inventory">상품</RouterLink>
+            <RouterLink to="/head/storeFlavor">아이스크림 맛</RouterLink>
+          </nav>
+        </div>
 
         <p class="page-description">
           전체 지점의 재고 수량과 자동 보충 설정을 관리합니다.
@@ -636,6 +643,7 @@ const settingForm = reactive({
   targetStock: 50
 })
 
+/* 재고 처리 성공·실패 내용을 공통 토스트 컴포넌트에 전달합니다. */
 const showMessage = (
   text,
   type = 'success'
@@ -644,10 +652,12 @@ const showMessage = (
   messageType.value = type
 }
 
+/* 사용자가 토스트를 닫으면 현재 안내 문구를 비웁니다. */
 const clearMessage = () => {
   message.value = ''
 }
 
+/* Axios 오류 응답에서 서버 메시지를 우선 꺼내고 없으면 기본 문구를 사용합니다. */
 const extractErrorMessage = (
   error,
   fallbackMessage
@@ -659,6 +669,7 @@ const extractErrorMessage = (
   )
 }
 
+/* 배열 또는 { data: 배열 } 형태의 API 응답을 항상 배열로 정규화합니다. */
 const extractList = (response) => {
   const body = response?.data
 
@@ -673,6 +684,7 @@ const extractList = (response) => {
   return []
 }
 
+/* 단건 API 응답이 { data: 객체 }로 감싸져 있어도 실제 객체만 반환합니다. */
 const extractItem = (response) => {
   return response?.data?.data ?? response?.data
 }
@@ -754,12 +766,20 @@ const extractItem = (response) => {
   }
 }
 
+/*
+ * 표의 storeInventoryId와 아직 지점에 보내지 않은 DETECTED 부족 알림을 연결합니다.
+ */
 const getActiveAlert = (storeInventoryId) => {
   return activeAlerts.value.find(
     alert => alert.storeInventoryId === storeInventoryId && alert.alertStatus === 'DETECTED'
   )
 }
 
+/*
+ * 본사 재고 표의 알림 전송 흐름
+ * 활성 alertId + 로그인 관리자 ID → 지점 알림 API
+ * → 성공 후 목록과 알림 상태를 조용히 재조회합니다.
+ */
 const sendAlert = async (alertId) => {
   if (!alertId || sendingAlertId.value) return
 
@@ -874,6 +894,9 @@ const storeOptions = computed(() => {
     )
 })
 
+/*
+ * 현재 수량을 최소·목표 재고와 비교해 LOW/NORMAL/FULL 화면 상태를 계산합니다.
+ */
 const getStockStatus = (inventory) => {
   const currentStock =
     Number(inventory.currentStock ?? 0)
@@ -898,6 +921,7 @@ const getStockStatus = (inventory) => {
   return 'NORMAL'
 }
 
+/* 계산된 LOW/NORMAL/FULL 코드를 표에 표시할 한글 문구로 바꿉니다. */
 const getStockStatusLabel = (
   inventory
 ) => {
@@ -913,6 +937,7 @@ const getStockStatusLabel = (
   return labels[status] ?? '-'
 }
 
+/* 자동 보충 enum을 관리자가 이해하기 쉬운 한글 방식명으로 바꿉니다. */
 const getRestockModeLabel = (mode) => {
   const labels = {
     THRESHOLD: '임계 재고',
@@ -1040,6 +1065,7 @@ const visiblePages = computed(() => {
   return pages
 })
 
+/* 유효한 페이지 범위일 때만 재고 표의 현재 페이지를 변경합니다. */
 const changePage = (page) => {
   if (
     page < 1 ||
@@ -1051,6 +1077,7 @@ const changePage = (page) => {
   currentPage.value = page
 }
 
+/* 현재 5페이지 묶음에서 이전 묶음의 첫 페이지로 이동합니다. */
 const movePreviousPageGroup = () => {
   changePage(
     Math.max(
@@ -1061,6 +1088,7 @@ const movePreviousPageGroup = () => {
   )
 }
 
+/* 현재 5페이지 묶음에서 다음 묶음의 첫 페이지로 이동합니다. */
 const moveNextPageGroup = () => {
   changePage(
     Math.min(
@@ -1071,6 +1099,7 @@ const moveNextPageGroup = () => {
   )
 }
 
+/* 검색어·지점·보충 방식·재고 상태 필터를 지우고 첫 페이지로 돌아갑니다. */
 const resetFilters = () => {
   keyword.value = ''
   selectedStoreId.value = ''
@@ -1079,6 +1108,9 @@ const resetFilters = () => {
   currentPage.value = 1
 }
 
+/*
+ * 선택 재고 행의 자동 보충 설정을 폼에 복사하고 설정 모달을 엽니다.
+ */
 const openSettingModal = (
   inventory
 ) => {
@@ -1103,6 +1135,7 @@ const openSettingModal = (
   settingModalOpen.value = true
 }
 
+/* 저장 중이 아닐 때 설정 모달과 선택 재고 정보를 안전하게 초기화합니다. */
 const closeSettingModal = () => {
   if (saving.value) {
     return
@@ -1112,6 +1145,10 @@ const closeSettingModal = () => {
   selectedInventory.value = null
 }
 
+/*
+ * 서버 요청 전에 최소 재고·목표 재고 관계를 검사합니다.
+ * 목표 재고는 최소 재고보다 커야 실제 보충 수량을 계산할 수 있습니다.
+ */
 const validateSettingForm = () => {
   if (
     settingForm.minStock === null ||
@@ -1151,6 +1188,11 @@ const validateSettingForm = () => {
 
   return true
 }
+/*
+ * 목록에서 자동 보충을 즉시 켜거나 끕니다.
+ * PATCH /head/inventory/{id}/restock-setting 응답으로 해당 표 행을 교체하며,
+ * 설정이 올바르지 않으면 저장 대신 설정 모달을 먼저 엽니다.
+ */
 const toggleAutoRestock = async (
 inventory
 ) => {
@@ -1260,6 +1302,11 @@ try {
   togglingInventoryId.value = null
 }
 }
+/*
+ * 설정 모달 저장 흐름
+ * 폼 검증 → 재고 설정 PATCH API → 최신 DTO로 목록 행 교체
+ * → 모달 닫기 및 성공 메시지 표시 순서입니다.
+ */
 const saveRestockSetting = async () => {
   if (
     !selectedInventory.value ||
@@ -1334,11 +1381,13 @@ const saveRestockSetting = async () => {
   }
 }
 
+/* 수량을 한국식 천 단위 구분 문자열로 표시합니다. */
 const formatNumber = (value) => {
   return Number(value ?? 0)
     .toLocaleString('ko-KR')
 }
 
+/* 서버 날짜를 재고 표에서 읽을 수 있는 한국 지역 날짜·시간으로 변환합니다. */
 const formatDate = (value) => {
   if (!value) {
     return '-'
@@ -1442,6 +1491,10 @@ onBeforeUnmount(() => {
   color: #252a38;
   font-size: 30px;
 }
+.inventory-title-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.inventory-tabs { display: flex; gap: 6px; }
+.inventory-tabs a { padding: 8px 14px; border: 1px solid #dfe3ea; border-radius: 8px; color: #697083; background: #fff; text-decoration: none; font-size: 13px; font-weight: 700; }
+.inventory-tabs a.active { border-color: #6d5de2; background: #6d5de2; color: #fff; }
 
 .page-description {
   margin: 10px 0 0;

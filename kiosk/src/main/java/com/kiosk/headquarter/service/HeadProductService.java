@@ -367,7 +367,7 @@ public class HeadProductService {
             getProductList() {
 
         return headProductMapper
-                .findByIsDisplayTrueOrderByIdDesc()
+                .findAllByOrderByIdDesc()
                 .stream()
                 .map(
                         this::toResponseDTO
@@ -389,7 +389,7 @@ public class HeadProductService {
 
         Product product =
                 headProductMapper
-                        .findByIdAndIsDisplayTrue(
+                        .findById(
                                 productId
                         )
                         .orElseThrow(() ->
@@ -401,6 +401,24 @@ public class HeadProductService {
         return toResponseDTO(
                 product
         );
+    }
+
+    /*
+     * 상품 노출 여부 변경 서비스
+     * 상품 ID 검증·조회 → Entity 상태 변경 → 트랜잭션 dirty checking
+     * → 프론트가 즉시 행을 갱신할 수 있도록 최신 DTO 반환 순서입니다.
+     */
+    @Transactional
+    public HeadProductResponseDTO updateProductDisplay(
+            Integer productId,
+            Boolean isDisplay
+    ) {
+        Product product = headProductMapper.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "존재하지 않는 상품입니다."
+                ));
+        product.changeDisplay(isDisplay);
+        return toResponseDTO(product);
     }
 
     /*

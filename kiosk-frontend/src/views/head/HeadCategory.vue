@@ -28,6 +28,7 @@ import P2ComingSoonModal from '@/components/head/P2ComingSoonModal.vue'
 
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
+import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
 
 /*
  * 서버 데이터
@@ -45,6 +46,8 @@ const saving = ref(false)
 const deletingId = ref(null)
 
 const searchKeyword = ref('')
+const currentPage = ref(1)
+const pageSize = ref(10)
 
 const message = ref('')
 const messageType = ref('success')
@@ -93,6 +96,14 @@ const filteredCategories = computed(() => {
         .includes(keyword)
     )
   })
+})
+/*
+ * 검색 결과를 페이지당 건수 기준으로 잘라 현재 카테고리 표에 전달합니다.
+ * 페이지 이동 값은 공통 HeadTablePagination에서 갱신됩니다.
+ */
+const paginatedCategories = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return filteredCategories.value.slice(start, start + pageSize.value)
 })
 
 /*
@@ -537,7 +548,7 @@ onMounted(() => {
 
           <tbody>
             <tr
-              v-for="category in filteredCategories"
+              v-for="category in paginatedCategories"
               :key="category.categoryId"
             >
               <td class="id-cell">
@@ -614,6 +625,11 @@ onMounted(() => {
             </tr>
           </tbody>
         </table>
+        <HeadTablePagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total-items="filteredCategories.length"
+        />
       </div>
 
       <div class="panel-footer">

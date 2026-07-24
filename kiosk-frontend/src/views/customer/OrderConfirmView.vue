@@ -68,6 +68,7 @@ const basketStore = useBasketStore();
 const { t } = useI18n({ useScope: 'global' });
 
 
+/* 옵션 표기가 붙은 상품명에서 결제 화면에 보여줄 기본 이름만 추출합니다. */
 const formatCartItemName = (name) => {
   if (name.includes(' (')) {
     const parts = name.split(' (');
@@ -85,12 +86,16 @@ const showAlert = ref(false);
 const alertMessage = ref('');
 const closeAlertCallback = ref(null);
 
+/*
+ * 결제 오류 안내 모달을 열고, 확인 후 실행할 선택적 콜백도 함께 저장합니다.
+ */
 const displayAlert = (msg, callback = null) => {
   alertMessage.value = msg;
   showAlert.value = true;
   closeAlertCallback.value = callback;
 };
 
+/* 안내 모달을 닫은 뒤 저장된 후속 이동 콜백이 있으면 한 번 실행합니다. */
 const closeAlert = () => {
   showAlert.value = false;
   if (closeAlertCallback.value) {
@@ -110,10 +115,18 @@ onMounted(() => {
   }
 });
 
+/* 결제 직전 화면에서 쿠폰·포인트 선택 화면으로 돌아갑니다. */
 const goBackToCart = async () => {
   router.push(`/point-discount`);
 };
 
+/*
+ * 현금·카드 결제 전체 흐름
+ * 장바구니 백업 → POST /api/orders로 주문 생성
+ * → POST /api/orders/{orderId}/pay로 할인·결제 저장
+ * → 성공 시 장바구니 삭제 및 /order-complete 이동
+ * → 실패 시 백업 장바구니 복원 순서입니다.
+ */
 const handlePayment = async (method) => {
   if (basketStore.cartItems.length === 0) {
     displayAlert(t('장바구니가 비어있습니다.'));
@@ -188,6 +201,11 @@ const handlePayment = async (method) => {
   }
 };
 
+/*
+ * Toss 간편결제 흐름
+ * 주문 생성 → Toss SDK 결제창 요청 → 성공 URL(/toss/success)에서 승인 API 호출
+ * 순서로 진행하며, 결제창 호출 전 오류가 나면 장바구니를 복원합니다.
+ */
 const handleTossPayment = async () => {
   if (basketStore.cartItems.length === 0) {
     displayAlert(t('장바구니가 비어있습니다. 처음부터 다시 시도해주세요.'), () => {

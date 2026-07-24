@@ -20,6 +20,7 @@ public interface HeadProductMapper extends JpaRepository<Product, Integer> {
 
     // 화면 표시 중인 상품 목록
     List<Product> findByIsDisplayTrueOrderByIdDesc();
+    List<Product> findAllByOrderByIdDesc();
 
     // 화면 표시 중인 상품 상세 조회
     Optional<Product> findByIdAndIsDisplayTrue(Integer productId);

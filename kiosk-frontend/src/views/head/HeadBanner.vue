@@ -25,6 +25,7 @@ import {
 
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
+import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
 
 const banners = ref([])
 
@@ -34,6 +35,8 @@ const updatingId = ref(null)
 const deletingId = ref(null)
 
 const searchKeyword = ref('')
+const currentPage = ref(1)
+const pageSize = ref(10)
 const activeFilter = ref('ALL')
 
 const message = ref('')
@@ -110,6 +113,14 @@ const filteredBanners = computed(() => {
       matchesActive
     )
   })
+})
+/*
+ * 검색·상태 필터가 끝난 결과에서 현재 페이지에 표시할 행만 잘라
+ * 공통 HeadTablePagination의 currentPage/pageSize와 연결합니다.
+ */
+const paginatedBanners = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return filteredBanners.value.slice(start, start + pageSize.value)
 })
 
 const activeCount = computed(() => {
@@ -500,7 +511,7 @@ onMounted(() => {
         class="banner-grid"
       >
         <article
-          v-for="banner in filteredBanners"
+          v-for="banner in paginatedBanners"
           :key="banner.bannerId"
           class="banner-card"
         >
@@ -607,6 +618,12 @@ onMounted(() => {
           검색 조건을 변경하거나 새로운 배너를 등록해주세요.
         </p>
       </div>
+
+      <HeadTablePagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total-items="filteredBanners.length"
+      />
 
       <footer class="panel-footer">
         <span>

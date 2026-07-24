@@ -192,6 +192,7 @@ const showToast = ref(false)
 const toastText = ref('')
 let toastTimeout = null
 
+/* 쿠폰·포인트 선택 결과나 입력 오류를 화면 하단에 잠시 안내합니다. */
 const displayToast = (msg) => {
   if (toastTimeout) clearTimeout(toastTimeout)
   toastText.value = msg
@@ -247,22 +248,30 @@ const closeKeypad = () => {
   inputNumber.value = ''
 }
 
+/* 회원 전화번호 숫자 키패드 입력을 현재 문자열 뒤에 추가합니다. */
 const pressKey = (key) => {
   if (inputNumber.value.length < 11) {
     inputNumber.value += key
   }
 }
 
+/* 휴대전화 식별번호(010 등)를 한 번에 입력합니다. */
 const pressPrefix = (prefix) => {
   if (inputNumber.value.length + prefix.length <= 11) {
     inputNumber.value += prefix
   }
 }
 
+/* 전화번호 입력값의 마지막 숫자 한 자를 지웁니다. */
 const deleteKey = () => {
   inputNumber.value = inputNumber.value.slice(0, -1)
 }
 
+/*
+ * 회원 조회 흐름
+ * 전화번호 검증 → GET /api/users/points → 보유 포인트·쿠폰 저장
+ * → 회원 할인 영역을 화면에 표시합니다.
+ */
 const confirmNumber = async () => {
   if (inputNumber.value.length < 10) {
     displayToast(t('올바른 휴대폰 번호를 입력해주세요.'))
@@ -292,6 +301,9 @@ const confirmNumber = async () => {
   }
 }
 
+/*
+ * 조회된 회원·쿠폰·포인트 선택을 모두 초기화해 비회원 상태로 되돌립니다.
+ */
 const resetUser = () => {
   phoneNumber.value = ''
   availablePoints.value = 0
@@ -302,6 +314,10 @@ const resetUser = () => {
   basketStore.setUsedPoints(0)
 }
 
+/*
+ * 결제에 사용할 회원 쿠폰 한 개를 선택합니다.
+ * 선택한 userCouponId와 계산된 할인액은 basketStore를 거쳐 결제 API로 전달됩니다.
+ */
 const selectCoupon = (coupon) => {
   if (selectedCoupon.value?.userCouponId === coupon.userCouponId) {
     selectedCoupon.value = null
@@ -350,6 +366,7 @@ const openPointKeypad = () => {
   showPointKeypad.value = true
 }
 
+/* 포인트 입력 모달을 닫고 임시 키패드 입력값을 초기화합니다. */
 const closePointKeypad = () => {
   showPointKeypad.value = false
   inputPointAmount.value = ''
@@ -405,10 +422,16 @@ const pressPointKey = (key) => {
   }
 }
 
+/* 사용할 포인트 입력값의 마지막 숫자 한 자를 지웁니다. */
 const deletePointKey = () => {
   inputPointAmount.value = inputPointAmount.value.slice(0, -1)
 }
 
+/*
+ * 포인트 사용 확정
+ * 입력값을 보유 포인트와 할인 후 주문 금액 범위로 제한한 뒤
+ * basketStore.usedPoints에 저장해 다음 결제 화면에서 사용합니다.
+ */
 const confirmPointUsage = () => {
   let amount = parseInt(inputPointAmount.value || '0')
 
@@ -455,6 +478,11 @@ const goBack = async () => {
   }
 }
 
+/*
+ * 할인 선택 완료 처리
+ * 전화번호·선택 쿠폰·사용 포인트를 Pinia에 확정하고
+ * 주문 최종 확인 화면(/order-confirm)으로 이동합니다.
+ */
 const proceedPayment = async () => {
   try {
     // 스토어 함수 대신 직접 상태 값에 할당 (에러 방지)

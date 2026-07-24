@@ -29,6 +29,7 @@ import {
 
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
+import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
 
 
 /*
@@ -46,6 +47,8 @@ const detailLoading = ref(false)
 const displayUpdatingId = ref(null)
 
 const searchKeyword = ref('')
+const currentPage = ref(1)
+const pageSize = ref(10)
 const categoryFilter = ref('ALL')
 const displayFilter = ref('ALL')
 
@@ -194,6 +197,14 @@ const filteredProducts = computed(() => {
       matchesDisplay
     )
   })
+})
+/*
+ * 카테고리·노출 상태·검색 조건을 통과한 상품을
+ * 공통 페이징 상태에 맞춰 현재 표 범위로 자릅니다.
+ */
+const paginatedProducts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return filteredProducts.value.slice(start, start + pageSize.value)
 })
 
 const displayedProductCount = computed(() => {
@@ -991,7 +1002,7 @@ onMounted(async () => {
 
           <tbody>
             <tr
-              v-for="product in filteredProducts"
+              v-for="product in paginatedProducts"
               :key="product.productId"
             >
               <td>
@@ -1123,6 +1134,11 @@ onMounted(async () => {
             </tr>
           </tbody>
         </table>
+        <HeadTablePagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total-items="filteredProducts.length"
+        />
       </div>
 
       <div class="panel-footer">
