@@ -51,7 +51,9 @@ const modal = reactive({
 const form = reactive({
   title: '',
   imageUrl: '',
-  isActive: true
+  isActive: true,
+  startDate: '',
+  endDate: ''
 })
 
 const normalizeBanner = (banner = {}) => {
@@ -75,7 +77,9 @@ const normalizeBanner = (banner = {}) => {
         banner.isActive ??
         banner.active ??
         false
-      )
+      ),
+    startDate: banner.startDate ?? '',
+    endDate: banner.endDate ?? ''
   }
 }
 
@@ -187,6 +191,8 @@ const resetForm = () => {
   form.title = ''
   form.imageUrl = ''
   form.isActive = true
+  form.startDate = ''
+  form.endDate = ''
 }
 
 const openCreateModal = () => {
@@ -208,6 +214,8 @@ const openEditModal = (banner) => {
 
   form.isActive =
     banner.isActive
+  form.startDate = banner.startDate?.slice(0, 16) ?? ''
+  form.endDate = banner.endDate?.slice(0, 16) ?? ''
 
   modal.mode = 'edit'
   modal.bannerId =
@@ -252,6 +260,11 @@ const validateForm = () => {
     return false
   }
 
+  if (form.startDate && form.endDate && form.endDate <= form.startDate) {
+    showMessage('종료일은 시작일보다 뒤여야 합니다.', 'error')
+    return false
+  }
+
   return true
 }
 
@@ -264,7 +277,9 @@ const createPayload = () => {
       form.imageUrl.trim(),
 
     isActive:
-      Boolean(form.isActive)
+      Boolean(form.isActive),
+    startDate: form.startDate || null,
+    endDate: form.endDate || null
   }
 }
 
@@ -577,6 +592,12 @@ onMounted(() => {
             <p class="image-url">
               {{ banner.imageUrl }}
             </p>
+            <p class="image-url">
+              기간:
+              {{ banner.startDate ? banner.startDate.slice(0, 16).replace('T', ' ') : '즉시' }}
+              ~
+              {{ banner.endDate ? banner.endDate.slice(0, 16).replace('T', ' ') : '계속' }}
+            </p>
 
             <div class="card-actions">
               <button
@@ -693,6 +714,24 @@ onMounted(() => {
                 type="text"
                 maxlength="255"
                 placeholder="https://example.com/banner.jpg"
+                :disabled="saving"
+              />
+            </label>
+
+            <label>
+              <span>노출 시작일</span>
+              <input
+                v-model="form.startDate"
+                type="datetime-local"
+                :disabled="saving"
+              />
+            </label>
+
+            <label>
+              <span>노출 종료일</span>
+              <input
+                v-model="form.endDate"
+                type="datetime-local"
                 :disabled="saving"
               />
             </label>

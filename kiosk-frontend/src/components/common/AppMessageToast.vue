@@ -6,7 +6,9 @@
   다음 이동: 현재 상태를 갱신하거나 부모 화면에 이벤트를 전달
 -->
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   message: {
     type: String,
     default: ''
@@ -23,6 +25,21 @@ defineProps({
         'info'
       ].includes(value)
   }
+})
+
+/*
+ * 쉬운주석: 일부 기존 화면은 오류 문구에도 기본 success 값을 사용한다.
+ * 공통 토스트가 실패 표현을 한 번 더 확인해 이런 메시지는 붉은 오류로 바로잡는다.
+ */
+const effectiveType = computed(() => {
+  if (props.type !== 'success') return props.type
+  if (/실패|오류|할 수 없|수 없습니다|불가|잘못|올바르지|반려/.test(props.message)) {
+    return 'error'
+  }
+  if (/입력|선택|확인.*필요|주의/.test(props.message)) {
+    return 'warning'
+  }
+  return 'success'
 })
 
 const emit = defineEmits([
@@ -44,18 +61,18 @@ const emit = defineEmits([
         <div
           class="app-message-toast"
           :class="[
-            `app-message-toast--${type}`
+            `app-message-toast--${effectiveType}`
           ]"
           role="alert"
           aria-live="assertive"
         >
           <span class="app-message-icon">
             {{
-              type === 'error'
+              effectiveType === 'error'
                 ? '!'
-                : type === 'warning'
+                : effectiveType === 'warning'
                   ? '!'
-                  : type === 'info'
+                  : effectiveType === 'info'
                     ? 'i'
                     : '✓'
             }}

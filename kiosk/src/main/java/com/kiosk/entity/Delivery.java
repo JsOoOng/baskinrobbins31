@@ -56,6 +56,12 @@ public class Delivery {
     @Builder.Default
     private DeliveryStatus status = DeliveryStatus.READY;
 
+    /*
+     * 쉬운주석: 배송 취소 모달에서 확정한 사유를 저장한다.
+     * 정상 배송이면 값이 없고, 취소된 배송에서만 화면과 작업 기록 확인에 사용한다.
+     */
+    @Column(name = "cancel_reason", length = 500)
+    private String cancelReason;
 
 
     /**
@@ -63,14 +69,28 @@ public class Delivery {
      */
     public void changeStatus(DeliveryStatus status) {
 
-        if(this.status == DeliveryStatus.COMPLETED){
+        if(this.status == DeliveryStatus.COMPLETED
+                || this.status == DeliveryStatus.CANCELED){
             throw new IllegalStateException(
-                "완료된 배송은 변경할 수 없습니다."
+                "완료되거나 취소된 배송은 변경할 수 없습니다."
             );
         }
 
         this.status = status;
 
+    }
+
+    /*
+     * 쉬운주석: 완료 전 배송만 취소할 수 있으며 취소 상태와 사유를 함께 보관한다.
+     */
+    public void cancel(String reason) {
+        if (this.status == DeliveryStatus.COMPLETED
+                || this.status == DeliveryStatus.CANCELED) {
+            throw new IllegalStateException("완료되거나 취소된 배송은 취소할 수 없습니다.");
+        }
+
+        this.status = DeliveryStatus.CANCELED;
+        this.cancelReason = reason;
     }
 
 }

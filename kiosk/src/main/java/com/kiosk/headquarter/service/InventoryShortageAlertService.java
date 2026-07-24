@@ -86,6 +86,7 @@ public class InventoryShortageAlertService {
 
     private final InventoryAlertSocketPublisher
             inventoryAlertSocketPublisher;
+    private final AdminLogService adminLogService;
 
     /*
      * 재고 부족 감지 또는 기존 알람 갱신
@@ -542,6 +543,9 @@ public class InventoryShortageAlertService {
                         alert
                 );
 
+        adminLogService.logAction("재고 알림",
+                alert.getStoreInventory().getStore().getStoreName() + " - "
+                        + alert.getStoreInventory().getItem().getItemName() + " 부족 알림 전송");
         return HeadInventoryShortageSocketResponse
                 .from(
                         alert

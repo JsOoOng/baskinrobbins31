@@ -41,5 +41,11 @@ export const headEventApi = {
   updateVisibility: async (eventId, isVisible) => {
     const response = await axios.patch(`/head/events/${eventId}/visibility`, { isVisible });
     return response.data;
+  },
+
+  // 쉬운주석: 이벤트 ID와 새 종료일만 보내 기존 이벤트 기간을 연장한다.
+  extendEvent: async (eventId, endDate) => {
+    const response = await axios.patch(`/head/events/${eventId}/extend`, { endDate });
+    return response.data;
   }
 };

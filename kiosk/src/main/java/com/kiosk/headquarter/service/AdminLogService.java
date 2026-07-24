@@ -83,7 +83,7 @@ public class AdminLogService {
      * Controller 또는 상위 서비스에서 호출되어 AdminActionLogRepository, HeadAuthMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public List<AdminLogResponseDto> getRecentLogs() {
-        List<AdminActionLog> logs = adminActionLogRepository.findTop100ByOrderByCreatedAtDesc();
+        List<AdminActionLog> logs = adminActionLogRepository.findAllByOrderByCreatedAtDesc();
         
         return logs.stream()
                 .map(log -> AdminLogResponseDto.from(log, formatDate(log.getCreatedAt())))

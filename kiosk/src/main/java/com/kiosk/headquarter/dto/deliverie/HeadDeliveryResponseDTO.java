@@ -60,6 +60,8 @@ public class HeadDeliveryResponseDTO {
     // 배송 상태
     private DeliveryStatus deliveryStatus;
 
+    // 배송 취소 모달에서 저장한 사유
+    private String cancelReason;
 
 
     /*

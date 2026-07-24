@@ -1,11 +1,17 @@
 package com.kiosk.headquarter.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.entity.Banner;
+import com.kiosk.entity.enums.NotificationCategory;
+import com.kiosk.entity.enums.NotificationType;
 import com.kiosk.headquarter.dto.banner.HeadBannerActiveRequest;
 import com.kiosk.headquarter.dto.banner.HeadBannerCreateRequest;
 import com.kiosk.headquarter.dto.banner.HeadBannerResponse;
@@ -31,6 +37,7 @@ public class HeadBannerService {
 
     private final AdminLogService
             adminLogService;
+    private final HeadNotificationService headNotificationService;
 
     /*
      * 배너 전체 목록
@@ -78,6 +85,7 @@ public class HeadBannerService {
     public HeadBannerResponse createBanner(
             HeadBannerCreateRequest request
     ) {
+        validatePeriod(request.getStartDate(), request.getEndDate());
 
         Boolean isActive =
                 request.getIsActive() != null
@@ -96,6 +104,8 @@ public class HeadBannerService {
                                         .trim()
                         )
                         .isActive(isActive)
+                        .startDate(request.getStartDate())
+                        .endDate(request.getEndDate())
                         .build();
 
         Banner savedBanner =
@@ -120,6 +130,7 @@ public class HeadBannerService {
             Integer bannerId,
             HeadBannerUpdateRequest request
     ) {
+        validatePeriod(request.getStartDate(), request.getEndDate());
 
         Banner banner =
                 findBanner(bannerId);
@@ -134,7 +145,9 @@ public class HeadBannerService {
                         request.getTitle()
                 ),
                 request.getImageUrl().trim(),
-                isActive
+                isActive,
+                request.getStartDate(),
+                request.getEndDate()
         );
 
         adminLogService.logAction("배너", "배너 정보 수정");
@@ -232,5 +245,62 @@ public class HeadBannerService {
         }
 
         return title.trim();
+    }
+
+    /*
+     * 쉬운주석: 시작일과 종료일을 모두 입력했다면 종료일이 반드시 더 뒤인지 확인한다.
+     */
+    private void validatePeriod(LocalDateTime startDate, LocalDateTime endDate) {
+        if (startDate != null && endDate != null && !endDate.isAfter(startDate)) {
+            throw new IllegalArgumentException("배너 종료일은 시작일보다 뒤여야 합니다.");
+        }
+    }
+
+    /**
+     * 쉬운주석: 매시간 배너 종료일을 확인해 7일·1일 전에 알리고,
+     * 종료 시 is_active를 false로 바꿔 키오스크에서 자동으로 숨긴다.
+     */
+    @Scheduled(cron = "0 0 * * * *")
+    @Transactional
+    public void synchronizeBannerPeriods() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+
+        for (Banner banner : headBannerMapper.findAll()) {
+            if (banner.getEndDate() == null) {
+                continue;
+            }
+            long days = ChronoUnit.DAYS.between(
+                    today,
+                    banner.getEndDate().toLocalDate()
+            );
+            String reference = banner.getId() + ":" + banner.getEndDate().toLocalDate();
+            String name = banner.getTitle() == null ? "제목 없는 배너" : banner.getTitle();
+
+            if (days == 7 || days == 1) {
+                String remaining = days == 1 ? "하루" : "일주일";
+                headNotificationService.createNotificationOnce(
+                        NotificationCategory.BANNER,
+                        NotificationType.BANNER_EXPIRING,
+                        "배너 종료 " + remaining + " 전",
+                        name + " 배너가 " + remaining + " 남았습니다.",
+                        "head-banners",
+                        reference
+                );
+            }
+            if (!banner.getEndDate().isAfter(now)
+                    && Boolean.TRUE.equals(banner.getIsActive())) {
+                banner.changeActive(false);
+                headNotificationService.createNotificationOnce(
+                        NotificationCategory.BANNER,
+                        NotificationType.BANNER_ENDED,
+                        "배너 종료",
+                        name + " 배너가 종료되어 자동으로 숨김 처리되었습니다.",
+                        "head-banners",
+                        reference
+                );
+                adminLogService.logAction("배너", name + " 자동 종료 및 숨김");
+            }
+        }
     }
 }

@@ -29,6 +29,7 @@ public class HeadProductOptionService {
 
     private final HeadProductOptionMapper headProductOptionMapper;
     private final HeadProductMapper headProductMapper;
+    private final AdminLogService adminLogService;
 
     // 상품 옵션 등록
     @Transactional
@@ -72,6 +73,8 @@ public class HeadProductOptionService {
 
         headProductOptionMapper.save(productOption);
 
+        adminLogService.logAction("상품 옵션",
+                product.getProductName() + " - " + productOption.getOptionName() + " 옵션 등록");
         return "상품 옵션 등록 성공";
     }
 
@@ -126,6 +129,8 @@ public class HeadProductOptionService {
                 requestDTO.getMaxFlavorCount() != null ? requestDTO.getMaxFlavorCount() : 0
         );
 
+        adminLogService.logAction("상품 옵션",
+                productOption.getProduct().getProductName() + " - " + productOption.getOptionName() + " 옵션 수정");
         return "상품 옵션 수정 성공";
     }
 
@@ -141,8 +146,11 @@ public class HeadProductOptionService {
                 .findByProduct_IdAndId(productId, optionId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품 옵션입니다."));
 
+        String action = productOption.getProduct().getProductName()
+                + " - " + productOption.getOptionName() + " 옵션 삭제";
         headProductOptionMapper.delete(productOption);
 
+        adminLogService.logAction("상품 옵션", action);
         return "상품 옵션 삭제 성공";
     }
 

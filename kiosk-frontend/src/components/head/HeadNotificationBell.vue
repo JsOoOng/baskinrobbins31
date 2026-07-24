@@ -186,6 +186,7 @@
   
   const router = useRouter()
   const route = useRoute()
+  const emit = defineEmits(['unread-routes-change'])
   
   const notificationRoot = ref(null)
   
@@ -262,6 +263,24 @@
       )
     }
   }
+
+  /*
+   * 쉬운주석: 읽지 않은 알림을 이동할 화면별로 세어 사이드바의 NEW 숫자로 전달한다.
+   */
+  const emitUnreadRouteCounts = () => {
+    emit(
+      'unread-routes-change',
+      notifications.value.reduce((counts, notification) => {
+        if (!notification.isRead && notification.routeName) {
+          const routeName = notification.routeName === 'head-restock'
+            ? 'head-inventory-requests'
+            : notification.routeName
+          counts[routeName] = (counts[routeName] ?? 0) + 1
+        }
+        return counts
+      }, {})
+    )
+  }
   
   /*
    * 읽지 않은 알림 개수 조회
@@ -309,6 +328,7 @@
           .map(
             normalizeNotification
           )
+      emitUnreadRouteCounts()
     } catch (error) {
       if (!silent) {
         notifications.value = []
@@ -446,6 +466,7 @@
         )
   
         notification.isRead = true
+        emitUnreadRouteCounts()
   
         unreadCount.value =
           Math.max(
@@ -527,6 +548,7 @@
         )
   
       unreadCount.value = 0
+      emitUnreadRouteCounts()
     } catch (error) {
       console.error(
         '[전체 알림 읽음 처리 실패]',
@@ -673,15 +695,10 @@
       return
     }
   
-    await loadUnreadCount(true)
-  
-    /*
-     * 알림 패널이 열려 있을 때만
-     * 목록 전체를 다시 조회합니다.
-     */
-    if (panelOpen.value) {
-      await loadNotifications(true)
-    }
+    await Promise.all([
+      loadUnreadCount(true),
+      loadNotifications(true)
+    ])
   }
   
   const startPolling = () => {
@@ -743,7 +760,10 @@
   }
   
   onMounted(async () => {
-    await loadUnreadCount(false)
+    await Promise.all([
+      loadUnreadCount(false),
+      loadNotifications(true)
+    ])
   
     startPolling()
   

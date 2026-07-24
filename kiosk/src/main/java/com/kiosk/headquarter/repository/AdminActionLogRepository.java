@@ -18,5 +18,5 @@ import com.kiosk.entity.AdminActionLog;
 public interface AdminActionLogRepository extends JpaRepository<AdminActionLog, Long> {
 
     List<AdminActionLog> findTop3ByOrderByCreatedAtDesc();
-    List<AdminActionLog> findTop100ByOrderByCreatedAtDesc();
+    List<AdminActionLog> findAllByOrderByCreatedAtDesc();
 }

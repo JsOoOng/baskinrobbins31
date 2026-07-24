@@ -86,7 +86,16 @@ public class HeadRestockController {
         return headRestockService.startShipping(requestId, requestDTO);
     }
 
-    
+    /**
+     * 배송 상태와 실제 재고 입고를 한 번에 완료한다.
+     */
+    @PutMapping("/head/restocks/{requestId}/complete")
+    public String completeRestock(
+            @PathVariable Integer requestId,
+            @RequestBody HeadRestockProcessRequestDTO requestDTO) {
+
+        return headRestockService.completeRestock(requestId, requestDTO);
+    }
 
     // 반려 처리
     /**

@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class HeadSettingsService {
 
     private final SystemSettingRepository systemSettingRepository;
+    private final AdminLogService adminLogService;
 
     @Transactional
     /**
@@ -49,6 +50,7 @@ public class HeadSettingsService {
         if (dto.getUseEasyPay() != null) setting.setUseEasyPay(dto.getUseEasyPay());
 
         SystemSetting savedSetting = systemSettingRepository.save(setting);
+        adminLogService.logAction("환경 설정", "키오스크 공통 환경 설정 변경");
         return SystemSettingDto.fromEntity(savedSetting);
     }
 }

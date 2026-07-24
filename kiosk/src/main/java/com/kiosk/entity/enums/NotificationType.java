@@ -29,6 +29,7 @@ public enum NotificationType {
     COUPON_ISSUED,
     COUPON_ISSUE_FAILED,
     COUPON_EXPIRING,
+    COUPON_EXPIRED,
 
     /*
      * 이벤트

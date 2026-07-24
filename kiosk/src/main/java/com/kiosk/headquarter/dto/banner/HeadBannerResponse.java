@@ -1,5 +1,6 @@
 package com.kiosk.headquarter.dto.banner;
 
+import java.time.LocalDateTime;
 import com.kiosk.entity.Banner;
 
 import lombok.Builder;
@@ -23,6 +24,8 @@ public class HeadBannerResponse {
     private String imageUrl;
 
     private Boolean isActive;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
 
     public static HeadBannerResponse from(
             Banner banner
@@ -32,6 +35,8 @@ public class HeadBannerResponse {
                 .title(banner.getTitle())
                 .imageUrl(banner.getImageUrl())
                 .isActive(banner.getIsActive())
+                .startDate(banner.getStartDate())
+                .endDate(banner.getEndDate())
                 .build();
     }
 }

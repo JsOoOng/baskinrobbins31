@@ -15,6 +15,11 @@ import lombok.Setter;
 public class HeadStoreProductUpdateRequestDTO {
 
     /*
+     * 쉬운주석: 수정 모달에서 입력한 지점별 판매 가격이다.
+     */
+    private Integer storeProductPrice;
+
+    /*
      * 품절 여부
      */
     private Boolean isSoldOut;

@@ -29,6 +29,7 @@ public class HeadStoreFlavorInventoryService {
     private final StoreFlavorRepository storeFlavorRepository;
     private final StoreFlavorAutoRestockService
             storeFlavorAutoRestockService;
+    private final AdminLogService adminLogService;
 
 
 
@@ -124,6 +125,9 @@ public class HeadStoreFlavorInventoryService {
                         storeFlavor
                 );
 
+        adminLogService.logAction("맛 재고",
+                storeFlavor.getStore().getStoreName() + " - "
+                        + storeFlavor.getFlavor().getFlavorName() + " 자동 보충 설정 변경");
         return HeadStoreFlavorInventoryResponse
                 .from(storeFlavor);
     }
@@ -156,6 +160,10 @@ public class HeadStoreFlavorInventoryService {
                 containerQuantity
         );
 
+        adminLogService.logAction("맛 재고",
+                storeFlavor.getStore().getStoreName() + " - "
+                        + storeFlavor.getFlavor().getFlavorName() + " "
+                        + containerQuantity + "통 입고");
         return HeadStoreFlavorInventoryResponse
                 .from(storeFlavor);
     }

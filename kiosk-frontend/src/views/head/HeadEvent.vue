@@ -77,6 +77,7 @@
             </td>
             <td>
               <button class="btn-sm btn-edit" @click="openModal(event)">수정</button>
+              <button class="btn-sm btn-edit" @click="extendEvent(event)">연장</button>
               <button class="btn-sm btn-delete" @click="deleteEvent(event.eventId)">삭제</button>
             </td>
           </tr>
@@ -287,6 +288,23 @@ const toggleVisibility = async (event) => {
     await eventStore.updateVisibility(event.eventId, !event.isVisible);
   } catch (error) {
     alert('노출 여부 변경에 실패했습니다.');
+  }
+};
+
+/*
+ * 쉬운주석: 현재 종료일을 입력 예시로 보여주고, 더 늦은 날짜를 입력하면 연장 API를 호출한다.
+ */
+const extendEvent = async (event) => {
+  const endDate = prompt(
+    '새 종료일을 입력해 주세요. (예: 2026-08-31T23:59)',
+    formatToInputDateTime(event.endDate)
+  );
+  if (!endDate) return;
+
+  try {
+    await eventStore.extendEvent(event.eventId, endDate);
+  } catch (error) {
+    alert(error.response?.data?.message || '이벤트 연장에 실패했습니다.');
   }
 };
 </script>
@@ -528,5 +546,147 @@ input:checked + .slider:before { transform: translateX(20px); }
   padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
+}
+
+/*
+ * 쉬운주석: 쿠폰 관리 화면과 같은 여백·모서리·보라색 버튼·작은 표 글씨를 사용한다.
+ * 기존 기능 CSS 뒤에 두어 화면 구조를 바꾸지 않고 디자인만 통일한다.
+ */
+.head-event-container {
+  display: grid;
+  gap: 18px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.header-section {
+  align-items: center;
+  gap: 18px;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid #e2e6ed;
+  border-radius: 15px;
+  background: #fff;
+}
+
+.header-section h2 {
+  color: #303544;
+  font-size: 20px;
+}
+
+.header-actions {
+  flex: 1;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.status-filter,
+.header-actions .table-search {
+  min-height: 40px;
+  border: 1px solid #d8dbe8;
+  border-radius: 8px;
+  color: #303544;
+  background: #fff;
+}
+
+/*
+ * 쉬운주석: 검색창과 필터, 등록 버튼이 한 줄에서 나란히 보이도록
+ * 검색창만 남는 공간을 사용하고 버튼과 선택창은 줄어들지 않게 한다.
+ */
+.header-actions .table-search {
+  flex: 1 1 260px;
+  min-width: 180px;
+}
+
+.header-actions :is(.status-filter, .btn-primary) {
+  flex: 0 0 auto;
+}
+
+.btn-primary {
+  height: 40px;
+  padding: 0 15px;
+  border-radius: 9px;
+  background: #725ee7;
+  font-size: 11px;
+}
+
+.btn-primary:hover {
+  background: #624ed8;
+}
+
+.table-container {
+  overflow-x: auto;
+  border: 1px solid #e2e6ed;
+  border-radius: 15px;
+  background: #fff;
+}
+
+.event-table {
+  min-width: 1050px;
+}
+
+.event-table th,
+.event-table td {
+  padding: 13px 12px;
+  border-bottom: 1px solid #edf0f4;
+  font-size: 10px;
+  text-align: center;
+}
+
+.event-table th {
+  color: #7e8696;
+  background: #fafbfc;
+  font-weight: 800;
+}
+
+.event-table td {
+  color: #515867;
+}
+
+.event-name {
+  color: #303544;
+}
+
+.btn-sm {
+  height: 29px;
+  padding: 0 10px;
+  border-radius: 7px;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.btn-edit {
+  border: 1px solid #dcd7fb;
+  color: #6756dc;
+  background: #f3f1ff;
+}
+
+.btn-delete {
+  border: 1px solid #ffd5dc;
+  color: #db485e;
+  background: #fff2f4;
+}
+
+.modal-content {
+  border: 1px solid #e3e6ed;
+  border-radius: 18px;
+}
+
+.btn-submit {
+  background: #725ee7;
+}
+
+@media (max-width: 900px) {
+  .header-section {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .header-actions {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
 }
 </style>

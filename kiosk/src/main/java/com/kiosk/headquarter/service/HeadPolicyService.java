@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class HeadPolicyService {
 
     private final HeadPolicyRepository policyRepository;
+    private final AdminLogService adminLogService;
 
     @Transactional(readOnly = true)
     /**
@@ -74,6 +75,8 @@ public class HeadPolicyService {
 
         Policy policy = requestDto.toEntity();
         Policy savedPolicy = policyRepository.save(policy);
+        adminLogService.logAction("정책",
+                savedPolicy.getType() + " " + savedPolicy.getVersion() + " 신규 등록");
         return new PolicyResponseDto(savedPolicy);
     }
 
@@ -98,6 +101,8 @@ public class HeadPolicyService {
             policy.setIsActive(requestDto.getIsActive());
         }
 
+        adminLogService.logAction("정책",
+                policy.getType() + " " + policy.getVersion() + " 정보 수정");
         return new PolicyResponseDto(policy);
     }
 
@@ -107,10 +112,11 @@ public class HeadPolicyService {
      * Controller 또는 상위 서비스에서 호출되어 HeadPolicyRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public void deletePolicy(Integer policyId) {
-        if (!policyRepository.existsById(policyId)) {
-            throw new IllegalArgumentException("약관/방침을 찾을 수 없습니다.");
-        }
-        policyRepository.deleteById(policyId);
+        Policy policy = policyRepository.findById(policyId)
+                .orElseThrow(() -> new IllegalArgumentException("약관/방침을 찾을 수 없습니다."));
+        String action = policy.getType() + " " + policy.getVersion() + " 삭제";
+        policyRepository.delete(policy);
+        adminLogService.logAction("정책", action);
     }
 
     @Transactional
@@ -127,6 +133,9 @@ public class HeadPolicyService {
         }
 
         policy.setIsActive(isActive);
+        adminLogService.logAction("정책",
+                policy.getType() + " " + policy.getVersion()
+                        + " 상태 변경 (" + (isActive ? "활성" : "비활성") + ")");
         return new PolicyResponseDto(policy);
     }
 

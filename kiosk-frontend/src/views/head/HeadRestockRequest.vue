@@ -175,6 +175,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import AppMessageToast from '@/components/common/AppMessageToast.vue'
 import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
 import { useHeadAuthStore } from '@/stores/head/headAuthStore'
+import { askRestockRejectionReason } from '@/constants/restockRejectionReasons'
 import {
   getHeadRestocks,
   approveHeadRestock,
@@ -300,7 +301,8 @@ const handleApprove = async (item) => {
  * 반려 사유를 입력받아 API로 전달하고 지점 상태 알림과 목록을 갱신합니다.
  */
 const handleReject = async (item) => {
-  if (!confirm(`${item.itemName} 신청을 반려하시겠습니까?`)) return
+  const rejectionReason = askRestockRejectionReason()
+  if (!rejectionReason) return
   
   const adminId = headAuthStore.headUser?.employeeId
   if (!adminId) {
@@ -310,7 +312,7 @@ const handleReject = async (item) => {
   
   processingId.value = item.requestId
   try {
-    await rejectHeadRestock(item.requestId, { adminId })
+    await rejectHeadRestock(item.requestId, { adminId, rejectionReason })
     showMessage('반려 처리되었습니다.')
     await loadRestocks()
   } catch (error) {
@@ -340,6 +342,31 @@ const handleShipping = async (item) => {
     await loadRestocks()
   } catch (error) {
     showMessage(extractRestockErrorMessage(error, '배송 처리에 실패했습니다.'), 'error')
+  } finally {
+    processingId.value = null
+  }
+}
+
+/*
+ * 쉬운주석: 배송 중인 신청을 완료하면 신청 상태와 연결된 실제 재고가 함께 증가한다.
+ * 화면의 관리자 번호를 완료 API에 보내고, 성공한 뒤 최신 목록을 다시 불러온다.
+ */
+const handleComplete = async (item) => {
+  if (!confirm('배송을 완료하고 재고를 입고하시겠습니까?')) return
+
+  const adminId = headAuthStore.headUser?.employeeId
+  if (!adminId) {
+    showMessage('처리 권한이 없습니다. 다시 로그인해주세요.', 'error')
+    return
+  }
+
+  processingId.value = item.requestId
+  try {
+    await completeHeadRestock(item.requestId, { adminId })
+    showMessage('배송 완료와 재고 입고가 처리되었습니다.')
+    await loadRestocks()
+  } catch (error) {
+    showMessage(extractRestockErrorMessage(error, '배송 완료 처리에 실패했습니다.'), 'error')
   } finally {
     processingId.value = null
   }

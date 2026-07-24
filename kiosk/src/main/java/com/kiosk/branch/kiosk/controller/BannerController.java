@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 /**
  * [코드 흐름 안내] BannerController
@@ -29,6 +30,6 @@ public class BannerController {
      */
     @GetMapping
     public List<Banner> getAllBanners() {
-        return bannerRepository.findAll();
+        return bannerRepository.findVisibleAt(LocalDateTime.now());
     }
 }

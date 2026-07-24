@@ -1,5 +1,6 @@
 package com.kiosk.headquarter.dto.banner;
 
+import java.time.LocalDateTime;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -35,4 +36,6 @@ public class HeadBannerCreateRequest {
     private String imageUrl;
 
     private Boolean isActive;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
 }

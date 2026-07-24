@@ -567,11 +567,17 @@ const handleRestockStatusMessage = (body) => {
     itemName:
       data.itemName ?? '재고 품목',
 
+    itemId:
+      data.itemId ?? null,
+
     requestQuantity:
       data.requestQuantity ?? null,
 
     requestTargetType:
       data.requestTargetType ?? null,
+
+    rejectionReason:
+      data.rejectionReason ?? null,
 
     processedAt:
       data.processedAt ?? null,
@@ -1178,10 +1184,15 @@ onBeforeUnmount(() => {
 
           <div>
 
-            <span>품목</span>
+            <span>
+              {{ restockAlert.requestTargetType === 'FLAVOR' ? '아이스크림 맛' : '상품 재고' }}
+            </span>
 
             <strong>
               {{ restockAlert.itemName }}
+              <template v-if="restockAlert.itemId !== null">
+                (ID: {{ restockAlert.itemId }})
+              </template>
             </strong>
 
           </div>
@@ -1199,6 +1210,16 @@ onBeforeUnmount(() => {
               {{ restockAlert.requestQuantity }}개
             </strong>
 
+          </div>
+
+          <div
+            v-if="
+              restockAlert.status === 'REJECTED' &&
+              restockAlert.rejectionReason
+            "
+          >
+            <span>반려 사유</span>
+            <strong>{{ restockAlert.rejectionReason }}</strong>
           </div>
 
         </div>

@@ -1,6 +1,7 @@
 package com.kiosk.headquarter.dto.coupon;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -29,4 +30,8 @@ public class CouponRequestDto {
     private Boolean isIssuedAll;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
+    /*
+     * 쉬운주석: 알림 조회에서 실제 user_coupon.expiry_date를 담을 때만 사용한다.
+     */
+    private LocalDate expiryDate;
 }

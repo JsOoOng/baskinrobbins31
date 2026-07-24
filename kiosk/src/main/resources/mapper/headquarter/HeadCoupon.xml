@@ -27,6 +27,23 @@
 
     </select>
 
+    <!--
+        쉬운주석: 회원에게 실제 발급되며 만들어진 expiry_date를 조회한다.
+        같은 쿠폰이 여러 날짜에 발급될 수 있어 만료일별로 한 행씩 반환한다.
+    -->
+    <select id="findCouponExpiryDates"
+            resultType="com.kiosk.headquarter.dto.coupon.CouponRequestDto">
+        SELECT DISTINCT
+            c.coupon_id AS couponId,
+            c.coupon_name AS couponName,
+            uc.expiry_date AS expiryDate
+        FROM coupon c
+        INNER JOIN user_coupon uc
+            ON uc.coupon_id = c.coupon_id
+        WHERE uc.is_used = FALSE
+          AND uc.expiry_date IS NOT NULL
+    </select>
+
     <insert id="insertCoupon"
             parameterType=
                     "com.kiosk.headquarter.dto.coupon.CouponRequestDto">
@@ -124,6 +141,23 @@
         SET is_issued_all = TRUE
         WHERE coupon_id = #{couponId}
 
+    </update>
+
+    <!-- 쉬운주석: 회수 버튼을 누를 수 있는 전체 발급 상태인지 확인한다. -->
+    <select id="isCouponIssuedAll" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM coupon
+            WHERE coupon_id = #{couponId}
+              AND is_issued_all = TRUE
+        )
+    </select>
+
+    <!-- 쉬운주석: 회원 쿠폰 삭제가 끝난 뒤 쿠폰을 다시 미발급 X 상태로 돌린다. -->
+    <update id="resetCouponIssuedStatus">
+        UPDATE coupon
+        SET is_issued_all = FALSE
+        WHERE coupon_id = #{couponId}
     </update>
 
 </mapper>

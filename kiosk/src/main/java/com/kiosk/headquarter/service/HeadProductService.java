@@ -418,6 +418,9 @@ public class HeadProductService {
                         "존재하지 않는 상품입니다."
                 ));
         product.changeDisplay(isDisplay);
+        adminLogService.logAction("상품",
+                product.getProductName() + " 고객 노출 상태 변경 ("
+                        + (Boolean.TRUE.equals(isDisplay) ? "노출" : "숨김") + ")");
         return toResponseDTO(product);
     }
 

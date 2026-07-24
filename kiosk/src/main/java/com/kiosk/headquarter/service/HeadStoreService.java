@@ -1,16 +1,19 @@
 package com.kiosk.headquarter.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.entity.Store;
+import com.kiosk.entity.StoreStatusHistory;
 import com.kiosk.entity.enums.StoreStatus;
 import com.kiosk.headquarter.dto.store.HeadStoreCreateRequest;
 import com.kiosk.headquarter.dto.store.HeadStoreResponse;
 import com.kiosk.headquarter.dto.store.HeadStoreUpdateRequest;
 import com.kiosk.headquarter.repository.HeadStoreMapper;
+import com.kiosk.headquarter.repository.StoreStatusHistoryRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,6 +34,7 @@ public class HeadStoreService {
 
     private final AdminLogService
             adminLogService;
+    private final StoreStatusHistoryRepository storeStatusHistoryRepository;
 
     /*
      * 전체 지점 목록 조회
@@ -132,6 +136,11 @@ public class HeadStoreService {
         Store savedStore =
                 headStoreMapper.save(store);
 
+        saveStatusHistory(
+                savedStore,
+                savedStore.getStoreStatus(),
+                LocalDateTime.now()
+        );
         adminLogService.logAction("지점", savedStore.getStoreName() + " 신규 등록");
 
         return HeadStoreResponse.from(
@@ -167,6 +176,7 @@ public class HeadStoreService {
 
         Store store =
                 findStore(storeId);
+        StoreStatus previousStatus = store.getStoreStatus();
 
         validateBusinessNumber(
                 store.getBusinessNumber(),
@@ -198,6 +208,27 @@ public class HeadStoreService {
                 request.getStoreStatus()
         );
 
+        if (previousStatus != request.getStoreStatus()) {
+            /*
+             * 기존 지점은 이력 테이블 도입 전에 만들어졌을 수 있습니다.
+             * 첫 변경 때 생성 시점의 이전 상태를 함께 기록해야 과거 상태를 복원할 수 있습니다.
+             */
+            if (!storeStatusHistoryRepository.existsByStore_Id(storeId)) {
+                saveStatusHistory(
+                        store,
+                        previousStatus,
+                        store.getCreatedAt() != null
+                                ? store.getCreatedAt()
+                                : LocalDateTime.now().minusNanos(1)
+                );
+            }
+            saveStatusHistory(
+                    store,
+                    request.getStoreStatus(),
+                    LocalDateTime.now()
+            );
+        }
+
         /*
          * @Transactional 안에서 조회한 엔티티이므로
          * JPA 변경 감지로 UPDATE가 실행됩니다.
@@ -205,6 +236,20 @@ public class HeadStoreService {
         adminLogService.logAction("지점", store.getStoreName() + " 정보 수정");
 
         return HeadStoreResponse.from(store);
+    }
+
+    private void saveStatusHistory(
+            Store store,
+            StoreStatus status,
+            LocalDateTime changedAt
+    ) {
+        storeStatusHistoryRepository.save(
+                StoreStatusHistory.builder()
+                        .store(store)
+                        .storeStatus(status)
+                        .changedAt(changedAt)
+                        .build()
+        );
     }
 
     /*

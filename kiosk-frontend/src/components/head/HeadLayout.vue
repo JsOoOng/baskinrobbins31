@@ -7,6 +7,7 @@
 -->
 <script setup>
 import {
+  onMounted,
   onBeforeUnmount,
   reactive,
   ref,
@@ -27,7 +28,56 @@ import HeadNotificationBell
 import P2ComingSoonModal
   from './P2ComingSoonModal.vue'
 
+import AppMessageToast
+  from '@/components/common/AppMessageToast.vue'
+
 const route = useRoute()
+const THEME_KEY = 'headTheme'
+const alertMessage = ref('')
+const alertType = ref('info')
+const sidebarNotificationCounts = ref({})
+let originalAlert = null
+
+/*
+ * 쉬운주석: 설정 화면에서 고른 테마를 HTML에 표시하면 모든 본사 화면의 공통 CSS가 함께 바뀐다.
+ */
+const applySavedTheme = () => {
+  document.documentElement.dataset.headTheme =
+    localStorage.getItem(THEME_KEY) === 'dark'
+      ? 'dark'
+      : 'light'
+}
+
+/*
+ * 쉬운주석: 기존 본사 페이지의 alert() 호출을 한 곳에서 가로채 공통 토스트로 보여준다.
+ * 각 관리 화면을 모두 고치지 않아도 이후 alert 메시지까지 같은 디자인을 사용한다.
+ */
+const showAlertToast = (value) => {
+  const message = String(value ?? '')
+  alertMessage.value = ''
+
+  requestAnimationFrame(() => {
+    alertMessage.value = message
+    alertType.value =
+      /실패|오류|찾을 수 없|할 수 없|수 없습니다|불가|올바르지|반려/.test(message)
+        ? 'error'
+        : /입력|선택|필요|없습니다/.test(message)
+          ? 'warning'
+          : /성공|완료|되었습니다|했습니다/.test(message)
+            ? 'success'
+            : 'info'
+  })
+}
+
+const closeAlertToast = () => {
+  alertMessage.value = ''
+}
+
+onMounted(() => {
+  applySavedTheme()
+  originalAlert = window.alert
+  window.alert = showAlertToast
+})
 
 const sidebarOpen =
   ref(false)
@@ -111,6 +161,7 @@ watch(
  */
 onBeforeUnmount(() => {
   document.body.style.overflow = ''
+  window.alert = originalAlert
 })
 </script>
 
@@ -119,6 +170,7 @@ onBeforeUnmount(() => {
     <!-- 본사 사이드바 -->
     <HeadSidebar
       :open="sidebarOpen"
+      :notification-counts="sidebarNotificationCounts"
       @close="closeSidebar"
       @open-p2="openP2Modal"
     />
@@ -145,7 +197,9 @@ onBeforeUnmount(() => {
           실제 알림 센터를 전달합니다.
         -->
         <template #notification>
-          <HeadNotificationBell />
+          <HeadNotificationBell
+            @unread-routes-change="sidebarNotificationCounts = $event"
+          />
         </template>
       </HeadHeader>
 
@@ -161,6 +215,13 @@ onBeforeUnmount(() => {
       :title="p2Modal.title"
       :description="p2Modal.description"
       @close="closeP2Modal"
+    />
+
+    <!-- 쉬운주석: 본사 전체 alert 메시지를 브라우저 창 대신 공통 토스트로 표시한다. -->
+    <AppMessageToast
+      :message="alertMessage"
+      :type="alertType"
+      @close="closeAlertToast"
     />
   </div>
 </template>

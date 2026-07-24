@@ -33,6 +33,7 @@ public class HeadStoreFlavorService {
     private final HeadStoreFlavorMapper headStoreFlavorMapper;
     private final HeadStoreMapper headStoreMapper;
     private final HeadFlavorMapper headFlavorMapper;
+    private final AdminLogService adminLogService;
 
     // 지점별 맛 배정
     @Transactional
@@ -82,6 +83,8 @@ public class HeadStoreFlavorService {
 
         headStoreFlavorMapper.save(storeFlavor);
 
+        adminLogService.logAction("지점 맛",
+                store.getStoreName() + " - " + flavor.getFlavorName() + " 맛 배정");
         return "지점 맛 등록 성공";
     }
 
@@ -140,6 +143,9 @@ public class HeadStoreFlavorService {
 
         storeFlavor.updateStoreFlavor(nextSoldOut, nextContainer);
 
+        adminLogService.logAction("지점 맛",
+                storeFlavor.getStore().getStoreName() + " - "
+                        + storeFlavor.getFlavor().getFlavorName() + " 맛 정보 수정");
         return "지점 맛 정보 수정 성공";
     }
 
@@ -154,8 +160,11 @@ public class HeadStoreFlavorService {
         StoreFlavor storeFlavor = headStoreFlavorMapper.findByStore_IdAndId(storeId, storeFlavorId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지점 맛 정보입니다."));
 
+        String action = storeFlavor.getStore().getStoreName() + " - "
+                + storeFlavor.getFlavor().getFlavorName() + " 맛 배정 삭제";
         headStoreFlavorMapper.delete(storeFlavor);
 
+        adminLogService.logAction("지점 맛", action);
         return "지점 맛 삭제 성공";
     }
 

@@ -15,4 +15,5 @@ import lombok.Setter;
 public class HeadRestockProcessRequestDTO {
 
     private Integer adminId;
+    private String rejectionReason;
 }

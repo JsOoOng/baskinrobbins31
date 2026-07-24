@@ -8,10 +8,16 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '@/api/axios'
+import { restockRejectionReasons } from '@/constants/restockRejectionReasons'
 
 
 const deliveries = ref([])
 const loading = ref(false)
+const cancelTarget = ref(null)
+const cancelReasonOption = ref('')
+const customCancelReason = ref('')
+
+const cancelReasons = restockRejectionReasons
 
 
 
@@ -90,6 +96,53 @@ function formatDate(date){
     return new Date(date).toLocaleString('ko-KR')
 }
 
+/* 쉬운주석: 선택한 배송 정보를 취소 모달에 넣고 이전 입력값을 비운다. */
+const openCancelModal = (delivery) => {
+    cancelTarget.value = delivery
+    cancelReasonOption.value = ''
+    customCancelReason.value = ''
+}
+
+/* 쉬운주석: 닫기 또는 처리 완료 시 모달과 입력값을 모두 초기화한다. */
+const closeCancelModal = () => {
+    cancelTarget.value = null
+    cancelReasonOption.value = ''
+    customCancelReason.value = ''
+}
+
+/*
+ * 쉬운주석: '기타'는 직접 입력값을, 나머지는 선택한 기본 사유를 서버로 보낸다.
+ * 서버는 배송 취소와 재고 신청 반려를 함께 처리하고 지점에 실시간 알림을 보낸다.
+ */
+const cancelDelivery = async () => {
+    const reason = cancelReasonOption.value === '기타(직접 입력)'
+        ? customCancelReason.value.trim()
+        : cancelReasonOption.value
+
+    if (!reason) {
+        alert('배송 취소 사유를 선택하거나 입력해주세요.')
+        return
+    }
+
+    try {
+        const response = await api.put(
+            `/head/delivery/${cancelTarget.value.deliveryId}/cancel`,
+            { reason }
+        )
+        /*
+         * 쉬운주석: 본사 공통 예외 응답은 HTTP 200일 수 있으므로
+         * success=false이면 성공처럼 모달을 닫지 않고 오류로 처리한다.
+         */
+        if (response.data?.success === false) {
+            throw new Error(response.data.message || '배송 취소에 실패했습니다.')
+        }
+        closeCancelModal()
+        await getDeliveries()
+    } catch (error) {
+        console.error(error)
+        alert(error.response?.data?.message || error.response?.data?.error || error.message || '배송 취소에 실패했습니다.')
+    }
+}
 /*
  * DeliveryStatus enum을 화면용 한글 상태로 변환합니다.
  * READY → STARTED → IN_PROGRESS → COMPLETED 흐름을 표에 표시합니다.
@@ -99,7 +152,8 @@ function deliveryStatusText(status){
         READY:'배송 준비',
         STARTED:'배송 시작',
         IN_PROGRESS:'배송 중',
-        COMPLETED:'배송 완료'
+        COMPLETED:'배송 완료',
+        CANCELED:'배송 취소'
     }
     return map[status] ?? status
 }
@@ -272,6 +326,22 @@ delivery.deliveryStatus === 'COMPLETED'
 완료
 </span>
 
+<span
+class="canceled-label"
+v-if="delivery.deliveryStatus === 'CANCELED'"
+:title="delivery.cancelReason"
+>
+취소
+</span>
+
+<button
+v-if="!['COMPLETED', 'CANCELED'].includes(delivery.deliveryStatus)"
+class="status-button cancel"
+type="button"
+@click="openCancelModal(delivery)"
+>
+배송 취소
+</button>
 
 </td>
 
@@ -288,6 +358,40 @@ delivery.deliveryStatus === 'COMPLETED'
 </table>
     </div>
   </section>
+
+  <!-- 쉬운주석: 배송 취소 사유를 선택하고 기타일 때만 직접 입력하는 모달이다. -->
+  <div v-if="cancelTarget" class="cancel-modal-backdrop" @click.self="closeCancelModal">
+    <form class="cancel-modal" @submit.prevent="cancelDelivery">
+      <h2>배송 취소 사유</h2>
+      <p>{{ cancelTarget.storeName }} · {{ cancelTarget.itemName }}</p>
+
+      <label for="cancel-reason">취소 사유 선택</label>
+      <select id="cancel-reason" v-model="cancelReasonOption" required>
+        <option value="" disabled>사유를 선택해주세요</option>
+        <option v-for="reason in cancelReasons" :key="reason" :value="reason">
+          {{ reason }}
+        </option>
+      </select>
+
+      <label v-if="cancelReasonOption === '기타(직접 입력)'" for="custom-cancel-reason">
+        기타 사유
+      </label>
+      <textarea
+        v-if="cancelReasonOption === '기타(직접 입력)'"
+        id="custom-cancel-reason"
+        v-model="customCancelReason"
+        maxlength="500"
+        rows="4"
+        placeholder="배송 취소 사유를 직접 입력해주세요."
+        required
+      />
+
+      <div class="cancel-modal-actions">
+        <button type="button" class="modal-close-button" @click="closeCancelModal">닫기</button>
+        <button type="submit" class="modal-cancel-button">배송 취소 확정</button>
+      </div>
+    </form>
+  </div>
 </section>
 
 </template>
@@ -417,7 +521,8 @@ delivery.deliveryStatus === 'COMPLETED'
 }
 
 .status-badge,
-.completed-label {
+.completed-label,
+.canceled-label {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -454,6 +559,12 @@ delivery.deliveryStatus === 'COMPLETED'
   background: #dff9ed;
 }
 
+.delivery-canceled,
+.canceled-label {
+  color: #dc3545;
+  background: #ffe7ea;
+}
+
 .status-button {
   min-width: 76px;
   padding: 7px 11px;
@@ -462,6 +573,84 @@ delivery.deliveryStatus === 'COMPLETED'
 
 .status-button.complete {
   background: #159b68;
+}
+
+.status-button.cancel {
+  min-width: 64px;
+  margin-left: 10px;
+  padding-inline: 8px;
+  background: #dc3545;
+}
+
+.cancel-modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(16, 20, 29, .55);
+}
+
+.cancel-modal {
+  width: min(480px, 100%);
+  padding: 24px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+}
+
+.cancel-modal h2 {
+  margin: 0 0 6px;
+}
+
+.cancel-modal p {
+  margin: 0 0 20px;
+  color: #71798b;
+}
+
+.cancel-modal label {
+  display: block;
+  margin: 14px 0 7px;
+  font-weight: 700;
+}
+
+.cancel-modal select,
+.cancel-modal textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d8dce5;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.cancel-modal textarea {
+  resize: vertical;
+}
+
+.cancel-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.cancel-modal-actions button {
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.modal-close-button {
+  color: #454b59;
+  background: #eceef3;
+}
+
+.modal-cancel-button {
+  color: #fff;
+  background: #dc3545;
 }
 
 .empty-cell {

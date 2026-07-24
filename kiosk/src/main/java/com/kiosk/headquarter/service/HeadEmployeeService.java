@@ -26,15 +26,18 @@ public class HeadEmployeeService {
     private final HeadEmployeeMapper headEmployeeMapper;
     private final HeadStoreMapper headStoreMapper;
     private final PasswordEncoder passwordEncoder;
+    private final AdminLogService adminLogService;
 
     public HeadEmployeeService(
             HeadEmployeeMapper headEmployeeMapper,
             HeadStoreMapper headStoreMapper,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            AdminLogService adminLogService
     ) {
         this.headEmployeeMapper = headEmployeeMapper;
         this.headStoreMapper = headStoreMapper;
         this.passwordEncoder = passwordEncoder;
+        this.adminLogService = adminLogService;
     }
 
     /*
@@ -130,6 +133,8 @@ public class HeadEmployeeService {
         Employee savedEmployee =
                 headEmployeeMapper.save(employee);
 
+        adminLogService.logAction("지점 계정",
+                store.getStoreName() + " - " + savedEmployee.getName() + " 관리자 계정 생성");
         // 10. 응답 DTO 생성
         return HeadEmployeeCreateResponse.builder()
                 .employeeId(savedEmployee.getId())

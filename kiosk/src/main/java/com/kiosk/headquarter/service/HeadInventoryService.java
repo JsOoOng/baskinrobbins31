@@ -31,6 +31,7 @@ public class HeadInventoryService {
 
     private final AutoRestockService
             autoRestockService;
+    private final AdminLogService adminLogService;
 
     /*
      * 전체 지점 재고 조회
@@ -149,6 +150,9 @@ public class HeadInventoryService {
             );
         }
 
+        adminLogService.logAction("상품 재고",
+                inventory.getStore().getStoreName() + " - "
+                        + inventory.getItem().getItemName() + " 자동 보충 설정 변경");
         return HeadInventoryResponse.from(
                 inventory
         );

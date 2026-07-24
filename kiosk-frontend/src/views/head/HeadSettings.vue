@@ -57,6 +57,19 @@
 
           <div class="setting-item">
             <div class="setting-info">
+              <h3>화면 테마</h3>
+              <p>본사 관리 화면을 밝은 화면 또는 눈부심을 줄인 어두운 화면으로 표시합니다.</p>
+            </div>
+            <div class="setting-control">
+              <select v-model="screenTheme" @change="changeTheme">
+                <option value="light">라이트</option>
+                <option value="dark">다크</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
               <h3>영수증 기본 출력 방식</h3>
               <p>결제 완료 시 영수증 출력 기본값을 설정합니다.</p>
             </div>
@@ -130,6 +143,8 @@ import { useHeadSettingsStore } from '@/stores/head/headSettingsStore';
 
 const settingsStore = useHeadSettingsStore();
 const activeTab = ref('GENERAL');
+const THEME_KEY = 'headTheme';
+const screenTheme = ref(localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light');
 
 const formData = ref({
   useVoiceGuide: true,
@@ -150,6 +165,15 @@ const resetForm = () => {
 
 const saveSettings = async () => {
   await settingsStore.saveSettings(formData.value);
+};
+
+/*
+ * 쉬운주석: 테마는 이 브라우저에서만 쓰는 화면 설정이므로 서버 대신 localStorage에 저장한다.
+ * HTML의 data-head-theme 값이 바뀌면 공통 다크 모드 CSS가 즉시 적용된다.
+ */
+const changeTheme = () => {
+  localStorage.setItem(THEME_KEY, screenTheme.value);
+  document.documentElement.dataset.headTheme = screenTheme.value;
 };
 </script>
 

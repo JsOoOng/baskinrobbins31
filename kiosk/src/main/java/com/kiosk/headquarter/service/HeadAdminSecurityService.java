@@ -34,6 +34,7 @@ public class HeadAdminSecurityService {
 
     private final HeadquarterAdminMapper headquarterAdminMapper;
     private final PasswordEncoder passwordEncoder;
+    private final AdminLogService adminLogService;
 
     /**
      * [메서드 흐름] getAdminList
@@ -94,6 +95,7 @@ public class HeadAdminSecurityService {
 
         headquarterAdminMapper.save(admin);
 
+        adminLogService.logAction("관리자 계정", admin.getName() + " 본사 관리자 생성");
         return "본사 관리자 생성 성공";
     }
 
@@ -116,6 +118,8 @@ public class HeadAdminSecurityService {
 
         targetAdmin.changeRole(requestDTO.getRole());
 
+        adminLogService.logAction("관리자 계정",
+                targetAdmin.getName() + " 권한 변경 (" + requestDTO.getRole() + ")");
         return "본사 관리자 권한 변경 성공";
     }
 
@@ -143,6 +147,8 @@ public class HeadAdminSecurityService {
 
         targetAdmin.changeStatus(requestDTO.getStatus());
 
+        adminLogService.logAction("관리자 계정",
+                targetAdmin.getName() + " 상태 변경 (" + requestDTO.getStatus() + ")");
         return "본사 관리자 상태 변경 성공";
     }
 
@@ -174,6 +180,7 @@ public class HeadAdminSecurityService {
 
         targetAdmin.changePassword(passwordEncoder.encode(requestDTO.getNewPassword()));
 
+        adminLogService.logAction("관리자 계정", targetAdmin.getName() + " 비밀번호 변경");
         return "본사 관리자 비밀번호 변경 성공";
     }
 

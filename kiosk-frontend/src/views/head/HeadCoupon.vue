@@ -2,7 +2,7 @@
   [화면 흐름 안내] HeadCoupon
   역할: 본사 관리에서 사용자가 보는 화면이다.
   진입: /head/coupons -> 이 Vue 파일 렌더링
-  데이터: 사용자 동작 -> http://localhost:8889/head/coupon, http://localhost:8889/head/coupon/${couponId}, http://localhost:8889/head/coupon/issue-all/${selectedIssueCouponId.value} -> 응답/상태 반영
+  데이터: 사용자 동작 -> http://localhost:8889/head/coupon, http://localhost:8889/head/coupon/${couponId}, http://localhost:8889/head/coupon/issue-all/${couponId} -> 응답/상태 반영
   다음 이동: 현재 상태를 갱신하거나 부모 화면에 이벤트를 전달
 -->
 <template>
@@ -10,7 +10,6 @@
  
         <div class="top-actions">
             <input v-model="searchKeyword" class="table-search" type="search" placeholder="쿠폰명·유형 검색" />
-            <button @click="openIssueAllModal" class="btn-secondary">🎁 쿠폰 발급</button>
             <button @click="openCreateModal" class="btn-primary">＋ 새 쿠폰 등록</button>    
         </div>
  
@@ -76,9 +75,15 @@
             <td>{{ coupon.durationDays ?? 0 }}일</td>
             <td>{{ coupon.createdAt ? coupon.createdAt.substring(0, 10) : '' }}</td>
             <td>
-                <span :class="coupon.isIssuedAll ? 'status-o' : 'status-x'">
-                    {{ coupon.isIssuedAll ? 'O' : 'X' }}
-                </span>
+                <span v-if="coupon.isIssuedAll" class="status-o">O</span>
+                <button
+                  v-else
+                  type="button"
+                  class="status-x status-issue-button"
+                  @click="executeIssueAll(coupon.couponId)"
+                >
+                  X
+                </button>
             </td>
             <td>
                 <button 
@@ -90,6 +95,14 @@
                     >
                     수정
                 </button>
+              <button
+                v-if="coupon.is_issued_all || coupon.isIssuedAll"
+                type="button"
+                class="btn-revoke"
+                @click="revokeCoupon(coupon.couponId)"
+              >
+                회수
+              </button>
               <button @click="deleteCoupon(coupon.couponId)" class="btn-delete">삭제</button>
             </td>
           </tr>
@@ -150,36 +163,6 @@
         </div>
       </div>
 
-      <!-- 쿠폰 뿌리기(전체 발급) 선택 모달 -->
-      <div v-if="isIssueModalOpen" class="modal-overlay">
-        <div class="modal-content">
-          <h3>🎁 전체 유저에게 쿠폰 뿌리기</h3>
-          <p class="modal-desc">모든 유저에게 일괄 발급할 쿠폰을 선택하세요.</p>
-          
-          <div class="form-group">
-            <label>발급할 쿠폰 선택</label>
-            <select v-model="selectedIssueCouponId" class="issue-select">
-              <option disabled value="">쿠폰을 선택해주세요</option>
-              
-              <template v-for="coupon in coupons" :key="coupon.couponId">
-                <option 
-                  v-if="!coupon.is_issued_all && !coupon.isIssuedAll" 
-                  :value="coupon.couponId"
-                >
-                  [{{ coupon.couponId }}] {{ coupon.couponName }} 
-                  ({{ (coupon.discountValue ?? 0).toLocaleString() }}{{ coupon.discountType === 'PERCENT' ? '%' : '원' }})
-                </option>
-              </template>
-              
-            </select>
-          </div>
-
-          <div class="modal-actions">
-            <button type="button" @click="executeIssueAll" class="btn-submit">발급하기</button>
-            <button type="button" @click="closeIssueModal" class="btn-cancel">취소</button>
-          </div>
-        </div>
-      </div>
     </div>
   </template>
   
@@ -198,9 +181,6 @@ const currentPage = ref(1);
 const pageSize = ref(10);
 const isModalOpen = ref(false);   
 const isEditMode = ref(false);    
-
-const isIssueModalOpen = ref(false);
-const selectedIssueCouponId = ref('');
 
 // 🔍 필터 상태 관리 변수
 const issueFilter = ref('ALL');        
@@ -298,11 +278,6 @@ const fetchCoupons = async () => {
   }
 };
 
-const openIssueAllModal = () => {
-  selectedIssueCouponId.value = '';
-  isIssueModalOpen.value = true;
-};
-
 const openCreateModal = () => {
   isEditMode.value = false; 
   form.value = {            
@@ -362,26 +337,41 @@ const deleteCoupon = async (couponId) => {
   }
 };
 
-const closeIssueModal = () => {
-  isIssueModalOpen.value = false;
-};
-
-const executeIssueAll = async () => {
-  if (!selectedIssueCouponId.value) {
+/* 쉬운주석: 표의 X를 누른 해당 쿠폰만 전체 회원에게 발급한다. */
+const executeIssueAll = async (couponId) => {
+  if (!couponId) {
     alert('발급할 쿠폰을 선택해주세요.');
     return;
   }
 
-  if (!confirm(`선택한 쿠폰 [${selectedIssueCouponId.value}]을(를) 모든 유저에게 일괄 발급하시겠습니까?`)) return;
+  if (!confirm('이 쿠폰을 일괄 발급하시겠습니까?')) return;
 
   try {
-    await axios.post(`http://localhost:8889/head/coupon/issue-all/${selectedIssueCouponId.value}`);
+    await axios.post(`http://localhost:8889/head/coupon/issue-all/${couponId}`);
+    const issuedCoupon = coupons.value.find(coupon => coupon.couponId === couponId);
+    if (issuedCoupon) issuedCoupon.isIssuedAll = true;
     alert('쿠폰이 모든 유저에게 성공적으로 뿌려졌습니다!');
-    closeIssueModal();
     await fetchCoupons();
   } catch (error) {
     console.error('쿠폰 일괄 발급 실패:', error);
     alert('쿠폰 일괄 발급 중 오류가 발생했습니다.');
+  }
+};
+
+/*
+ * 쉬운주석: O 상태 쿠폰을 회수하면 모든 user_coupon 발급 내역이 삭제되고
+ * 쿠폰은 X 상태가 되어 다시 수정하거나 전체 회원에게 재발급할 수 있다.
+ */
+const revokeCoupon = async (couponId) => {
+  if (!confirm(`쿠폰 [${couponId}]을 모든 유저에게서 회수하시겠습니까?`)) return;
+
+  try {
+    await axios.delete(`http://localhost:8889/head/coupon/issue-all/${couponId}`);
+    alert('쿠폰이 모든 유저에게서 회수되었습니다.');
+    await fetchCoupons();
+  } catch (error) {
+    console.error('쿠폰 회수 실패:', error);
+    alert(error.response?.data || '쿠폰 회수 중 오류가 발생했습니다.');
   }
 };
 </script>
@@ -410,8 +400,7 @@ const executeIssueAll = async () => {
 }
 
 
-.btn-primary,
-.btn-secondary {
+.btn-primary {
 
   height: 36px;
 
@@ -438,19 +427,6 @@ const executeIssueAll = async () => {
   background: #725ee7;
 
 }
-
-
-/* 전체 발급 */
-.btn-secondary {
-
-  border: 1px solid #dcd7fb;
-
-  color: #6756dc;
-
-  background: #f3f1ff;
-
-}
-
 
 
 /* =====================
@@ -673,6 +649,16 @@ const executeIssueAll = async () => {
 
 }
 
+.status-issue-button {
+  border: 0;
+  cursor: pointer;
+}
+
+.status-issue-button:hover {
+  color: #ffffff;
+  background: #db485e;
+}
+
 
 
 .status-o {
@@ -701,7 +687,8 @@ const executeIssueAll = async () => {
 
 
 .btn-edit,
-.btn-delete {
+.btn-delete,
+.btn-revoke {
 
   height:29px;
 
@@ -751,6 +738,23 @@ const executeIssueAll = async () => {
 
   background:#fff2f4;
 
+}
+
+.btn-revoke {
+  margin-right: 5px;
+  border: 1px solid #c9cdd4;
+  color: #737985;
+  background: #e5e7eb;
+}
+
+/*
+ * 쉬운주석: 다크 모드에서는 회색 버튼을 주변보다 밝게 만들어
+ * 회수 글자와 버튼 경계가 어두운 표 배경에서도 분명하게 보이게 한다.
+ */
+:global(html[data-head-theme='dark']) .btn-revoke {
+  border-color: #697384;
+  color: #f1f3f6;
+  background: #505968;
 }
 
 

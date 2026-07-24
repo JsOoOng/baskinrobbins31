@@ -48,6 +48,7 @@ public class HeadStoreProductService {
     
     private final HeadStoreInventoryMapper
     	headStoreInventoryMapper;
+    private final AdminLogService adminLogService;
 
     /*
      * 지점 판매 메뉴 등록
@@ -126,6 +127,7 @@ public class HeadStoreProductService {
                 StoreProduct.builder()
                         .store(store)
                         .product(product)
+                        .storeProductPrice(storeProductPrice)
                         .isSoldOut(
                                 Boolean.TRUE.equals(
                                         requestDTO.getIsSoldOut()
@@ -154,6 +156,8 @@ public class HeadStoreProductService {
             headStoreInventoryMapper.save(inventory);
         }
 
+        adminLogService.logAction("지점 상품",
+                store.getStoreName() + " - " + product.getProductName() + " 판매 상품 등록");
         return "지점 판매 메뉴 등록 성공";
     }
 
@@ -243,10 +247,18 @@ public class HeadStoreProductService {
                         ? requestDTO.getIsSoldOut()
                         : storeProduct.getIsSoldOut();
 
+        Integer storeProductPrice =
+                requestDTO.getStoreProductPrice() != null
+                        ? requestDTO.getStoreProductPrice()
+                        : storeProduct.getStoreProductPrice();
 
+        validatePrice(storeProductPrice);
+        storeProduct.changeStoreProductPrice(storeProductPrice);
         storeProduct.changeSoldOut(isSoldOut);
 
-
+        adminLogService.logAction("지점 상품",
+                storeProduct.getStore().getStoreName() + " - "
+                        + storeProduct.getProduct().getProductName() + " 판매 정보 수정");
         return "지점 판매 메뉴 수정 성공";
     }
 
@@ -274,6 +286,9 @@ public class HeadStoreProductService {
 
         storeProduct.deleteStoreProduct();
 
+        adminLogService.logAction("지점 상품",
+                storeProduct.getStore().getStoreName() + " - "
+                        + storeProduct.getProduct().getProductName() + " 판매 상품 삭제");
         return "지점 판매 메뉴 삭제 성공";
     }
 
@@ -345,6 +360,9 @@ public class HeadStoreProductService {
                                 .getProduct()
                                 .getBasePrice()
                 )
+                .storeProductPrice(
+                        storeProduct.getStoreProductPrice()
+                )
                 .isSoldOut(
                         storeProduct.getIsSoldOut()
                 )
@@ -383,6 +401,9 @@ public class HeadStoreProductService {
                 )
                 .basePrice(
                         product.getBasePrice()
+                )
+                .storeProductPrice(
+                        storeProduct.getStoreProductPrice()
                 )
                 .discountRate(
                         product.getDiscountRate()

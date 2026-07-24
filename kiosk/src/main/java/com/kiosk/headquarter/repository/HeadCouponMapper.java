@@ -20,6 +20,9 @@ public interface HeadCouponMapper {
     List<CouponRequestDto>
             findAllCoupons();
 
+    List<CouponRequestDto>
+            findCouponExpiryDates();
+
     void insertCoupon(
             CouponRequestDto request
     );
@@ -44,6 +47,16 @@ public interface HeadCouponMapper {
     );
 
     void updateCouponIssuedStatus(
+            @Param("couponId")
+            String couponId
+    );
+
+    boolean isCouponIssuedAll(
+            @Param("couponId")
+            String couponId
+    );
+
+    void resetCouponIssuedStatus(
             @Param("couponId")
             String couponId
     );

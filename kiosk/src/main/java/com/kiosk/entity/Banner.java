@@ -1,5 +1,6 @@
 package com.kiosk.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -56,16 +57,29 @@ public class Banner {
     private Boolean isActive = true;
 
     /*
+     * 쉬운주석: 이 두 날짜 사이에서만 배너를 노출할 수 있다.
+     */
+    @Column(name = "start_date")
+    private LocalDateTime startDate;
+
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
+
+    /*
      * 배너 기본 정보 수정
      */
     public void updateBanner(
             String title,
             String imageUrl,
-            Boolean isActive
+            Boolean isActive,
+            LocalDateTime startDate,
+            LocalDateTime endDate
     ) {
         this.title = title;
         this.imageUrl = imageUrl;
         this.isActive = isActive;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
     /*
@@ -76,5 +90,14 @@ public class Banner {
     ) {
         this.isActive =
                 Boolean.TRUE.equals(isActive);
+    }
+
+    /*
+     * 쉬운주석: 지정한 시각이 노출 기간 안이고 활성 상태인지 한 번에 확인한다.
+     */
+    public boolean isVisibleAt(LocalDateTime dateTime) {
+        return Boolean.TRUE.equals(isActive)
+                && (startDate == null || !startDate.isAfter(dateTime))
+                && (endDate == null || endDate.isAfter(dateTime));
     }
 }

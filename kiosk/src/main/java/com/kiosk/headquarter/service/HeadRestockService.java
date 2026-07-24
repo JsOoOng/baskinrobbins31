@@ -37,7 +37,7 @@ public class HeadRestockService {
 
 	private final HeadRestockRequestMapper headRestockRequestMapper;
 	private final HeadquarterAdminMapper headquarterAdminMapper;
-	private final com.kiosk.headquarter.repository.AdminActionLogRepository adminActionLogRepository;
+	private final AdminLogService adminLogService;
 
 	/*
 	 * 추가
@@ -136,6 +136,7 @@ public class HeadRestockService {
                         restockRequest
                 );
 
+        adminLogService.logAction("재고 신청", "재고 신청 승인 (ID: " + requestId + ")");
         return "발주 요청 승인 성공";
     }
 
@@ -179,87 +180,59 @@ public class HeadRestockService {
 
 
 
+        adminLogService.logAction("재고 신청", "재고 신청 배송 시작 (ID: " + requestId + ")");
         return "발주 요청 배송 처리 성공";
     }
 
 
 
-/*
-    // 완료 및 재고 증가
+    // 배송 완료 및 실제 재고 입고
     @Transactional
     public String completeRestock(
             Integer requestId,
             HeadRestockProcessRequestDTO requestDTO
     ) {
-
-
         RestockRequest restockRequest =
                 getRestock(requestId);
-
-
-
         HeadquarterAdmin admin =
                 getActiveAdmin(requestDTO.getAdminId());
+        Delivery delivery = deliveryRepository
+                .findByRestockRequestId(requestId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "연결된 배송 정보가 없습니다."
+                ));
 
-
-
-        // SHIPPING -> COMPLETED
-        restockRequest.complete(admin);
-
-
-
-        /*
-         * 제품 재고 입고
-         */
-    /*
-        if (restockRequest.getStoreInventory() != null) {
-
-
-            StoreInventory inventory =
-                    restockRequest.getStoreInventory();
-
-
-            inventory.increaseStock(
-                    restockRequest.getRequestQuantity()
-            );
-
-        }
-
-
-
-        /*
-         * 맛 재고 입고
-         */
-    
-    /*
-        else if (restockRequest.getStoreFlavor() != null) {
-
-
-            StoreFlavor flavor =
-                    restockRequest.getStoreFlavor();
-
-
-            flavor.increaseStock(
-                    restockRequest.getRequestQuantity()
-            );
-
-        }
-
-
-        else {
-
-            throw new IllegalStateException(
-                    "입고 대상 재고 정보가 없습니다."
-            );
-        }
-
-
-
+        delivery.changeStatus(DeliveryStatus.COMPLETED);
+        completeAndReceive(restockRequest, admin);
+        adminLogService.logAction(
+                "재고 신청",
+                "재고 신청 배송 완료 (ID: " + requestId + ")"
+        );
         return "발주 완료 및 재고 입고 처리 성공";
     }
 
+    /**
+     * 배송 관리와 재고 신청 관리가 공유하는 최종 완료 처리다.
+     * 신청 상태와 상품·맛 재고를 같은 트랜잭션에서 함께 변경한다.
+     */
+    public void completeAndReceive(
+            RestockRequest restockRequest,
+            HeadquarterAdmin admin
+    ) {
+        restockRequest.complete(admin);
 
-*/
+        if (restockRequest.getStoreInventory() != null) {
+            restockRequest.getStoreInventory().increaseStock(
+                    restockRequest.getRequestQuantity()
+            );
+        } else if (restockRequest.getStoreFlavor() != null) {
+            restockRequest.getStoreFlavor().increaseStock(
+                    restockRequest.getRequestQuantity()
+            );
+        } else {
+            throw new IllegalStateException("입고 대상 재고 정보가 없습니다.");
+        }
+    }
 
     private RestockRequest getRestock(Integer requestId) {
 
@@ -321,6 +294,15 @@ public class HeadRestockService {
             Integer requestId,
             HeadRestockProcessRequestDTO requestDTO
     ) {
+        String rejectionReason = requestDTO.getRejectionReason() == null
+                ? ""
+                : requestDTO.getRejectionReason().trim();
+        if (rejectionReason.isBlank()) {
+            throw new IllegalArgumentException("반려 사유를 입력해주세요.");
+        }
+        if (rejectionReason.length() > 500) {
+            throw new IllegalArgumentException("반려 사유는 500자 이하로 입력해주세요.");
+        }
 
         RestockRequest restockRequest =
                 getRestock(
@@ -336,32 +318,14 @@ public class HeadRestockService {
          * WAITING → REJECTED
          */
         restockRequest.reject(
-                admin
+                admin,
+                rejectionReason
         );
 
-        /*
-         * 반려 작업 로그
-         */
-        com.kiosk.entity.AdminActionLog actionLog =
-                com.kiosk.entity.AdminActionLog
-                        .builder()
-                        .administrator(
-                                admin.getName()
-                        )
-                        .action(
-                                "재고 신청 반려 (ID: "
-                                + requestId
-                                + ")"
-                        )
-                        .type(
-                                "RESTOCK_REJECT"
-                        )
-                        .build();
-
-        adminActionLogRepository
-                .save(
-                        actionLog
-                );
+        adminLogService.logAction(
+                "재고 신청",
+                "재고 신청 반려 (ID: " + requestId + ", 사유: " + rejectionReason + ")"
+        );
 
         /*
          * 상태 변경과 작업 로그가 모두 커밋된 후

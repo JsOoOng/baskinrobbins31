@@ -8,10 +8,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kiosk.entity.enums.DeliveryStatus;
 import com.kiosk.headquarter.dto.deliverie.HeadDeliveryResponseDTO;
+import com.kiosk.headquarter.dto.deliverie.HeadDeliveryCancelRequestDTO;
 import com.kiosk.headquarter.service.DeliveryService;
 
 import lombok.RequiredArgsConstructor;
@@ -71,6 +73,22 @@ public class DeliveryController {
         return deliveryService.changeDeliveryStatus(
                 deliveryId,
                 status,
+                authentication
+        );
+    }
+
+    /**
+     * 쉬운주석: 배송 취소 모달의 사유를 받아 배송과 재고 신청을 함께 취소 처리한다.
+     */
+    @PutMapping("/delivery/{deliveryId}/cancel")
+    public String cancelDelivery(
+            @PathVariable Integer deliveryId,
+            @RequestBody HeadDeliveryCancelRequestDTO requestDTO,
+            Authentication authentication
+    ) {
+        return deliveryService.cancelDelivery(
+                deliveryId,
+                requestDTO.getReason(),
                 authentication
         );
     }

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,6 +47,9 @@ public class KioskBannerService {
         if (kb == null) {
             return null; // 배너가 매핑되어 있지 않음
         }
+        if (!kb.getBanner().isVisibleAt(LocalDateTime.now())) {
+            return null;
+        }
         return KioskBannerResponse.builder()
                 .kioskId(kioskId)
                 .bannerId(kb.getBanner().getId())
@@ -70,6 +74,9 @@ public class KioskBannerService {
                 .orElseThrow(() -> new IllegalArgumentException("Invalid kiosk ID"));
         Banner banner = bannerRepository.findById(request.getBannerId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid banner ID"));
+        if (!banner.isVisibleAt(LocalDateTime.now())) {
+            throw new IllegalStateException("현재 노출 가능한 배너가 아닙니다.");
+        }
 
         KioskBanner kb = kioskBannerRepository.findByKioskId(kioskId)
                 .orElseGet(() -> KioskBanner.builder()

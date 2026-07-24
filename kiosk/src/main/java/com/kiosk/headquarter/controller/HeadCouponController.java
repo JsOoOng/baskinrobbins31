@@ -85,4 +85,19 @@ public class HeadCouponController {
             return ResponseEntity.badRequest().body("쿠폰 일괄 발급 실패: " + e.getMessage());
         }
     }
+
+    /**
+     * 쉬운주석: 발급 O인 쿠폰의 회원별 발급 내역을 회수하고 상태를 X로 되돌린다.
+     */
+    @DeleteMapping("/issue-all/{couponId}")
+    public ResponseEntity<String> revokeCouponFromAllUsers(
+            @PathVariable("couponId") String couponId
+    ) {
+        try {
+            headCouponService.revokeCouponFromAllUsers(couponId);
+            return ResponseEntity.ok("쿠폰이 모든 유저에게서 회수되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("쿠폰 회수 실패: " + e.getMessage());
+        }
+    }
 }

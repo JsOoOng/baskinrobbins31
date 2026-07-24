@@ -63,4 +63,11 @@ public class StoreProduct {
     public void changeSoldOut(Boolean isSoldOut) {
     	this.isSoldOut = isSoldOut;
     }
+
+    /*
+     * 쉬운주석: 본사 수정 모달에서 바꾼 지점별 판매 가격을 엔티티에 반영한다.
+     */
+    public void changeStoreProductPrice(Integer storeProductPrice) {
+        this.storeProductPrice = storeProductPrice;
+    }
 }

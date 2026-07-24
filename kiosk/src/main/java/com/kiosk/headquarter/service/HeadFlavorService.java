@@ -46,6 +46,7 @@ public class HeadFlavorService {
 
     private final HeadFlavorMapper
             headFlavorMapper;
+    private final AdminLogService adminLogService;
 
     /*
      * 아이스크림 맛 등록
@@ -122,6 +123,7 @@ public class HeadFlavorService {
                                 flavor
                         );
 
+        adminLogService.logAction("맛", savedFlavor.getFlavorName() + " 맛 신규 등록");
         return toResponseDTO(
                 savedFlavor
         );
@@ -253,6 +255,7 @@ public class HeadFlavorService {
                 imageUrl
         );
 
+        adminLogService.logAction("맛", flavor.getFlavorName() + " 맛 정보 수정");
         return toResponseDTO(
                 flavor
         );
@@ -277,6 +280,7 @@ public class HeadFlavorService {
 
         flavor.deactivate();
 
+        adminLogService.logAction("맛", flavor.getFlavorName() + " 맛 비활성화");
         return "아이스크림 맛 비활성화 성공";
     }
 

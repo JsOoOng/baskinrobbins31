@@ -81,6 +81,36 @@ public class HeadNotificationService {
                 false
         );
     }
+
+    /**
+     * 쉬운주석: 스케줄러가 매시간 실행되어도 같은 대상의 같은 알림은 한 번만 저장한다.
+     */
+    @Transactional
+    public void createNotificationOnce(
+            NotificationCategory category,
+            NotificationType notificationType,
+            String title,
+            String message,
+            String routeName,
+            String referenceKey
+    ) {
+        if (headNotificationRepository
+                .existsByNotificationTypeAndReferenceKeyAndTitle(
+                        notificationType,
+                        referenceKey,
+                        title
+                )) {
+            return;
+        }
+        createNotification(
+                category,
+                notificationType,
+                title,
+                message,
+                routeName,
+                referenceKey
+        );
+    }
     
     @Transactional
     /**

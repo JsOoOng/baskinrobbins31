@@ -2,6 +2,7 @@ package com.kiosk.headquarter.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -92,5 +93,18 @@ public class HeadEventController {
             @RequestBody Map<String, Boolean> request) {
         Boolean isVisible = request.get("isVisible");
         return ResponseEntity.ok(eventService.updateVisibility(eventId, isVisible));
+    }
+
+    /**
+     * 쉬운주석: 화면에서 새 종료일을 보내면 서비스가 날짜를 검증하고 이벤트 기간을 연장한다.
+     */
+    @PatchMapping("/{eventId}/extend")
+    public ResponseEntity<EventResponseDto> extendEvent(
+            @PathVariable("eventId") Integer eventId,
+            @RequestBody Map<String, String> request) {
+        return ResponseEntity.ok(eventService.extendEvent(
+                eventId,
+                LocalDateTime.parse(request.get("endDate"))
+        ));
     }
 }

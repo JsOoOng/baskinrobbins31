@@ -90,6 +90,14 @@ export const useHeadEventStore = defineStore('headEvent', {
         console.error('가시성 수정 실패:', error);
         throw error;
       }
+    },
+
+    // 쉬운주석: 연장된 이벤트 한 건만 목록에서 바꿔 전체 화면을 다시 불러오지 않는다.
+    async extendEvent(eventId, endDate) {
+      const updatedEvent = await headEventApi.extendEvent(eventId, endDate);
+      const index = this.events.findIndex(event => event.eventId === eventId);
+      if (index !== -1) this.events[index] = updatedEvent;
+      return updatedEvent;
     }
   }
 });

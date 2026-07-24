@@ -6,7 +6,12 @@
   다음 이동: 현재 상태를 갱신하거나 부모 화면에 이벤트를 전달
 -->
 <script setup>
-import { computed } from 'vue'
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref
+} from 'vue'
 import {
   useRoute,
   useRouter
@@ -16,11 +21,16 @@ import { storeToRefs } from 'pinia'
 import {
   useHeadAuthStore
 } from '@/stores/head/headAuthStore'
+import api from '@/api/axios'
 
-defineProps({
+const props = defineProps({
   open: {
     type: Boolean,
     default: false
+  },
+  notificationCounts: {
+    type: Object,
+    default: () => ({})
   }
 })
 
@@ -38,6 +48,49 @@ const headAuthStore =
 const {
   isSuperAdmin
 } = storeToRefs(headAuthStore)
+
+const serverStatus = ref('checking')
+const collapsedGroups = ref({})
+let healthCheckTimer
+
+/*
+ * 쉬운주석: 그룹 제목을 누르면 그 제목 아래 메뉴만 접거나 다시 펼친다.
+ * 제목별 true/false 값을 보관하므로 다른 그룹의 상태에는 영향을 주지 않는다.
+ */
+const toggleMenuGroup = (title) => {
+  collapsedGroups.value[title] =
+    !collapsedGroups.value[title]
+}
+
+/*
+ * Spring Boot Actuator의 실제 상태를 확인합니다.
+ * 성공 응답의 status가 UP일 때만 정상으로 표시합니다.
+ */
+const checkServerHealth = async () => {
+  try {
+    const response = await api.get('/actuator/health', {
+      timeout: 3000
+    })
+    serverStatus.value =
+      response.data?.status === 'UP'
+        ? 'up'
+        : 'down'
+  } catch {
+    serverStatus.value = 'down'
+  }
+}
+
+onMounted(() => {
+  checkServerHealth()
+  healthCheckTimer = window.setInterval(
+    checkServerHealth,
+    30000
+  )
+})
+
+onBeforeUnmount(() => {
+  window.clearInterval(healthCheckTimer)
+})
 
 /*
  * path 문자열 대신 routeName을 사용합니다.
@@ -142,7 +195,6 @@ const menuGroups = computed(() => {
           label: '재고 현황',
           icon: '▥',
           routeName: 'head-inventory',
-          phase: 'P2',
           implemented: true,
           description:
             '본사와 지점별 재고 현황을 조회하는 기능입니다.'
@@ -194,6 +246,12 @@ const menuGroups = computed(() => {
           implemented: true
         },
         {
+          label: '약관 및 방침 관리',
+          icon: '📜',
+          routeName: 'head-policies',
+          implemented: true
+        },
+        {
           label: '작업 내역',
           icon: '📝',
           routeName: 'head-logs',
@@ -214,6 +272,12 @@ const isActiveMenu = (item) => {
 
   return route.name === item.routeName
 }
+
+/*
+ * 쉬운주석: 알림의 이동 화면과 같은 사이드바 메뉴에 읽지 않은 개수를 표시한다.
+ */
+const getNotificationCount = (item) =>
+  Number(props.notificationCounts[item.routeName] ?? 0)
 
 /*
  * 메뉴 클릭 처리
@@ -310,15 +374,25 @@ const handleMenuClick = async (item) => {
         :key="group.title || 'main'"
         class="menu-group"
       >
-        <p
+        <button
           v-if="group.title"
+          type="button"
           class="menu-group-title"
+          :aria-expanded="!collapsedGroups[group.title]"
+          @click="toggleMenuGroup(group.title)"
         >
-          {{ group.title }}
-        </p>
+          <span>{{ group.title }}</span>
+          <span
+            class="menu-group-arrow"
+            :class="{ collapsed: collapsedGroups[group.title] }"
+          >
+            ▾
+          </span>
+        </button>
 
         <button
             v-for="item in group.items"
+            v-show="!collapsedGroups[group.title]"
             :key="item.label"
             type="button"
             class="menu-item"
@@ -337,7 +411,14 @@ const handleMenuClick = async (item) => {
             </span>
 
             <span
-                v-if="item.phase === 'P2'"
+                v-if="getNotificationCount(item) > 0"
+                class="notification-menu-badge"
+            >
+                NEW {{ getNotificationCount(item) > 99 ? '99+' : getNotificationCount(item) }}
+            </span>
+
+            <span
+                v-else-if="item.phase === 'P2'"
                 class="phase-badge phase-p2"
             >
                 P2
@@ -355,12 +436,21 @@ const handleMenuClick = async (item) => {
 
     <!-- 하단 정보 -->
     <div class="sidebar-footer">
-      <div class="system-status">
+      <div
+        class="system-status"
+        :class="`system-status-${serverStatus}`"
+      >
         <span class="status-dot" />
 
         <div>
           <strong>
-            시스템 정상
+            {{
+              serverStatus === 'up'
+                ? '시스템 정상'
+                : serverStatus === 'down'
+                  ? '시스템 연결 끊김'
+                  : '시스템 확인 중'
+            }}
           </strong>
 
           <p>
@@ -485,13 +575,29 @@ const handleMenuClick = async (item) => {
 }
 
 .menu-group-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
   margin: 0 0 7px;
   padding: 0 12px;
 
+  border: 0;
+  cursor: pointer;
   color: #a0a6b3;
   font-size: 10px;
   font-weight: 800;
+  text-align: left;
   letter-spacing: 1.1px;
+  background: transparent;
+}
+
+.menu-group-arrow {
+  transition: transform 0.18s ease;
+}
+
+.menu-group-arrow.collapsed {
+  transform: rotate(-90deg);
 }
 
 .menu-item {
@@ -585,6 +691,16 @@ const handleMenuClick = async (item) => {
   background: #fff0dc;
 }
 
+.notification-menu-badge {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 900;
+  background: #ef3e91;
+}
+
 .sidebar-footer {
   padding: 15px;
 
@@ -614,6 +730,20 @@ const handleMenuClick = async (item) => {
   box-shadow:
     0 0 0 4px
     rgba(56, 185, 127, 0.13);
+}
+
+.system-status-down .status-dot {
+  background: #e05252;
+  box-shadow:
+    0 0 0 4px
+    rgba(224, 82, 82, 0.13);
+}
+
+.system-status-checking .status-dot {
+  background: #e5a93d;
+  box-shadow:
+    0 0 0 4px
+    rgba(229, 169, 61, 0.13);
 }
 
 .system-status strong {

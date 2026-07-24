@@ -1,8 +1,14 @@
 package com.kiosk.headquarter.service;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.kiosk.headquarter.repository.HeadCouponMapper;
+import com.kiosk.entity.enums.NotificationCategory;
+import com.kiosk.entity.enums.NotificationType;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -18,6 +24,7 @@ public class HeadCouponService {
 
     private final HeadCouponMapper headCouponMapper;
     private final AdminLogService adminLogService;
+    private final HeadNotificationService headNotificationService;
 
     @Transactional
     /**
@@ -53,6 +60,21 @@ public class HeadCouponService {
         
         adminLogService.logAction("쿠폰", "쿠폰 전체 일괄 발급 (ID: " + couponId + ")");
     }
+
+    /**
+     * 쉬운주석: 전체 발급된 쿠폰만 회수할 수 있다.
+     * 회원별 쿠폰을 지운 뒤 발급 상태를 X로 되돌려 수정과 재발급이 가능하게 한다.
+     */
+    @Transactional
+    public void revokeCouponFromAllUsers(String couponId) {
+        if (!headCouponMapper.isCouponIssuedAll(couponId)) {
+            throw new IllegalStateException("전체 발급된 쿠폰만 회수할 수 있습니다.");
+        }
+
+        headCouponMapper.deleteUserCouponsByCouponId(couponId);
+        headCouponMapper.resetCouponIssuedStatus(couponId);
+        adminLogService.logAction("쿠폰", "쿠폰 전체 회수 (ID: " + couponId + ")");
+    }
     
     @Transactional
     /**
@@ -67,5 +89,49 @@ public class HeadCouponService {
         headCouponMapper.deleteCoupon(couponId);
         
         adminLogService.logAction("쿠폰", "쿠폰 삭제 (ID: " + couponId + ")");
+    }
+
+    /**
+     * 쉬운주석: 실제 발급된 회원 쿠폰의 expiry_date로 남은 날짜를 계산한다.
+     * 매시간 실행되며 7일·1일 전과 만료 시점에 각각 한 번만 알림을 만든다.
+     */
+    @Scheduled(cron = "0 0 * * * *")
+    @Transactional
+    public void notifyCouponPeriods() {
+        LocalDate today = LocalDate.now();
+
+        for (com.kiosk.headquarter.dto.coupon.CouponRequestDto coupon
+                : headCouponMapper.findCouponExpiryDates()) {
+            if (coupon.getExpiryDate() == null) {
+                continue;
+            }
+            long days = ChronoUnit.DAYS.between(
+                    today,
+                    coupon.getExpiryDate()
+            );
+            String reference = coupon.getCouponId() + ":" + coupon.getExpiryDate();
+
+            if (days == 7 || days == 1) {
+                String remaining = days == 1 ? "하루" : "일주일";
+                headNotificationService.createNotificationOnce(
+                        NotificationCategory.COUPON,
+                        NotificationType.COUPON_EXPIRING,
+                        "쿠폰 만료 " + remaining + " 전",
+                        coupon.getCouponName() + " 쿠폰이 " + remaining + " 남았습니다.",
+                        "head-coupons",
+                        reference
+                );
+            }
+            if (!coupon.getExpiryDate().isAfter(today)) {
+                headNotificationService.createNotificationOnce(
+                        NotificationCategory.COUPON,
+                        NotificationType.COUPON_EXPIRED,
+                        "쿠폰 만료",
+                        coupon.getCouponName() + " 쿠폰이 만료되었습니다.",
+                        "head-coupons",
+                        reference
+                );
+            }
+        }
     }
 }

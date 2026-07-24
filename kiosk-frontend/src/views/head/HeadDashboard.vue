@@ -6,16 +6,23 @@
   다음 이동: 현재 상태를 갱신하거나 부모 화면에 이벤트를 전달
 -->
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import P2ComingSoonModal from '../../components/head/P2ComingSoonModal.vue'
+import HeadTablePagination from '../../components/head/HeadTablePagination.vue'
 import { getHeadDashboardSummary } from '../../api/head/headDashboardApi'
+import {
+  approveHeadRestock,
+  rejectHeadRestock,
+  extractRestockErrorMessage
+} from '../../api/head/headRestockApi'
 import {
   getActiveInventoryShortageAlerts,
   sendInventoryShortageAlertToStore
 } from '../../api/headquarter/headInventoryAlertApi'
 import { useHeadAuthStore } from '../../stores/head/headAuthStore'
+import { askRestockRejectionReason } from '../../constants/restockRejectionReasons'
 
 const router = useRouter()
 
@@ -25,6 +32,11 @@ const router = useRouter()
  */
 const comparisonPeriod = ref('전주 대비')
 const searchKeyword = ref('')
+const inventoryStatusFilter = ref('ALL')
+const inventorySortKey = ref('requestNumber')
+const inventorySortDirection = ref('desc')
+const inventoryCurrentPage = ref(1)
+const inventoryPageSize = ref(10)
 
 const p2Modal = ref({
   open: false,
@@ -46,9 +58,94 @@ const statistics = ref([
 const inventoryRequests = ref([])
 const shortageAlerts = ref([])
 const sendingAlertId = ref(null)
+const processingRequestId = ref(null)
 const headAuthStore = useHeadAuthStore()
 const storeSummary = ref([])
 const recentActions = ref([])
+
+const inventoryStatusOptions = [
+  'ALL',
+  'waiting',
+  'approved',
+  'shipping',
+  'completed',
+  'rejected',
+  'canceled'
+]
+
+/*
+ * 쉬운주석: 같은 표 제목을 누르면 오름차순과 내림차순이 번갈아 적용된다.
+ * 숫자·날짜·한글은 각 데이터에 맞는 비교 방법을 아래 정렬 함수에서 사용한다.
+ */
+const toggleInventorySort = (key) => {
+  if (inventorySortKey.value === key) {
+    inventorySortDirection.value =
+      inventorySortDirection.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    inventorySortKey.value = key
+    inventorySortDirection.value = key === 'requestDate' ? 'desc' : 'asc'
+  }
+}
+
+/* 쉬운주석: 상태 제목은 전체부터 각 처리 상태까지 한 번씩 순서대로 보여준다. */
+const cycleInventoryStatus = () => {
+  const currentIndex = inventoryStatusOptions.indexOf(inventoryStatusFilter.value)
+  inventoryStatusFilter.value =
+    inventoryStatusOptions[(currentIndex + 1) % inventoryStatusOptions.length]
+}
+
+const inventorySortMark = (key) => {
+  if (inventorySortKey.value !== key) return '↕'
+  return inventorySortDirection.value === 'asc' ? '↑' : '↓'
+}
+
+const inventoryStatusLabel = () => ({
+  ALL: '전체',
+  waiting: '승인 대기',
+  approved: '승인 완료',
+  shipping: '배송 중',
+  completed: '배송 완료',
+  rejected: '반려',
+  canceled: '취소'
+}[inventoryStatusFilter.value])
+
+// 숫자 필드가 없거나 null이어도 대시보드 전체 렌더링이 중단되지 않게 0으로 표시한다.
+const dashboardNumber = (value) => Number(value ?? 0)
+
+const periodCardLabels = {
+  '전일 대비': ['오늘 전체 매출', '오늘 전체 주문 수'],
+  '전주 대비': ['최근 7일 전체 매출', '최근 7일 전체 주문 수'],
+  '전월 대비': ['최근 30일 전체 매출', '최근 30일 전체 주문 수'],
+  '전년 동기 대비': ['최근 365일 전체 매출', '최근 365일 전체 주문 수']
+}
+
+const comparisonTrend = (change) => {
+  const value = dashboardNumber(change)
+  if (value > 0) return 'up'
+  if (value < 0) return 'down'
+  return 'same'
+}
+
+const comparisonText = (change, unit) => {
+  const value = dashboardNumber(change)
+  if (value > 0) return `${comparisonPeriod.value} ${value}${unit} 증가`
+  if (value < 0) return `${comparisonPeriod.value} ${Math.abs(value)}${unit} 감소`
+  return `${comparisonPeriod.value} 동일`
+}
+
+const rateText = (change, rate) => {
+  const value = dashboardNumber(change)
+  if (value > 0) return `${comparisonPeriod.value} 약 ${Math.abs(rate).toFixed(1)}% 증가`
+  if (value < 0) return `${comparisonPeriod.value} 약 ${Math.abs(rate).toFixed(1)}% 감소`
+  return `${comparisonPeriod.value} 동일`
+}
+
+const changeAmountText = (change, unit) => {
+  const value = dashboardNumber(change)
+  if (value > 0) return `${value.toLocaleString()}${unit} 증가`
+  if (value < 0) return `${Math.abs(value).toLocaleString()}${unit} 감소`
+  return `변동 ${dashboardNumber(0).toLocaleString()}${unit}`
+}
 
 /*
  * 본사 대시보드 진입 시 요약 통계·재고 신청·부족 알림을 조회해
@@ -60,22 +157,46 @@ const fetchDashboardData = async () => {
       getHeadDashboardSummary(comparisonPeriod.value),
       getActiveInventoryShortageAlerts()
     ])
-    
+
+    // 구버전 API의 { data: {...} } 응답과 현재의 직접 DTO 응답을 모두 처리한다.
+    const summary = data?.data ?? data ?? {}
+    const totalStoresChange = dashboardNumber(summary.totalStoresChange)
+    const activeStoresChange = dashboardNumber(summary.activeStoresChange)
+    const todaySalesChange = dashboardNumber(summary.todaySalesChange)
+    const todayOrdersChange = dashboardNumber(summary.todayOrdersChange)
+    const [salesLabel, ordersLabel] = periodCardLabels[comparisonPeriod.value]
+
     statistics.value = [
-      { key: 'stores', label: '전체 지점 수', value: data.totalStores.toString(), subText: '실시간 현황', trend: 'up', icon: '⌂' },
-      { key: 'activeStores', label: '운영 중인 지점 수', value: data.activeStores.toString(), subText: '정상 운영 중', trend: 'success', icon: '✓' },
-      { key: 'products', label: '전체 상품 수', value: data.totalProducts.toString(), subText: '등록된 전체 상품', trend: 'up', icon: '▣' },
-      { key: 'pendingInventory', label: '처리 대기 재고 신청', value: data.pendingInventory.toString(), subText: '처리 현황', trend: 'warning', icon: '◷' },
-      { key: 'events', label: '진행 중인 이벤트 수', value: (data.activeEvents || 0).toString(), subText: '진행 중인 이벤트', trend: 'same', icon: '★' },
-      { key: 'banners', label: '노출 중인 배너 수', value: data.activeBanners.toString(), subText: '활성화 배너', trend: 'up', icon: '▤' },
-      { key: 'sales', label: '오늘 전체 매출', value: data.todaySales.toLocaleString() + '원', subText: comparisonPeriod.value, trend: 'up', icon: '₩' },
-      { key: 'orders', label: '오늘 전체 주문 수', value: data.todayOrders.toLocaleString() + '건', subText: comparisonPeriod.value, trend: 'up', icon: '▧' }
+      { key: 'stores', label: '전체 지점 수', value: dashboardNumber(summary.totalStores).toString(), subText: comparisonText(totalStoresChange, '곳'), trend: comparisonTrend(totalStoresChange), icon: '⌂' },
+      { key: 'activeStores', label: '운영 중인 지점 수', value: dashboardNumber(summary.activeStores).toString(), subText: comparisonText(activeStoresChange, '곳'), trend: comparisonTrend(activeStoresChange), icon: '✓' },
+      { key: 'products', label: '전체 상품 수', value: dashboardNumber(summary.totalProducts).toString(), subText: '등록된 전체 상품', trend: 'same', icon: '▣' },
+      { key: 'pendingInventory', label: '처리 대기 재고 신청', value: dashboardNumber(summary.pendingInventory).toString(), subText: '처리 현황', trend: 'same', icon: '◷' },
+      { key: 'events', label: '진행 중인 이벤트 수', value: dashboardNumber(summary.activeEvents).toString(), subText: '진행 중인 이벤트', trend: 'same', icon: '★' },
+      { key: 'banners', label: '노출 중인 배너 수', value: dashboardNumber(summary.activeBanners).toString(), subText: '활성화 배너', trend: 'same', icon: '▤' },
+      {
+        key: 'sales',
+        label: salesLabel,
+        value: dashboardNumber(summary.todaySales).toLocaleString() + '원',
+        subText: rateText(todaySalesChange, dashboardNumber(summary.todaySalesChangeRate)),
+        detailText: changeAmountText(todaySalesChange, '원'),
+        trend: comparisonTrend(todaySalesChange),
+        icon: '₩'
+      },
+      {
+        key: 'orders',
+        label: ordersLabel,
+        value: dashboardNumber(summary.todayOrders).toLocaleString() + '건',
+        subText: rateText(todayOrdersChange, dashboardNumber(summary.todayOrdersChangeRate)),
+        detailText: changeAmountText(todayOrdersChange, '건'),
+        trend: comparisonTrend(todayOrdersChange),
+        icon: '▧'
+      }
     ]
     
-    storeSummary.value = data.storeSummary
-    inventoryRequests.value = data.inventoryRequests || []
+    storeSummary.value = summary.storeSummary || []
+    inventoryRequests.value = summary.inventoryRequests || []
     shortageAlerts.value = Array.isArray(alertResponse.data) ? alertResponse.data : []
-    recentActions.value = data.recentActions || []
+    recentActions.value = summary.recentActions || []
   } catch (error) {
     console.error('대시보드 통계 조회 실패:', error)
   }
@@ -114,28 +235,81 @@ const sendShortageAlert = async (request) => {
   }
 }
 
+/*
+ * 대시보드의 승인·반려도 재고 신청 관리 화면과 같은 API를 사용한다.
+ * 처리 후 대시보드를 다시 조회해 세 화면의 상태를 즉시 맞춘다.
+ */
+const processInventoryRequest = async (request, action) => {
+  const adminId = headAuthStore.headUser?.employeeId
+  if (!adminId) {
+    alert('처리할 본사 관리자 정보가 없습니다. 다시 로그인해 주세요.')
+    return
+  }
+
+  const actionLabel = action === 'approve' ? '승인' : '반려'
+  const rejectionReason = action === 'reject' ? askRestockRejectionReason() : null
+  if (action === 'reject' && !rejectionReason) return
+  if (action === 'approve' && !confirm(`${request.productName} 재고 신청을 승인하시겠습니까?`)) return
+
+  processingRequestId.value = request.requestNumber
+  try {
+    const process = action === 'approve' ? approveHeadRestock : rejectHeadRestock
+    await process(request.requestNumber, { adminId, rejectionReason })
+    await fetchDashboardData()
+  } catch (error) {
+    alert(extractRestockErrorMessage(error, `${actionLabel} 처리에 실패했습니다.`))
+  } finally {
+    processingRequestId.value = null
+  }
+}
+
 onMounted(() => {
   fetchDashboardData()
 })
 
 const filteredInventoryRequests = computed(() => {
   const keyword = searchKeyword.value.trim().toLowerCase()
-
-  if (!keyword) {
-    return inventoryRequests.value
-  }
-
-  return inventoryRequests.value.filter((request) => {
-    return [
+  const filtered = inventoryRequests.value.filter((request) => {
+    const matchesKeyword = !keyword || [
       request.requestNumber,
       request.storeName,
       request.productName,
       request.status
-    ].some((value) =>
-      String(value).toLowerCase().includes(keyword)
-    )
+    ].some((value) => String(value).toLowerCase().includes(keyword))
+    const matchesStatus =
+      inventoryStatusFilter.value === 'ALL' ||
+      request.statusType === inventoryStatusFilter.value
+    return matchesKeyword && matchesStatus
+  })
+
+  return [...filtered].sort((a, b) => {
+    const key = inventorySortKey.value
+    let result
+
+    if (['requestNumber', 'quantity'].includes(key)) {
+      result = dashboardNumber(a[key]) - dashboardNumber(b[key])
+    } else if (key === 'requestDate') {
+      result = new Date(a.requestDate) - new Date(b.requestDate)
+    } else {
+      result = String(a[key] ?? '').localeCompare(String(b[key] ?? ''), 'ko')
+    }
+
+    return inventorySortDirection.value === 'asc' ? result : -result
   })
 })
+
+/*
+ * 쉬운주석: 필터가 끝난 전체 목록에서 현재 페이지에 해당하는 10건만 잘라 표에 보여준다.
+ */
+const paginatedInventoryRequests = computed(() => {
+  const start = (inventoryCurrentPage.value - 1) * inventoryPageSize.value
+  return filteredInventoryRequests.value.slice(start, start + inventoryPageSize.value)
+})
+
+watch(
+  [searchKeyword, inventoryStatusFilter, inventorySortKey, inventorySortDirection, inventoryPageSize],
+  () => { inventoryCurrentPage.value = 1 }
+)
 
 /* 통계 증감 방향을 대시보드 카드의 화살표 문자로 변환합니다. */
 const getTrendIcon = (trend) => {
@@ -143,7 +317,7 @@ const getTrendIcon = (trend) => {
   if (trend === 'down') return '↘'
   if (trend === 'success') return '✓'
   if (trend === 'warning') return '!'
-  return '→'
+  return '-'
 }
 
 /* 지점별 수치를 최대값 대비 백분율로 바꿔 진행 막대 너비를 계산합니다. */
@@ -255,8 +429,11 @@ const goTo = (path) => {
             {{ getTrendIcon(statistic.trend) }}
           </span>
 
-          <span>
-            {{ statistic.subText }}
+          <span class="trend-copy">
+            <span>{{ statistic.subText }}</span>
+            <small v-if="statistic.detailText" class="trend-detail">
+              {{ statistic.detailText }}
+            </small>
           </span>
 
           <small v-if="statistic.phase">
@@ -290,21 +467,6 @@ const goTo = (path) => {
             />
           </div>
 
-          <button
-            type="button"
-            class="secondary-button"
-            @click="goTo('/head/inventory-requests')"
-          >
-            필터
-          </button>
-
-          <button
-            type="button"
-            class="primary-button"
-            @click="goTo('/head/inventory-requests')"
-          >
-            ＋ 신청 등록
-          </button>
         </div>
       </div>
 
@@ -312,19 +474,19 @@ const goTo = (path) => {
         <table class="request-table">
           <thead>
             <tr>
-              <th>신청 번호</th>
-              <th>지점명</th>
-              <th>신청 메뉴</th>
-              <th>수량</th>
-              <th>신청일</th>
-              <th>상태</th>
+              <th><button class="table-sort-button" type="button" @click="toggleInventorySort('requestNumber')">신청 번호 {{ inventorySortMark('requestNumber') }}</button></th>
+              <th><button class="table-sort-button" type="button" @click="toggleInventorySort('storeName')">지점명 {{ inventorySortMark('storeName') }}</button></th>
+              <th><button class="table-sort-button" type="button" @click="toggleInventorySort('productName')">신청 메뉴 {{ inventorySortMark('productName') }}</button></th>
+              <th><button class="table-sort-button" type="button" @click="toggleInventorySort('quantity')">수량 {{ inventorySortMark('quantity') }}</button></th>
+              <th><button class="table-sort-button" type="button" @click="toggleInventorySort('requestDate')">신청일 {{ inventorySortMark('requestDate') }}</button></th>
+              <th><button class="table-sort-button" type="button" @click="cycleInventoryStatus">상태: {{ inventoryStatusLabel() }}</button></th>
               <th>처리</th>
             </tr>
           </thead>
 
           <tbody>
             <tr
-              v-for="request in filteredInventoryRequests"
+              v-for="request in paginatedInventoryRequests"
               :key="request.requestNumber"
             >
               <td class="request-number">
@@ -369,7 +531,8 @@ const goTo = (path) => {
                     <button
                       type="button"
                       class="approve-button"
-                      @click="goTo('/head/inventory-requests')"
+                      :disabled="processingRequestId === request.requestNumber"
+                      @click="processInventoryRequest(request, 'approve')"
                     >
                       승인
                     </button>
@@ -377,7 +540,8 @@ const goTo = (path) => {
                     <button
                       type="button"
                       class="reject-button"
-                      @click="goTo('/head/inventory-requests')"
+                      :disabled="processingRequestId === request.requestNumber"
+                      @click="processInventoryRequest(request, 'reject')"
                     >
                       반려
                     </button>
@@ -417,38 +581,11 @@ const goTo = (path) => {
         </table>
       </div>
 
-      <div class="table-footer">
-        <span>
-          전체 {{ filteredInventoryRequests.length }}건 표시
-        </span>
-
-        <div class="pagination">
-          <button type="button" disabled>
-            ‹
-          </button>
-
-          <button
-            type="button"
-            class="active-page"
-          >
-            1
-          </button>
-
-          <button
-            type="button"
-            @click="goTo('/head/inventory-requests')"
-          >
-            2
-          </button>
-
-          <button
-            type="button"
-            @click="goTo('/head/inventory-requests')"
-          >
-            ›
-          </button>
-        </div>
-      </div>
+      <HeadTablePagination
+        v-model:current-page="inventoryCurrentPage"
+        v-model:page-size="inventoryPageSize"
+        :total-items="filteredInventoryRequests.length"
+      />
     </section>
 
     <!-- 하단 정보 -->
@@ -793,7 +930,19 @@ const goTo = (path) => {
   font-size: 14px;
 }
 
-.trend-text small {
+.trend-copy {
+  display: grid;
+  gap: 3px;
+  text-align: left;
+}
+
+.trend-copy .trend-detail {
+  color: #858c9a;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.trend-text > small {
   margin-left: auto;
   padding: 3px 5px;
 
@@ -915,6 +1064,34 @@ const goTo = (path) => {
   background: #ffffff;
 }
 
+.inventory-filter-panel {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  padding: 12px 18px;
+  border-bottom: 1px solid #e9ebf0;
+  background: #fafbfc;
+}
+
+.inventory-filter-panel label {
+  display: grid;
+  gap: 5px;
+  color: #646c7b;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.inventory-filter-panel select {
+  height: 36px;
+  min-width: 145px;
+  padding: 0 10px;
+  border: 1px solid #dfe3ea;
+  border-radius: 9px;
+  color: #3d4350;
+  background: #ffffff;
+  font: inherit;
+}
+
 .table-scroll {
   overflow-x: auto;
 }
@@ -935,6 +1112,25 @@ const goTo = (path) => {
   text-align: left;
 
   background: #fafbfc;
+}
+
+/*
+ * 쉬운주석: 표 제목 전체를 누를 수 있게 만들되 기존 제목 모양은 그대로 유지한다.
+ * 화살표는 현재 열의 정렬 방향을 알려주고, 상태 열은 클릭할 때마다 상태 필터가 바뀐다.
+ */
+.table-sort-button {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.table-sort-button:hover {
+  color: #5b4bd6;
 }
 
 .request-table td {

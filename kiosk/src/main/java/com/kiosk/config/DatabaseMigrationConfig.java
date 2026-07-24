@@ -24,11 +24,23 @@ public class DatabaseMigrationConfig {
         return args -> {
             try {
                 jdbcTemplate.execute("ALTER TABLE payments MODIFY COLUMN payment_method ENUM('CARD', 'CASH', 'E_PAY', 'COUPON', 'TOSS')");
-                System.out.println("=========================================================");
                 System.out.println("데이터베이스 마이그레이션 완료: payment_method ENUM에 'TOSS' 추가됨");
-                System.out.println("=========================================================");
             } catch (Exception e) {
-                System.out.println("데이터베이스 마이그레이션 실패 (이미 적용되었거나 권한 문제일 수 있습니다): " + e.getMessage());
+                System.out.println("payment_method 마이그레이션 실패: " + e.getMessage());
+            }
+
+            /*
+             * 쉬운주석: Java의 배송 상태에 CANCELED가 추가되어도 기존 MySQL ENUM은 자동으로
+             * 늘어나지 않을 수 있으므로, 서버 시작 때 DB가 같은 다섯 상태를 받도록 맞춘다.
+             */
+            try {
+                jdbcTemplate.execute(
+                        "ALTER TABLE deliveries MODIFY COLUMN delivery_status "
+                        + "ENUM('READY', 'STARTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELED') NOT NULL"
+                );
+                System.out.println("데이터베이스 마이그레이션 완료: delivery_status에 'CANCELED' 추가됨");
+            } catch (Exception e) {
+                System.out.println("delivery_status 마이그레이션 실패: " + e.getMessage());
             }
         };
     }

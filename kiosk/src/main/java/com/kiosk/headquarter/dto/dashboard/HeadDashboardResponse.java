@@ -22,6 +22,8 @@ public class HeadDashboardResponse {
 
     private long totalStores;
     private long activeStores;
+    private long totalStoresChange;
+    private long activeStoresChange;
     private long totalProducts;
     private long pendingInventory;
     private long activeDiscounts;
@@ -29,6 +31,10 @@ public class HeadDashboardResponse {
     private long activeBanners;
     private long todaySales;
     private long todayOrders;
+    private long todaySalesChange;
+    private double todaySalesChangeRate;
+    private long todayOrdersChange;
+    private double todayOrdersChangeRate;
 
     private List<StoreSummaryDto> storeSummary;
     private List<DashboardInventoryRequestDto> inventoryRequests;

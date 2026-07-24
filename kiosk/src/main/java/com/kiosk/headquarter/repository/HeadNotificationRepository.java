@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.kiosk.entity.HeadNotification;
+import com.kiosk.entity.enums.NotificationType;
 
 /**
  * [코드 흐름 안내] HeadNotificationRepository
@@ -26,4 +27,10 @@ public interface HeadNotificationRepository
      */
     List<HeadNotification>
             findAllByOrderByCreatedAtDescIdDesc();
+
+    boolean existsByNotificationTypeAndReferenceKeyAndTitle(
+            NotificationType notificationType,
+            String referenceKey,
+            String title
+    );
 }

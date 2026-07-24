@@ -18,8 +18,16 @@ import java.util.List;
 @Repository
 public interface UserCouponRepository extends JpaRepository<UserCoupon, Integer> {
 
-    // 엔티티 필드명이 uc.user.id 인 경우
-    @Query("SELECT uc FROM UserCoupon uc WHERE uc.user.id = :userId")
+    /*
+     * 쉬운주석: 고객 화면에는 아직 사용하지 않았고 오늘까지 유효한 쿠폰만 보여준다.
+     * 만료된 쿠폰은 DB 기록은 남지만 노출 목록에서는 자동으로 사라진다.
+     */
+    @Query("""
+            SELECT uc FROM UserCoupon uc
+            WHERE uc.user.id = :userId
+              AND uc.isUsed = false
+              AND uc.expiryDate >= CURRENT_DATE
+            """)
     List<UserCoupon> findByUserId(@Param("userId") Integer userId);
 
 }

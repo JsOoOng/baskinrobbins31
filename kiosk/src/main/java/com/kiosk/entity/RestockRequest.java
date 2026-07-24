@@ -104,6 +104,12 @@ public class RestockRequest {
     )
     private HeadquarterAdmin admin;
 
+    /*
+     * 쉬운주석: 본사 반려 또는 배송 취소 이유를 저장해 지점 알림에서도 확인할 수 있게 한다.
+     */
+    @Column(name = "rejection_reason", length = 500)
+    private String rejectionReason;
+
 
 
     /*
@@ -264,12 +270,28 @@ public class RestockRequest {
     /*
      * 반려 처리
      */
-    public void reject(HeadquarterAdmin admin) {
+    public void reject(HeadquarterAdmin admin, String reason) {
         if (this.status != RestockStatus.WAITING) {
             throw new IllegalStateException("대기 중인 발주 요청만 반려할 수 있습니다.");
         }
         this.status = RestockStatus.REJECTED;
         this.admin = admin;
+        this.rejectionReason = reason;
+    }
+
+    /*
+     * 쉬운주석: 승인이 끝난 뒤 배송이 취소되면 신청 관리 화면에서도 반려로 맞춘다.
+     * 이미 끝난 신청이나 처음부터 반려·취소된 신청은 다시 변경하지 못하게 막는다.
+     */
+    public void rejectDelivery(HeadquarterAdmin admin, String reason) {
+        if (this.status != RestockStatus.APPROVED
+                && this.status != RestockStatus.SHIPPING) {
+            throw new IllegalStateException("승인 완료 또는 배송 중인 신청만 배송 취소할 수 있습니다.");
+        }
+
+        this.status = RestockStatus.REJECTED;
+        this.admin = admin;
+        this.rejectionReason = reason;
     }
 
 }

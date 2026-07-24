@@ -70,3 +70,159 @@ textarea:focus-visible {
 .top-actions {
   gap: 12px;
 }
+
+/*
+ * 쉬운주석: 본사 레이아웃에만 적용되는 공통 다크 모드다.
+ * 이미지와 상태 색상은 유지하고, 넓은 배경·표·입력창·글자만 어둡고 선명하게 바꾼다.
+ */
+html[data-head-theme='dark'] {
+  color-scheme: dark;
+}
+
+html[data-head-theme='dark'] .head-layout,
+html[data-head-theme='dark'] .head-main-shell,
+html[data-head-theme='dark'] .head-content {
+  color: #e7eaf1;
+  background: #11151d !important;
+}
+
+html[data-head-theme='dark'] .head-layout :is(.head-sidebar, .head-header) {
+  color: #e7eaf1 !important;
+  border-color: #353c49 !important;
+  background: #181e28 !important;
+}
+
+html[data-head-theme='dark'] .head-layout :is(.sidebar-brand, .sidebar-footer) {
+  border-color: #353c49 !important;
+  background: #181e28 !important;
+}
+
+/*
+ * 쉬운주석: 다크 사이드바의 기본 메뉴는 밝게 읽히도록 하고,
+ * 프로필 이름과 서버 상태 상자는 주변보다 한 단계 어둡게 구분한다.
+ */
+html[data-head-theme='dark'] .head-sidebar :is(
+  .brand-text strong,
+  .brand-text span,
+  .menu-group-title,
+  .sidebar-version
+) {
+  color: #d7dce6 !important;
+}
+
+html[data-head-theme='dark'] .head-sidebar .menu-item:not(.menu-item-active) {
+  color: #d7dce6 !important;
+}
+
+/*
+ * 쉬운주석: 다크 모드에서도 밝은 hover 배경 위 글자와 아이콘은 검게 보여 대비를 높인다.
+ */
+html[data-head-theme='dark'] .head-sidebar .menu-item:hover {
+  color: #171a20 !important;
+  background: #e8eaf0 !important;
+}
+
+html[data-head-theme='dark'] .head-header :is(
+  .profile-information strong,
+  .dropdown-user strong
+) {
+  color: #9ba4b3 !important;
+}
+
+html[data-head-theme='dark'] .head-sidebar .system-status {
+  border: 1px solid #2b3442;
+  background: #0f141c !important;
+}
+
+html[data-head-theme='dark'] .head-sidebar .system-status strong {
+  color: #cbd1dc !important;
+}
+
+html[data-head-theme='dark'] .head-sidebar .system-status p {
+  color: #7f8999 !important;
+}
+
+html[data-head-theme='dark'] .head-layout :is(
+  .dashboard-panel,
+  .table-panel,
+  .table-container,
+  .coupon-dashboard > .top-actions,
+  .head-event-container,
+  .head-settings-container,
+  .settings-content,
+  .modal-content,
+  .banner-modal,
+  .cancel-modal,
+  table
+) {
+  color: #e7eaf1 !important;
+  border-color: #353c49 !important;
+  background: #1c222d !important;
+}
+
+html[data-head-theme='dark'] .head-layout :is(th, thead, .panel-header) {
+  color: #c5cad4 !important;
+  border-color: #353c49 !important;
+  background: #252c38 !important;
+}
+
+html[data-head-theme='dark'] .head-layout :is(td, h1, h2, h3, strong, label) {
+  color: #eef1f6 !important;
+  border-color: #353c49 !important;
+}
+
+html[data-head-theme='dark'] .head-layout :is(p, small, .muted-cell) {
+  color: #aeb5c2 !important;
+}
+
+html[data-head-theme='dark'] .head-layout :is(input, select, textarea) {
+  color: #f2f4f8 !important;
+  border-color: #465062 !important;
+  background: #151a23 !important;
+}
+
+html[data-head-theme='dark'] .head-layout :is(.btn-cancel, .secondary-button) {
+  color: #e2e6ee !important;
+  border-color: #4b5568 !important;
+  background: #2a3240 !important;
+}
+
+/*
+ * 쉬운주석: 각 본사 화면이 자체 CSS에서 흰 카드 배경을 사용해도
+ * 다크 모드에서는 공통 어두운 표면과 밝은 글자로 덮어 명암을 일정하게 맞춘다.
+ */
+html[data-head-theme='dark'] .head-content :is(
+  [class$='-card'],
+  [class$='-panel'],
+  [class$='-container'],
+  .pagination,
+  .table-pagination
+) {
+  color: #eef1f6 !important;
+  border-color: #3b4453 !important;
+  background-color: #1c222d !important;
+}
+
+html[data-head-theme='dark'] .head-content :is(
+  [class*='description'],
+  [class*='subtitle'],
+  [class*='eyebrow'],
+  [class*='meta'],
+  [class*='hint'],
+  [class*='count']
+) {
+  color: #b8c0cd !important;
+}
+
+html[data-head-theme='dark'] .head-content :is(
+  a,
+  .table-sort-button,
+  .pagination button,
+  .table-pagination button
+) {
+  border-color: #465062 !important;
+}
+
+html[data-head-theme='dark'] .head-content .table-sort-button:hover {
+  color: #ffffff !important;
+}

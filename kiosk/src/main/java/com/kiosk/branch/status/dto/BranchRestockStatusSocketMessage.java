@@ -37,8 +37,10 @@ public class BranchRestockStatusSocketMessage {
      */
     private String requestTargetType;
 
+    private Integer itemId;
     private String itemName;
     private Integer requestQuantity;
+    private String rejectionReason;
 
     private RestockStatus status;
 
@@ -72,6 +74,7 @@ public class BranchRestockStatusSocketMessage {
         }
 
         Integer storeId;
+        Integer itemId;
         String requestTargetType;
         String itemName;
 
@@ -101,6 +104,9 @@ public class BranchRestockStatusSocketMessage {
 
             requestTargetType =
                     "INVENTORY";
+            itemId = restockRequest.getStoreInventory().getItem() == null
+                    ? null
+                    : restockRequest.getStoreInventory().getItem().getId();
 
             if (
                     restockRequest
@@ -148,6 +154,9 @@ public class BranchRestockStatusSocketMessage {
 
             requestTargetType =
                     "FLAVOR";
+            itemId = restockRequest.getStoreFlavor().getFlavor() == null
+                    ? null
+                    : restockRequest.getStoreFlavor().getFlavor().getId();
 
             if (
                     restockRequest
@@ -214,8 +223,14 @@ public class BranchRestockStatusSocketMessage {
                 .itemName(
                         itemName
                 )
+                .itemId(
+                        itemId
+                )
                 .requestQuantity(
                         restockRequest.getRequestQuantity()
+                )
+                .rejectionReason(
+                        restockRequest.getRejectionReason()
                 )
                 .status(
                         status

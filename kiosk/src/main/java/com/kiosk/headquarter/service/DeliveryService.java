@@ -12,9 +12,11 @@ import com.kiosk.entity.RestockRequest;
 import com.kiosk.entity.StoreFlavor;
 import com.kiosk.entity.StoreInventory;
 import com.kiosk.entity.enums.DeliveryStatus;
+import com.kiosk.entity.enums.RestockStatus;
 import com.kiosk.headquarter.dto.deliverie.HeadDeliveryResponseDTO;
 import com.kiosk.headquarter.repository.DeliveryRepository;
 import com.kiosk.headquarter.repository.HeadquarterAdminRepository;
+import com.kiosk.common.websocket.BranchRestockStatusSocketPublisher;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +35,9 @@ public class DeliveryService {
     private final DeliveryRepository deliveryRepository;
 
     private final HeadquarterAdminRepository headquarterAdminRepository;
+    private final AdminLogService adminLogService;
+    private final HeadRestockService headRestockService;
+    private final BranchRestockStatusSocketPublisher branchRestockStatusSocketPublisher;
 
 
     /**
@@ -179,6 +184,10 @@ public class DeliveryService {
                         delivery.getStatus()
                 )
 
+                .cancelReason(
+                        delivery.getCancelReason()
+                )
+
                 .build();
 
     }
@@ -209,48 +218,79 @@ public class DeliveryService {
                 );
 
 
+        RestockRequest request = delivery.getRestockRequest();
+
+        /*
+         * 쉬운주석: 배송 화면과 재고 신청 화면은 서로 다른 상태값을 사용한다.
+         * 배송 시작 때 신청도 SHIPPING으로 맞춰야 완료 시 재고 입고 규칙을 통과한다.
+         */
+        if (status == DeliveryStatus.STARTED
+                && request.getStatus() == RestockStatus.APPROVED) {
+            request.startShipping(getLoginAdmin(authentication));
+        }
+
         delivery.changeStatus(status);
 
-
-
         if(status == DeliveryStatus.COMPLETED){
-
-
-            HeadquarterAdmin admin =
-                    getLoginAdmin(authentication);
-
-
-
-            RestockRequest request =
-                    delivery.getRestockRequest();
-
-
-
-            request.complete(admin);
-
-
-
-            if(request.getStoreInventory()!=null){
-
-                request.getStoreInventory()
-                        .increaseStock(
-                                request.getRequestQuantity()
-                        );
-
-            }
-            else if(request.getStoreFlavor()!=null){
-
-                request.getStoreFlavor()
-                        .increaseStock(
-                                request.getRequestQuantity()
-                        );
+            /*
+             * 쉬운주석: 수정 전에 이미 배송 중이 된 기존 데이터는 신청 상태가 APPROVED일 수 있다.
+             * 이런 신청도 먼저 SHIPPING으로 맞춘 뒤 한 번만 완료·입고 처리한다.
+             */
+            if (request.getStatus() == RestockStatus.APPROVED) {
+                request.startShipping(getLoginAdmin(authentication));
             }
 
+            headRestockService.completeAndReceive(
+                    request,
+                    getLoginAdmin(authentication)
+            );
         }
 
 
+        adminLogService.logAction("배송",
+                "배송 상태 변경 (ID: " + deliveryId + ", 상태: " + status + ")");
         return "배송 상태 변경 완료";
 
+    }
+
+    /**
+     * 쉬운주석: 배송 취소, 재고 신청 반려, 지점 알림, 작업 로그를 한 번에 처리한다.
+     * 메서드가 실패하면 트랜잭션이 롤백되어 일부 상태만 바뀌는 일을 막는다.
+     */
+    public String cancelDelivery(
+            Integer deliveryId,
+            String reason,
+            Authentication authentication
+    ) {
+        String cancelReason = reason == null ? "" : reason.trim();
+        if (cancelReason.isBlank()) {
+            throw new IllegalArgumentException("배송 취소 사유를 입력해주세요.");
+        }
+        if (cancelReason.length() > 500) {
+            throw new IllegalArgumentException("배송 취소 사유는 500자 이하로 입력해주세요.");
+        }
+
+        Delivery delivery = deliveryRepository.findById(deliveryId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "배송 정보를 찾을 수 없습니다."
+                ));
+        HeadquarterAdmin admin = getLoginAdmin(authentication);
+        RestockRequest request = delivery.getRestockRequest();
+
+        delivery.cancel(cancelReason);
+        request.rejectDelivery(admin, cancelReason);
+
+        /*
+         * 쉬운주석: DB의 취소·반려 상태가 정상 저장된 뒤 해당 지점 화면에
+         * '재고 신청이 반려되었습니다.' 실시간 알림을 보낸다.
+         */
+        branchRestockStatusSocketPublisher.publishAfterCommit(request);
+        adminLogService.logAction(
+                "배송",
+                "배송 취소 (ID: " + deliveryId + ", 사유: " + cancelReason + ")"
+        );
+
+        return "배송 취소 및 재고 신청 반려 완료";
     }
 
 }

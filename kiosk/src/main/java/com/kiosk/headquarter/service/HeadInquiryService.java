@@ -30,6 +30,7 @@ public class HeadInquiryService {
 
     private final HeadInquiryMapper headInquiryMapper;
     private final HeadquarterAdminMapper headquarterAdminMapper;
+    private final AdminLogService adminLogService;
 
     // 문의 전체 목록 조회
     /**
@@ -98,6 +99,7 @@ public class HeadInquiryService {
 
         inquiry.writeAnswer(requestDTO.getAnswer(), admin);
 
+        adminLogService.logAction("고객 문의", "문의 답변 등록 (ID: " + inquiryId + ")");
         return "문의 답변 등록 성공";
     }
 
