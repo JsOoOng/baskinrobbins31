@@ -511,14 +511,6 @@ const goTo = (path) => {
 
         <button
           type="button"
-          @click="goTo('/head/discounts')"
-        >
-          <span>%</span>
-          할인 관리
-        </button>
-
-        <button
-          type="button"
           @click="goTo('/head/banners')"
         >
           <span>▤</span>
@@ -1173,7 +1165,7 @@ const goTo = (path) => {
 
 .quick-action-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
 
   padding: 17px;
