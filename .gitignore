@@ -65,6 +65,7 @@ Thumbs.db
 # DB 비밀번호나 API 키가 들어있는 설정 파일은 절대 Git에 올리면 안 됩니다.
 # application-secret.yml
 # application-local.yml
+*.pem
 /.metadata/
 
 # ==========================================
