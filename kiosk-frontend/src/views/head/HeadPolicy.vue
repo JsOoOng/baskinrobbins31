@@ -94,8 +94,14 @@
           </div>
           
           <div class="form-group">
-            <label>내용</label>
+            <div class="content-label-row">
+              <label>내용</label>
+              <button type="button" class="btn-example" @click="applyExample">
+                {{ formData.type === 'TERMS_OF_SERVICE' ? '이용약관 예시 불러오기' : '개인정보 방침 예시 불러오기' }}
+              </button>
+            </div>
             <textarea v-model="formData.content" rows="15" required placeholder="약관 내용을 입력하세요..."></textarea>
+            <p class="example-note">예시는 운영 전 담당 부서의 검토가 필요한 초안입니다.</p>
           </div>
 
           <div class="form-group checkbox-group">
@@ -134,6 +140,49 @@ const defaultForm = {
 
 const formData = ref({ ...defaultForm });
 
+const policyExamples = {
+  TERMS_OF_SERVICE: `제1조 (목적)
+본 약관은 회사가 제공하는 키오스크 주문, 결제 및 멤버십 서비스의 이용 조건과 절차를 정함을 목적으로 합니다.
+
+제2조 (서비스 이용)
+이용자는 화면에 표시된 상품, 수량, 옵션 및 결제금액을 확인한 후 주문을 확정해야 합니다. 매장 재고 상황에 따라 일부 상품의 판매가 제한될 수 있습니다.
+
+제3조 (결제 및 주문 취소)
+결제 완료 전에는 주문 내용을 변경하거나 취소할 수 있습니다. 결제 완료 후의 취소·환불은 해당 매장의 운영 기준과 관련 법령에 따라 처리됩니다.
+
+제4조 (서비스 제한)
+시스템 점검, 통신 장애, 천재지변 등 불가피한 사유가 있는 경우 서비스의 전부 또는 일부가 일시 중단될 수 있습니다.
+
+제5조 (책임과 의무)
+회사는 안정적인 서비스 제공을 위해 노력하며, 이용자는 타인의 결제수단이나 멤버십 정보를 부정하게 사용해서는 안 됩니다.
+
+부칙
+본 약관은 2026년 8월 1일부터 시행합니다.`,
+  PRIVACY_POLICY: `1. 개인정보의 처리 목적
+회사는 주문 처리, 결제 확인, 멤버십 포인트 적립·사용, 고객 문의 대응을 위해 필요한 범위에서 개인정보를 처리합니다.
+
+2. 처리하는 개인정보 항목
+필수 항목: 휴대전화번호, 주문·결제 내역, 멤버십 식별정보
+자동 수집 항목: 서비스 이용 기록, 접속 일시, 기기 및 오류 기록
+
+3. 개인정보의 보유 및 이용 기간
+관련 법령에 별도 보존 의무가 있는 경우를 제외하고, 처리 목적 달성 후 지체 없이 파기합니다. 결제 및 계약 관련 기록은 관계 법령이 정한 기간 동안 보관할 수 있습니다.
+
+4. 개인정보의 제3자 제공 및 처리위탁
+회사는 결제 처리와 서비스 운영에 필요한 경우에 한해 결제대행사 등 수탁자에게 업무를 위탁하며, 법적 근거 또는 동의 없이 제3자에게 제공하지 않습니다.
+
+5. 정보주체의 권리
+이용자는 개인정보 열람, 정정, 삭제 및 처리정지를 요청할 수 있습니다. 요청은 고객센터 또는 매장 문의 채널을 통해 접수할 수 있습니다.
+
+6. 안전성 확보 조치
+회사는 접근 권한 관리, 전송구간 암호화, 접속기록 보관 등 개인정보 보호를 위한 기술적·관리적 조치를 시행합니다.
+
+7. 개인정보 보호책임자
+개인정보 관련 문의는 본사 고객지원 담당 부서로 접수할 수 있습니다.
+
+본 방침은 2026년 8월 1일부터 시행합니다.`
+};
+
 onMounted(() => {
   policyStore.fetchPolicies();
 });
@@ -169,6 +218,16 @@ const openModal = (policy = null) => {
 
 const closeModal = () => {
   isModalOpen.value = false;
+};
+
+const applyExample = () => {
+  if (formData.value.content.trim() &&
+      !confirm('작성 중인 내용을 예시로 바꾸시겠습니까?')) return;
+
+  formData.value.content = policyExamples[formData.value.type];
+  if (!formData.value.version) {
+    formData.value.version = 'v1.0';
+  }
 };
 
 const submitPolicy = async () => {
@@ -241,6 +300,30 @@ const toggleActive = async (policy) => {
 
 .btn-primary:hover {
   background-color: #45a049;
+}
+
+.content-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 7px;
+}
+
+.btn-example {
+  padding: 6px 10px;
+  border: 1px solid #cfc8f5;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #5d4cc7;
+  font-weight: 700;
+  background: #f5f2ff;
+}
+
+.example-note {
+  margin: 6px 0 0;
+  color: #888;
+  font-size: 12px;
 }
 
 .tab-nav {

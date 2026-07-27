@@ -27,6 +27,7 @@ public class SystemSettingDto {
     private Integer tumblerDiscountAmount;
     private Integer lowStockAlertCount;
     private Boolean useEasyPay;
+    private Boolean allowOrderCancel;
 
     public static SystemSettingDto fromEntity(SystemSetting setting) {
         return SystemSettingDto.builder()
@@ -36,6 +37,7 @@ public class SystemSettingDto {
                 .tumblerDiscountAmount(setting.getTumblerDiscountAmount())
                 .lowStockAlertCount(setting.getLowStockAlertCount())
                 .useEasyPay(setting.getUseEasyPay())
+                .allowOrderCancel(setting.getAllowOrderCancel())
                 .build();
     }
 }

@@ -399,7 +399,7 @@ public class StoreInventory {
             return false;
         }
 
-        return currentStock < minStock;
+        return currentStock <= minStock;
     }
 
     /*

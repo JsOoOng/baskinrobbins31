@@ -9,6 +9,7 @@
 import { ref, onMounted } from 'vue'
 import api from '@/api/axios'
 import { restockRejectionReasons } from '@/constants/restockRejectionReasons'
+import AppMessageToast from '@/components/common/AppMessageToast.vue'
 
 
 const deliveries = ref([])
@@ -16,6 +17,12 @@ const loading = ref(false)
 const cancelTarget = ref(null)
 const cancelReasonOption = ref('')
 const customCancelReason = ref('')
+const message = ref('')
+const messageType = ref('success')
+const showMessage = (text, type = 'success') => {
+  message.value = text
+  messageType.value = type
+}
 
 const cancelReasons = restockRejectionReasons
 
@@ -72,9 +79,7 @@ const changeStatus = async (
 
         console.error(error)
 
-        alert(
-            "배송 상태 변경 실패"
-        )
+        showMessage("배송 상태 변경 실패", 'error')
 
     }
 
@@ -120,7 +125,7 @@ const cancelDelivery = async () => {
         : cancelReasonOption.value
 
     if (!reason) {
-        alert('배송 취소 사유를 선택하거나 입력해주세요.')
+        showMessage('배송 취소 사유를 선택하거나 입력해주세요.', 'error')
         return
     }
 
@@ -140,7 +145,7 @@ const cancelDelivery = async () => {
         await getDeliveries()
     } catch (error) {
         console.error(error)
-        alert(error.response?.data?.message || error.response?.data?.error || error.message || '배송 취소에 실패했습니다.')
+        showMessage(error.response?.data?.message || error.response?.data?.error || error.message || '배송 취소에 실패했습니다.', 'error')
     }
 }
 /*
@@ -179,6 +184,12 @@ function restockStatusText(status){
 
 
 <template>
+
+<AppMessageToast
+  :message="message"
+  :type="messageType"
+  @close="message = ''"
+/>
 
 <section class="delivery-page">
   <header class="page-header">
@@ -323,7 +334,7 @@ v-if="
 delivery.deliveryStatus === 'COMPLETED'
 "
 >
-완료
+완료 · 지점 알림 전송
 </span>
 
 <span

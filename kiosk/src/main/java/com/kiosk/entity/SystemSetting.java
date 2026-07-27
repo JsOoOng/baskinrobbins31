@@ -59,6 +59,10 @@ public class SystemSetting {
     @Builder.Default
     private Boolean useEasyPay = true; // 카카오페이, 네이버페이 등
 
+    @Column(name = "allow_order_cancel")
+    @Builder.Default
+    private Boolean allowOrderCancel = true;
+
     // --- 타임스탬프 ---
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

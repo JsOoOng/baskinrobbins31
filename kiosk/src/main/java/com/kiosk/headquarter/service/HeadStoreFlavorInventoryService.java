@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.entity.StoreFlavor;
+import com.kiosk.entity.enums.NotificationCategory;
+import com.kiosk.entity.enums.NotificationType;
+import com.kiosk.branch.notification.service.BranchNotificationService;
 import com.kiosk.headquarter.dto.storeFlavor.HeadStoreFlavorInventoryResponse;
 import com.kiosk.headquarter.dto.storeFlavor.UpdateStoreFlavorRestockRequest;
 import com.kiosk.headquarter.repository.StoreFlavorRepository;
@@ -30,6 +33,8 @@ public class HeadStoreFlavorInventoryService {
     private final StoreFlavorAutoRestockService
             storeFlavorAutoRestockService;
     private final AdminLogService adminLogService;
+    private final HeadNotificationService headNotificationService;
+    private final BranchNotificationService branchNotificationService;
 
 
 
@@ -124,6 +129,32 @@ public class HeadStoreFlavorInventoryService {
                 .processThresholdRestock(
                         storeFlavor
                 );
+
+        if (storeFlavor.getContainer() != null
+                && storeFlavor.getMinStock() != null
+                && storeFlavor.getContainer() <= storeFlavor.getMinStock()) {
+            String referenceKey = "flavor-" + storeFlavor.getId()
+                    + "-" + storeFlavor.getContainer() + "-" + storeFlavor.getMinStock();
+            String message = String.format(
+                    "%s의 %s 맛 재고가 부족합니다. 현재 %d통, 최소 %d통",
+                    storeFlavor.getStore().getStoreName(),
+                    storeFlavor.getFlavor().getFlavorName(),
+                    storeFlavor.getContainer(),
+                    storeFlavor.getMinStock());
+            headNotificationService.createNotificationOnce(
+                    NotificationCategory.INVENTORY,
+                    NotificationType.LOW_STOCK,
+                    "아이스크림 맛 재고 부족",
+                    message,
+                    "head-store-flavors",
+                    referenceKey);
+            branchNotificationService.createOnce(
+                    storeFlavor.getStore().getId(),
+                    "FLAVOR_LOW_STOCK",
+                    referenceKey,
+                    "아이스크림 맛 재고 부족",
+                    message);
+        }
 
         adminLogService.logAction("맛 재고",
                 storeFlavor.getStore().getStoreName() + " - "

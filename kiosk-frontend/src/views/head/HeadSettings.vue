@@ -81,6 +81,19 @@
               </select>
             </div>
           </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <h3>결제 전 주문 취소 허용</h3>
+              <p>고객이 결제 확정 전 장바구니를 취소할 수 있도록 합니다.</p>
+            </div>
+            <div class="setting-control">
+              <label class="switch">
+                <input type="checkbox" v-model="formData.allowOrderCancel">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <!-- 주문 / 결제 설정 탭 -->
@@ -151,7 +164,8 @@ const formData = ref({
   receiptPrintMode: 'SELECT',
   tumblerDiscountAmount: 300,
   lowStockAlertCount: 5,
-  useEasyPay: true
+  useEasyPay: true,
+  allowOrderCancel: true
 });
 
 onMounted(async () => {
@@ -279,6 +293,7 @@ const changeTheme = () => {
   font-size: 15px;
   width: 160px;
 }
+
 
 .input-with-unit {
   display: flex;

@@ -10,6 +10,15 @@
     <div class="header-section">
       <h2>📝 관리자 작업 내역</h2>
       <div class="header-actions">
+        <label class="search-box">
+          <span aria-hidden="true">⌕</span>
+          <input
+            v-model.trim="searchKeyword"
+            type="search"
+            placeholder="작업 내용·작업자·분류 검색"
+            aria-label="작업 내역 검색"
+          >
+        </label>
         <select v-model="typeFilter" class="status-filter">
           <option value="ALL">전체 분류</option>
           <!-- 서버에 새 작업 분류가 추가되어도 별도 화면 수정 없이 필터에 표시한다. -->
@@ -52,12 +61,18 @@
           <tr v-else v-for="(log, index) in paginatedLogs" :key="log.id">
             <td>{{ filteredLogs.length - ((currentPage - 1) * pageSize + index) }}</td>
             <td>
-              <span class="type-badge" :class="getTypeClass(log.type)">
+              <span
+                class="type-badge"
+                :class="[getTypeClass(log.type), { 'danger-badge': isDestructiveAction(log.action) }]"
+              >
                 {{ log.type }}
               </span>
             </td>
             <td class="log-action">
-              <span class="action-badge">{{ getActionType(log.action) }}</span>
+              <span
+                class="action-badge"
+                :class="{ 'action-danger': isDestructiveAction(log.action) }"
+              >{{ getActionType(log.action) }}</span>
               {{ log.action }}
             </td>
             <td>
@@ -84,6 +99,7 @@ import HeadTablePagination from '@/components/head/HeadTablePagination.vue';
 const logs = ref([]);
 const isLoading = ref(false);
 const error = ref(null);
+const searchKeyword = ref('');
 const typeFilter = ref('ALL');
 const actionTypeFilter = ref('ALL');
 const currentPage = ref(1);
@@ -101,6 +117,10 @@ const logTypes = computed(() =>
  */
 const getActionType = (action = '') => {
   const rules = [
+    ['취소', '취소·종료·삭제'],
+    ['종료', '취소·종료·삭제'],
+    ['삭제', '취소·종료·삭제'],
+    ['비활성화', '취소·종료·삭제'],
     ['반려', '반려'],
     ['승인', '승인'],
     ['배송', '배송'],
@@ -108,8 +128,6 @@ const getActionType = (action = '') => {
     ['알림', '알림 전송'],
     ['발급', '발급'],
     ['회수', '회수'],
-    ['삭제', '삭제'],
-    ['비활성화', '삭제'],
     ['상태 변경', '상태 변경'],
     ['노출', '상태 변경'],
     ['등록', '등록'],
@@ -123,16 +141,31 @@ const getActionType = (action = '') => {
   return rules.find(([keyword]) => action.includes(keyword))?.[1] ?? '기타';
 };
 
+const isDestructiveAction = (action = '') => {
+  const normalized = String(action).trim();
+  return /(^|[\s[(])D(?:ELETE)?(?=$|[\s\]):_-])|삭제|취소|종료|비활성화/i.test(normalized);
+};
+
 const actionTypes = computed(() =>
   [...new Set(logs.value.map(log => getActionType(log.action)))]
     .sort((a, b) => a.localeCompare(b, 'ko'))
 );
 
 const filteredLogs = computed(() => {
-  return logs.value.filter(log =>
-    (typeFilter.value === 'ALL' || log.type === typeFilter.value) &&
-    (actionTypeFilter.value === 'ALL' || getActionType(log.action) === actionTypeFilter.value)
-  );
+  const keyword = searchKeyword.value.toLocaleLowerCase('ko-KR');
+  return logs.value.filter(log => {
+    const searchable = [
+      log.type,
+      log.action,
+      log.administrator,
+      log.displayTime,
+      getActionType(log.action)
+    ].join(' ').toLocaleLowerCase('ko-KR');
+
+    return (typeFilter.value === 'ALL' || log.type === typeFilter.value) &&
+      (actionTypeFilter.value === 'ALL' || getActionType(log.action) === actionTypeFilter.value) &&
+      (!keyword || searchable.includes(keyword));
+  });
 });
 
 const paginatedLogs = computed(() => {
@@ -141,7 +174,7 @@ const paginatedLogs = computed(() => {
 });
 
 // 필터가 바뀌면 결과가 없는 이전 페이지에 머물지 않고 첫 페이지로 이동한다.
-watch([typeFilter, actionTypeFilter], () => {
+watch([searchKeyword, typeFilter, actionTypeFilter, pageSize], () => {
   currentPage.value = 1;
 });
 
@@ -216,6 +249,31 @@ onMounted(() => {
   gap: 10px;
 }
 
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 250px;
+  padding: 7px 11px;
+  border: 1px solid #ddd;
+  border-radius: 7px;
+  color: #7c8493;
+  background: #fff;
+}
+
+.search-box:focus-within {
+  border-color: #6f5bd5;
+  box-shadow: 0 0 0 3px rgba(111, 91, 213, 0.12);
+}
+
+.search-box input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: #333;
+  background: transparent;
+}
+
 .status-filter {
   padding: 8px 12px;
   border: 1px solid #ddd;
@@ -285,6 +343,13 @@ onMounted(() => {
   font-weight: 700;
   text-align: center;
   background: #f0edff;
+}
+
+.action-badge.action-danger,
+.type-badge.danger-badge {
+  color: #c62828;
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
 }
 
 .text-center {

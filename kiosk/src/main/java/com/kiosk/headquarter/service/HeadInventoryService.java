@@ -31,6 +31,7 @@ public class HeadInventoryService {
 
     private final AutoRestockService
             autoRestockService;
+    private final InventoryShortageAlertService inventoryShortageAlertService;
     private final AdminLogService adminLogService;
 
     /*
@@ -137,6 +138,8 @@ public class HeadInventoryService {
                         .processThresholdRestock(
                                 inventory
                         );
+
+        inventoryShortageAlertService.detectOrRefreshShortage(inventory);
 
         if (restockedQuantity > 0) {
             System.out.println(

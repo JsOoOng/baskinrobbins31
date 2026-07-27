@@ -108,7 +108,12 @@
       </div>
 
       <div class="button-group">
-        <button class="prev-btn" @click="goBack">&lt; {{ $t('이전') }}</button>
+        <button
+          class="prev-btn"
+          :disabled="!allowOrderCancel"
+          :title="allowOrderCancel ? '' : '현재 키오스크에서는 결제 단계의 주문 취소가 제한됩니다.'"
+          @click="goBack"
+        >&lt; {{ $t('이전') }}</button>
         <button class="next-btn" @click="proceedPayment">{{ $t('다음(결제하기)') }}</button>
       </div>
     </div>
@@ -170,6 +175,7 @@ import { useRouter } from 'vue-router'
 import { useBasketStore } from '@/stores/customer/basket'
 import { useI18n } from 'vue-i18n'
 import axios from '@/api/axios'
+import { getCustomerSettings } from '@/api/customer/settingsApi'
 
 const router = useRouter()
 const basketStore = useBasketStore()
@@ -181,6 +187,7 @@ const coupons = ref([])
 const selectedCoupon = ref(null)
 const discountAmount = ref(0)
 const earnedPoints = ref(0)
+const allowOrderCancel = ref(true)
 
 const showKeypad = ref(false)
 const inputNumber = ref('')
@@ -202,7 +209,15 @@ const displayToast = (msg) => {
   }, 2500)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    const settings = await getCustomerSettings()
+    allowOrderCancel.value = settings?.allowOrderCancel !== false
+  } catch (error) {
+    // 설정 API 장애가 결제 흐름을 막지 않도록 기존 동작(취소 허용)을 유지한다.
+    console.warn('고객 설정을 불러오지 못해 주문 취소를 기본 허용합니다.', error)
+  }
+
   basketStore.setPhoneNumber('')
   if (basketStore.cartItems.length === 0) {
     displayToast(t('장바구니가 비어있습니다.'))
@@ -473,6 +488,10 @@ const confirmPointUsage = () => {
 }
 
 const goBack = async () => {
+  if (!allowOrderCancel.value) {
+    displayToast(t('현재 키오스크에서는 결제 단계의 주문 취소가 제한됩니다.'))
+    return
+  }
   if (confirm(t('현재 결제를 취소하고 장바구니로 돌아가시겠습니까? (장바구니 내역은 유지됩니다)'))) {
     router.push('/menu')
   }

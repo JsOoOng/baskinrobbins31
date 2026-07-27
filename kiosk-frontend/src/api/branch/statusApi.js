@@ -45,3 +45,9 @@ export const confirmInventoryShortages = (
     + '/inventory-shortage-alerts/confirm'
   )
 }
+
+export const getUnreadBranchNotifications = (storeId) =>
+  api.get(`/branch/stores/${storeId}/notifications/unread`)
+
+export const readBranchNotification = (storeId, notificationId) =>
+  api.patch(`/branch/stores/${storeId}/notifications/${notificationId}/read`)

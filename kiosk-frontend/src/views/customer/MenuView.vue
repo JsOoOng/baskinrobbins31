@@ -1136,9 +1136,17 @@ const handleCallStaff = async () => {
 /* Products Grid */
 .product-grid-area {
   flex: 1;
+  min-height: 0;
   padding: 20px 30px;
   overflow-y: auto;
-  padding-bottom: 150px; /* space for bottom bar */
+  padding-bottom: 20px;
+  overscroll-behavior: contain;
+}
+.product-grid-container {
+  box-sizing: border-box;
+  min-height: 100%;
+  height: auto !important;
+  padding-bottom: 8px;
 }
 .product-grid {
   display: grid;
@@ -1178,14 +1186,19 @@ const handleCallStaff = async () => {
 
 /* Floating Cart Bar */
 .floating-cart-bar {
-  position: absolute;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
+  z-index: 100;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 15px;
-  z-index: 100;
+  width: 100%;
+  padding: 12px 20px max(18px, env(safe-area-inset-bottom));
+  border-top: 1px solid #f0edf3;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 -8px 22px rgba(45, 35, 58, .08);
+  backdrop-filter: blur(10px);
 }
 .cart-icon-btn {
   background: #fff;
@@ -1253,7 +1266,8 @@ const handleCallStaff = async () => {
 .modal-content.option-modal {
   background: white;
   width: 100%;
-  height: 85vh;
+  height: min(85vh, 85dvh);
+  max-height: calc(100dvh - 12px);
   border-top-left-radius: 30px;
   border-top-right-radius: 30px;
   display: flex;
@@ -1302,6 +1316,7 @@ const handleCallStaff = async () => {
 }
 .tab-body {
   flex: 1;
+  min-height: 0;
   padding: 30px;
   display: flex;
   flex-direction: column;
@@ -1657,10 +1672,15 @@ const handleCallStaff = async () => {
 .flavor-image { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
 .flavor-name { font-size: 0.85rem; color: #333;}
 .pagination-controls-pink {
+  /* 상품 카드의 그림자·밑단과 페이지 버튼이 겹치지 않도록 위쪽 여백을 확보한다. */
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 15px;
+  padding-top: 24px;
   margin-bottom: 20px;
 }
 .btn-arrow-pink {
@@ -1717,11 +1737,16 @@ const handleCallStaff = async () => {
 
 /* Modal Bottom Actions */
 .modal-bottom-actions {
+  position: sticky;
+  z-index: 5;
+  bottom: 0;
+  flex: 0 0 auto;
   display: flex;
   justify-content: space-between;
   gap: 15px;
   padding-top: 20px;
   border-top: 1px solid #eee;
+  background: #fff;
 }
 .btn-prev-outline {
   flex: 1; padding: 20px;
@@ -1738,7 +1763,36 @@ const handleCallStaff = async () => {
 .cart-overlay {
   align-items: center;
 }
-.modal-content.cart-modal { height: auto; max-height: 70vh; max-width: 600px; padding: 20px; border-radius: 20px; margin: 20px;}
+.modal-content.cart-modal {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: min(600px, calc(100vw - 24px));
+  height: min(760px, calc(100dvh - 24px));
+  max-height: calc(100dvh - 24px);
+  max-width: 600px;
+  padding: 20px;
+  border-radius: 20px;
+  margin: 12px;
+  overflow: hidden;
+}
+.cart-modal > .modal-header {
+  flex: 0 0 auto;
+}
+.cart-modal > .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  padding: 0 8px 0 0;
+  overscroll-behavior: contain;
+  overflow-y: auto;
+}
+.cart-modal > .cart-modal-footer {
+  z-index: 2;
+  flex: 0 0 auto;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #eee; margin-bottom: 15px;}
 .modal-header h3 { margin:0; color: #e91e63; }
 .btn-close { background: transparent; border: none; font-size: 1.5rem; cursor: pointer; }
@@ -1747,6 +1801,41 @@ const handleCallStaff = async () => {
 .cart-item-price { color: #e91e63; font-weight: bold; margin-top: 5px; }
 .cart-item-options { font-size: 0.9rem; color: #666; margin-top: 5px;}
 .btn-delete { background: #f8f9fa; border: 1px solid #ddd; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: #333;}
+
+@media (max-height: 700px) {
+  .modal-content.option-modal {
+    height: calc(100dvh - 8px);
+  }
+
+  .tab-body {
+    padding: 18px 22px;
+  }
+
+  .product-detail-header {
+    gap: 18px;
+    margin-bottom: 10px;
+  }
+
+  .detail-img {
+    width: 88px;
+  }
+
+  .container-card {
+    min-width: 100px;
+    padding: 12px;
+  }
+
+  .modal-bottom-actions,
+  .btn-prev-outline,
+  .btn-next-pink {
+    padding-top: 12px;
+  }
+
+  .btn-prev-outline,
+  .btn-next-pink {
+    padding-bottom: 12px;
+  }
+}
 
 /* Toast Message */
 .toast-message {

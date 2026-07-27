@@ -25,12 +25,48 @@ import TimeoutModal from '@/components/common/TimeoutModal.vue'
 
 import {
   getUnconfirmedInventoryShortages,
-  confirmInventoryShortages
+  confirmInventoryShortages,
+  getUnreadBranchNotifications,
+  readBranchNotification
 } from '@/api/branch/statusApi'
 
 
 const route = useRoute()
 const router = useRouter()
+const branchNotificationQueue = ref([])
+const activeBranchNotification = computed(() => branchNotificationQueue.value[0] ?? null)
+
+const showAndReadBranchNotification = (storeId, notification) => {
+  if (!notification) return
+  if (branchNotificationQueue.value.some(
+    item => item.notificationId === notification.notificationId
+  )) return
+  branchNotificationQueue.value.push({ ...notification, storeId })
+}
+
+const closeBranchNotification = async () => {
+  const notification = activeBranchNotification.value
+  if (!notification) return
+  try {
+    await readBranchNotification(notification.storeId, notification.notificationId)
+  } catch (error) {
+    console.error('지점 알림 읽음 처리 실패', error)
+  } finally {
+    branchNotificationQueue.value.shift()
+  }
+}
+
+const loadUnreadBranchNotifications = async (storeId) => {
+  try {
+    const response = await getUnreadBranchNotifications(storeId)
+    const notifications = Array.isArray(response.data) ? response.data : []
+    for (const notification of [...notifications].reverse()) {
+      showAndReadBranchNotification(storeId, notification)
+    }
+  } catch (error) {
+    console.error('지점 알림 조회 실패', error)
+  }
+}
 
 
 /*
@@ -711,6 +747,7 @@ const connectBranchSocket = () => {
     loadInventoryShortageAlert(
       storeId
     )
+    loadUnreadBranchNotifications(storeId)
 
     /*
      * 기존 주문 관련 지점 알림
@@ -730,6 +767,15 @@ const connectBranchSocket = () => {
         showToast(
           message.body
         )
+      }
+    )
+
+    nextClient.subscribe(
+      `/topic/stores/${storeId}/notifications`,
+      (message) => {
+        if (!route.path.startsWith('/branch')) return
+        const notification = parseSocketMessage(message.body)
+        showAndReadBranchNotification(storeId, notification)
       }
     )
 
@@ -971,9 +1017,25 @@ onBeforeUnmount(() => {
 <template>
 
   <div
+    v-if="activeBranchNotification"
+    class="restock-alert-overlay"
+    @click.self="closeBranchNotification"
+  >
+    <section class="restock-alert-modal">
+      <div class="restock-alert-icon">🔔</div>
+      <h2>{{ activeBranchNotification.title || '지점 알림' }}</h2>
+      <p>{{ activeBranchNotification.message }}</p>
+      <div class="restock-alert-buttons">
+        <button type="button" @click="closeBranchNotification">확인</button>
+      </div>
+    </section>
+  </div>
+
+  <div
     class="app-container"
     :class="{
-      'kiosk-wrapper': isKiosk
+      'kiosk-wrapper': isKiosk,
+      'branch-wrapper': route.path.startsWith('/branch') && route.path !== '/branch/login'
     }"
   >
 

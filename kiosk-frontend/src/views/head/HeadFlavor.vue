@@ -321,14 +321,18 @@ onMounted(() => {
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
+  flex-wrap: nowrap;
 }
 .header-actions .table-search {
   margin: 0;
 }
 .create-button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
   gap: 6px;
+  min-width: 112px;
   padding: 10px 18px;
   border-radius: 8px;
   background: #3a2b99;
@@ -338,6 +342,7 @@ onMounted(() => {
   border: none;
   cursor: pointer;
   transition: background 0.2s;
+  white-space: nowrap;
 }
 .create-button:hover {
   background: #2b1f7a;

@@ -87,6 +87,7 @@ public class InventoryShortageAlertService {
     private final InventoryAlertSocketPublisher
             inventoryAlertSocketPublisher;
     private final AdminLogService adminLogService;
+    private final HeadNotificationService headNotificationService;
 
     /*
      * 재고 부족 감지 또는 기존 알람 갱신
@@ -185,6 +186,19 @@ public class InventoryShortageAlertService {
                         .saveAndFlush(
                                 newAlert
                         );
+
+        headNotificationService.createNotificationOnce(
+                com.kiosk.entity.enums.NotificationCategory.INVENTORY,
+                com.kiosk.entity.enums.NotificationType.LOW_STOCK,
+                "재고 부족 발생",
+                savedAlert.getStore().getStoreName() + "의 "
+                        + savedAlert.getItem().getItemName()
+                        + " 재고가 부족합니다. 현재 "
+                        + savedAlert.getCurrentStockSnapshot() + "개, 최소 "
+                        + savedAlert.getMinStockSnapshot() + "개",
+                "head-inventory",
+                "inventory-" + savedAlert.getStoreInventory().getId()
+                        + "-" + savedAlert.getDetectedAt());
 
         /*
          * 1. 본사에 자동 부족 알림

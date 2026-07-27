@@ -124,118 +124,108 @@ const router = createRouter({
       meta: { title: '지점 관리자 로그인' }
     },
     {
-      path: '/branch/main',
-      name: 'branch-main',
-      component: () => import('../views/branch/BranchMain.vue'),
-      meta: { title: '지점 관리자 메인' }
-    },
-    {
-      path: '/branch/order',
-      name: 'branch-order',
-      component: () => import('../views/branch/OrderView.vue'),
-      meta: { title: '주문 관리' }
-    },
-    {
-      path: '/branch/menu',
-      name: 'branch-menu',
-      component: () => import('../views/branch/BranchMenu.vue'),
-      meta: { title: '지점 메뉴 관리' }
-    },
-    {
-      path: '/branch/inventory',
-      name: 'branch-inventory',
-      component: () => import('../views/branch/BranchInventory.vue')
-    },
-    {
-      path: '/branch/restock-history',
-      name: 'branch-restock-history',
-      component: () => import('../views/branch/BranchRestockHistory.vue')
-    },
-    {
-      path: '/branch/statistics',
-      name: 'branch-statistics',
-      component: () => import('../views/branch/statistics/BranchStatistics.vue')
-    },
-
-    {
-      path: '/branch/kiosk',
-      name: 'branch-kiosk',
-      component: () => import('../views/branch/BranchKiosk.vue')
-    },
-
-    {
-      path: '/branch/kiosk/register',
-      name: 'branch-kiosk-register',
-      component: () => import('../views/branch/BranchKioskRegister.vue')
-    },
-
-    {
-      path:'/branch/staff',
-      name: 'branch-staff',
-      component:() => import('../views/branch/StaffView.vue')
-    },
-
-    {
-          path:'/branch/staff/register',
-          name:'StaffRegister',
-          component:
-              () => import(
-                  '@/views/branch/StaffRegisterView.vue'
-              )
-      },
-
-      {
-        path:'/branch/staff/:staffId/update',
-        name:'StaffUpdate',
-        component:
-            () => import(
-                '@/views/branch/StaffUpdateView.vue'
-            )
-    },
-
-    {
-          path:'/branch/staff/:staffId/schedule',
-          name:'WeekSchedule',
-          component:
-              () => import(
-                  '@/views/branch/WeekScheduleView.vue'
-              )
-      },
-
-      {
-        path:'/branch/staff/:staffId/history',
-        name:'WorkHistory',
-        component:
-            () => import(
-                '@/views/branch/WorkHistoryView.vue'
-            )
-          },
-
-          {
-            path:'/branch/staff/:staffId/salary',
-            name:'SalaryView',
-            component:
-                () => import(
-                    '@/views/branch/SalaryView.vue'
-                )
-        },
-
+      path: '/branch',
+      // 로그인 이후 지점 화면은 모두 같은 사이드바와 헤더 안에서 열린다.
+      component: () => import('../components/branch/BranchLayout.vue'),
+      children: [
         {
-          path:'/branch/week-schedule',
-          name:'branch-week-schedule',
-          component:
-              () => import(
-                  '@/views/branch/BranchScheduleView.vue'
-              )
-      },
-
-      {
-        path:"/branch/expense",
-        name:"ExpenseCreate",
-        component:()=>import(
-        "@/views/branch/expense/ExpenseCreate.vue"
-        )
-       },
+          path: 'main',
+          name: 'branch-main',
+          component: () => import('../views/branch/BranchMain.vue'),
+          meta: { title: '운영 대시보드', description: '오늘의 매장 운영 현황을 확인하세요.' }
+        },
+        {
+          path: 'order',
+          name: 'branch-order',
+          component: () => import('../views/branch/OrderView.vue'),
+          meta: { title: '주문 관리', description: '접수된 주문과 처리 상태를 관리합니다.' }
+        },
+        {
+          path: 'menu',
+          name: 'branch-menu',
+          component: () => import('../views/branch/BranchMenu.vue'),
+          meta: { title: '판매 메뉴 관리', description: '지점에서 판매할 메뉴를 설정합니다.' }
+        },
+        {
+          path: 'inventory',
+          name: 'branch-inventory',
+          component: () => import('../views/branch/BranchInventory.vue'),
+          meta: { title: '재고 관리', description: '상품과 아이스크림 맛의 재고를 확인합니다.' }
+        },
+        {
+          path: 'restock-history',
+          name: 'branch-restock-history',
+          component: () => import('../views/branch/BranchRestockHistory.vue'),
+          meta: { title: '재고 신청 내역', description: '본사에 신청한 재고의 처리 현황을 확인합니다.' }
+        },
+        {
+          path: 'statistics',
+          name: 'branch-statistics',
+          component: () => import('../views/branch/statistics/BranchStatistics.vue'),
+          meta: { title: '매출 통계', description: '매장의 매출과 운영 지표를 분석합니다.' }
+        },
+        {
+          path: 'kiosk',
+          name: 'branch-kiosk',
+          component: () => import('../views/branch/BranchKiosk.vue'),
+          meta: { title: '키오스크 관리', description: '매장 키오스크의 등록 및 상태를 관리합니다.' }
+        },
+        {
+          path: 'kiosk/register',
+          name: 'branch-kiosk-register',
+          component: () => import('../views/branch/BranchKioskRegister.vue'),
+          meta: { title: '키오스크 등록', description: '새 키오스크를 매장에 등록합니다.' }
+        },
+        {
+          path: 'staff',
+          name: 'branch-staff',
+          component: () => import('../views/branch/StaffView.vue'),
+          meta: { title: '직원 관리', description: '직원 정보와 근무 현황을 관리합니다.' }
+        },
+        {
+          path: 'staff/register',
+          name: 'StaffRegister',
+          component: () => import('@/views/branch/StaffRegisterView.vue'),
+          meta: { title: '직원 등록', description: '새로운 직원을 등록합니다.' }
+        },
+        {
+          path: 'staff/:staffId/update',
+          name: 'StaffUpdate',
+          component: () => import('@/views/branch/StaffUpdateView.vue'),
+          meta: { title: '직원 정보 수정', description: '직원의 기본 정보를 수정합니다.' }
+        },
+        {
+          path: 'staff/:staffId/schedule',
+          name: 'WeekSchedule',
+          component: () => import('@/views/branch/WeekScheduleView.vue'),
+          meta: { title: '직원 스케줄', description: '직원의 주간 근무 일정을 관리합니다.' }
+        },
+        {
+          path: 'staff/:staffId/history',
+          name: 'WorkHistory',
+          component: () => import('@/views/branch/WorkHistoryView.vue'),
+          meta: { title: '직원 근무 내역', description: '직원의 출퇴근 및 근무 기록을 확인합니다.' }
+        },
+        {
+          path: 'staff/:staffId/salary',
+          name: 'SalaryView',
+          component: () => import('@/views/branch/SalaryView.vue'),
+          meta: { title: '급여 관리', description: '직원의 급여 내역을 확인합니다.' }
+        },
+        {
+          path: 'week-schedule',
+          name: 'branch-week-schedule',
+          component: () => import('@/views/branch/BranchScheduleView.vue'),
+          meta: { title: '주간 스케줄', description: '매장 전체의 주간 근무 일정을 확인합니다.' }
+        },
+        {
+          path: 'expense',
+          name: 'ExpenseCreate',
+          component: () => import('@/views/branch/expense/ExpenseCreate.vue'),
+          meta: { title: '지출 관리', description: '매장 지출 내역을 등록하고 관리합니다.' }
+        }
+      ]
+    },
 
 
     // ====================================================

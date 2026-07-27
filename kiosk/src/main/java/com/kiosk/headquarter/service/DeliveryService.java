@@ -17,6 +17,7 @@ import com.kiosk.headquarter.dto.deliverie.HeadDeliveryResponseDTO;
 import com.kiosk.headquarter.repository.DeliveryRepository;
 import com.kiosk.headquarter.repository.HeadquarterAdminRepository;
 import com.kiosk.common.websocket.BranchRestockStatusSocketPublisher;
+import com.kiosk.branch.notification.service.BranchNotificationService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,6 +39,7 @@ public class DeliveryService {
     private final AdminLogService adminLogService;
     private final HeadRestockService headRestockService;
     private final BranchRestockStatusSocketPublisher branchRestockStatusSocketPublisher;
+    private final BranchNotificationService branchNotificationService;
 
 
     /**
@@ -244,6 +246,20 @@ public class DeliveryService {
                     request,
                     getLoginAdmin(authentication)
             );
+
+            Integer storeId = request.getStoreInventory() != null
+                    ? request.getStoreInventory().getStore().getId()
+                    : request.getStoreFlavor().getStore().getId();
+            String itemName = request.getStoreInventory() != null
+                    ? request.getStoreInventory().getItem().getItemName()
+                    : request.getStoreFlavor().getFlavor().getFlavorName();
+            branchNotificationService.createOnce(
+                    storeId,
+                    "DELIVERY_COMPLETED",
+                    String.valueOf(deliveryId),
+                    "배송 및 입고 완료",
+                    itemName + " " + request.getRequestQuantity()
+                            + "개 배송이 완료되어 재고에 반영되었습니다.");
         }
 
 

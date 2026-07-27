@@ -1,0 +1,189 @@
+/*
+ * 기존 지점 화면들의 기능 코드는 그대로 유지하면서
+ * 본사 관리 화면과 비슷한 색상·카드·표·입력 요소를 공통 적용하는 테마이다.
+ */
+.branch-wrapper {
+  /* 지점 화면 전체에서 함께 사용하는 색상 값이다. */
+  --branch-primary: #6f5bd5;
+  --branch-primary-dark: #5845bf;
+  --branch-primary-soft: #f1eeff;
+  --branch-border: #e5e7ef;
+  --branch-text: #292e3b;
+  --branch-muted: #7c8493;
+  min-height: 100vh;
+  color: var(--branch-text);
+  background:
+    radial-gradient(circle at 95% 0, rgba(111, 91, 213, .10), transparent 28rem),
+    #f5f6fa !important;
+}
+
+.branch-wrapper :where(.container, .menu-page, .kiosk-page, .register-page, .schedule-box, .expense-container, .statistics-page) {
+  /* 화면마다 달랐던 바깥 너비와 여백을 하나의 콘텐츠 규격으로 맞춘다. */
+  box-sizing: border-box;
+  width: min(1180px, calc(100% - 40px)) !important;
+  min-height: auto;
+  margin: 0 auto !important;
+  padding: 32px 0 48px;
+  background: transparent !important;
+}
+
+.branch-wrapper :where(.main-box, .menu-box, .register-box, .staff-box, .box, .left, .right, .kiosk-list, .dashboard, .report, .content) {
+  border: 1px solid var(--branch-border) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  box-shadow: 0 10px 30px rgba(34, 39, 59, .07) !important;
+}
+
+.branch-wrapper .main-box {
+  box-sizing: border-box;
+  width: min(760px, 100%);
+  margin: 24px auto 0;
+  padding: 38px;
+}
+
+.branch-wrapper :where(h1, h2, h3) {
+  color: var(--branch-text);
+  letter-spacing: -.02em;
+}
+
+.branch-wrapper :where(.menu-page > h1, .kiosk-header, .header, .top-area) {
+  border-bottom-color: var(--branch-border);
+}
+
+.branch-wrapper :where(table) {
+  /* 주문·재고·직원 목록 표에 동일한 카드형 표 디자인을 적용한다. */
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid var(--branch-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.branch-wrapper :where(th) {
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--branch-border);
+  color: #656d7c;
+  font-size: 13px;
+  font-weight: 800;
+  background: #f7f8fb;
+}
+
+.branch-wrapper :where(td) {
+  padding: 14px 15px;
+  border-bottom: 1px solid #eef0f5;
+  color: #3a4050;
+}
+
+.branch-wrapper :where(tbody tr:last-child td) {
+  border-bottom: 0;
+}
+
+.branch-wrapper :where(tbody tr:hover) {
+  background: #faf9ff;
+}
+
+.branch-wrapper :where(input, select, textarea) {
+  /* 모든 지점 입력 요소의 높이와 테두리를 통일한다. */
+  box-sizing: border-box;
+  min-height: 42px;
+  border: 1px solid #d8dbe6;
+  border-radius: 9px;
+  color: var(--branch-text);
+  background: #fff;
+}
+
+.branch-wrapper :where(input, select, textarea):focus {
+  border-color: var(--branch-primary);
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(111, 91, 213, .12);
+}
+
+.branch-wrapper :where(button, .register-button, .register-btn, .back, .back-button) {
+  border-radius: 9px;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.branch-wrapper :where(button):not(.count-btn):not(.toggle) {
+  border-color: transparent;
+}
+
+.branch-wrapper :where(.main-box button, .register-button, .register-btn) {
+  color: #fff;
+  background: var(--branch-primary) !important;
+  box-shadow: 0 6px 16px rgba(111, 91, 213, .20);
+}
+
+.branch-wrapper :where(.main-box button, .register-button, .register-btn):hover {
+  background: var(--branch-primary-dark) !important;
+  transform: translateY(-1px);
+}
+
+.branch-wrapper .main-box button:last-child {
+  color: #c62828 !important;
+  background: #ffebee !important;
+  box-shadow: none;
+}
+
+.branch-wrapper :where(.back, .back-button) {
+  color: var(--branch-primary) !important;
+  border: 1px solid #d8d2f7 !important;
+  background: var(--branch-primary-soft) !important;
+}
+
+.branch-wrapper :where(.kiosk-card, .staff-card, .history-card, .card, .chart-box, .summary-card, .day-box) {
+  border: 1px solid var(--branch-border);
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 5px 16px rgba(34, 39, 59, .05);
+}
+
+.branch-wrapper :where(.modal-background) {
+  backdrop-filter: blur(4px);
+  background: rgba(25, 29, 42, .52);
+}
+
+.branch-wrapper :where(.restock-modal) {
+  border: 1px solid var(--branch-border);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(25, 29, 42, .22);
+}
+
+.branch-wrapper .statistics-page {
+  /* 통계 화면 자체의 보조 메뉴와 차트 영역은 두 열로 유지한다. */
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 20px;
+}
+
+.branch-wrapper .side-menu {
+  border: 1px solid var(--branch-border);
+  border-radius: 16px;
+  background: #29243e;
+  box-shadow: 0 10px 30px rgba(34, 39, 59, .12);
+}
+
+.branch-wrapper .side-menu :where(button.active, .active) {
+  color: #fff;
+  background: var(--branch-primary);
+}
+
+@media (max-width: 760px) {
+  .branch-wrapper :where(.container, .menu-page, .kiosk-page, .register-page, .schedule-box, .expense-container, .statistics-page) {
+    width: min(100% - 24px, 1180px);
+    padding-top: 20px;
+  }
+
+  .branch-wrapper .main-box {
+    padding: 24px;
+  }
+
+  .branch-wrapper .statistics-page {
+    display: block;
+  }
+
+  .branch-wrapper .side-menu {
+    margin-bottom: 14px;
+  }
+}

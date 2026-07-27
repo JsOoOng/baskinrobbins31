@@ -48,6 +48,7 @@ public class HeadSettingsService {
         if (dto.getTumblerDiscountAmount() != null) setting.setTumblerDiscountAmount(dto.getTumblerDiscountAmount());
         if (dto.getLowStockAlertCount() != null) setting.setLowStockAlertCount(dto.getLowStockAlertCount());
         if (dto.getUseEasyPay() != null) setting.setUseEasyPay(dto.getUseEasyPay());
+        if (dto.getAllowOrderCancel() != null) setting.setAllowOrderCancel(dto.getAllowOrderCancel());
 
         SystemSetting savedSetting = systemSettingRepository.save(setting);
         adminLogService.logAction("환경 설정", "키오스크 공통 환경 설정 변경");

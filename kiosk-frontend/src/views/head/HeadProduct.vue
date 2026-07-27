@@ -394,10 +394,7 @@ const openEditModal = async (productId) => {
 }
 
 const closeFormModal = () => {
-  if (
-    saving.value ||
-    flavorSaving.value
-  ) {
+  if (saving.value) {
     return
   }
 
@@ -729,107 +726,6 @@ const showMessage = (
 
 const clearMessage = () => {
   message.value = ''
-}
-
-
-/*
- * 선택된 카테고리
- */
-const selectedCategory =
-  computed(() => {
-    return categories.value.find(
-      (category) =>
-        String(category.categoryId) ===
-        String(form.categoryId)
-    )
-  })
-
-/*
- * 아이스크림 카테고리에서만
- * 독립적인 맛 등록 영역을 표시합니다.
- *
- * 케이크 상품명과 일반 상품명은
- * icecream_flavors에 저장하지 않습니다.
- */
-const isFlavorCategory =
-  computed(() => {
-    const categoryName =
-      selectedCategory.value
-        ?.categoryName
-        ?.trim()
-
-    return categoryName === '아이스크림'
-  })
-
-const normalizeFlavorName = (
-  value
-) => {
-  return String(value ?? '')
-    .trim()
-    .toLocaleLowerCase('ko-KR')
-}
-
-const isDuplicateFlavorName = (
-  flavorName
-) => {
-  const normalizedName =
-    normalizeFlavorName(flavorName)
-
-  return flavors.value.some(
-    (flavor) =>
-      normalizeFlavorName(
-        flavor.flavorName
-      ) === normalizedName
-  )
-}
-
-const validateFlavorInput = () => {
-  const flavorName =
-    newFlavorName.value.trim()
-
-  const imageUrl =
-    newFlavorImageUrl.value.trim()
-
-  if (!flavorName) {
-    showMessage(
-      '추가할 맛 이름을 입력해주세요.',
-      'error'
-    )
-
-    return false
-  }
-
-  if (!imageUrl) {
-    showMessage(
-      '맛 이미지 URL을 입력해주세요.',
-      'error'
-    )
-
-    return false
-  }
-
-  /*
-   * 허용 예:
-   * /images/flavors/black_sorbet.png
-   * /images/flavors/black_sorbet.jpg
-   */
-  const flavorImagePattern =
-    /^\/images\/flavors\/[a-z0-9]+(?:_[a-z0-9]+)*\.(?:png|jpg)$/
-
-  if (
-    !flavorImagePattern.test(
-      imageUrl
-    )
-  ) {
-    showMessage(
-      '이미지 URL은 /images/flavors/파일명.png 또는 /images/flavors/파일명.jpg 형식이어야 하며, 파일명에는 영문 소문자·숫자·언더스코어만 사용할 수 있습니다.',
-      'error'
-    )
-
-    return false
-  }
-
-  return true
 }
 
 
@@ -1183,10 +1079,7 @@ onMounted(async () => {
 
               <button
                 type="button"
-                :disabled="
-                  saving ||
-                  flavorSaving
-                "
+                :disabled="saving"
                 aria-label="닫기"
                 @click="closeFormModal"
               >
@@ -1267,88 +1160,6 @@ onMounted(async () => {
                 </label>
               </div>
 
-              <section
-                v-if="
-                  formModal.mode === 'create' &&
-                  isFlavorCategory
-                "
-                class="flavor-section"
-              >
-                <div class="flavor-section-header">
-                  <div>
-                    <strong>
-                      아이스크림 맛 추가
-                    </strong>
-
-                    <p>
-                      상품 등록과 별도로 icecream_flavors에 저장됩니다.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="flavor-input-list">
-                  <label>
-                    <span>
-                      맛 이름
-                      <strong>*</strong>
-                    </span>
-
-                    <input
-                      v-model="newFlavorName"
-                      type="text"
-                      maxlength="50"
-                      placeholder="예: 바람과 함께 사라지다"
-                      :disabled="
-                        saving ||
-                        flavorSaving
-                      "
-                    />
-                  </label>
-
-                  <label>
-                    <span>
-                      이미지 URL
-                      <strong>*</strong>
-                    </span>
-
-                    <input
-                      v-model="newFlavorImageUrl"
-                      type="text"
-                      maxlength="500"
-                      placeholder="예: /images/flavors/twinberry_cheesecake.png"
-                      :disabled="
-                        saving ||
-                        flavorSaving
-                      "
-                      @keydown.enter.prevent="
-                        addNewFlavor
-                      "
-                    />
-                  </label>
-                </div>
-
-                <div class="flavor-add-footer">
-                  <p>
-                    같은 맛 이름은 중복 등록되지 않습니다.
-                  </p>
-
-                  <button
-                    type="button"
-                    :disabled="
-                      saving ||
-                      flavorSaving
-                    "
-                    @click="addNewFlavor"
-                  >
-                    {{
-                      flavorSaving
-                        ? '확인 중...'
-                        : '맛 추가'
-                    }}
-                  </button>
-                </div>
-              </section>
-
               <label class="full-field">
                 <span>상품 설명</span>
 
@@ -1414,10 +1225,7 @@ onMounted(async () => {
               <button
                 type="button"
                 class="cancel-button"
-                :disabled="
-                  saving ||
-                  flavorSaving
-                "
+                :disabled="saving"
                 @click="closeFormModal"
               >
                 취소
@@ -1426,15 +1234,10 @@ onMounted(async () => {
               <button
                 type="submit"
                 class="save-button"
-                :disabled="
-                  saving ||
-                  flavorSaving
-                "
+                :disabled="saving"
               >
                 {{
-                  flavorSaving
-                    ? '맛 처리 중...'
-                    : saving
+                  saving
                       ? '저장 중...'
                       : formModal.mode === 'create'
                         ? '상품 등록'

@@ -20,7 +20,7 @@
         </p>
         <h1>재고 신청 관리</h1>
         <p class="page-description">
-          지점의 재고 신청 내역을 확인하고 승인 및 배송 상태를 처리합니다.
+          지점의 재고 신청 내역과 현재 처리 상태를 조회합니다.
         </p>
       </div>
       <button
@@ -112,39 +112,14 @@
                     class="save-button"
                     :disabled="processingId === item.requestId"
                     @click="handleApprove(item)"
-                  >
-                    승인
-                  </button>
+                  >승인</button>
                   <button
                     v-if="item.status === 'WAITING'"
                     type="button"
-                    class="save-button"
-                    style="background: #ef4444;"
+                    class="save-button reject-button"
                     :disabled="processingId === item.requestId"
                     @click="handleReject(item)"
-                  >
-                    반려
-                  </button>
-                  <button
-                    v-if="item.status === 'APPROVED'"
-                    type="button"
-                    class="save-button"
-                    style="background: #3b82f6"
-                    :disabled="processingId === item.requestId"
-                    @click="handleShipping(item)"
-                  >
-                    배송시작
-                  </button>
-                  <button
-                    v-if="item.status === 'SHIPPING'"
-                    type="button"
-                    class="save-button"
-                    style="background: #10b981"
-                    :disabled="processingId === item.requestId"
-                    @click="handleComplete(item)"
-                  >
-                    배송완료
-                  </button>
+                  >반려</button>
                   <button
                     v-if="findShortageAlert(item)"
                     type="button"
@@ -154,6 +129,10 @@
                   >
                     {{ sendingAlertId === findShortageAlert(item).alertId ? '알림 전송 중' : '지점 알림' }}
                   </button>
+                  <span
+                    v-if="item.status !== 'WAITING' && !findShortageAlert(item)"
+                    class="no-action"
+                  >처리 완료</span>
                 </div>
               </td>
               <td>{{ item.adminName || '-' }}</td>
@@ -690,6 +669,10 @@ onMounted(() => {
   transition: all 0.2s;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.reject-button {
+  background: #ef4444;
 }
 
 .save-button:hover:not(:disabled) {

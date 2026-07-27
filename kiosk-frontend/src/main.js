@@ -5,6 +5,8 @@
  * 데이터 기준: 실제 요청 URL과 현재 백엔드 DTO 필드를 우선한다.
  */
 import './assets/main.css'
+// 지점 화면의 공통 카드·표·입력 디자인은 별도 테마 파일에서 관리한다.
+import './assets/branch-theme.css'
 
 import { createApp } from 'vue'
 
