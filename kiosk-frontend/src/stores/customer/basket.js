@@ -17,6 +17,7 @@ export const useBasketStore = defineStore('basket', {
     dryIceMins: 0,
     phoneNumber: '',
     usedPoints: 0,
+    totalDiscount: 0,
     pointMode: ''
   }),
 
@@ -48,6 +49,9 @@ export const useBasketStore = defineStore('basket', {
     },
     setUsedPoints(points) {
       this.usedPoints = points;
+    },
+    setTotalDiscount(discount) {
+      this.totalDiscount = discount;
     },
     setPointMode(mode) {
       this.pointMode = mode;

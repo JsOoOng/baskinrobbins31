@@ -35,7 +35,7 @@
     </div>
 
     <div class="payment-section">
-      <h3>{{ $t('결제 방법을 선택해주세요 (총 ₩{total})', { total: (basketStore.totalPrice - (basketStore.usedPoints || 0)).toLocaleString() }) }}</h3>
+      <h3>{{ $t('결제 방법을 선택해주세요 (총 ₩{total})', { total: (basketStore.totalPrice - (basketStore.totalDiscount || 0)).toLocaleString() }) }}</h3>
       <div class="pay-buttons">
         <button @click="handlePayment('CASH')">{{ $t('현금') }}</button>
         <button @click="handlePayment('CARD')">{{ $t('신용카드') }}</button>
@@ -154,12 +154,11 @@ const handlePayment = async (method) => {
           unitPrice: item.unitPrice
         };
 
-        // 💡 기존 맛 데이터 구조({ flavorName, quantity })에 맞춰 flavorId도 유연하게 찾아서 전송
         return {
           ...baseItem,
           flavors: item.flavors ? item.flavors.map(f => ({
-            flavorId: f.flavorId || f.id || 0, // flavorId가 없다면 id나 기본값 처리
-            flavorName: f.flavorName,          // 맛 이름도 함께 전달 필요할 수 있음
+            flavorId: f.flavorId || f.id || 0,
+            flavorName: f.flavorName,
             quantity: f.quantity || 1
           })) : []
         };
@@ -235,14 +234,14 @@ const handleTossPayment = async () => {
           unitPrice: item.unitPrice
         };
 
-        if (item.categoryId === 1) {
-          return {
-            ...baseItem,
-            flavors: item.flavors || []
-          };
-        } else {
-          return baseItem;
-        }
+        return {
+          ...baseItem,
+          flavors: item.flavors ? item.flavors.map(f => ({
+            flavorId: f.flavorId || f.id || 0,
+            flavorName: f.flavorName,
+            quantity: f.quantity || 1
+          })) : []
+        };
       })
     });
     const orderId = orderRes.data;
@@ -260,7 +259,7 @@ const handleTossPayment = async () => {
     
     // 토스페이먼츠 결제창 호출 (파라미터 전달)
     await tossPayments.requestPayment('카드', {
-      amount: basketStore.totalPrice - (basketStore.usedPoints || 0),
+      amount: basketStore.totalPrice - (basketStore.totalDiscount || 0),
       orderId: `kiosk_order_${orderId}`,
       orderName: orderName,
       customerName: '키오스크고객',
