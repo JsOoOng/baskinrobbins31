@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace=
+        "com.kiosk.headquarter.repository.HeadCouponMapper">
+
+    <!--
+        전체 쿠폰 조회
+    -->
+    <select id="findAllCoupons"
+            resultType=
+                    "com.kiosk.headquarter.dto.coupon.CouponRequestDto">
+
+        SELECT
+            coupon_id AS couponId,
+            coupon_name AS couponName,
+            discount_value AS discountValue,
+            discount_type AS discountType,
+            duration_days AS durationDays,
+            is_issued_all AS isIssuedAll,
+            created_at AS createdAt
+        FROM coupon
+        ORDER BY created_at DESC
+
+    </select>
+
+    <!--
+        쉬운주석: 회원에게 실제 발급되며 만들어진 expiry_date를 조회한다.
+        같은 쿠폰이 여러 날짜에 발급될 수 있어 만료일별로 한 행씩 반환한다.
+    -->
+    <select id="findCouponExpiryDates"
+            resultType="com.kiosk.headquarter.dto.coupon.CouponRequestDto">
+        SELECT DISTINCT
+            c.coupon_id AS couponId,
+            c.coupon_name AS couponName,
+            uc.expiry_date AS expiryDate
+        FROM coupon c
+        INNER JOIN user_coupon uc
+            ON uc.coupon_id = c.coupon_id
+        WHERE uc.is_used = FALSE
+          AND uc.expiry_date IS NOT NULL
+    </select>
+
+    <insert id="insertCoupon"
+            parameterType=
+                    "com.kiosk.headquarter.dto.coupon.CouponRequestDto">
+
+        INSERT INTO coupon (
+            coupon_id,
+            coupon_name,
+            discount_type,
+            discount_value,
+            duration_days,
+            is_issued_all,
+            created_at
+        ) VALUES (
+            #{couponId},
+            #{couponName},
+            #{discountType},
+            #{discountValue},
+            #{durationDays},
+            FALSE,
+            CURRENT_TIMESTAMP
+        )
+
+    </insert>
+
+    <!-- 쿠폰 수정 -->
+    <update id="updateCoupon"
+            parameterType=
+                    "com.kiosk.headquarter.dto.coupon.CouponRequestDto">
+
+        UPDATE coupon
+        SET
+            coupon_name = #{couponName},
+            discount_type = #{discountType},
+            discount_value = #{discountValue},
+            duration_days = #{durationDays}
+        WHERE coupon_id = #{couponId}
+
+    </update>
+
+    <!-- 쿠폰 삭제 전 회원 쿠폰 삭제 -->
+    <delete id="deleteUserCouponsByCouponId"
+            parameterType="java.lang.String">
+
+        DELETE FROM user_coupon
+        WHERE coupon_id = #{couponId}
+
+    </delete>
+
+    <!-- 쿠폰 삭제 -->
+    <delete id="deleteCoupon"
+            parameterType="java.lang.String">
+
+        DELETE FROM coupon
+        WHERE coupon_id = #{couponId}
+
+    </delete>
+
+    <!-- 모든 회원에게 쿠폰 일괄 발급 이미 같은 쿠폰이 발급된 회원은 다시 발급하지 않습니다. -->
+    <insert id="insertCouponToAllUsers"
+            parameterType="java.lang.String">
+
+        INSERT INTO user_coupon (
+            user_id,
+            coupon_id,
+            is_used,
+            expiry_date,
+            issued_date
+        )
+        SELECT
+            u.user_id,
+            c.coupon_id,
+            FALSE,
+            DATE_ADD(
+                CURDATE(),
+                INTERVAL c.duration_days DAY
+            ),
+            CURDATE()
+        FROM users u
+        INNER JOIN coupon c
+            ON c.coupon_id = #{couponId}
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM user_coupon uc
+            WHERE uc.user_id = u.user_id
+              AND uc.coupon_id = c.coupon_id
+        )
+
+    </insert>
+
+    <!-- 전체 회원 발급 완료 상태 변경 -->
+    <update id="updateCouponIssuedStatus"
+            parameterType="java.lang.String">
+
+        UPDATE coupon
+        SET is_issued_all = TRUE
+        WHERE coupon_id = #{couponId}
+
+    </update>
+
+    <!-- 쉬운주석: 회수 버튼을 누를 수 있는 전체 발급 상태인지 확인한다. -->
+    <select id="isCouponIssuedAll" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM coupon
+            WHERE coupon_id = #{couponId}
+              AND is_issued_all = TRUE
+        )
+    </select>
+
+    <!-- 쉬운주석: 회원 쿠폰 삭제가 끝난 뒤 쿠폰을 다시 미발급 X 상태로 돌린다. -->
+    <update id="resetCouponIssuedStatus">
+        UPDATE coupon
+        SET is_issued_all = FALSE
+        WHERE coupon_id = #{couponId}
+    </update>
+
+</mapper>

@@ -1,0 +1,55 @@
+백엔드 설정 오류 수정 기록
+
+1. 발생한 경고
+- pom.xml에 org.springframework.boot:spring-boot-starter-data-jpa 의존성이
+  같은 내용으로 두 번 선언되어 Maven이 중복 의존성 경고를 출력했습니다.
+
+2. 수정 내용
+- 앞쪽의 Spring Data JPA 선언은 그대로 유지했습니다.
+- 뒤쪽에 반복된 동일 선언 한 개만 제거했습니다.
+- 실제 사용하는 JPA 기능과 의존성 버전에는 변화가 없습니다.
+
+3. 수정 이유
+- 같은 의존성을 중복 선언하면 현재 Maven에서는 경고가 발생합니다.
+- 향후 Maven 버전에서는 중복 선언이 빌드 오류로 처리될 가능성이 있습니다.
+- 의존성 정의를 한 곳으로 정리하면 버전과 설정을 혼동할 가능성이 줄어듭니다.
+
+4. StoreFlavor 경고
+- StoreFlavor의 restockRequests 필드는 new ArrayList<>()로 초기화되어 있었지만,
+  Lombok의 @Builder로 객체를 만들면 이 초기값이 무시될 수 있었습니다.
+- 해당 필드에 @Builder.Default를 추가했습니다.
+- 이제 Builder에서 restockRequests를 따로 지정하지 않아도 빈 목록이 기본값으로
+  사용되므로 목록이 null이 되어 발생할 수 있는 NullPointerException을 방지합니다.
+
+5. HeadInventory 중복 불러오기 경고
+- 발생 위치: kiosk-frontend/src/router/index.js
+- HeadInventory.vue가 파일 위쪽에서 일반 import로 한 번 불러와져 있었고,
+  /head/inventory 라우트에서도 import() 방식으로 다시 불러와지고 있었습니다.
+- 실제 라우트에서는 import()를 사용하므로, 사용되지 않는 일반 import 한 줄만
+  제거하고 동적 import 방식은 그대로 유지했습니다.
+- 수정 전 Vite는 같은 화면을 일반 방식과 동적 방식으로 동시에 불러오기 때문에
+  별도 파일로 나누는 최적화가 적용되지 않는다는 경고를 출력했습니다.
+- 수정 후 npm.cmd run build를 다시 실행했고 해당 경고 없이 빌드에 성공했습니다.
+
+6. 전체 코드 흐름 주석 작업 및 검증 과정
+- 현재 Java, Vue, JavaScript, MyBatis Mapper XML 파일을 실제 코드 기준으로 읽었습니다.
+- 제공된 SQL은 참고 자료로 사용하되, 서로 다른 부분은 현재 Entity, Repository,
+  Mapper, DTO와 실제 라우트 및 API 호출 코드를 기준으로 설명했습니다.
+- Java 클래스에는 역할과 호출 흐름, Controller에는 요청 URL과 Service 이동 흐름,
+  중요한 Service 메서드에는 조회·검증·저장 흐름을 주석으로 추가했습니다.
+- Vue 화면에는 진입 경로와 API/상태 처리 흐름, JavaScript 모듈에는 호출 방향,
+  Mapper XML에는 Mapper와 SQL 실행 결과가 돌아가는 흐름을 주석으로 추가했습니다.
+- 총 525개 파일(Java 412, Vue 71, JavaScript 36, Mapper XML 6)에 주석을 넣었습니다.
+- 처음 자동 주석을 검증할 때 원본의 이모지를 한 글자로 계산하여 일부 Java
+  어노테이션 중간에 주석이 들어가는 문제가 발견되었습니다.
+- 생성한 주석만 제거했을 때 525개 파일 모두 작업 전 SHA-256 해시와 같아지는지
+  확인한 뒤, 이모지가 있어도 삽입 위치가 어긋나지 않도록 생성 도구의 내부
+  문자열 위치 계산 방식을 고쳤습니다. 여기서 위치 계산 방식은 파일 인코딩을
+  뜻하지 않으며, 모든 소스 파일은 처음부터 끝까지 UTF-8로 읽고 저장했습니다.
+- 수정된 방식으로 주석을 다시 넣은 후, 생성 주석을 가상으로 제거했을 때
+  525개 파일 모두 원본 해시와 일치함을 재확인했습니다.
+- Java, Vue, JavaScript, XML 총 526개 파일의 실제 바이트를 엄격한 UTF-8 방식으로
+  검사했으며, 526개 모두 올바른 UTF-8이었습니다. UTF-16 파일과 잘못된 UTF-8
+  파일은 각각 0개였고 UTF-8 BOM도 없었습니다.
+- 백엔드는 mvnw.cmd clean compile로 411개 소스 컴파일 성공,
+  프론트엔드는 npm.cmd run build로 빌드 성공을 확인했습니다.

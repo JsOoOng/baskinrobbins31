@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  [SQL 흐름 안내]
+  연결 인터페이스: com.kiosk.branch.status.reopsitory.BranchRestockRequestMapper
+  호출 흐름: Service -> Mapper 인터페이스 -> 이 SQL -> MySQL -> 결과 반환
+  주요 테이블: restock_requests
+-->
+
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kiosk.branch.status.reopsitory.BranchRestockRequestMapper">
+
+    <!--
+        지점 재고 신청 저장
+
+        상품 재고 신청:
+        store_inventory_id 값 존재
+        store_flavor_id NULL
+
+        맛 재고 신청:
+        store_inventory_id NULL
+        store_flavor_id 값 존재
+
+        useGeneratedKeys:
+        INSERT 후 생성된 request_id를
+        RestockRequest.id에 저장합니다.
+    -->
+    <insert
+            id="insert"
+            parameterType="com.kiosk.entity.RestockRequest"
+            useGeneratedKeys="true"
+            keyProperty="id"
+            keyColumn="request_id">
+
+        INSERT INTO restock_requests
+        (
+            store_inventory_id,
+            store_flavor_id,
+            request_quantity,
+            status,
+            requested_at
+        )
+        VALUES
+        (
+            <!-- 일반 상품·원부자재 재고 ID -->
+            <choose>
+                <when test="storeInventory != null">
+                    #{storeInventory.id, jdbcType=INTEGER}
+                </when>
+
+                <otherwise>
+                    NULL
+                </otherwise>
+            </choose>,
+
+            <!-- 아이스크림 맛 재고 ID -->
+            <choose>
+                <when test="storeFlavor != null">
+                    #{storeFlavor.id, jdbcType=INTEGER}
+                </when>
+
+                <otherwise>
+                    NULL
+                </otherwise>
+            </choose>,
+
+            #{requestQuantity, jdbcType=INTEGER},
+
+            #{status, jdbcType=VARCHAR},
+
+            CURRENT_TIMESTAMP
+        )
+
+    </insert>
+
+</mapper>

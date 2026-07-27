@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  [SQL 흐름 안내]
+  연결 인터페이스: com.kiosk.branch.status.reopsitory.BranchRestockMapper
+  호출 흐름: Service -> Mapper 인터페이스 -> 이 SQL -> MySQL -> 결과 반환
+  주요 테이블: store_inventory, stores, inventory_items, store_flavors, icecream_flavors
+-->
+
+
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.kiosk.branch.status.reopsitory.BranchRestockMapper">
+
+
+    <!-- 상품 재고 조회 -->
+    <select id="findStoreInventoryById"
+            parameterType="java.lang.Integer"
+            resultMap="storeInventoryMap">
+
+
+        SELECT
+    si.store_inventory_id,
+    si.store_id,
+    s.store_name,
+    si.item_id,
+    p.product_id,
+    p.product_name,
+    si.current_stock,
+    si.min_stock,
+    si.target_stock,
+    si.auto_restock_enabled,
+    si.restock_mode,
+    si.last_updated
+
+FROM store_inventory si
+LEFT JOIN stores s
+    ON si.store_id = s.store_id
+LEFT JOIN inventory_items ii
+    ON si.item_id = ii.item_id
+LEFT JOIN products p
+    ON ii.product_id = p.product_id
+
+WHERE si.store_inventory_id = #{storeInventoryId}
+
+    </select>
+
+
+
+
+    <resultMap id="storeInventoryMap"
+               type="com.kiosk.entity.StoreInventory">
+
+
+        <id property="id"
+            column="store_inventory_id"/>
+
+
+        <result property="currentStock"
+                column="current_stock"/>
+
+
+        <result property="minStock"
+                column="min_stock"/>
+
+
+        <result property="targetStock"
+                column="target_stock"/>
+
+
+        <result property="autoRestockEnabled"
+                column="auto_restock_enabled"/>
+
+
+        <result property="restockMode"
+                column="restock_mode"/>
+
+
+        <association property="store"
+                     javaType="com.kiosk.entity.Store">
+
+
+            <id property="id"
+                column="store_id"/>
+
+            <result property="storeName"
+                    column="store_name"/>
+
+        </association>
+
+
+        <association property="item"
+                     javaType="com.kiosk.entity.InventoryItem">
+
+
+            <id property="id"
+                column="item_id"/>
+
+            <association property="product"
+                 javaType="com.kiosk.entity.Product">
+
+		        <id property="id"
+		            column="product_id"/>
+		
+		        <result property="productName"
+		                column="product_name"/>
+		
+		    </association>
+
+        </association>
+
+
+    </resultMap>
+
+
+
+
+
+    <!-- 맛 재고 조회 -->
+    <select id="findStoreFlavorById"
+            parameterType="java.lang.Integer"
+            resultMap="storeFlavorMap">
+
+
+        SELECT
+
+            sf.store_flavor_id,
+            sf.store_id,
+            s.store_name,
+            sf.flavor_id,
+            f.flavor_name,
+            sf.container,
+            sf.is_sold_out,
+            sf.min_stock,
+            sf.target_stock,
+            sf.auto_restock_enabled,
+            sf.restock_mode,
+            sf.last_updated
+
+
+        FROM store_flavors sf
+        LEFT JOIN stores s ON sf.store_id = s.store_id
+        LEFT JOIN icecream_flavors f ON sf.flavor_id = f.flavor_id
+
+        WHERE sf.store_flavor_id =
+              #{storeFlavorId}
+
+    </select>
+
+
+
+
+
+    <resultMap id="storeFlavorMap"
+               type="com.kiosk.entity.StoreFlavor">
+
+
+        <id property="id"
+            column="store_flavor_id"/>
+
+
+        <result property="container"
+                column="container"/>
+
+
+        <result property="isSoldOut"
+                column="is_sold_out"/>
+
+
+        <result property="minStock"
+                column="min_stock"/>
+
+
+        <result property="targetStock"
+                column="target_stock"/>
+
+
+        <result property="autoRestockEnabled"
+                column="auto_restock_enabled"/>
+
+
+        <result property="restockMode"
+                column="restock_mode"/>
+
+
+        <association property="store"
+                     javaType="com.kiosk.entity.Store">
+
+
+            <id property="id"
+                column="store_id"/>
+
+            <result property="storeName"
+                    column="store_name"/>
+
+        </association>
+
+
+
+        <association property="flavor"
+                     javaType="com.kiosk.entity.IcecreamFlavor">
+
+
+            <id property="id"
+                column="flavor_id"/>
+
+            <result property="flavorName"
+                    column="flavor_name"/>
+
+        </association>
+
+
+    </resultMap>
+
+
+</mapper>

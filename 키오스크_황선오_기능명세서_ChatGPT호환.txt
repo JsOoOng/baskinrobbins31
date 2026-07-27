@@ -1,0 +1,680 @@
+키오스크_황선오_기능명세서
+프로젝트명: Baskin Robbins 31 통합 키오스크 관리 시스템
+작성자: 황선오
+작성 기준일: 2026-07-24
+검증 기준: 현재 baskinrobbins31 실제 프론트엔드·백엔드 소스
+
+※ 이 문서는 아래 11개 기능을 황선오 담당 기능으로 정리하였다.
+※ 실제 코드의 Controller, Service, Repository/Mapper, Vue 화면과 SQL을 기준으로 작성하였다.
+※ 프론트와 백엔드의 계산 기준이 다른 부분은 “현재 구현 주의사항”에 표시하였다.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. 문서 구조와 공통 기준
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+모든 기능은 다음 8개 항목을 같은 순서로 작성한다.
+1) 상세 흐름도
+2) 호출 API·URL·Method·역할·실제 화면 경로
+3) 프론트 요청 JSON·사용 테이블·Mapper/Repository
+4) 백엔드 응답과 프론트 수신 방식
+5) Vue 화면 이동
+6) 화면에서 동작하는 기능
+7) 예외처리와 현재 구현 주의사항
+8) 기능 핵심 정리
+
+[공통 실행 구조]
+Vue 화면
+→ Axios instance(baseURL=/proxy-api)
+→ Vite proxy
+→ Spring Boot localhost:8889
+→ Controller
+→ Service
+→ JPA Repository 또는 MyBatis Mapper
+→ MySQL kiosk 데이터베이스
+→ Response JSON
+→ Pinia 상태·화면 갱신
+
+[공통 담당 코드]
+- Frontend
+  - kiosk-frontend/src/views/customer/PointDiscountView.vue
+  - kiosk-frontend/src/views/customer/OrderConfirmView.vue
+  - kiosk-frontend/src/views/customer/TossSuccessView.vue
+  - kiosk-frontend/src/stores/customer/basket.js
+  - kiosk-frontend/src/views/head/HeadCoupon.vue
+- Backend
+  - kiosk/src/main/java/com/kiosk/customer/order/controller/UserController.java
+  - kiosk/src/main/java/com/kiosk/customer/order/controller/OrderController.java
+  - kiosk/src/main/java/com/kiosk/customer/order/service/OrderService.java
+  - kiosk/src/main/java/com/kiosk/customer/order/repository/UserRepository.java
+  - kiosk/src/main/java/com/kiosk/customer/order/repository/UserCouponRepository.java
+  - kiosk/src/main/java/com/kiosk/customer/order/repository/OrderMapper.java
+  - kiosk/src/main/resources/mapper/customer/OrderMapper.xml
+  - kiosk/src/main/java/com/kiosk/headquarter/controller/HeadCouponController.java
+  - kiosk/src/main/java/com/kiosk/headquarter/service/HeadCouponService.java
+  - kiosk/src/main/java/com/kiosk/headquarter/repository/HeadCouponMapper.java
+  - kiosk/src/main/resources/mapper/headquarter/HeadCoupon.xml
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. 키오스크 기능
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+──────────────────────────────────────────────────
+2-1. 보유 쿠폰 목록 출력
+──────────────────────────────────────────────────
+
+1) 상세 흐름도
+고객이 /point-discount에서 회원 조회 선택
+→ 전화번호 입력
+→ GET /api/users/points?phone={phone}
+→ UserRepository가 전화번호에서 하이픈을 제거해 회원 조회
+→ UserCouponRepository가 회원의 USER_COUPON 목록 조회
+→ Coupon 정보와 사용 여부·만료일을 CouponDto로 변환
+→ PointDiscountView.vue가 사용 가능한 쿠폰 목록 출력
+
+2) 호출 API·URL·Method·역할·실제 화면 경로
+- GET /api/users/points
+- Query Parameter: phone
+- 역할: 회원 포인트와 보유 쿠폰을 한 번에 조회
+- 화면: /point-discount
+
+3) 프론트 요청 JSON·사용 테이블·Mapper/Repository
+- GET 요청이므로 Request Body 없음
+- 사용 테이블: USERS, USER_COUPON, COUPON
+- Repository: UserRepository, UserCouponRepository
+- 응답 CouponDto:
+  userCouponId, couponName, discountValue, discountType,
+  isUsed, expiryDate
+
+4) 백엔드 응답과 프론트 수신 방식
+- UserPointResponseDto 반환
+- pointBalance와 coupons 배열을 함께 반환
+- 프론트는 response.data.coupons를 쿠폰 선택 목록에 반영
+
+5) Vue 화면 이동
+- /menu → /point-discount
+- 쿠폰·포인트 선택 완료 → /order-confirm
+
+6) 화면에서 동작하는 기능
+- 전화번호로 회원 조회
+- 쿠폰명, 할인 값, 할인 유형, 만료일 표시
+- 사용한 쿠폰과 사용 가능한 쿠폰 구분
+- 결제에 사용할 쿠폰 한 개 선택
+
+7) 예외처리와 현재 구현 주의사항
+- 등록되지 않은 전화번호는 현재 신규 회원을 만들고 포인트 0으로 응답한다.
+- Repository 조회 결과에는 사용 완료 쿠폰도 포함될 수 있으므로 화면에서 isUsed를 확인해야 한다.
+- 만료일이 지난 쿠폰을 서버 결제 단계에서도 다시 검증하는 로직이 필요하다.
+
+8) 기능 핵심 정리
+회원 전화번호를 기준으로 USER_COUPON과 COUPON을 조회해
+고객이 결제에 사용할 수 있는 보유 쿠폰을 보여주는 기능이다.
+
+──────────────────────────────────────────────────
+2-2. 보유 쿠폰 사용
+──────────────────────────────────────────────────
+
+1) 상세 흐름도
+고객이 보유 쿠폰 선택
+→ PointDiscountView가 userCouponId를 basketStore.usedCouponId에 저장
+→ OrderConfirmView가 결제 요청에 userCouponId 전달
+→ POST /api/orders/{orderId}/pay
+→ OrderService.processPayment()
+→ UserCouponRepository로 회원 쿠폰 조회
+→ AMOUNT 또는 PERCENT 방식으로 할인액 계산
+→ 최종 결제액에서 쿠폰 할인 차감
+→ UserCoupon.useCoupon()으로 사용 완료 처리
+→ PAYMENTS.coupon_discount에 할인액 저장
+
+2) 호출 API·URL·Method·역할·실제 화면 경로
+- POST /api/orders/{orderId}/pay
+- 역할: 쿠폰·포인트를 적용하고 결제 상세 저장
+- 화면: /order-confirm
+
+3) 프론트 요청 JSON·사용 테이블·Mapper/Repository
+요청 예시:
+{
+  "paymentMethod": "CARD",
+  "userCouponId": 15,
+  "usePoints": false,
+  "pointUsed": 0
+}
+- 사용 테이블: USER_COUPON, COUPON, ORDERS, PAYMENTS
+- Repository/Mapper: UserCouponRepository, OrderMapper
+
+4) 백엔드 응답과 프론트 수신 방식
+- 성공 시 결제 완료 문자열 응답
+- 프론트는 성공 후 장바구니를 비우고 /order-complete로 이동
+
+5) Vue 화면 이동
+- /point-discount에서 쿠폰 선택
+- /order-confirm에서 결제
+- 성공 시 /order-complete?orderId={orderId}
+
+6) 화면에서 동작하는 기능
+- 정액 할인(AMOUNT)
+- 정률 할인(PERCENT)
+- 선택 쿠폰 할인 반영
+- 사용한 회원 쿠폰 재사용 방지용 상태 변경
+
+7) 예외처리와 현재 구현 주의사항
+- 쿠폰이 없으면 “쿠폰을 찾을 수 없습니다.” 예외가 발생한다.
+- 쿠폰 할인액이 상품 금액보다 크면 사용을 차단한다.
+- 현재 processPayment()에는 소유 회원 일치, isUsed, expiryDate의 최종 검증을 강화할 필요가 있다.
+
+8) 기능 핵심 정리
+화면에서 선택한 userCouponId를 결제 트랜잭션에 전달하고,
+서버에서 할인액 계산과 쿠폰 사용 완료 처리를 수행하는 기능이다.
+
+──────────────────────────────────────────────────
+2-3. 보유 회원 포인트 출력
+──────────────────────────────────────────────────
+
+1) 상세 흐름도
+고객이 전화번호 입력
+→ GET /api/users/points
+→ UserRepository.findByPhoneIgnoringHyphen()
+→ USERS.point_balance 조회
+→ UserPointResponseDto.pointBalance 반환
+→ PointDiscountView에서 보유 포인트 출력
+
+2) 호출 API·URL·Method·역할·실제 화면 경로
+- GET /api/users/points?phone={phone}
+- 역할: 회원 보유 포인트와 쿠폰 조회
+- 화면: /point-discount
+
+3) 프론트 요청 JSON·사용 테이블·Mapper/Repository
+- Request Body 없음
+- 사용 테이블: USERS
+- Repository: UserRepository
+
+4) 백엔드 응답과 프론트 수신 방식
+- pointBalance가 null이면 0으로 변환
+- 프론트가 보유 포인트와 최대 사용 가능 포인트를 화면에 표시
+
+5) Vue 화면 이동
+- /menu → /point-discount
+- 포인트 확인 후 /order-confirm
+
+6) 화면에서 동작하는 기능
+- 전화번호 숫자 키패드 입력
+- 회원 조회
+- 보유 포인트 표시
+- 전액 사용 가능 범위 안내
+
+7) 예외처리와 현재 구현 주의사항
+- 등록되지 않은 번호는 신규 USERS 레코드가 생성된다.
+- 전화번호 형식과 중복 회원 정책을 서버에서 더 엄격히 검증할 수 있다.
+
+8) 기능 핵심 정리
+회원 전화번호로 USERS의 point_balance를 조회해
+결제 전 고객에게 현재 사용 가능한 포인트를 보여주는 기능이다.
+
+──────────────────────────────────────────────────
+2-4. 보유 회원 포인트 사용
+──────────────────────────────────────────────────
+
+1) 상세 흐름도
+고객이 사용할 포인트 입력
+→ 보유 포인트와 주문 금액 범위 검증
+→ basketStore.usedPoints에 저장
+→ OrderConfirmView가 pointUsed 전달
+→ OrderService.processPayment()
+→ pointUsed를 남은 결제 금액 이하로 제한
+→ USERS.point_balance에서 사용 포인트 차감
+→ 최종 결제 금액의 5%를 포인트로 적립
+→ PAYMENTS.point_used 저장
+
+2) 호출 API·URL·Method·역할·실제 화면 경로
+- POST /api/orders/{orderId}/pay
+- POST /api/orders/toss/confirm
+- 역할: 일반 결제 또는 Toss 승인 후 포인트 사용 처리
+- 화면: /point-discount, /order-confirm, /toss/success
+
+3) 프론트 요청 JSON·사용 테이블·Mapper/Repository
+일반 결제 예시:
+{
+  "paymentMethod": "CASH",
+  "userCouponId": 0,
+  "pointUsed": 2000
+}
+Toss 승인 예시:
+{
+  "paymentKey": "...",
+  "orderId": "kiosk_order_100",
+  "amount": 7800,
+  "pointUsed": 2000
+}
+- 사용 테이블: USERS, ORDERS, PAYMENTS
+- Repository/Mapper: UserRepository, OrderMapper
+
+4) 백엔드 응답과 프론트 수신 방식
+- 결제 성공 문자열 반환
+- 성공 후 결제 완료 화면으로 이동
+
+5) Vue 화면 이동
+- /point-discount → /order-confirm
+- Toss 사용 시 /toss/success → /order-complete
+
+6) 화면에서 동작하는 기능
+- 포인트 직접 입력
+- 최대 사용 버튼
+- 보유 포인트 초과 방지
+- 결제액 초과 사용 방지
+- 결제 후 사용 포인트 차감 및 5% 적립
+
+7) 예외처리와 현재 구현 주의사항
+- 서버는 pointUsed를 finalAmount 이하로 제한한다.
+- 현재 회원의 실제 보유 포인트보다 큰 값에 대한 서버 검증을 강화해야 한다.
+- 포인트 차감과 적립은 결제 트랜잭션 안에서 함께 처리된다.
+
+8) 기능 핵심 정리
+프론트에서 선택한 포인트를 결제 요청에 포함하고,
+서버가 최종 결제액 차감·회원 잔액 변경·적립까지 처리하는 기능이다.
+
+──────────────────────────────────────────────────
+2-5. 주문 최종 확인
+──────────────────────────────────────────────────
+
+1) 상세 흐름도
+/order-confirm 진입
+→ basketStore.cartItems 확인
+→ 상품명·맛·옵션·수량 출력
+→ 주문 유형·드라이아이스·회원 정보 유지
+→ 현금·카드·간편결제 중 결제 방식 선택
+→ POST /api/orders
+→ OrderService가 재고 확인 후 주문과 상세 항목 저장
+→ 일반 결제 또는 Toss 결제로 진행
+
+2) 호출 API·URL·Method·역할·실제 화면 경로
+- POST /api/orders: 주문 최종 생성
+- POST /api/orders/{orderId}/pay: 일반 결제
+- 화면: /payment, /order-confirm
+
+3) 프론트 요청 JSON·사용 테이블·Mapper/Repository
+{
+  "orderType": "TOGO",
+  "dryIceCount": 0,
+  "dryIceMins": 0,
+  "phoneNumber": "01012345678",
+  "pointUsed": 1000,
+  "userCouponId": 15,
+  "kioskId": 1,
+  "storeId": 1,
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 1,
+      "unitPrice": 9800,
+      "options": [3],
+      "flavors": [{"flavorId": 1, "quantity": 1}]
+    }
+  ]
+}
+- 사용 테이블:
+  ORDERS, ORDER_ITEMS, ORDER_ITEM_OPTIONS, ORDER_ITEM_FLAVORS,
+  PRODUCTS, ICECREAM_FLAVORS, PRODUCT_OPTIONS, KIOSKS, STORES
+- Repository/Mapper:
+  OrderRepository, OrderItemMapper, OrderItemOptionMapper,
+  OrderItemFlavorMapper, OrderMapper
+
+4) 백엔드 응답과 프론트 수신 방식
+- 주문 생성 성공 시 orderId(Integer) 반환
+- 프론트는 orderId를 결제 API와 완료 화면에 전달
+
+5) Vue 화면 이동
+- /point-discount → /order-confirm
+- 이전 버튼 → /point-discount
+- 결제 성공 → /order-complete
+
+6) 화면에서 동작하는 기능
+- 최종 상품·맛·옵션·수량 확인
+- 결제 방식 선택
+- 빈 장바구니 진입 차단
+- 결제 실패 시 백업 장바구니 복원
+
+7) 예외처리와 현재 구현 주의사항
+- 장바구니가 비어 있으면 /kiosk로 이동한다.
+- 주문 생성 직전에 재고를 다시 확인한다.
+- 현재 주문 생성은 프론트가 전달한 unitPrice를 사용하므로 서버 가격 재조회 보강이 필요하다.
+
+8) 기능 핵심 정리
+장바구니와 할인 정보를 최종 검토하고,
+주문 데이터를 DB 구조에 맞게 저장한 뒤 결제 단계로 연결하는 기능이다.
+
+──────────────────────────────────────────────────
+2-6. 장바구니 총금액에서 최종금액 계산
+──────────────────────────────────────────────────
+
+1) 상세 흐름도
+장바구니 상품별 unitPrice × quantity 합산
+→ 상품 자체 할인 금액 계산
+→ 쿠폰 할인 계산
+→ 쿠폰 적용 후 금액 확인
+→ 포인트 사용액을 남은 금액 이하로 제한
+→ 최종 결제 금액 계산
+→ PAYMENTS의 금액별 컬럼에 저장
+
+2) 호출 API·URL·Method·역할·실제 화면 경로
+- GET /api/customer/basket: 장바구니 총액 조회
+- POST /api/orders/{orderId}/pay: 서버 최종금액 계산
+- 화면: /menu, /point-discount, /order-confirm
+
+3) 프론트 요청 JSON·사용 테이블·Mapper/Repository
+- 입력값: basketStore.totalPrice, usedCouponId, usedPoints
+- 사용 테이블: ORDER_ITEMS, PRODUCTS, COUPON, USER_COUPON, PAYMENTS
+- Repository/Mapper: OrderRepository, UserCouponRepository, OrderMapper
+
+4) 백엔드 응답과 프론트 수신 방식
+- 화면은 Pinia computed 값으로 예상 결제액 표시
+- 서버는 결제 시 실제 할인 항목을 다시 계산해 PAYMENTS에 저장
+
+5) Vue 화면 이동
+- /menu에서 장바구니 총액
+- /point-discount에서 할인 적용 예상 금액
+- /order-confirm에서 최종 결제 예정 금액
+
+6) 화면에서 동작하는 기능
+- 상품 총액 합산
+- 정액·정률 쿠폰 할인
+- 포인트 할인
+- 총 할인액과 최종 결제액 계산
+
+7) 예외처리와 현재 구현 주의사항
+- 서버 계산식:
+  discountedAmount = order.getTotalPrice()
+  couponDiscount = AMOUNT 또는 PERCENT
+  finalAmount = discountedAmount - couponDiscount - pointUsed
+  totalDiscount = productDiscount + couponDiscount + pointUsed
+- Toss 요청 금액은 현재 화면에서 totalPrice - usedPoints로 계산되어
+  선택 쿠폰 할인 반영 여부를 서버 계산과 반드시 일치시켜야 한다.
+- 결제 금액의 최종 신뢰 기준은 서버가 되어야 한다.
+
+8) 기능 핵심 정리
+장바구니 총액에서 상품 할인, 쿠폰, 포인트를 순서대로 반영하여
+실제 결제할 금액과 할인 내역을 산출하는 기능이다.
+
+──────────────────────────────────────────────────
+2-7. 결제 테이블로 결제 상세정보 전송
+──────────────────────────────────────────────────
+
+1) 상세 흐름도
+결제 방식 선택 또는 Toss 승인
+→ OrderController가 결제 입력값 추출
+→ OrderService.processPayment()
+→ 금액·쿠폰·포인트·재고 검증
+→ Payment DTO 생성
+→ OrderMapper.insertPayment()
+→ PAYMENTS INSERT
+→ 주문 상태 WAITING 갱신
+→ 세션 장바구니 초기화
+
+2) 호출 API·URL·Method·역할·실제 화면 경로
+- POST /api/orders/{orderId}/pay
+- POST /api/orders/toss/confirm
+- 역할: 결제 승인 후 상세 내역 저장
+- 화면: /order-confirm, /toss/success
+
+3) 프론트 요청 JSON·사용 테이블·Mapper/Repository
+- PAYMENTS 저장 컬럼:
+  order_id, payment_method, base_amount, product_discount,
+  coupon_discount, point_used, total_discount, final_amount,
+  payment_status, payment_date
+- 사용 테이블: PAYMENTS, ORDERS, ORDER_ITEMS, USERS, USER_COUPON
+- Mapper: OrderMapper.insertPayment()
+
+4) 백엔드 응답과 프론트 수신 방식
+- 일반 결제와 Toss 승인 성공 문자열 반환
+- 프론트는 성공 시 orderId를 가진 완료 화면으로 이동
+
+5) Vue 화면 이동
+- /order-confirm → /order-complete
+- Toss: /order-confirm → Toss 결제창 → /toss/success → /order-complete
+
+6) 화면에서 동작하는 기능
+- 결제 수단 저장
+- 원금·상품 할인·쿠폰 할인·포인트 사용·총 할인 저장
+- 최종 결제 금액과 결제 일시 저장
+- 결제 상태 PAID 저장
+
+7) 예외처리와 현재 구현 주의사항
+- 주문이 없으면 결제 처리를 중단한다.
+- 재고 부족 시 PAYMENTS INSERT 전에 예외 처리한다.
+- 동일 주문에 대한 중복 결제 INSERT 방지 제약과 멱등성 검증을 강화할 수 있다.
+
+8) 기능 핵심 정리
+결제 결과를 단순 주문 총액 하나로 저장하지 않고,
+할인 종류별 상세 금액과 결제 수단·상태·일시를 PAYMENTS에 기록하는 기능이다.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. 본사 쿠폰 관리 기능
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+──────────────────────────────────────────────────
+3-1. 쿠폰 입력
+──────────────────────────────────────────────────
+
+1) 상세 흐름도
+본사 관리자가 /head/coupons에서 새 쿠폰 등록
+→ 쿠폰 ID·이름·할인 값·할인 유형·유효 일수 입력
+→ POST /head/coupon
+→ HeadCouponController
+→ HeadCouponService.createCoupon()
+→ HeadCouponMapper.insertCoupon()
+→ COUPON INSERT
+→ 관리자 작업 로그 저장
+→ 목록 재조회
+
+2) 호출 API·URL·Method·역할·실제 화면 경로
+- POST /head/coupon
+- 역할: 쿠폰 마스터 신규 등록
+- 화면: /head/coupons
+
+3) 프론트 요청 JSON·사용 테이블·Mapper/Repository
+{
+  "couponId": "SUMMER3000",
+  "couponName": "여름 3천원 할인",
+  "discountValue": 3000,
+  "discountType": "AMOUNT",
+  "durationDays": 30
+}
+- 사용 테이블: COUPON, ADMIN_ACTION_LOG
+- Mapper: HeadCouponMapper
+
+4) 백엔드 응답과 프론트 수신 방식
+- “Coupon inserted successfully” 문자열 반환
+- 프론트는 성공 알림 후 쿠폰 목록 재조회
+
+5) Vue 화면 이동
+- /head/coupons 내부 모달에서 처리
+- 저장 후 같은 화면의 목록으로 복귀
+
+6) 화면에서 동작하는 기능
+- 쿠폰 코드 입력
+- 정액/정률 할인 유형 선택
+- 할인 값과 유효기간 입력
+- 신규 쿠폰 등록
+
+7) 예외처리와 현재 구현 주의사항
+- PERCENT가 100을 초과하면 프론트에서 차단한다.
+- 중복 couponId, 음수 할인 값, 유효 일수 범위는 서버 검증을 강화할 수 있다.
+
+8) 기능 핵심 정리
+본사에서 고객에게 발급할 쿠폰의 기준 정보를 COUPON 테이블에 등록하는 기능이다.
+
+──────────────────────────────────────────────────
+3-2. 쿠폰 수정
+──────────────────────────────────────────────────
+
+1) 상세 흐름도
+쿠폰 목록에서 수정 선택
+→ 기존 정보를 모달에 복사
+→ 수정값 입력
+→ PUT /head/coupon
+→ HeadCouponService.updateCoupon()
+→ COUPON UPDATE
+→ 관리자 작업 로그 저장
+→ 목록 재조회
+
+2) 호출 API·URL·Method·역할·실제 화면 경로
+- PUT /head/coupon
+- 역할: 쿠폰명·유형·할인 값·유효 일수 수정
+- 화면: /head/coupons
+
+3) 프론트 요청 JSON·사용 테이블·Mapper/Repository
+- CouponRequestDto 전체 전송
+- 사용 테이블: COUPON, ADMIN_ACTION_LOG
+- Mapper: HeadCouponMapper.updateCoupon()
+
+4) 백엔드 응답과 프론트 수신 방식
+- “Coupon updated successfully” 문자열 반환
+- 성공 알림 후 목록 재조회
+
+5) Vue 화면 이동
+- 같은 화면의 수정 모달에서 처리
+
+6) 화면에서 동작하는 기능
+- 쿠폰명 변경
+- 정액/정률 유형 변경
+- 할인 값·유효 일수 변경
+- 전체 발급된 쿠폰 수정 버튼 비활성화
+
+7) 예외처리와 현재 구현 주의사항
+- 발급 완료 여부는 프론트 버튼에서 제한하나 서버에서도 수정 불가 정책 검증이 필요하다.
+- couponId는 수정 대상 식별자이므로 편집 중 비활성화된다.
+
+8) 기능 핵심 정리
+아직 전체 발급하지 않은 쿠폰 정책을 수정하고 변경 이력을 남기는 기능이다.
+
+──────────────────────────────────────────────────
+3-3. 쿠폰 삭제
+──────────────────────────────────────────────────
+
+1) 상세 흐름도
+쿠폰 목록에서 삭제 선택
+→ 사용자 확인창
+→ DELETE /head/coupon/{couponId}
+→ USER_COUPON의 연관 발급 내역 먼저 삭제
+→ COUPON 마스터 삭제
+→ 관리자 작업 로그 저장
+→ 목록 재조회
+
+2) 호출 API·URL·Method·역할·실제 화면 경로
+- DELETE /head/coupon/{couponId}
+- 역할: 쿠폰과 회원 발급 내역 삭제
+- 화면: /head/coupons
+
+3) 프론트 요청 JSON·사용 테이블·Mapper/Repository
+- Request Body 없음
+- PathVariable: couponId
+- 사용 테이블: USER_COUPON, COUPON, ADMIN_ACTION_LOG
+- Mapper:
+  deleteUserCouponsByCouponId(), deleteCoupon()
+
+4) 백엔드 응답과 프론트 수신 방식
+- “Coupon deleted successfully” 문자열 반환
+- 성공 알림 후 목록 재조회
+
+5) Vue 화면 이동
+- /head/coupons 화면 유지
+
+6) 화면에서 동작하는 기능
+- 삭제 전 확인
+- 회원 쿠폰 외래키 데이터 정리
+- 쿠폰 마스터 삭제
+
+7) 예외처리와 현재 구현 주의사항
+- 현재 삭제는 이미 회원에게 발급된 USER_COUPON도 함께 영구 삭제한다.
+- 운영 환경에서는 사용 이력 보존을 위해 비활성화 또는 소프트 삭제 정책을 고려해야 한다.
+
+8) 기능 핵심 정리
+외래키 관계를 고려해 회원 발급 내역을 먼저 정리한 후
+쿠폰 마스터를 삭제하는 기능이다.
+
+──────────────────────────────────────────────────
+3-4. 쿠폰 전체 유저에게 발급
+──────────────────────────────────────────────────
+
+1) 상세 흐름도
+본사 관리자가 쿠폰 발급 모달 열기
+→ 미발급 쿠폰 선택
+→ POST /head/coupon/issue-all/{couponId}
+→ INSERT INTO USER_COUPON ... SELECT FROM USERS
+→ 이미 같은 쿠폰이 있는 회원은 NOT EXISTS로 제외
+→ COUPON.is_issued_all = TRUE
+→ 관리자 작업 로그 저장
+→ 쿠폰 목록 재조회
+
+2) 호출 API·URL·Method·역할·실제 화면 경로
+- POST /head/coupon/issue-all/{couponId}
+- 역할: 선택 쿠폰을 모든 회원에게 일괄 발급
+- 화면: /head/coupons
+
+3) 프론트 요청 JSON·사용 테이블·Mapper/Repository
+- Request Body 없음
+- PathVariable: couponId
+- 사용 테이블: USERS, COUPON, USER_COUPON, ADMIN_ACTION_LOG
+- Mapper:
+  insertCouponToAllUsers(), updateCouponIssuedStatus()
+
+4) 백엔드 응답과 프론트 수신 방식
+- 성공: “쿠폰이 모든 유저에게 성공적으로 발급되었습니다.”
+- 실패: 400과 실패 원인 문자열
+- 성공 후 모달을 닫고 목록 재조회
+
+5) Vue 화면 이동
+- /head/coupons 내부 발급 모달에서 처리
+
+6) 화면에서 동작하는 기능
+- 전체 발급하지 않은 쿠폰만 선택
+- 모든 USERS에 USER_COUPON 생성
+- 중복 발급 방지
+- durationDays 기준 expiry_date 계산
+- 전체 발급 상태 O 표시
+
+7) 예외처리와 현재 구현 주의사항
+- 동일 회원·동일 쿠폰은 NOT EXISTS 조건으로 중복 생성하지 않는다.
+- 발급 INSERT와 is_issued_all 변경은 하나의 서비스 트랜잭션으로 처리된다.
+- 향후 가입 회원에게도 자동 발급할 것인지 별도 정책이 필요하다.
+
+8) 기능 핵심 정리
+쿠폰 마스터 한 건을 현재 전체 회원의 USER_COUPON으로 일괄 생성하고
+발급 완료 상태와 관리자 이력을 함께 관리하는 기능이다.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. 황선오 담당 기능 체크리스트
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[키오스크]
+[x] 1. 보유 쿠폰 목록 출력 기능
+[x] 2. 보유 쿠폰 사용 기능
+[x] 3. 보유 회원 포인트 출력 기능
+[x] 4. 보유 회원 포인트 사용 기능
+[x] 5. 주문 최종 확인
+[x] 6. 장바구니 총금액에서 최종금액 계산 로직
+[x] 7. 결제 테이블로 결제 상세정보 전송 로직
+
+[본사]
+[x] 8. 쿠폰 입력 기능
+[x] 9. 쿠폰 수정 기능
+[x] 10. 쿠폰 삭제 기능
+[x] 11. 쿠폰 전체 유저에게 발급 기능
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. 담당자 최종 정리
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+담당자: 황선오
+
+담당 범위:
+- 키오스크 회원 쿠폰·포인트 조회 및 사용
+- 주문 최종 확인과 할인 금액 계산
+- 결제 상세정보 PAYMENTS 저장
+- 본사 쿠폰 등록·수정·삭제·전체 회원 발급
+
+주요 연계 테이블:
+USERS, COUPON, USER_COUPON, ORDERS, ORDER_ITEMS,
+ORDER_ITEM_OPTIONS, ORDER_ITEM_FLAVORS, PAYMENTS
+
+주요 연계 화면:
+/point-discount, /order-confirm, /toss/success,
+/order-complete, /head/coupons

@@ -66,3 +66,26 @@ Thumbs.db
 # application-secret.yml
 # application-local.yml
 /.metadata/
+
+# ==========================================
+# 6. Vue & Node.js (프론트엔드 필수)
+# ==========================================
+# 🚨 절대 Git에 올라가면 안 되는 패키지 폴더 (용량 폭탄)
+node_modules/
+
+# 프로덕션 빌드 결과물 (npm run build 시 생성되는 폴더)
+dist/
+dist-ssr/
+
+# 로컬 환경 변수 파일 (API 주소나 포트 번호 등)
+.env.local
+.env.*.local
+
+# Node.js 로그 파일들
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Linter 및 기타 캐시 파일
+.eslintcache

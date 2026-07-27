@@ -1,0 +1,107 @@
+/* =========================================
+   전체 브라우저 기본 설정
+========================================= */
+
+:root {
+  font-family:
+    Pretendard,
+    "Noto Sans KR",
+    "Malgun Gothic",
+    Arial,
+    sans-serif;
+
+  color: #292e3b;
+  background: #f4f6fa;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+ * width와 padding 계산에
+ * border 크기까지 포함합니다.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/*
+ * 브라우저 기본 여백 제거
+ */
+html,
+body {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+
+  color: #292e3b;
+  background: #f4f6fa;
+
+  font-family:
+    Pretendard,
+    "Noto Sans KR",
+    "Malgun Gothic",
+    Arial,
+    sans-serif;
+
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/*
+ * Vue 애플리케이션이
+ * 브라우저 전체 영역을 사용하도록 설정
+ */
+#app {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100vh;
+
+  margin: 0;
+  padding: 0;
+}
+
+/*
+ * 폼 요소에 동일한 글꼴 적용
+ */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/*
+ * 기본 버튼 형태 초기화는
+ * 각 컴포넌트에서 처리합니다.
+ */
+button {
+  touch-action: manipulation;
+}
+
+/*
+ * 링크 기본 설정
+ */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/*
+ * 이미지가 부모 영역을 넘지 않도록 설정
+ */
+img {
+  display: block;
+  max-width: 100%;
+}

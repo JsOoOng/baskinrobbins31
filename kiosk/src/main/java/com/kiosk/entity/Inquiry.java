@@ -1,13 +1,36 @@
 package com.kiosk.entity;
 
-import com.kiosk.entity.enums.InquiryStatus;
-import com.kiosk.entity.enums.InquiryType;
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+
+import com.kiosk.entity.enums.InquiryStatus;
+import com.kiosk.entity.enums.InquiryType;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+/**
+ * [코드 흐름 안내] Inquiry
+ *
+ * <p>역할: 문의 데이터를 나타내는 JPA Entity다.</p>
+ * <p>호출 흐름: Repository가 현재 코드의 INQUIRIES 테이블 매핑을 통해 이 객체를 저장·조회한다. 관계 키는 store_id, admin_id를 사용한다.</p>
+ * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
+ */
 @Entity
 @Table(name = "INQUIRIES")
 @Getter
@@ -29,6 +52,10 @@ public class Inquiry {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admin_id")
+    private HeadquarterAdmin admin;
+
     @Column(name = "title", length = 200, nullable = false)
     private String title;
 
@@ -46,4 +73,10 @@ public class Inquiry {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    public void writeAnswer(String answer, HeadquarterAdmin admin) {
+        this.answer = answer;
+        this.admin = admin;
+        this.status = InquiryStatus.ANSWERED;
+    }
 }
