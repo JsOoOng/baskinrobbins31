@@ -99,7 +99,6 @@ public class HeadFlavorService {
                     "이미 존재하는 맛 이름입니다."
             );
         }
-
         saveImageFile(imageFile, originalFilename);
 
         /*
@@ -399,17 +398,33 @@ public class HeadFlavorService {
 
     private void saveImageFile(MultipartFile file, String filename) {
         try {
-            String uploadDir = "F:/박지성/baskinrobbins31/kiosk-frontend/public/images/flavors";
+
+            // 프로젝트 내부 static 이미지 폴더
+            String uploadDir = System.getProperty("user.dir")
+                    + "/src/main/resources/static/images/flavors";
+
             Path uploadPath = Paths.get(uploadDir);
-            
+
+            // 폴더 없으면 생성
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }
-            
+
             Path filePath = uploadPath.resolve(filename);
+
+            System.out.println("이미지 저장 위치 = "
+                    + filePath.toAbsolutePath());
+
+            // 파일 저장
             file.transferTo(filePath.toFile());
+
         } catch (IOException e) {
-            throw new RuntimeException("이미지 파일 저장에 실패했습니다.", e);
+            e.printStackTrace();
+
+            throw new RuntimeException(
+                    "이미지 파일 저장에 실패했습니다.",
+                    e
+            );
         }
     }
 }

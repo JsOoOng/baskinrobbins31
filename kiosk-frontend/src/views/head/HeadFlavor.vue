@@ -217,8 +217,14 @@ onMounted(() => {
           <tbody>
             <tr v-for="flavor in paginatedFlavors" :key="flavor.flavorId || flavor.id">
               <td class="td-image">
-                <img :src="flavor.imageUrl || flavor.image" :alt="flavor.flavorName || flavor.name" class="flavor-img" />
+                <img
+                  :src="`http://localhost:8889${flavor.imageUrl || flavor.image}`"
+                  :alt="flavor.flavorName || flavor.name"
+                  class="flavor-img"
+                />
               </td>
+
+
               <td>
                 <strong>{{ flavor.flavorName || flavor.name }}</strong>
               </td>
