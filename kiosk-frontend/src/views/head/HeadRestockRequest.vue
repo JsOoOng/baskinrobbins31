@@ -255,7 +255,8 @@ const getStatusLabel = (status) => {
     APPROVED: '승인 완료',
     SHIPPING: '배송 중',
     COMPLETED: '배송 완료',
-    REJECTED: '반려'
+    REJECTED: '반려',
+    CANCELED: '취소'
   }
   return labels[status] || status
 }
@@ -718,6 +719,12 @@ onMounted(() => {
   color: #991b1b;
   background: #fee2e2;
 }
+
+.status-canceled{
+  color: #991b1b;
+  background: #fee2e2;
+}
+
 
 .action-buttons {
   display: flex;
