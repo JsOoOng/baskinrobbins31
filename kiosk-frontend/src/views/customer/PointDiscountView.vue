@@ -506,6 +506,7 @@ const proceedPayment = async () => {
   try {
     // 스토어 함수 대신 직접 상태 값에 할당 (에러 방지)
     basketStore.usedPoints = discountAmount.value;
+    basketStore.totalDiscount = totalDiscount.value;
     basketStore.usedCouponId = selectedCoupon.value ? selectedCoupon.value.userCouponId : null;
 
     // 만약 setUsedPoints 함수는 있다면 안전하게 호출
