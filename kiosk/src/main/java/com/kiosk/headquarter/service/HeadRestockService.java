@@ -401,7 +401,8 @@ public class HeadRestockService {
         	        restockRequest
         	                .getStoreInventory()
         	                .getItem()
-        	                .getItemName();
+        	                .getProduct()
+        	                .getProductName();
             unit = restockRequest.getStoreInventory().getItem().getUnit();
             storeName = restockRequest.getStoreInventory().getStore().getStoreName();
         } else if (restockRequest.getStoreFlavor() != null) {
