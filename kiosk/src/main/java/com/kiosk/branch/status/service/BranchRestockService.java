@@ -127,7 +127,8 @@ public class BranchRestockService {
                     getItemName(
                             inventory
                                     .getItem()
-                                    .getItemName()
+                                    .getProduct()
+                                    .getProductName()
                     );
 
             requestTargetType =
@@ -327,8 +328,15 @@ public class BranchRestockService {
                     String itemName = "";
                     String unit = "";
                     if (request.getStoreInventory() != null) {
-                        itemName = request.getStoreInventory().getItem().getItemName();
-                        unit = request.getStoreInventory().getItem().getUnit();
+                        itemName = request.getStoreInventory()
+                                          .getItem()
+                                          .getProduct()
+                                          .getProductName();
+
+                        unit = request.getStoreInventory()
+                                      .getItem()
+                                      .getUnit();
+                    
                     } else if (request.getStoreFlavor() != null) {
                         itemName = request.getStoreFlavor().getFlavor().getFlavorName();
                         unit = "EA";
