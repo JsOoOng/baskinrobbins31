@@ -63,6 +63,16 @@ public class Delivery {
     @Column(name = "cancel_reason", length = 500)
     private String cancelReason;
 
+    /* 배송 완료 알림을 지점에 한 번 이상 전송했는지 표시합니다. */
+    @Builder.Default
+    @Column(name = "notification_sent", nullable = false)
+    private Boolean notificationSent = false;
+
+    /* 본사 관리자가 알림 전송 후 배송 업무를 최종 완료했는지 표시합니다. */
+    @Builder.Default
+    @Column(name = "management_completed", nullable = false)
+    private Boolean managementCompleted = false;
+
 
     /**
      * 배송 상태 변경
@@ -91,6 +101,20 @@ public class Delivery {
 
         this.status = DeliveryStatus.CANCELED;
         this.cancelReason = reason;
+    }
+
+    public void markNotificationSent() {
+        if (this.status != DeliveryStatus.COMPLETED) {
+            throw new IllegalStateException("배송 완료 상태에서만 알림을 전송할 수 있습니다.");
+        }
+        this.notificationSent = true;
+    }
+
+    public void completeManagement() {
+        if (this.status != DeliveryStatus.COMPLETED || !Boolean.TRUE.equals(this.notificationSent)) {
+            throw new IllegalStateException("배송 완료 알림 전송 후 관리 업무를 완료할 수 있습니다.");
+        }
+        this.managementCompleted = true;
     }
 
 }

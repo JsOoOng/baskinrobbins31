@@ -12,4 +12,6 @@ public interface BranchNotificationRepository extends JpaRepository<BranchNotifi
             Integer storeId, String notificationType, String referenceKey);
     List<BranchNotification> findAllByStoreIdAndIsReadFalseOrderByCreatedAtDescIdDesc(Integer storeId);
     Optional<BranchNotification> findByIdAndStoreId(Integer id, Integer storeId);
+    Optional<BranchNotification> findByStoreIdAndNotificationTypeAndReferenceKey(
+            Integer storeId, String notificationType, String referenceKey);
 }

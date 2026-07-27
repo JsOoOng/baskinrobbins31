@@ -66,13 +66,45 @@ public class DeliveryService {
     /**
      * 배송 목록 조회
      */
-    @Transactional(readOnly = true)
     /**
      * [메서드 흐름] getDeliveries
      * Controller 또는 상위 서비스에서 호출되어 DeliveryRepository, HeadquarterAdminRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public List<HeadDeliveryResponseDTO> getDeliveries(){
 
+        /*
+         * 수정 전에 승인되어 배송 행이 없는 신청도 배송 관리에 즉시 나타나도록 복구합니다.
+         * 새 승인 건은 HeadRestockService에서 바로 생성되므로 보통 이 목록은 비어 있습니다.
+         */
+        deliveryRepository.findRequestsWithoutDelivery(RestockStatus.APPROVED)
+                .forEach(request -> {
+                    deliveryRepository.save(
+                            Delivery.builder()
+                                    .restockRequest(request)
+                                    .status(DeliveryStatus.READY)
+                                    .build()
+                    );
+
+                    Integer storeId = request.getStoreInventory() != null
+                            ? request.getStoreInventory().getStore().getId()
+                            : request.getStoreFlavor().getStore().getId();
+                    String itemName = request.getStoreInventory() != null
+                            ? request.getStoreInventory().getItem().getItemName()
+                            : request.getStoreFlavor().getFlavor().getFlavorName();
+
+                    /*
+                     * 과거 승인 건이 알림도 놓친 경우를 함께 복구합니다.
+                     * createOnce가 신청 번호 기준 중복을 막으므로 이미 받은 지점에는 다시 쌓이지 않습니다.
+                     */
+                    branchNotificationService.createOnce(
+                            storeId,
+                            "RESTOCK_REQUEST_APPROVED",
+                            String.valueOf(request.getId()),
+                            "재고 신청이 승인되었습니다.",
+                            itemName + " " + request.getRequestQuantity()
+                                    + "개 신청이 승인되었습니다."
+                    );
+                });
 
         return deliveryRepository.findAllDelivery()
                 .stream()
@@ -189,6 +221,8 @@ public class DeliveryService {
                 .cancelReason(
                         delivery.getCancelReason()
                 )
+                .notificationSent(delivery.getNotificationSent())
+                .managementCompleted(delivery.getManagementCompleted())
 
                 .build();
 
@@ -247,19 +281,6 @@ public class DeliveryService {
                     getLoginAdmin(authentication)
             );
 
-            Integer storeId = request.getStoreInventory() != null
-                    ? request.getStoreInventory().getStore().getId()
-                    : request.getStoreFlavor().getStore().getId();
-            String itemName = request.getStoreInventory() != null
-                    ? request.getStoreInventory().getItem().getItemName()
-                    : request.getStoreFlavor().getFlavor().getFlavorName();
-            branchNotificationService.createOnce(
-                    storeId,
-                    "DELIVERY_COMPLETED",
-                    String.valueOf(deliveryId),
-                    "배송 및 입고 완료",
-                    itemName + " " + request.getRequestQuantity()
-                            + "개 배송이 완료되어 재고에 반영되었습니다.");
         }
 
 
@@ -267,6 +288,60 @@ public class DeliveryService {
                 "배송 상태 변경 (ID: " + deliveryId + ", 상태: " + status + ")");
         return "배송 상태 변경 완료";
 
+    }
+
+    /**
+     * 배송 관리 화면의 '지점 알림' 버튼이 호출합니다.
+     * 배송 완료 상태를 확인한 뒤 해당 지점에 완료 안내를 한 번만 전송합니다.
+     */
+    public String notifyDeliveryCompleted(Integer deliveryId) {
+        Delivery delivery = deliveryRepository.findById(deliveryId)
+                .orElseThrow(() -> new IllegalArgumentException("배송 정보를 찾을 수 없습니다."));
+
+        if (delivery.getStatus() != DeliveryStatus.COMPLETED) {
+            throw new IllegalStateException("배송 완료 상태에서만 지점 알림을 보낼 수 있습니다.");
+        }
+
+        RestockRequest request = delivery.getRestockRequest();
+        Integer storeId = request.getStoreInventory() != null
+                ? request.getStoreInventory().getStore().getId()
+                : request.getStoreFlavor().getStore().getId();
+        String itemName = request.getStoreInventory() != null
+                ? request.getStoreInventory().getItem().getItemName()
+                : request.getStoreFlavor().getFlavor().getFlavorName();
+
+        String message = itemName + " " + request.getRequestQuantity()
+                + "개 배송이 완료되어 재고에 반영되었습니다.";
+
+        if (Boolean.TRUE.equals(delivery.getNotificationSent())) {
+            branchNotificationService.resend(
+                    storeId,
+                    "DELIVERY_COMPLETED",
+                    String.valueOf(deliveryId),
+                    "배송 및 입고 완료",
+                    message
+            );
+        } else {
+            branchNotificationService.createOnce(
+                    storeId,
+                    "DELIVERY_COMPLETED",
+                    String.valueOf(deliveryId),
+                    "배송 및 입고 완료",
+                    message
+            );
+            delivery.markNotificationSent();
+        }
+
+        return "지점 배송 완료 알림 전송 완료";
+    }
+
+    /** 알림 전송을 확인한 관리자가 해당 배송 업무를 최종 완료합니다. */
+    public String completeDeliveryManagement(Integer deliveryId) {
+        Delivery delivery = deliveryRepository.findById(deliveryId)
+                .orElseThrow(() -> new IllegalArgumentException("배송 정보를 찾을 수 없습니다."));
+        delivery.completeManagement();
+        adminLogService.logAction("배송", "배송 관리 완료 (ID: " + deliveryId + ")");
+        return "배송 관리 완료";
     }
 
     /**

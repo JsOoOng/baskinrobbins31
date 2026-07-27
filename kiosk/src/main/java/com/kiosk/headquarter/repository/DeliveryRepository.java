@@ -5,8 +5,11 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.kiosk.entity.Delivery;
+import com.kiosk.entity.RestockRequest;
+import com.kiosk.entity.enums.RestockStatus;
 
 /**
  * [코드 흐름 안내] DeliveryRepository
@@ -24,6 +27,24 @@ public interface DeliveryRepository
     );
 
     Optional<Delivery> findByRestockRequestId(Integer requestId);
+
+    /*
+     * 승인됐지만 과거 로직 때문에 배송 행이 만들어지지 않은 신청을 찾습니다.
+     * 배송 목록 조회 시 누락 데이터를 READY 배송으로 자동 복구하는 데 사용합니다.
+     */
+    @Query("""
+            select r
+            from RestockRequest r
+            where r.status = :status
+              and not exists (
+                select d.id
+                from Delivery d
+                where d.restockRequest = r
+              )
+            """)
+    List<RestockRequest> findRequestsWithoutDelivery(
+            @Param("status") RestockStatus status
+    );
 
 
 

@@ -37,6 +37,8 @@ const inventorySortKey = ref('requestNumber')
 const inventorySortDirection = ref('desc')
 const inventoryCurrentPage = ref(1)
 const inventoryPageSize = ref(10)
+const shortageAlerts = ref([])
+const sendingAlertId = ref(null)
 
 const p2Modal = ref({
   open: false,
@@ -56,8 +58,6 @@ const statistics = ref([
 ])
 
 const inventoryRequests = ref([])
-const shortageAlerts = ref([])
-const sendingAlertId = ref(null)
 const processingRequestId = ref(null)
 const headAuthStore = useHeadAuthStore()
 const storeSummary = ref([])
@@ -148,7 +148,7 @@ const changeAmountText = (change, unit) => {
 }
 
 /*
- * 본사 대시보드 진입 시 요약 통계·재고 신청·부족 알림을 조회해
+ * 본사 대시보드 진입 시 요약 통계·재고 신청·부족 알림을 함께 조회해
  * 카드, 진행률, 최근 처리 목록에 각각 분배합니다.
  */
 const fetchDashboardData = async () => {
@@ -203,18 +203,14 @@ const fetchDashboardData = async () => {
 }
 
 /*
- * 대시보드의 재고 신청 행과 서버의 활성 부족 알림을
- * 지점명·품목명으로 연결해 실제 전송 대상 alertId를 찾습니다.
+ * 대시보드의 재고 신청 행과 활성 부족 알림을 지점명·품목명으로 연결합니다.
+ * 재고 신청 관리에는 버튼을 두지 않고, 대시보드와 재고 현황에서만 부족 알림을 보냅니다.
  */
 const findShortageAlert = (request) => shortageAlerts.value.find((alert) =>
   alert.storeName === request.storeName && alert.itemName === request.productName
 )
 
-/*
- * 대시보드 알림 버튼
- * 행 선택 → 활성 alertId 확인 → 본사 관리자 ID와 함께 전송 API 호출
- * → 성공 후 대시보드 데이터를 다시 조회해 버튼 상태를 동기화합니다.
- */
+// 선택한 부족 알림을 현재 로그인한 본사 관리자 정보와 함께 지점으로 전송합니다.
 const sendShortageAlert = async (request) => {
   const shortageAlert = findShortageAlert(request)
   const adminId = headAuthStore.headUser?.employeeId
@@ -223,6 +219,7 @@ const sendShortageAlert = async (request) => {
     return
   }
   if (!confirm(`${request.storeName}에 ${request.productName} 재고 부족 알림을 보내시겠습니까?`)) return
+
   sendingAlertId.value = shortageAlert.alertId
   try {
     await sendInventoryShortageAlertToStore(shortageAlert.alertId, adminId)

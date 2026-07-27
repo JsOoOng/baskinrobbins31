@@ -78,6 +78,20 @@ public class DeliveryController {
     }
 
     /**
+     * 배송 완료 후 본사 관리자가 지점 알림 버튼을 눌렀을 때 호출합니다.
+     */
+    @PutMapping("/delivery/{deliveryId}/notify-completed")
+    public String notifyCompleted(@PathVariable Integer deliveryId) {
+        return deliveryService.notifyDeliveryCompleted(deliveryId);
+    }
+
+    /** 지점 알림을 확인한 뒤 관리 열을 최종 완료 상태로 바꿉니다. */
+    @PutMapping("/delivery/{deliveryId}/management-complete")
+    public String completeManagement(@PathVariable Integer deliveryId) {
+        return deliveryService.completeDeliveryManagement(deliveryId);
+    }
+
+    /**
      * 쉬운주석: 배송 취소 모달의 사유를 받아 배송과 재고 신청을 함께 취소 처리한다.
      */
     @PutMapping("/delivery/{deliveryId}/cancel")

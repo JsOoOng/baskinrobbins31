@@ -12,6 +12,53 @@
     @close="clearMessage"
   />
 
+  <!-- 브라우저 confirm/prompt 대신 승인·반려를 처리하는 내부 확인창입니다. -->
+  <div v-if="actionModal.open" class="action-modal-backdrop" @click.self="closeActionModal">
+    <section class="action-modal" role="dialog" aria-modal="true" aria-labelledby="restock-action-title">
+      <button class="action-modal-close" type="button" aria-label="닫기" @click="closeActionModal">×</button>
+      <p class="action-modal-eyebrow">RESTOCK REQUEST</p>
+      <h2 id="restock-action-title">
+        {{ actionModal.type === 'approve' ? '재고 신청 승인' : '재고 신청 반려' }}
+      </h2>
+      <p class="action-modal-description">
+        <strong>{{ actionModal.item?.itemName }}</strong>
+        신청을 {{ actionModal.type === 'approve' ? '승인' : '반려' }}하시겠습니까?
+      </p>
+
+      <template v-if="actionModal.type === 'reject'">
+        <label for="rejection-reason">반려 사유</label>
+        <select id="rejection-reason" v-model="actionModal.reason">
+          <option value="">사유를 선택해 주세요</option>
+          <option v-for="reason in restockRejectionReasons" :key="reason" :value="reason">
+            {{ reason }}
+          </option>
+        </select>
+        <textarea
+          v-if="actionModal.reason === '기타(직접 입력)'"
+          v-model="actionModal.customReason"
+          rows="3"
+          maxlength="500"
+          placeholder="반려 사유를 입력해 주세요"
+        />
+      </template>
+
+      <div class="action-modal-buttons">
+        <button class="modal-cancel-button" type="button" :disabled="actionModal.submitting" @click="closeActionModal">
+          취소
+        </button>
+        <button
+          class="modal-submit-button"
+          :class="{ reject: actionModal.type === 'reject' }"
+          type="button"
+          :disabled="actionModal.submitting"
+          @click="submitAction"
+        >
+          {{ actionModal.submitting ? '처리 중...' : (actionModal.type === 'approve' ? '승인' : '반려') }}
+        </button>
+      </div>
+    </section>
+  </div>
+
   <section class="restock-page">
     <header class="page-header">
       <div>
@@ -120,17 +167,8 @@
                     :disabled="processingId === item.requestId"
                     @click="handleReject(item)"
                   >반려</button>
-                  <button
-                    v-if="findShortageAlert(item)"
-                    type="button"
-                    class="notify-button"
-                    :disabled="sendingAlertId === findShortageAlert(item).alertId"
-                    @click="handleSendAlert(item)"
-                  >
-                    {{ sendingAlertId === findShortageAlert(item).alertId ? '알림 전송 중' : '지점 알림' }}
-                  </button>
                   <span
-                    v-if="item.status !== 'WAITING' && !findShortageAlert(item)"
+                    v-if="item.status !== 'WAITING'"
                     class="no-action"
                   >처리 완료</span>
                 </div>
@@ -150,38 +188,37 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, reactive, watch } from 'vue'
 import AppMessageToast from '@/components/common/AppMessageToast.vue'
 import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
 import { useHeadAuthStore } from '@/stores/head/headAuthStore'
-import { askRestockRejectionReason } from '@/constants/restockRejectionReasons'
+import { restockRejectionReasons } from '@/constants/restockRejectionReasons'
 import {
   getHeadRestocks,
   approveHeadRestock,
-  startHeadRestockShipping,
-  completeHeadRestock,
   rejectHeadRestock,
   extractRestockErrorMessage
 } from '@/api/head/headRestockApi'
-import {
-  getActiveInventoryShortageAlerts,
-  sendInventoryShortageAlertToStore
-} from '@/api/headquarter/headInventoryAlertApi'
-
 const headAuthStore = useHeadAuthStore()
 
 const restocks = ref([])
 
 const loading = ref(false)
 const processingId = ref(null)
-const sendingAlertId = ref(null)
-const shortageAlerts = ref([])
 const filterStatus = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 
 const message = ref('')
 const messageType = ref('success')
+const actionModal = reactive({
+  open: false,
+  type: 'approve',
+  item: null,
+  reason: '',
+  customReason: '',
+  submitting: false
+})
 
 /* 신청 처리 결과를 성공·오류 유형과 함께 토스트에 표시합니다. */
 const showMessage = (text, type = 'success') => {
@@ -236,13 +273,9 @@ const loadRestocks = async () => {
   loading.value = true
   clearMessage()
   try {
-    const [data, alertResponse] = await Promise.all([
-      getHeadRestocks(),
-      getActiveInventoryShortageAlerts()
-    ])
+    const data = await getHeadRestocks()
     // Sort by requestedAt descending
     restocks.value = data.sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt))
-    shortageAlerts.value = Array.isArray(alertResponse.data) ? alertResponse.data : []
   } catch (error) {
     showMessage(extractRestockErrorMessage(error, '신청 내역을 불러오지 못했습니다.'), 'error')
   } finally {
@@ -250,108 +283,65 @@ const loadRestocks = async () => {
   }
 }
 
-/*
- * WAITING 신청 승인 처리
- * 관리자 ID와 함께 승인 API 호출 → 상태 변경 알림 발행 → 목록 재조회 순서입니다.
- */
-const handleApprove = async (item) => {
-  if (!confirm(`${item.itemName} 신청을 승인하시겠습니까?`)) return
-  
-  const adminId = headAuthStore.headUser?.employeeId
-  if (!adminId) {
-    showMessage('처리 권한이 없습니다. 다시 로그인해주세요.', 'error')
-    return
-  }
-  
-  processingId.value = item.requestId
-  try {
-    await approveHeadRestock(item.requestId, { adminId })
-    showMessage('승인 처리되었습니다.')
-    await loadRestocks()
-  } catch (error) {
-    showMessage(extractRestockErrorMessage(error, '승인 처리에 실패했습니다.'), 'error')
-  } finally {
-    processingId.value = null
-  }
+// 승인·반려 버튼을 누르면 브라우저 팝업이 아닌 화면 내부 확인창을 엽니다.
+const openActionModal = (type, item) => {
+  actionModal.open = true
+  actionModal.type = type
+  actionModal.item = item
+  actionModal.reason = ''
+  actionModal.customReason = ''
+}
+const handleApprove = (item) => openActionModal('approve', item)
+const handleReject = (item) => openActionModal('reject', item)
+
+const closeActionModal = () => {
+  if (actionModal.submitting) return
+  actionModal.open = false
+  actionModal.item = null
 }
 
 /*
- * WAITING 신청 반려 처리
- * 반려 사유를 입력받아 API로 전달하고 지점 상태 알림과 목록을 갱신합니다.
+ * 내부 확인창에서 승인 또는 반려 API를 실행합니다.
+ * 반려일 때는 선택한 사유나 직접 입력한 사유를 함께 전달합니다.
  */
-const handleReject = async (item) => {
-  const rejectionReason = askRestockRejectionReason()
-  if (!rejectionReason) return
-  
-  const adminId = headAuthStore.headUser?.employeeId
-  if (!adminId) {
-    showMessage('처리 권한이 없습니다. 다시 로그인해주세요.', 'error')
-    return
-  }
-  
-  processingId.value = item.requestId
-  try {
-    await rejectHeadRestock(item.requestId, { adminId, rejectionReason })
-    showMessage('반려 처리되었습니다.')
-    await loadRestocks()
-  } catch (error) {
-    showMessage(extractRestockErrorMessage(error, '반려 처리에 실패했습니다.'), 'error')
-  } finally {
-    processingId.value = null
-  }
-}
-
-/*
- * 승인된 신청을 배송 단계로 이동합니다.
- * APPROVED → SHIPPING 상태 변경 API 호출 후 표의 최신 상태를 다시 조회합니다.
- */
-const handleShipping = async (item) => {
-  if (!confirm('배송을 시작하시겠습니까?')) return
-  
+const submitAction = async () => {
+  const item = actionModal.item
+  if (!item) return
   const adminId = headAuthStore.headUser?.employeeId
   if (!adminId) {
     showMessage('처리 권한이 없습니다. 다시 로그인해주세요.', 'error')
     return
   }
 
-  processingId.value = item.requestId
-  try {
-    await startHeadRestockShipping(item.requestId, { adminId })
-    showMessage('배송 처리가 시작되었습니다.')
-    await loadRestocks()
-  } catch (error) {
-    showMessage(extractRestockErrorMessage(error, '배송 처리에 실패했습니다.'), 'error')
-  } finally {
-    processingId.value = null
-  }
-}
-
-/*
- * 쉬운주석: 배송 중인 신청을 완료하면 신청 상태와 연결된 실제 재고가 함께 증가한다.
- * 화면의 관리자 번호를 완료 API에 보내고, 성공한 뒤 최신 목록을 다시 불러온다.
- */
-const handleComplete = async (item) => {
-  if (!confirm('배송을 완료하고 재고를 입고하시겠습니까?')) return
-
-  const adminId = headAuthStore.headUser?.employeeId
-  if (!adminId) {
-    showMessage('처리 권한이 없습니다. 다시 로그인해주세요.', 'error')
+  const rejectionReason = actionModal.reason === '기타(직접 입력)'
+    ? actionModal.customReason.trim()
+    : actionModal.reason
+  if (actionModal.type === 'reject' && !rejectionReason) {
+    showMessage('반려 사유를 선택하거나 입력해 주세요.', 'warning')
     return
   }
 
+  actionModal.submitting = true
   processingId.value = item.requestId
   try {
-    await completeHeadRestock(item.requestId, { adminId })
-    showMessage('배송 완료와 재고 입고가 처리되었습니다.')
+    if (actionModal.type === 'approve') {
+      await approveHeadRestock(item.requestId, { adminId })
+      showMessage('승인 처리되었습니다.')
+    } else {
+      await rejectHeadRestock(item.requestId, { adminId, rejectionReason })
+      showMessage('반려 처리되었습니다.')
+    }
+    actionModal.open = false
+    actionModal.item = null
     await loadRestocks()
   } catch (error) {
-    showMessage(extractRestockErrorMessage(error, '배송 완료 처리에 실패했습니다.'), 'error')
+    const label = actionModal.type === 'approve' ? '승인' : '반려'
+    showMessage(extractRestockErrorMessage(error, `${label} 처리에 실패했습니다.`), 'error')
   } finally {
     processingId.value = null
+    actionModal.submitting = false
   }
 }
-
-
 
 const filteredRestocks = computed(() => {
   if (!filterStatus.value) return restocks.value
@@ -371,38 +361,6 @@ watch(totalPages, (pages) => {
   if (currentPage.value > pages) currentPage.value = pages
 })
 
-/*
- * 재고 신청 행과 활성 재고 부족 알림을 지점·품목 기준으로 연결합니다.
- * 반환된 alertId는 지점 알림 전송 API의 식별자로 사용됩니다.
- */
-const findShortageAlert = (item) => shortageAlerts.value.find((alert) =>
-  alert.storeName === item.storeName && alert.itemName === item.itemName
-)
-
-/*
- * 재고 신청 관리의 '알림 보내기' 처리
- * 신청 행 → 활성 부족 알림 조회 → 지점 알림 API → 목록 재조회 순으로 이동합니다.
- */
-const handleSendAlert = async (item) => {
-  const shortageAlert = findShortageAlert(item)
-  const adminId = headAuthStore.headUser?.employeeId
-  if (!shortageAlert || !adminId) {
-    showMessage('전송 가능한 부족 알림 또는 관리자 정보가 없습니다.', 'error')
-    return
-  }
-  if (!confirm(`${item.storeName}에 ${item.itemName} 재고 부족 알림을 보내시겠습니까?`)) return
-  sendingAlertId.value = shortageAlert.alertId
-  try {
-    await sendInventoryShortageAlertToStore(shortageAlert.alertId, adminId)
-    showMessage(`${item.storeName}에 재고 부족 알림을 전송했습니다.`)
-    await loadRestocks()
-  } catch (error) {
-    showMessage(error.response?.data?.message || '지점 알림 전송에 실패했습니다.', 'error')
-  } finally {
-    sendingAlertId.value = null
-  }
-}
-
 const waitingCount = computed(() => restocks.value.filter(r => r.status === 'WAITING').length)
 const approvedCount = computed(() => restocks.value.filter(r => r.status === 'APPROVED').length)
 const shippingCount = computed(() => restocks.value.filter(r => r.status === 'SHIPPING').length)
@@ -413,6 +371,122 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.action-modal-backdrop {
+  position: fixed;
+  z-index: 5000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(28, 31, 43, .52);
+  backdrop-filter: blur(4px);
+}
+
+.action-modal {
+  position: relative;
+  width: min(440px, 100%);
+  padding: 28px;
+  border: 1px solid #e4e6ed;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 65px rgba(28, 31, 43, .24);
+}
+
+.action-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+  color: #858b98;
+  font-size: 23px;
+  background: #f5f6f8;
+  cursor: pointer;
+}
+
+.action-modal-eyebrow {
+  margin: 0 0 8px;
+  color: #7464df;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.action-modal h2 {
+  margin: 0;
+  color: #292e3b;
+  font-size: 22px;
+}
+
+.action-modal-description {
+  margin: 13px 0 21px;
+  color: #737b8c;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.action-modal label {
+  display: block;
+  margin-bottom: 7px;
+  color: #4c5362;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.action-modal select,
+.action-modal textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #daddE6;
+  border-radius: 10px;
+  color: #343a48;
+  font: inherit;
+  background: #fff;
+}
+
+.action-modal textarea {
+  margin-top: 10px;
+  resize: vertical;
+}
+
+.action-modal-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.action-modal-buttons button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  font-family: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.modal-cancel-button {
+  color: #5f6674;
+  background: #eff1f5;
+}
+
+.modal-submit-button {
+  color: #fff;
+  background: #6d5de2;
+}
+
+.modal-submit-button.reject {
+  background: #e44d5f;
+}
+
+.action-modal-buttons button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
 .restock-page {
   padding: 30px;
 }

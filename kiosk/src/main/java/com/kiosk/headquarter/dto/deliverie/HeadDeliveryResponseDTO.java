@@ -63,6 +63,9 @@ public class HeadDeliveryResponseDTO {
     // 배송 취소 모달에서 저장한 사유
     private String cancelReason;
 
+    private Boolean notificationSent;
+    private Boolean managementCompleted;
+
 
     /*
      * 처리 관리자

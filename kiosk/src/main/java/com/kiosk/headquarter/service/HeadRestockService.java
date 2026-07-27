@@ -18,7 +18,7 @@ import com.kiosk.headquarter.dto.restock.HeadRestockProcessRequestDTO;
 import com.kiosk.headquarter.repository.DeliveryRepository;
 import com.kiosk.headquarter.repository.HeadRestockRequestMapper;
 import com.kiosk.headquarter.repository.HeadquarterAdminMapper;
-import com.kiosk.common.websocket.BranchRestockStatusSocketPublisher;
+import com.kiosk.branch.notification.service.BranchNotificationService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -39,12 +39,8 @@ public class HeadRestockService {
 	private final HeadquarterAdminMapper headquarterAdminMapper;
 	private final AdminLogService adminLogService;
 
-	/*
-	 * 추가
-	 */
-	  private final BranchRestockStatusSocketPublisher
-	        branchRestockStatusSocketPublisher;
     private final DeliveryRepository deliveryRepository;
+    private final BranchNotificationService branchNotificationService;
 
 
     // 전체 발주 목록
@@ -128,13 +124,31 @@ public class HeadRestockService {
         );
 
         /*
-         * DB 커밋 성공 후 해당 지점에
-         * 승인 알림을 보냅니다.
+         * 승인된 신청은 배송 관리에서 바로 보일 수 있도록
+         * READY 상태의 배송 정보를 같은 트랜잭션에서 생성합니다.
          */
-        branchRestockStatusSocketPublisher
-                .publishAfterCommit(
-                        restockRequest
-                );
+        if (!deliveryRepository.existsByRestockRequestId(requestId)) {
+            deliveryRepository.save(
+                    Delivery.builder()
+                            .restockRequest(restockRequest)
+                            .status(DeliveryStatus.READY)
+                            .build()
+            );
+        }
+
+        /*
+         * 승인 알림을 DB에 보관하고 실시간으로도 전송합니다.
+         * 지점이 승인 순간 오프라인이어도 다음 접속 때 읽지 않은 알림을 받을 수 있습니다.
+         */
+        branchNotificationService.createOnce(
+                getStoreId(restockRequest),
+                "RESTOCK_REQUEST_APPROVED",
+                String.valueOf(requestId),
+                "재고 신청이 승인되었습니다.",
+                getItemName(restockRequest) + " "
+                        + restockRequest.getRequestQuantity()
+                        + "개 신청이 승인되었습니다."
+        );
 
         adminLogService.logAction("재고 신청", "재고 신청 승인 (ID: " + requestId + ")");
         return "발주 요청 승인 성공";
@@ -328,15 +342,40 @@ public class HeadRestockService {
         );
 
         /*
-         * 상태 변경과 작업 로그가 모두 커밋된 후
-         * 해당 지점에 반려 알림을 보냅니다.
+         * 반려 결과도 저장형 지점 알림으로 전송해 접속 여부와 관계없이 확인할 수 있게 합니다.
          */
-        branchRestockStatusSocketPublisher
-                .publishAfterCommit(
-                        restockRequest
-                );
+        branchNotificationService.createOnce(
+                getStoreId(restockRequest),
+                "RESTOCK_REQUEST_REJECTED",
+                String.valueOf(requestId),
+                "재고 신청이 반려되었습니다.",
+                getItemName(restockRequest) + " 신청이 반려되었습니다. 사유: "
+                        + rejectionReason
+        );
 
         return "발주 요청 반려 성공";
+    }
+
+    /* 일반 상품 신청과 맛 신청에서 알림을 받을 지점 번호를 공통으로 찾습니다. */
+    private Integer getStoreId(RestockRequest request) {
+        if (request.getStoreInventory() != null) {
+            return request.getStoreInventory().getStore().getId();
+        }
+        if (request.getStoreFlavor() != null) {
+            return request.getStoreFlavor().getStore().getId();
+        }
+        throw new IllegalStateException("재고 신청의 지점 정보가 없습니다.");
+    }
+
+    /* 지점 알림 문구에 표시할 상품 또는 맛 이름을 공통으로 찾습니다. */
+    private String getItemName(RestockRequest request) {
+        if (request.getStoreInventory() != null) {
+            return request.getStoreInventory().getItem().getItemName();
+        }
+        if (request.getStoreFlavor() != null) {
+            return request.getStoreFlavor().getFlavor().getFlavorName();
+        }
+        return "재고 품목";
     }
 
     private HeadRestockListResponseDTO toListResponseDTO(

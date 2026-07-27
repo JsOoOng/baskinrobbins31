@@ -9,6 +9,7 @@
 import {
   computed,
   onBeforeUnmount,
+  onMounted,
   ref,
   watch
 } from 'vue'
@@ -22,6 +23,7 @@ import {
 import { Client } from '@stomp/stompjs'
 
 import TimeoutModal from '@/components/common/TimeoutModal.vue'
+import AppMessageToast from '@/components/common/AppMessageToast.vue'
 
 import {
   getUnconfirmedInventoryShortages,
@@ -33,6 +35,34 @@ import {
 
 const route = useRoute()
 const router = useRouter()
+
+/*
+ * 브라우저 기본 alert는 주소(localhost:5173)가 표시되어 서비스 메시지처럼 보이지 않습니다.
+ * 기존 코드의 alert 호출도 모두 이 최상위 내부 토스트로 통일합니다.
+ */
+const appMessage = ref('')
+const appMessageType = ref('info')
+let originalWindowAlert
+
+const showAppMessage = (value) => {
+  const message = String(value ?? '')
+  appMessage.value = ''
+  requestAnimationFrame(() => {
+    appMessage.value = message
+    appMessageType.value = /실패|오류|없습니다|불가|반려/.test(message)
+      ? 'error'
+      : /입력|선택|필요/.test(message)
+        ? 'warning'
+        : /성공|완료|되었습니다/.test(message)
+          ? 'success'
+          : 'info'
+  })
+}
+
+onMounted(() => {
+  originalWindowAlert = window.alert
+  window.alert = showAppMessage
+})
 const branchNotificationQueue = ref([])
 const activeBranchNotification = computed(() => branchNotificationQueue.value[0] ?? null)
 
@@ -1010,11 +1040,17 @@ onBeforeUnmount(() => {
 
   disconnectBranchSocket()
   disconnectHeadSocket()
+  window.alert = originalWindowAlert
 })
 </script>
 
 
 <template>
+  <AppMessageToast
+    :message="appMessage"
+    :type="appMessageType"
+    @close="appMessage = ''"
+  />
 
   <div
     v-if="activeBranchNotification"
@@ -1483,6 +1519,49 @@ body,
     scale(0.98);
 }
 
+
+/*
+ * 본사에서 저장·전송한 지점 공통 알림의 전체 화면 배경입니다.
+ * 알림이 지점 사이드바나 대시보드보다 항상 위에서 가운데 보이도록 고정합니다.
+ */
+.restock-alert-overlay {
+  position: fixed;
+  z-index: 30000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100vw;
+  height: 100vh;
+  padding: 20px;
+  background: rgba(16, 24, 40, .62);
+  backdrop-filter: blur(5px);
+}
+
+.restock-alert-overlay .restock-alert-modal {
+  position: relative;
+  box-sizing: border-box;
+  width: min(460px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  border-top: 6px solid #735ee9;
+}
+
+.restock-alert-overlay .restock-alert-icon {
+  color: #6554df;
+  background: #eeebff;
+}
+
+.restock-alert-overlay .restock-alert-buttons {
+  grid-template-columns: 1fr;
+}
+
+.restock-alert-overlay .restock-alert-buttons button {
+  width: 100%;
+  color: #fff;
+  background: linear-gradient(135deg, #6554df, #e6408b);
+}
 
 /*
  * 재고 승인·반려 모달 배경

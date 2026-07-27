@@ -6,14 +6,21 @@
   다음 이동: 현재 상태를 갱신하거나 부모 화면에 이벤트를 전달
 -->
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import api from '@/api/axios'
 import { restockRejectionReasons } from '@/constants/restockRejectionReasons'
 import AppMessageToast from '@/components/common/AppMessageToast.vue'
+import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
 
 
 const deliveries = ref([])
 const loading = ref(false)
+const notifyingId = ref(null)
+const completingId = ref(null)
+const searchKeyword = ref('')
+const weekdayFilter = ref('ALL')
+const currentPage = ref(1)
+const pageSize = ref(10)
 const cancelTarget = ref(null)
 const cancelReasonOption = ref('')
 const customCancelReason = ref('')
@@ -25,6 +32,44 @@ const showMessage = (text, type = 'success') => {
 }
 
 const cancelReasons = restockRejectionReasons
+const weekdays = [
+    { value: 'ALL', label: '전체 요일' },
+    { value: '1', label: '월요일' },
+    { value: '2', label: '화요일' },
+    { value: '3', label: '수요일' },
+    { value: '4', label: '목요일' },
+    { value: '5', label: '금요일' },
+    { value: '6', label: '토요일' },
+    { value: '0', label: '일요일' }
+]
+
+// 지점명·품목명·상태를 한 번에 검색하고 신청일의 요일로 추가 필터링합니다.
+const filteredDeliveries = computed(() => {
+    const keyword = searchKeyword.value.trim().toLowerCase()
+    return deliveries.value.filter((delivery) => {
+        if (!delivery) return false
+        const matchesKeyword = !keyword || [
+            delivery.storeName,
+            delivery.itemName,
+            restockStatusText(delivery.restockStatus),
+            deliveryStatusText(delivery.deliveryStatus)
+        ].some((value) => String(value ?? '').toLowerCase().includes(keyword))
+        const day = delivery.requestedAt ? String(new Date(delivery.requestedAt).getDay()) : ''
+        const matchesWeekday = weekdayFilter.value === 'ALL' || weekdayFilter.value === day
+        return matchesKeyword && matchesWeekday
+    })
+})
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredDeliveries.value.length / pageSize.value)))
+const paginatedDeliveries = computed(() => {
+    const start = (currentPage.value - 1) * pageSize.value
+    return filteredDeliveries.value.slice(start, start + pageSize.value)
+})
+
+watch([searchKeyword, weekdayFilter, pageSize], () => { currentPage.value = 1 })
+watch(totalPages, (pages) => {
+    if (currentPage.value > pages) currentPage.value = pages
+})
 
 
 
@@ -99,6 +144,39 @@ onMounted(() => {
 function formatDate(date){
     if(!date) return '-'
     return new Date(date).toLocaleString('ko-KR')
+}
+
+/*
+ * 배송 완료된 행에서만 실행됩니다.
+ * 서버가 같은 배송 번호의 알림을 한 번만 저장하므로 중복 클릭해도 알림이 중복되지 않습니다.
+ */
+const sendCompletedNotification = async (delivery) => {
+    notifyingId.value = delivery.deliveryId
+    try {
+        await api.put(`/head/delivery/${delivery.deliveryId}/notify-completed`)
+        showMessage(`${delivery.storeName}에 배송 완료 알림을 전송했습니다.`)
+        await getDeliveries()
+    } catch (error) {
+        console.error(error)
+        showMessage(error.response?.data?.message || '배송 완료 알림 전송에 실패했습니다.', 'error')
+    } finally {
+        notifyingId.value = null
+    }
+}
+
+// 알림 전송까지 확인한 배송 행을 최종 '완료' 상태로 고정합니다.
+const completeManagement = async (delivery) => {
+    completingId.value = delivery.deliveryId
+    try {
+        await api.put(`/head/delivery/${delivery.deliveryId}/management-complete`)
+        showMessage('배송 관리가 완료되었습니다.')
+        await getDeliveries()
+    } catch (error) {
+        console.error(error)
+        showMessage(error.response?.data?.message || '배송 관리 완료 처리에 실패했습니다.', 'error')
+    } finally {
+        completingId.value = null
+    }
 }
 
 /* 쉬운주석: 선택한 배송 정보를 취소 모달에 넣고 이전 입력값을 비운다. */
@@ -207,7 +285,19 @@ function restockStatusText(status){
     <div class="panel-header">
       <div>
         <h2>배송 목록</h2>
-        <p>전체 {{ deliveries.filter(d => d).length }}건</p>
+        <p>검색 결과 {{ filteredDeliveries.length }}건 / 전체 {{ deliveries.filter(d => d).length }}건</p>
+      </div>
+      <div class="delivery-filters">
+        <label class="search-box">
+          <span>검색</span>
+          <input v-model="searchKeyword" type="search" placeholder="지점명, 품목명, 상태 검색" />
+        </label>
+        <label class="weekday-box">
+          <span>요일</span>
+          <select v-model="weekdayFilter">
+            <option v-for="day in weekdays" :key="day.value" :value="day.value">{{ day.label }}</option>
+          </select>
+        </label>
       </div>
     </div>
     <div class="table-scroll">
@@ -233,7 +323,7 @@ function restockStatusText(status){
 
 
     <tr
-v-for="(delivery,index) in deliveries.filter(d => d)"
+v-for="(delivery,index) in paginatedDeliveries"
 :key="delivery.deliveryId ?? index"
 >
 
@@ -328,14 +418,34 @@ delivery.deliveryId,
 
 
 
-<span
-class="completed-label"
-v-if="
-delivery.deliveryStatus === 'COMPLETED'
-"
+<template v-if="delivery.deliveryStatus === 'COMPLETED'">
+<span v-if="delivery.managementCompleted" class="completed-label">완료</span>
+
+<button
+v-else-if="!delivery.notificationSent"
+class="status-button notify"
+type="button"
+:disabled="notifyingId === delivery.deliveryId"
+@click="sendCompletedNotification(delivery)"
 >
-완료 · 지점 알림 전송
-</span>
+{{ notifyingId === delivery.deliveryId ? '알림 전송 중' : '지점 알림' }}
+</button>
+
+<div v-else class="completed-actions">
+  <button
+    class="status-button complete"
+    type="button"
+    :disabled="completingId === delivery.deliveryId"
+    @click="completeManagement(delivery)"
+  >{{ completingId === delivery.deliveryId ? '처리 중' : '완료' }}</button>
+  <button
+    class="status-button notify resend"
+    type="button"
+    :disabled="notifyingId === delivery.deliveryId"
+    @click="sendCompletedNotification(delivery)"
+  >{{ notifyingId === delivery.deliveryId ? '재발송 중' : '알림 재발송' }}</button>
+</div>
+</template>
 
 <span
 class="canceled-label"
@@ -359,7 +469,7 @@ type="button"
 
 </tr>
 
-    <tr v-if="!loading && deliveries.filter(d => d).length === 0">
+    <tr v-if="!loading && filteredDeliveries.length === 0">
       <td class="empty-cell" colspan="8">등록된 배송 내역이 없습니다.</td>
     </tr>
 
@@ -368,6 +478,11 @@ type="button"
 
 </table>
     </div>
+    <HeadTablePagination
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
+      :total-items="filteredDeliveries.length"
+    />
   </section>
 
   <!-- 쉬운주석: 배송 취소 사유를 선택하고 기타일 때만 직접 입력하는 모달이다. -->
@@ -477,8 +592,46 @@ type="button"
 }
 
 .panel-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
   padding: 17px 20px;
   border-bottom: 1px solid #e8ebf0;
+}
+
+.delivery-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.delivery-filters label {
+  display: grid;
+  gap: 5px;
+  color: #7b8292;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.delivery-filters input,
+.delivery-filters select {
+  box-sizing: border-box;
+  height: 38px;
+  border: 1px solid #dce0e8;
+  border-radius: 9px;
+  color: #3f4656;
+  background: #fff;
+}
+
+.delivery-filters input {
+  width: 240px;
+  padding: 0 12px;
+}
+
+.delivery-filters select {
+  min-width: 115px;
+  padding: 0 10px;
 }
 
 .panel-header h2 {
@@ -586,6 +739,17 @@ type="button"
   background: #159b68;
 }
 
+.completed-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.status-button.resend {
+  min-width: 92px;
+  background: #7a5bd5;
+}
+
 .status-button.cancel {
   min-width: 64px;
   margin-left: 10px;
@@ -677,6 +841,17 @@ type="button"
   .page-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .panel-header,
+  .delivery-filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .delivery-filters input,
+  .delivery-filters select {
+    width: 100%;
   }
 }
 
