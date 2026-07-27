@@ -155,7 +155,12 @@
               @click="!flavor.isSoldOut && addFlavorSlot(flavor.flavorId)"
               style="position: relative;"
             >
-              <img v-if="flavor.imageUrl" :src="flavor.imageUrl" :alt="flavor.flavorName" class="flavor-image"/>
+            <img
+              v-if="flavor.imageUrl"
+              :src="`http://localhost:8889${flavor.imageUrl}`"
+              :alt="flavor.flavorName"
+              class="flavor-image"
+            />
               <div v-else class="flavor-image-placeholder">🍦</div>
               <img v-if="flavor.isSoldOut" src="/images/etc/flavor_sold_out.png" alt="sold out" class="sold-out-overlay" />
               <div class="flavor-name">{{ $t(flavor.flavorName) }}</div>
