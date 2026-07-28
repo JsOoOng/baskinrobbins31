@@ -25,7 +25,7 @@ echo "> 실행할 JAR 파일: $JAR_NAME"
 
 # 로컬 application.properties를 수정하지 않고도, 배포 시점에만 데이터베이스 URL을 EC2 내부 Docker 포트(3308)로 덮어쓰며 실행합니다.
 nohup java -jar \
-    -Dspring.datasource.url="jdbc:mysql://localhost:3308/kiosk?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useUnicode=true&useSSL=false&allowPublicKeyRetrieval=true" \
+    -Dspring.datasource.url="jdbc:mysql://172.16.15.83:3308/kiosk?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useUnicode=true&useSSL=false&allowPublicKeyRetrieval=true" \
     $JAR_NAME > /home/ubuntu/kiosk-deploy/nohup.out 2>&1 &
 
 echo "> 배포가 완료되었습니다!"
