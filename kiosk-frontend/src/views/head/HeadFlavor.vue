@@ -217,8 +217,14 @@ onMounted(() => {
           <tbody>
             <tr v-for="flavor in paginatedFlavors" :key="flavor.flavorId || flavor.id">
               <td class="td-image">
-                <img :src="flavor.imageUrl || flavor.image" :alt="flavor.flavorName || flavor.name" class="flavor-img" />
+                <img
+                  :src="`http://localhost:8889${flavor.imageUrl || flavor.image}`"
+                  :alt="flavor.flavorName || flavor.name"
+                  class="flavor-img"
+                />
               </td>
+
+
               <td>
                 <strong>{{ flavor.flavorName || flavor.name }}</strong>
               </td>
@@ -269,8 +275,12 @@ onMounted(() => {
           </label>
 
           <label class="form-field">
-            <span>이미지 파일 {{ formModal.mode === 'create' ? '<strong>*</strong>' : '(변경 시에만 선택)' }}</span>
-            <input type="file" accept="image/*" @change="handleFileChange" ref="fileInputRef" :disabled="saving" />
+            <span>
+              이미지 파일
+              <strong v-if="formModal.mode === 'create'">*</strong>
+              <template v-else>(변경 시에만 선택)</template>
+            </span>
+          <input type="file" accept="image/*" @change="handleFileChange" ref="fileInputRef" :disabled="saving" />
           </label>
           
           <label class="form-field toggle-field">

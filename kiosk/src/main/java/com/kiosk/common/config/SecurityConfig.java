@@ -90,6 +90,11 @@ public class SecurityConfig {
                             HttpMethod.OPTIONS,
                             "/**"
                     ).permitAll()
+                    
+                    // 업로드된 맛 이미지 접근 허용
+                    .requestMatchers(
+                            "/images/flavors/**"
+                    ).permitAll()
 
                     // 고객이 사용하는 공개 API는 인증 없이 접근 가능
                     .requestMatchers(
