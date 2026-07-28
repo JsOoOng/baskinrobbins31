@@ -101,6 +101,9 @@ public class OrderController {
         // 4. 서비스로 통합 전달
         orderService.processPayment(orderId, paymentMethod, userCouponId, pointUsed, session);
         
+        // 5. 영수증 출력 (모든 결제 수단 공통 적용)
+        sendReceipt(orderId);
+        
         return ResponseEntity.ok("결제 및 재고 차감 완료");
     }
     
@@ -119,10 +122,10 @@ public class OrderController {
     @org.springframework.beans.factory.annotation.Value("${toss.secret-key}")
     private String tossSecretKey;
 
-    @org.springframework.beans.factory.annotation.Value("${server.port:8889}")
+    @org.springframework.beans.factory.annotation.Value("${server.port}")
     private String serverPort;
     
-    @org.springframework.beans.factory.annotation.Value("${server.printPort:8888}")
+    @org.springframework.beans.factory.annotation.Value("${server.printPort}")
     private String printServerPort;
 
     /**
@@ -152,27 +155,7 @@ public class OrderController {
             orderService.processPayment(orderId, "TOSS", 0, tossReq.getPointUsed(), session);
             
             // 영수증 데이터 생성 후 로컬 /receipt API 호출
-            try {
-                OrderResponse orderRes = orderService.getOrderDetails(orderId);
-                String orderNo = String.format("%03d", orderRes.getOrderNumber());
-                String orderItem = orderRes.getOrderItems().isEmpty() ? "상품없음" : orderRes.getOrderItems().get(0).getProductName();
-                if (orderRes.getOrderItems().size() > 1) {
-                    orderItem += " 외 " + (orderRes.getOrderItems().size() - 1) + "건";
-                }
-                String price = orderRes.getTotalPrice() + "원";
-                String orderDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy년MM월dd일"));
-
-                HttpHeaders receiptHeaders = new HttpHeaders();
-                receiptHeaders.setContentType(MediaType.APPLICATION_JSON);
-                String receiptJson = String.format("{\"orderNo\":\"%s\",\"orderItem\":\"%s\",\"price\":\"%s\",\"orderDate\":\"%s\"}", 
-                        orderNo, orderItem, price, orderDate);
-                HttpEntity<String> receiptEntity = new HttpEntity<>(receiptJson, receiptHeaders);
-                
-                // 포트 동적 참조
-                restTemplate.postForEntity("http://172.16.15.83:" + this.printServerPort + "/receipt", receiptEntity, String.class);
-            } catch (Exception ex) {
-                System.err.println("영수증 출력 요청 중 오류 (결제는 성공): " + ex.getMessage());
-            }
+            sendReceipt(orderId);
 
             return ResponseEntity.ok("토스 결제 승인 및 주문 처리 완료");
         } catch (org.springframework.web.client.HttpStatusCodeException e) {
@@ -200,5 +183,31 @@ public class OrderController {
         System.out.println("주문일자: " + receiptData.get("orderDate"));
         System.out.println("===============================================");
         return ResponseEntity.ok("영수증 출력 성공");
+    }
+
+    private void sendReceipt(int orderId) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            OrderResponse orderRes = orderService.getOrderDetails(orderId);
+            String orderNo = String.format("%03d", orderRes.getOrderNumber());
+            String orderItem = orderRes.getOrderItems().isEmpty() ? "상품없음" : orderRes.getOrderItems().get(0).getProductName();
+            if (orderRes.getOrderItems().size() > 1) {
+                orderItem += " 외 " + (orderRes.getOrderItems().size() - 1) + "건";
+            }
+            String price = orderRes.getTotalPrice() + "원";
+            String orderDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy년MM월dd일"));
+
+            HttpHeaders receiptHeaders = new HttpHeaders();
+            receiptHeaders.setContentType(MediaType.APPLICATION_JSON);
+            String receiptJson = String.format("{\"orderNo\":\"%s\",\"orderItem\":\"%s\",\"price\":\"%s\",\"orderDate\":\"%s\"}", 
+                    orderNo, orderItem, price, orderDate);
+            HttpEntity<String> receiptEntity = new HttpEntity<>(receiptJson, receiptHeaders);
+            
+            // 사용자가 수정한 대로 localhost와 printServerPort를 사용하여 로컬 프린터 서버 호출
+            String receiptUrl = "http://localhost:" + this.printServerPort + "/receipt";
+            restTemplate.postForEntity(receiptUrl, receiptEntity, String.class);
+        } catch (Exception ex) {
+            System.err.println("영수증 출력 요청 중 오류 (결제는 성공): " + ex.getMessage());
+        }
     }
 }
