@@ -147,7 +147,7 @@ const connectSSE = () => {
 
 const loadKiosks = async () => {
   try {
-    const response = await api.get('/branch/kiosk/all')
+    const response = await api.get('/branch/kiosk/list-all')
     kiosks.value = response.data.filter(kiosk => kiosk.kioskStatus === 'ONLINE')
     
     // 현재 선택된 키오스크가 온라인 목록에 없다면 첫 번째 항목으로 변경

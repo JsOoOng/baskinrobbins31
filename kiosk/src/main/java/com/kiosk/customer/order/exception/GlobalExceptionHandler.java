@@ -19,7 +19,7 @@ import java.util.HashMap;
 public class GlobalExceptionHandler {
 
     // 1. 재고 부족, 잘못된 요청 등(400 Bad Request)
-    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class, RuntimeException.class})
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
     public ResponseEntity<Map<String, String>> handleBusinessException(RuntimeException e) {
         Map<String, String> response = new HashMap<>();
         response.put("error", e.getMessage()); // 서비스에서 던진 메시지를 JSON으로 변환
