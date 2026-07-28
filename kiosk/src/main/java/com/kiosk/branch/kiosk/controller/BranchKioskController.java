@@ -65,7 +65,7 @@ public class BranchKioskController {
      * [요청 흐름] GET /branch/kiosk/all
      * 프론트 요청을 받아 getAllKiosks() 메서드가 입력을 받고 BranchKioskService 호출 후 결과를 응답한다.
      */
-    @GetMapping("/all")
+    @GetMapping("/list-all")
     public ResponseEntity<List<BranchKioskResponse>> getAllKiosks(){
         return ResponseEntity.ok(
                 kioskService.getAllKiosks()
