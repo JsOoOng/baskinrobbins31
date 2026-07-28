@@ -512,7 +512,7 @@ const getWebSocketUrl = () => {
   return (
     `${protocol}//`
     + `${window.location.hostname}`
-    + ':8889/ws'
+    + ':/ws'
   )
 }
 
