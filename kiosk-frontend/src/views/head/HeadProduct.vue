@@ -903,18 +903,6 @@ onMounted(async () => {
             >
               <td>
                 <div class="product-info">
-                  <div class="product-image">
-                    <img
-                      v-if="product.imageUrl"
-                      :src="product.imageUrl"
-                      :alt="product.productName"
-                    />
-
-                    <span v-else>
-                      BR
-                    </span>
-                  </div>
-
                   <div>
                     <strong>
                       {{ product.productName }}
