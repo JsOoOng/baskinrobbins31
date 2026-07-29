@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy to EC2 (3-Tier Bastion)
 
 on:
   push:
@@ -42,25 +42,67 @@ jobs:
         npm run build
 
     # ==========================================
-    # EC2 서버로 전송 및 배포 실행
+    # 프론트엔드 배포 (Bastion -> Nginx Server)
     # ==========================================
-    - name: 6. 빌드 파일 및 스크립트 EC2로 전송 (SCP)
+    - name: 6-1. Nginx 서버로 프론트엔드 파일 전송
       uses: appleboy/scp-action@master
       with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.EC2_KEY }}
-        source: "kiosk/target/*.jar, kiosk-frontend/dist/*, deploy.sh"
+        proxy_host: ${{ secrets.BASTION_HOST }}
+        proxy_username: ${{ secrets.BASTION_USERNAME }}
+        proxy_key: ${{ secrets.BASTION_KEY }}
+        host: ${{ secrets.NGINX_HOST }}
+        username: ubuntu
+        key: ${{ secrets.BASTION_KEY }}
+        source: "kiosk-frontend/dist/*, deploy_frontend.sh, nginx/default.conf"
         target: "/home/ubuntu/kiosk-deploy"
         strip_components: 0
 
-    - name: 7. EC2 배포 스크립트 실행 (SSH)
+    - name: 6-2. Nginx 서버 배포 스크립트 실행
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.EC2_KEY }}
+        proxy_host: ${{ secrets.BASTION_HOST }}
+        proxy_username: ${{ secrets.BASTION_USERNAME }}
+        proxy_key: ${{ secrets.BASTION_KEY }}
+        host: ${{ secrets.NGINX_HOST }}
+        username: ubuntu
+        key: ${{ secrets.BASTION_KEY }}
         script: |
           cd /home/ubuntu/kiosk-deploy
-          chmod +x deploy.sh
-          ./deploy.sh
+          chmod +x deploy_frontend.sh
+          # Nginx 설정 파일에서 kiosk-be-internal 호스트를 실제 BE IP로 치환
+          sed -i "s/kiosk-be-internal/${{ secrets.BE_HOST }}/g" nginx/default.conf
+          ./deploy_frontend.sh
+
+    # ==========================================
+    # 백엔드 배포 (Bastion -> BE Server)
+    # ==========================================
+    - name: 7-1. BE 서버로 백엔드 파일 전송
+      uses: appleboy/scp-action@master
+      with:
+        proxy_host: ${{ secrets.BASTION_HOST }}
+        proxy_username: ${{ secrets.BASTION_USERNAME }}
+        proxy_key: ${{ secrets.BASTION_KEY }}
+        host: ${{ secrets.BE_HOST }}
+        username: ubuntu
+        key: ${{ secrets.BASTION_KEY }}
+        source: "kiosk/target/*.jar, deploy_backend.sh"
+        target: "/home/ubuntu/kiosk-deploy"
+        strip_components: 0
+
+    - name: 7-2. BE 서버 배포 스크립트 실행
+      uses: appleboy/ssh-action@master
+      with:
+        proxy_host: ${{ secrets.BASTION_HOST }}
+        proxy_username: ${{ secrets.BASTION_USERNAME }}
+        proxy_key: ${{ secrets.BASTION_KEY }}
+        host: ${{ secrets.BE_HOST }}
+        username: ubuntu
+        key: ${{ secrets.BASTION_KEY }}
+        # 환경변수 주입하여 스크립트 실행
+        script: |
+          cd /home/ubuntu/kiosk-deploy
+          chmod +x deploy_backend.sh
+          export RDS_ENDPOINT="${{ secrets.BE_RDS_ENDPOINT }}"
+          export RDS_USERNAME="${{ secrets.BE_RDS_USERNAME }}"
+          export RDS_PASSWORD="${{ secrets.BE_RDS_PASSWORD }}"
+          ./deploy_backend.sh
