@@ -8,6 +8,22 @@ echo "=========================================="
 echo "🚀 프론트엔드 배포를 시작합니다..."
 echo "=========================================="
 
+# 0. Nginx 설치 여부 확인
+echo "[Step 0] Nginx 설치 확인"
+if ! command -v nginx >/dev/null 2>&1; then
+    echo " > Nginx가 설치되어 있지 않습니다. 설치를 진행합니다."
+
+    sudo apt update
+    sudo apt install -y nginx
+
+    echo " > Nginx 설치 완료."
+else
+    echo " > Nginx가 이미 설치되어 있습니다."
+fi
+
+# Nginx 서비스 활성화
+sudo systemctl enable nginx
+
 # 1. Nginx 정적 폴더 교체
 echo "[Step 1] 프론트엔드 정적 파일(Vue/Vite) 교체"
 # Nginx의 기본 웹 루트 디렉토리 사용 (Ubuntu 기준)
