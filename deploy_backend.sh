@@ -8,6 +8,13 @@ echo "=========================================="
 echo "🚀 백엔드 배포를 시작합니다..."
 echo "=========================================="
 
+
+if ! command -v java &> /dev/null
+then
+    sudo apt update
+    sudo apt install openjdk-21-jdk -y
+fi
+
 # 0. 필수 패키지 점검 (lsof)
 echo "[Step 0] 필수 패키지(lsof) 설치 점검"
 if ! command -v lsof &> /dev/null
