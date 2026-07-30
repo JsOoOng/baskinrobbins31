@@ -29,16 +29,26 @@ fi
 
 # 1. 구동 중인 백엔드(Spring Boot) 종료
 echo "[Step 1] 실행 중인 구버전 백엔드 종료"
-CURRENT_PID=$(sudo lsof -t -i:8889)
+
+CURRENT_PID=$(pgrep -f "kiosk-.*\.jar")
 
 if [ -z "$CURRENT_PID" ]; then
-    echo " > 구동 중인 백엔드 애플리케이션이 없습니다."
+    echo " > 실행 중인 백엔드가 없습니다."
 else
-    echo " > 구동 중인 백엔드(PID: $CURRENT_PID) 종료 중..."
-    sudo kill -9 $CURRENT_PID
-    sleep 5
-    echo " > 기존 백엔드 종료 완료."
+    echo " > 기존 백엔드 PID: $CURRENT_PID 종료"
+    sudo kill -15 $CURRENT_PID
+
+    sleep 10
+
+    if ps -p $CURRENT_PID > /dev/null
+    then
+        echo " > 정상 종료 실패, 강제 종료"
+        sudo kill -9 $CURRENT_PID
+    fi
+
+    echo " > 기존 백엔드 종료 완료"
 fi
+
 
 # 2. 새로운 백엔드(Spring Boot) 백그라운드 실행
 echo "[Step 2] 최신 버전 백엔드 애플리케이션 실행"
