@@ -14,6 +14,7 @@ import { useHeadAuthStore } from '@/stores/head/headAuthStore'
 
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
+import VueTurnstile from 'vue-turnstile'
 
 const router = useRouter()
 const headAuthStore = useHeadAuthStore()
@@ -29,8 +30,11 @@ const {
  */
 const form = reactive({
   loginId: '',
-  password: ''
+  password: '',
+  turnstileToken: ''
 })
+
+const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY
 
 /*
  * 비밀번호 표시 여부
@@ -66,11 +70,11 @@ const clearLoginMessage = () => {
 /*
  * 로그인 버튼 비활성화 여부
  */
-const isSubmitDisabled = computed(() => {
   return (
     loading.value ||
     !form.loginId.trim() ||
-    !form.password
+    !form.password ||
+    !form.turnstileToken
   )
 })
 
@@ -101,7 +105,8 @@ const isSubmitDisabled = computed(() => {
   try {
     await headAuthStore.login(
       loginId,
-      password
+      password,
+      form.turnstileToken
     )
 
     await router.replace({
@@ -352,6 +357,10 @@ onMounted(() => {
             </div>
           </div>
           
+          <div class="form-field" style="display: flex; justify-content: center; margin-top: 10px;">
+            <VueTurnstile :site-key="turnstileSiteKey" v-model="form.turnstileToken" />
+          </div>
+
           <!-- 로그인 버튼 -->
           <button
             class="login-button"

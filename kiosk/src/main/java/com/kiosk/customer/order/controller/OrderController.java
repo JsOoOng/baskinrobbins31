@@ -38,6 +38,7 @@ public class OrderController {
 	
 	private final OrderService orderService;
 	private final OrderMapper orderMapper;
+    private final com.kiosk.common.service.TurnstileService turnstileService;
 
     // 0. 결제 버튼 클릭 시 장바구니 데이터를 실제 주문 DB에 저장
     /**
@@ -45,7 +46,11 @@ public class OrderController {
      * 프론트 요청을 받아 createOrder() 메서드가 입력을 받고 OrderService, OrderMapper 호출 후 결과를 응답한다.
      */
     @PostMapping
-    public ResponseEntity<Integer> createOrder(@RequestBody OrderCreateRequest request, HttpSession session) {
+    public ResponseEntity<?> createOrder(@RequestBody OrderCreateRequest request, HttpSession session) {
+        if (!turnstileService.verifyToken(request.getTurnstileToken())) {
+            return ResponseEntity.badRequest().body("자동입력 방지(Turnstile) 검증에 실패했습니다.");
+        }
+
         // 프론트엔드에서 넘어오지 않은 값이 있다면 기본값 세팅
         if (request.getKioskId() == null) request.setKioskId(1);
         if (request.getStoreId() == null) request.setStoreId(1);

@@ -17,17 +17,18 @@ public class OrderCreateRequest {
     private Integer storeId;       // 지점 ID
     private Integer kioskId;       // 키오스크 기기 ID
     private Integer userId;        // 적립 회원 ID
-    private String orderType;      // "HERE" 또는 "TOGO"
+    private String orderType;      // "TOGO" 또는 "DINE_IN"
     private Integer dryIceCount;   // 드라이아이스 개수
     private Integer dryIceMins;    // 포장 소요 시간
     
     // 포인트 적립용 회원 전화번호 (없는 경우 null 또는 빈 문자열)
     private String phoneNumber;
 
-    // =========================================================
     // 🚀 [여기에 추가!] 장바구니 상세 내역을 받을 리스트 변수 추가
     // =========================================================
     private List<ItemDto> items;
+    
+    private String turnstileToken;
 
     // 상세 상품 정보를 담을 Inner Class (전부 Integer로 통일!)
     @Getter

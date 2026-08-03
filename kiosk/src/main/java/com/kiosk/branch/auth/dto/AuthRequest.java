@@ -18,4 +18,6 @@ public class AuthRequest {
 
     private String password;
 
+    private String turnstileToken;
+
 }

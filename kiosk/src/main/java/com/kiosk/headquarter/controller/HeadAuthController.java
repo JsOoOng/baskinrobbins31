@@ -20,9 +20,11 @@ import com.kiosk.headquarter.service.HeadAuthService;
 public class HeadAuthController {
 
     private final HeadAuthService headAuthService;
+    private final com.kiosk.common.service.TurnstileService turnstileService;
 
-    public HeadAuthController(HeadAuthService headAuthService) {
+    public HeadAuthController(HeadAuthService headAuthService, com.kiosk.common.service.TurnstileService turnstileService) {
         this.headAuthService = headAuthService;
+        this.turnstileService = turnstileService;
     }
 
     /*
@@ -54,6 +56,10 @@ public class HeadAuthController {
     public HeadApiResponse<HeadLoginResponse> login(
             @RequestBody HeadLoginRequest request
     ) {
+
+        if (!turnstileService.verifyToken(request.getTurnstileToken())) {
+            throw new IllegalArgumentException("자동입력 방지(Turnstile) 검증에 실패했습니다. 새로고침 후 다시 시도해주세요.");
+        }
 
         HeadLoginResponse loginUser =
                 headAuthService.login(request);
