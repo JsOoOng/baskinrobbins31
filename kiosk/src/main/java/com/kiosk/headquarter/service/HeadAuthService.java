@@ -232,6 +232,8 @@ public class HeadAuthService {
 
         return "ADMIN".equals(
                 normalizedRole
+        ) || "HEAD_ADMIN".equals(
+        		normalizedRole
         ) || "SUPER_ADMIN".equals(
                 normalizedRole
         );
