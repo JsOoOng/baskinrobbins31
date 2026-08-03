@@ -20,7 +20,8 @@ import {
   extractStoreErrorMessage,
   getHeadStoreDetail,
   getHeadStores,
-  updateHeadStore
+  updateHeadStore,
+  deleteHeadStore
 } from '@/api/head/headStoreApi'
 
 import AppMessageToast
@@ -706,6 +707,25 @@ const submitEmployee = async () => {
   }
 }
 
+const removeStore = async (store) => {
+  const confirmed = window.confirm(
+    `"${store.storeName}" 지점을 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
+  )
+  if (!confirmed) return
+
+  clearMessage()
+  try {
+    await deleteHeadStore(store.storeId)
+    showMessage('지점이 삭제되었습니다.', 'success')
+    await loadStores()
+  } catch (error) {
+    showMessage(
+      extractStoreErrorMessage(error, '지점 삭제에 실패했습니다.'),
+      'error'
+    )
+  }
+}
+
 onMounted(() => {
   loadStores()
 })
@@ -928,6 +948,14 @@ onMounted(() => {
                     "
                   >
                     계정 발급
+                  </button>
+
+                  <button
+                    type="button"
+                    class="delete-button"
+                    @click="removeStore(store)"
+                  >
+                    삭제
                   </button>
                 </div>
               </td>
@@ -1616,6 +1644,15 @@ td {
   border: 1px solid #ffd6e6;
   color: #d8457d;
   background: #fff0f6;
+}
+
+.delete-button {
+  border: 1px solid #fc8181;
+  color: #c53030;
+  background: #fff5f5;
+}
+.delete-button:hover {
+  background: #fed7d7;
 }
 
 .empty-cell {

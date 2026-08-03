@@ -20,7 +20,8 @@ import {
   getHeadProductDetail,
   getHeadProducts,
   updateHeadProduct,
-  updateHeadProductDisplay
+  updateHeadProductDisplay,
+  deleteHeadProduct
 } from '@/api/head/headProductApi'
 
 import {
@@ -716,6 +717,40 @@ const toggleDisplay = async (product) => {
   }
 }
 
+/*
+ * 상품 삭제
+ */
+const removeProduct = async (product) => {
+  const confirmed = window.confirm(
+    `"${product.productName}" 상품을 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  clearMessage()
+
+  try {
+    await deleteHeadProduct(product.productId)
+
+    showMessage(
+      '상품이 삭제되었습니다.',
+      'success'
+    )
+
+    await loadProducts()
+  } catch (error) {
+    showMessage(
+      extractProductErrorMessage(
+        error,
+        '상품 삭제에 실패했습니다.'
+      ),
+      'error'
+    )
+  }
+}
+
 const showMessage = (
   text,
   type = 'success'
@@ -995,6 +1030,14 @@ onMounted(async () => {
                     "
                   >
                     수정
+                  </button>
+
+                  <button
+                    type="button"
+                    class="delete-button"
+                    @click="removeProduct(product)"
+                  >
+                    삭제
                   </button>
                 </div>
               </td>
@@ -1699,6 +1742,12 @@ td {
   border: 1px solid #dcd7fb;
   color: #6756dc;
   background: #f3f1ff;
+}
+
+.delete-button {
+  border: 1px solid #ffd7e2;
+  color: #df4a72;
+  background: #fff0f4;
 }
 
 .empty-cell {

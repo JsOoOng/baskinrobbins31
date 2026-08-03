@@ -87,6 +87,21 @@ export const updateHeadProductDisplay = async (
 }
 
 /*
+ * 본사 상품 삭제
+ *
+ * DELETE /head/products/{productId}
+ */
+export const deleteHeadProduct = async (
+  productId
+) => {
+  const response = await api.delete(
+    `/head/products/${productId}`
+  )
+
+  return response.data
+}
+
+/*
  * 공통 응답 객체에서 실제 데이터 추출
  *
  * 다음 두 응답을 모두 처리합니다.

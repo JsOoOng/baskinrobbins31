@@ -106,6 +106,21 @@ export const resetHeadAdminPassword = async (
 }
 
 /*
+ * 본사 관리자 삭제
+ *
+ * DELETE /head/admins/{adminId}
+ */
+export const deleteHeadAdmin = async (
+  adminId
+) => {
+  const response = await api.delete(
+    `/head/admins/${adminId}`
+  )
+
+  return response.data
+}
+
+/*
  * HeadApiResponse에서 data 추출
  */
 export const extractSecurityData = (

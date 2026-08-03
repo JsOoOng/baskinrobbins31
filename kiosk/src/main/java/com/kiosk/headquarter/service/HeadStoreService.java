@@ -238,6 +238,16 @@ public class HeadStoreService {
         return HeadStoreResponse.from(store);
     }
 
+    /*
+     * 지점 삭제
+     */
+    @Transactional
+    public void deleteStore(Integer storeId) {
+        Store store = findStore(storeId);
+        headStoreMapper.delete(store);
+        adminLogService.logAction("지점", store.getStoreName() + " 지점 삭제");
+    }
+
     private void saveStatusHistory(
             Store store,
             StoreStatus status,
