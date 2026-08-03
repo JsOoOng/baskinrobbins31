@@ -52,6 +52,10 @@ instance.interceptors.response.use(
    * 정상 응답
    */
   (response) => {
+    // API 응답 구조에서 success가 명시적으로 false인 경우 에러로 처리
+    if (response.data && response.data.success === false) {
+      return Promise.reject(new Error(response.data.message || '요청 처리에 실패했습니다.'))
+    }
     return response
   },
 

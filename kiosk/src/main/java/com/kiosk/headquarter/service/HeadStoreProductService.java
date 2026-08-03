@@ -284,7 +284,7 @@ public class HeadStoreProductService {
                         storeProductId
                 );
 
-        storeProduct.deleteStoreProduct();
+        headStoreProductMapper.delete(storeProduct);
 
         adminLogService.logAction("지점 상품",
                 storeProduct.getStore().getStoreName() + " - "

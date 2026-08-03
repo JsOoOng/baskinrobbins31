@@ -16,6 +16,7 @@ import com.kiosk.headquarter.dto.admin.HeadAdminPasswordUpdateRequestDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminResponseDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminUpdateRequestDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminStatusUpdateRequestDTO;
+import com.kiosk.headquarter.dto.admin.HeadAdminRoleUpdateRequestDTO;
 import com.kiosk.headquarter.repository.HeadquarterAdminMapper;
 
 import lombok.RequiredArgsConstructor;

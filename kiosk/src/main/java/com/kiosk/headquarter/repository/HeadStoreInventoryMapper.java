@@ -46,4 +46,6 @@ public interface HeadStoreInventoryMapper
             findByAutoRestockEnabledTrueAndRestockModeIn(
                     List<AutoRestockMode> modes
             );
+
+    void deleteByItem(InventoryItem item);
 }

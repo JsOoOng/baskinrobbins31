@@ -48,4 +48,6 @@ public interface HeadStoreProductMapper
                     Integer storeId,
                     Integer storeProductId
             );
+
+    void deleteByProduct(com.kiosk.entity.Product product);
 }
