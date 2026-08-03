@@ -70,6 +70,7 @@ const clearLoginMessage = () => {
 /*
  * 로그인 버튼 비활성화 여부
  */
+const isSubmitDisabled = computed(() => {
   return (
     loading.value ||
     !form.loginId.trim() ||
