@@ -28,12 +28,15 @@ public interface HeadFlavorMapper
      */
     List<IcecreamFlavor>
             findAllByOrderByIdDesc();
+    List<IcecreamFlavor> findByIsDeletedFalseOrderByIdDesc();
 
     /*
      * 활성화된 맛 목록
      */
     List<IcecreamFlavor>
-            findByIsActiveTrueOrderByIdDesc();
+            findByIsActiveTrueAndIsDeletedFalseOrderByIdDesc();
+
+    java.util.Optional<IcecreamFlavor> findByIdAndIsDeletedFalse(Integer flavorId);
 
     /*
      * 맛 등록 시 중복 검사

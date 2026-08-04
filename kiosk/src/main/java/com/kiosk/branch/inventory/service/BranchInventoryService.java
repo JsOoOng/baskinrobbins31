@@ -112,7 +112,7 @@ public class BranchInventoryService {
 			/*
 			 * 해당 지점에서 판매 중인 상품 조회
 			 */
-			StoreProduct storeProduct = storeProductMapper.findByStoreIdAndProductId(order.getStore().getId(),
+			StoreProduct storeProduct = storeProductMapper.findByStoreIdAndProductIdAndIsDeletedFalseAndProduct_IsDeletedFalse(order.getStore().getId(),
 
 					product.getId()).orElseThrow(() -> new IllegalArgumentException("지점 판매 상품 정보가 없습니다."));
 

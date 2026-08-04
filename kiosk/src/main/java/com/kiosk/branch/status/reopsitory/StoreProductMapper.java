@@ -19,9 +19,9 @@ public interface StoreProductMapper
         extends JpaRepository<StoreProduct, Integer> {
 
 
-    List<StoreProduct> findByStoreId(Integer storeId);
+    List<StoreProduct> findByStoreIdAndIsDeletedFalseAndProduct_IsDeletedFalse(Integer storeId);
     
-    Optional<StoreProduct> findByStoreIdAndProductId(
+    Optional<StoreProduct> findByStoreIdAndProductIdAndIsDeletedFalseAndProduct_IsDeletedFalse(
             Integer storeId,
             Integer productId
     );

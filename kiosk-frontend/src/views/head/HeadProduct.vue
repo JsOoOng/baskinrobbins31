@@ -618,6 +618,10 @@ const submitProduct = async () => {
  * 상품 상세 조회
  */
 const openDetailModal = async (productId) => {
+  if (productId === null || productId === undefined) {
+    showMessage('상품 번호가 없어 상세 정보를 조회할 수 없습니다.', 'error')
+    return
+  }
   detailModal.open = true
   detailModal.product = null
   detailLoading.value = true
@@ -738,11 +742,20 @@ onMounted(async () => {
   ])
 })
 const removeProduct = async (product) => {
+  if (!product?.productId) {
+    showMessage('상품 번호가 없어 삭제할 수 없습니다.', 'error')
+    return
+  }
   if (!window.confirm(`"${product.productName}" 상품을 삭제하시겠습니까?`)) return
   deletingId.value = product.productId
   clearMessage()
   try {
     await deleteHeadProduct(product.productId)
+    products.value = products.value.filter(
+      (item) => item.productId !== product.productId
+    )
+    detailModal.open = false
+    detailModal.product = null
     showMessage('상품이 삭제되었습니다.')
     await loadProducts()
   } catch (error) {
@@ -902,6 +915,7 @@ const removeProduct = async (product) => {
         <table>
           <thead>
             <tr>
+              <th>번호</th>
               <th>상품</th>
               <th>카테고리</th>
               <th>기본 가격</th>
@@ -914,9 +928,10 @@ const removeProduct = async (product) => {
 
           <tbody>
             <tr
-              v-for="product in paginatedProducts"
+              v-for="(product, index) in paginatedProducts"
               :key="product.productId"
             >
+              <td>{{ (currentPage - 1) * pageSize + index + 1 }}</td>
               <td>
                 <div class="product-info">
                   <div>
@@ -925,8 +940,7 @@ const removeProduct = async (product) => {
                     </strong>
 
                     <small>
-                      상품 ID:
-                      {{ product.productId }}
+                      상품 #{{ product.productId }}
                     </small>
                   </div>
                 </div>

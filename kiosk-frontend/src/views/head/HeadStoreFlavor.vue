@@ -434,13 +434,13 @@
     
     
               <tr
-                v-for="flavor in paginatedInventories"
+                v-for="(flavor, index) in paginatedInventories"
                 :key="flavor.storeFlavorId"
               >
     
     
                 <td>
-                  {{ flavor.storeFlavorId }}
+                  {{ (currentPage - 1) * pageSize + index + 1 }}
                 </td>
     
     
@@ -468,7 +468,7 @@
     
     
                     <span>
-                      맛 번호 {{ flavor.flavorId }}
+                      맛 #{{ flavor.flavorId }} · 지점 맛 #{{ flavor.storeFlavorId }}
                     </span>
     
     

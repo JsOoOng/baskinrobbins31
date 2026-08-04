@@ -18,9 +18,9 @@ import com.kiosk.entity.StoreFlavor;
 @Repository
 public interface HeadStoreFlavorMapper extends JpaRepository<StoreFlavor, Integer> {
 
-    List<StoreFlavor> findByStore_IdOrderByIdDesc(Integer storeId);
+    List<StoreFlavor> findByStore_IdAndFlavor_IsDeletedFalseOrderByIdDesc(Integer storeId);
 
-    Optional<StoreFlavor> findByStore_IdAndId(Integer storeId, Integer storeFlavorId);
+    Optional<StoreFlavor> findByStore_IdAndIdAndFlavor_IsDeletedFalse(Integer storeId, Integer storeFlavorId);
 
     boolean existsByStore_IdAndFlavor_Id(Integer storeId, Integer flavorId);
 }

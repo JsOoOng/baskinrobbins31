@@ -28,10 +28,13 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 		    WHERE sp.store.id = :storeId
 		    AND sp.product.category.id = :categoryId
 		    AND sp.product.isDisplay = true
+		    AND sp.product.isDeleted = false
+		    AND sp.isDeleted = false
 		""")
 		List<Object[]> findProductsWithSoldOutStatus(
 		        @Param("storeId") Long storeId,
 		        @Param("categoryId") Long categoryId
 		);
 	Optional<Product> findById(Long valueOf);
+	Optional<Product> findByIdAndIsDeletedFalse(Integer productId);
 }

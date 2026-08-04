@@ -74,6 +74,10 @@ public class Product {
     @Builder.Default
     private Boolean isDisplay = true;
 
+    @Column(name = "is_deleted", nullable = false, columnDefinition = "boolean default false")
+    @Builder.Default
+    private Boolean isDeleted = false;
+
     @Column(name = "image_url", length = 255)
     private String imageUrl;
 
@@ -120,6 +124,11 @@ public class Product {
     }
 
     public void hideProduct() {
+        this.isDisplay = false;
+    }
+
+    public void deleteProduct() {
+        this.isDeleted = true;
         this.isDisplay = false;
     }
 

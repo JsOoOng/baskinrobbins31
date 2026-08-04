@@ -98,7 +98,7 @@ public class HeadStoreFlavorService {
         headStoreMapper.findById(storeId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지점입니다."));
 
-        return headStoreFlavorMapper.findByStore_IdOrderByIdDesc(storeId)
+        return headStoreFlavorMapper.findByStore_IdAndFlavor_IsDeletedFalseOrderByIdDesc(storeId)
                 .stream()
                 .map(this::toListResponseDTO)
                 .toList();
@@ -113,7 +113,7 @@ public class HeadStoreFlavorService {
             Integer storeId,
             Integer storeFlavorId) {
 
-        StoreFlavor storeFlavor = headStoreFlavorMapper.findByStore_IdAndId(storeId, storeFlavorId)
+        StoreFlavor storeFlavor = headStoreFlavorMapper.findByStore_IdAndIdAndFlavor_IsDeletedFalse(storeId, storeFlavorId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지점 맛 정보입니다."));
 
         return toDetailResponseDTO(storeFlavor);
@@ -130,7 +130,7 @@ public class HeadStoreFlavorService {
             Integer storeFlavorId,
             HeadStoreFlavorUpdateRequestDTO requestDTO) {
 
-        StoreFlavor storeFlavor = headStoreFlavorMapper.findByStore_IdAndId(storeId, storeFlavorId)
+        StoreFlavor storeFlavor = headStoreFlavorMapper.findByStore_IdAndIdAndFlavor_IsDeletedFalse(storeId, storeFlavorId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지점 맛 정보입니다."));
 
         Boolean nextSoldOut = requestDTO.getIsSoldOut() != null
@@ -157,7 +157,7 @@ public class HeadStoreFlavorService {
      */
     public String deleteStoreFlavor(Integer storeId, Integer storeFlavorId) {
 
-        StoreFlavor storeFlavor = headStoreFlavorMapper.findByStore_IdAndId(storeId, storeFlavorId)
+        StoreFlavor storeFlavor = headStoreFlavorMapper.findByStore_IdAndIdAndFlavor_IsDeletedFalse(storeId, storeFlavorId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지점 맛 정보입니다."));
 
         String action = storeFlavor.getStore().getStoreName() + " - "

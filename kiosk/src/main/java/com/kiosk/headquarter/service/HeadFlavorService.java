@@ -139,7 +139,7 @@ public class HeadFlavorService {
             getFlavorList() {
 
         return headFlavorMapper
-                .findAllByOrderByIdDesc()
+                .findByIsDeletedFalseOrderByIdDesc()
                 .stream()
                 .map(
                         this::toResponseDTO
@@ -158,7 +158,7 @@ public class HeadFlavorService {
             getActiveFlavorList() {
 
         return headFlavorMapper
-                .findByIsActiveTrueOrderByIdDesc()
+                .findByIsActiveTrueAndIsDeletedFalseOrderByIdDesc()
                 .stream()
                 .map(
                         this::toResponseDTO
@@ -277,7 +277,7 @@ public class HeadFlavorService {
                         flavorId
                 );
 
-        flavor.deactivate();
+        flavor.deleteFlavor();
 
         adminLogService.logAction("맛", flavor.getFlavorName() + " 맛 비활성화");
         return "아이스크림 맛 비활성화 성공";
@@ -300,7 +300,7 @@ public class HeadFlavorService {
         }
 
         return headFlavorMapper
-                .findById(
+                .findByIdAndIsDeletedFalse(
                         flavorId
                 )
                 .orElseThrow(() ->

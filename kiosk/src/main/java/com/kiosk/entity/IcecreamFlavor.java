@@ -60,6 +60,10 @@ public class IcecreamFlavor {
     )
     private Boolean isActive = true;
 
+    @Builder.Default
+    @Column(name = "is_deleted", nullable = false, columnDefinition = "boolean default false")
+    private Boolean isDeleted = false;
+
     /*
      * 프론트 입력 maxlength와 맞추기 위해
      * 기존 255에서 500으로 변경합니다.
@@ -129,6 +133,11 @@ public class IcecreamFlavor {
      * 아이스크림 맛 비활성화
      */
     public void deactivate() {
+        this.isActive = false;
+    }
+
+    public void deleteFlavor() {
+        this.isDeleted = true;
         this.isActive = false;
     }
 

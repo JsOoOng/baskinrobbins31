@@ -223,6 +223,7 @@ const removeFlavor = async (flavor) => {
         <table class="data-table">
           <thead>
             <tr>
+              <th>번호</th>
               <th>이미지</th>
               <th>맛 이름</th>
               <th>노출 상태</th>
@@ -231,10 +232,11 @@ const removeFlavor = async (flavor) => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="flavor in paginatedFlavors" :key="flavor.flavorId || flavor.id">
+            <tr v-for="(flavor, index) in paginatedFlavors" :key="flavor.flavorId || flavor.id">
+              <td>{{ (currentPage - 1) * pageSize + index + 1 }}</td>
               <td class="td-image">
                 <img
-                  :src="`http://localhost:8889${flavor.imageUrl || flavor.image}`"
+                  :src="`/proxy-api${flavor.imageUrl || flavor.image}`"
                   :alt="flavor.flavorName || flavor.name"
                   class="flavor-img"
                 />
@@ -243,6 +245,7 @@ const removeFlavor = async (flavor) => {
 
               <td>
                 <strong>{{ flavor.flavorName || flavor.name }}</strong>
+                <small>맛 #{{ flavor.flavorId || flavor.id }}</small>
               </td>
               <td>
                 <span :class="['status-badge', (flavor.isActive !== undefined ? flavor.isActive : flavor.active) ? 'status-active' : 'status-inactive']">
@@ -455,6 +458,13 @@ const removeFlavor = async (flavor) => {
   background: #fff1f2;
   color: #be123c;
   border: 1px solid #fecdd3;
+}
+
+.data-table td small {
+  display: block;
+  margin-top: 4px;
+  color: #8a94a6;
+  font-size: 11px;
 }
 .empty-state, .loading-state {
   padding: 40px;

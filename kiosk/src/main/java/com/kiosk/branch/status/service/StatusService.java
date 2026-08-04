@@ -144,7 +144,7 @@ public class StatusService {
     ){
 
         return storeProductMapper
-                .findByStoreId(storeId)
+                .findByStoreIdAndIsDeletedFalseAndProduct_IsDeletedFalse(storeId)
                 .stream()
                 .map(sp -> {
 
@@ -303,7 +303,7 @@ public class StatusService {
 
 
         return icecreamFlavorMapper
-                .findByIsActiveTrue()
+                .findByIsActiveTrueAndIsDeletedFalse()
                 .stream()
                 .map(FlavorResponse::from)
                 .toList();
@@ -343,7 +343,7 @@ public class StatusService {
 
 
         IcecreamFlavor flavor =
-                icecreamFlavorMapper.findById(flavorId)
+                icecreamFlavorMapper.findByIdAndIsDeletedFalse(flavorId)
                 .orElseThrow(
                         () -> new IllegalArgumentException("맛 없음")
                 );

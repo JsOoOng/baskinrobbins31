@@ -250,7 +250,7 @@ public class HeadProductService {
              */
             boolean storeProductExists =
                     headStoreProductMapper
-                            .existsByStore_IdAndProduct_IdAndIsDeletedFalse(
+                            .existsByStore_IdAndProduct_IdAndIsDeletedFalseAndProduct_IsDeletedFalse(
                                     store.getId(),
                                     savedProduct.getId()
                             );
@@ -367,7 +367,7 @@ public class HeadProductService {
             getProductList() {
 
         return headProductMapper
-                .findAllByOrderByIdDesc()
+                .findByIsDeletedFalseOrderByIdDesc()
                 .stream()
                 .map(
                         this::toResponseDTO
@@ -389,7 +389,7 @@ public class HeadProductService {
 
         Product product =
                 headProductMapper
-                        .findById(
+                        .findByIdAndIsDeletedFalse(
                                 productId
                         )
                         .orElseThrow(() ->
@@ -413,7 +413,7 @@ public class HeadProductService {
             Integer productId,
             Boolean isDisplay
     ) {
-        Product product = headProductMapper.findById(productId)
+        Product product = headProductMapper.findByIdAndIsDeletedFalse(productId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "존재하지 않는 상품입니다."
                 ));
@@ -551,7 +551,10 @@ public class HeadProductService {
                                 )
                         );
 
-        product.hideProduct();
+        product.deleteProduct();
+        headStoreProductMapper
+                .findByProduct_IdAndIsDeletedFalse(productId)
+                .forEach(StoreProduct::deleteStoreProduct);
 
         adminLogService.logAction(
                 "상품",

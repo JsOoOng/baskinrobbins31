@@ -237,18 +237,19 @@ onMounted(async()=>{
 
 
                 <tr
-                    v-for="flavor in allFlavors"
+                    v-for="(flavor, index) in allFlavors"
                     :key="flavor.flavorId"
                 >
 
 
                     <td>
-                        {{ flavor.flavorId }}
+                        {{ index + 1 }}
                     </td>
 
 
                     <td class="flavor-name">
                         {{ flavor.flavorName }}
+                        <small>맛 #{{ flavor.flavorId }}</small>
                     </td>
 
 
