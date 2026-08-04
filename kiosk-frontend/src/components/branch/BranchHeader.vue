@@ -19,7 +19,7 @@ const avatar = computed(() => displayName.value.trim().charAt(0) || '관')
 
 // 인증 정보를 모두 지운 다음 지점 로그인 화면으로 돌아간다.
 const logout = async () => {
-  localStorage.removeItem('token')
+  localStorage.removeItem('branchToken')
   localStorage.removeItem('branchUser')
   await router.replace({ name: 'branch-login' })
 }

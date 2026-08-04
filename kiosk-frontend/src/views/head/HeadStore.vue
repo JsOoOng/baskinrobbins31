@@ -21,8 +21,7 @@ import {
   extractStoreErrorMessage,
   getHeadStoreDetail,
   getHeadStores,
-  updateHeadStore,
-  deleteHeadStore
+  updateHeadStore
 } from '@/api/head/headStoreApi'
 
 import AppMessageToast
@@ -706,25 +705,6 @@ const submitEmployee = async () => {
 
   } finally {
     employeeSaving.value = false
-  }
-}
-
-const removeStore = async (store) => {
-  const confirmed = window.confirm(
-    `"${store.storeName}" 지점을 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
-  )
-  if (!confirmed) return
-
-  clearMessage()
-  try {
-    await deleteHeadStore(store.storeId)
-    showMessage('지점이 삭제되었습니다.', 'success')
-    await loadStores()
-  } catch (error) {
-    showMessage(
-      extractStoreErrorMessage(error, '지점 삭제에 실패했습니다.'),
-      'error'
-    )
   }
 }
 

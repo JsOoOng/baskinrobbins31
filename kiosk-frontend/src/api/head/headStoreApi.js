@@ -148,7 +148,3 @@ export const extractStoreErrorMessage = (
   )
 }
 
-export const deleteHeadStore = async (storeId) => {
-  const response = await api.delete(`/head/stores/${storeId}`)
-  return response.data
-}

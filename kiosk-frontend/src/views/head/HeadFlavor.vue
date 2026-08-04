@@ -12,8 +12,7 @@ import {
   createHeadFlavor,
   deleteHeadFlavor,
   getHeadFlavors,
-  updateHeadFlavor,
-  deleteHeadFlavor
+  updateHeadFlavor
 } from '@/api/head/headFlavorApi'
 
 import AppMessageToast from '@/components/common/AppMessageToast.vue'
@@ -187,24 +186,6 @@ const submitFlavor = async () => {
     showMessage('요청 처리에 실패했습니다.', 'error')
   } finally {
     saving.value = false
-  }
-}
-
-const removeFlavor = async (flavor) => {
-  const flavorName = flavor.flavorName || flavor.name
-  const flavorId = flavor.flavorId || flavor.id
-  const confirmed = window.confirm(
-    `"${flavorName}" 아이스크림을 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
-  )
-  if (!confirmed) return
-
-  clearMessage()
-  try {
-    await deleteHeadFlavor(flavorId)
-    showMessage('아이스크림 맛이 삭제되었습니다.', 'success')
-    await loadFlavors()
-  } catch (error) {
-    showMessage('맛 삭제에 실패했습니다.', 'error')
   }
 }
 

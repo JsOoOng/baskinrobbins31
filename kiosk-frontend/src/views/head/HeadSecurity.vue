@@ -24,8 +24,7 @@ import {
   getHeadAdmins,
   resetHeadAdminPassword,
   updateHeadAdmin,
-  updateHeadAdminStatus,
-  deleteHeadAdmin
+  updateHeadAdminStatus
 } from '@/api/head/headSecurityApi'
 
 /*
@@ -606,29 +605,6 @@ const toggleAdminStatus = async (
 
   } finally {
     statusUpdatingId.value = null
-  }
-}
-
-/*
- * 관리자 계정 삭제
- */
-const removeAdmin = async (admin) => {
-  const confirmed = window.confirm(
-    `"${admin.name}" 관리자 계정을 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
-  )
-  
-  if (!confirmed) return
-  
-  clearMessage()
-  try {
-    await deleteHeadAdmin(admin.adminId)
-    showMessage('관리자 계정이 삭제되었습니다.', 'success')
-    await loadAdmins(true)
-  } catch (error) {
-    showMessage(
-      extractSecurityErrorMessage(error, '관리자 계정 삭제에 실패했습니다.'),
-      'error'
-    )
   }
 }
 

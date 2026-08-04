@@ -163,7 +163,3 @@ export const extractSecurityErrorMessage = (
   )
 }
 
-export const deleteHeadAdmin = async (adminId) => {
-  const response = await api.delete(`/head/admins/${adminId}`)
-  return response.data
-}

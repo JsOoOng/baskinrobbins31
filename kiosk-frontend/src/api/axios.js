@@ -29,7 +29,12 @@ const instance = axios.create({
  */
 instance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const isHeadRequest =
+      config.url?.startsWith('/head/') ||
+      window.location.pathname.startsWith('/head')
+    const token = localStorage.getItem(
+      isHeadRequest ? 'headToken' : 'branchToken'
+    )
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -110,8 +115,14 @@ instance.interceptors.response.use(
  * 본사 관련 저장 값과 기존 공통 저장 값을 모두 제거합니다.
  */
 const clearAuthentication = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('headUser')
+  if (window.location.pathname.startsWith('/head')) {
+    localStorage.removeItem('headToken')
+    localStorage.removeItem('headUser')
+    return
+  }
+
+  localStorage.removeItem('branchToken')
+  localStorage.removeItem('branchUser')
 }
 
 export default instance

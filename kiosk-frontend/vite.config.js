@@ -31,9 +31,8 @@ export default defineConfig({
   },
   server: {
 
-    allowedHosts: [
-      'trace-discount-appraisal.ngrok-free.dev' // 여기에 ngrok 도메인 추가
-    ],
+    // Cloudflare quick tunnels use a different subdomain each time.
+    allowedHosts: ['.trycloudflare.com', 'trace-discount-appraisal.ngrok-free.dev'],
     host: '0.0.0.0',
     proxy: {
       // 이 특별한 접두사가 붙은 데이터 요청만 백엔드로 보냅니다.

@@ -51,7 +51,7 @@ const login = async () => {
       turnstileToken: turnstileToken.value
     })
 
-    localStorage.setItem('token', response.data.token)
+    localStorage.setItem('branchToken', response.data.token)
     // 공통 헤더·사이드바에서도 지점명과 관리자명을 사용할 수 있도록 함께 저장한다.
     localStorage.setItem('branchUser', JSON.stringify(response.data.user))
     await router.push('/branch/main')

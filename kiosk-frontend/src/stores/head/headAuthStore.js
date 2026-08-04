@@ -15,7 +15,7 @@ import {
   logoutHeadAdmin
 } from '@/api/head/headAuthApi'
 
-const TOKEN_KEY = 'token'
+const TOKEN_KEY = 'headToken'
 const HEAD_USER_KEY = 'headUser'
 const AUTH_USER_TYPE_KEY = 'authUserType'
 
