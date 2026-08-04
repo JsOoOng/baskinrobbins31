@@ -1,20 +1,12 @@
 package com.kiosk.headquarter.service;
 
 
-import org.springframework.web.multipart.MultipartFile;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.kiosk.entity.IcecreamFlavor;
 import com.kiosk.headquarter.dto.flavor.HeadFlavorCreateRequestDTO;
@@ -37,27 +29,19 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class HeadFlavorService {
 
-    private static final Set<String> ALLOWED_IMAGE_EXTENSIONS =
-            Set.of("png", "jpeg", "jpg", "webp");
-
-    private static final Set<String> ALLOWED_IMAGE_CONTENT_TYPES =
-            Set.of("image/png", "image/jpeg", "image/webp");
-	
 	private static final Pattern
     FLAVOR_IMAGE_URL_PATTERN =
     Pattern.compile(
             "^/images/flavors/"
             + "[a-z0-9]+"
             + "(?:_[a-z0-9]+)*"
-            + "\\.(?:png|jpg)$"
+            + "\\.(?:png|jpe?g|webp)$"
     );
 
     private final HeadFlavorMapper
             headFlavorMapper;
     private final AdminLogService adminLogService;
-
-    @Value("${app.upload.flavor-directory}")
-    private String flavorUploadDirectory;
+    private final FlavorImageFileStorage flavorImageFileStorage;
 
     /*
      * 아이스크림 맛 등록
@@ -90,12 +74,6 @@ public class HeadFlavorService {
             throw new IllegalArgumentException("이미지 파일을 첨부해주세요.");
         }
         
-        String originalFilename = validateImageFile(imageFile);
-        
-        String imageUrl = "/images/flavors/" + originalFilename;
-
-
-
         boolean alreadyExists =
                 headFlavorMapper
                         .existsByFlavorNameIgnoreCase(
@@ -107,8 +85,8 @@ public class HeadFlavorService {
                     "이미 존재하는 맛 이름입니다."
             );
         }
-        saveImageFile(imageFile, originalFilename);
-
+        // 쉬운주석: 중복 맛 이름 검사가 끝난 뒤 저장해야 실패한 요청의 사진이 폴더에 남지 않는다.
+        String imageUrl = flavorImageFileStorage.store(imageFile);
         /*
          * 신규 맛은 항상 활성화 상태로 생성합니다.
          */
@@ -230,12 +208,6 @@ public class HeadFlavorService {
 
         String imageUrl = flavor.getImageUrl();
         MultipartFile imageFile = requestDTO.getImageFile();
-        
-        if (imageFile != null && !imageFile.isEmpty()) {
-            String originalFilename = validateImageFile(imageFile);
-            imageUrl = "/images/flavors/" + originalFilename;
-            saveImageFile(imageFile, originalFilename);
-        }
 
         boolean alreadyExists =
                 headFlavorMapper
@@ -248,6 +220,11 @@ public class HeadFlavorService {
             throw new IllegalArgumentException(
                     "이미 존재하는 맛 이름입니다."
             );
+        }
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // 쉬운주석: 이름 중복 검사가 끝난 뒤에만 새 이미지를 저장하고 URL을 갈아 끼운다.
+            imageUrl = flavorImageFileStorage.store(imageFile);
         }
 
         flavor.updateFlavor(
@@ -402,69 +379,4 @@ public class HeadFlavorService {
         }
     }
 
-    private void saveImageFile(MultipartFile file, String filename) {
-        try {
-
-            Path uploadPath = Paths.get(flavorUploadDirectory)
-                    .toAbsolutePath()
-                    .normalize();
-
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            Path filePath = uploadPath.resolve(filename);
-
-            System.out.println("저장 위치 = " + filePath.toAbsolutePath());
-
-            file.transferTo(filePath.toFile());
-
-        } catch (IOException e) {
-            throw new RuntimeException(
-                    "이미지 파일 저장에 실패했습니다.",
-                    e
-            );
-        }
-    }
-
-    private String validateImageFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("이미지 파일을 첨부해주세요.");
-        }
-
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null || originalFilename.isBlank()) {
-            throw new IllegalArgumentException("올바른 파일이 아닙니다.");
-        }
-
-        String safeFilename = Paths.get(
-                originalFilename.replace('\\', '/')
-        ).getFileName().toString();
-        int extensionSeparator = safeFilename.lastIndexOf('.');
-        if (extensionSeparator <= 0 || extensionSeparator == safeFilename.length() - 1) {
-            throw new IllegalArgumentException(
-                    "이미지 파일은 png, jpeg, jpg, webp 확장자만 허용됩니다."
-            );
-        }
-
-        String extension = safeFilename
-                .substring(extensionSeparator + 1)
-                .toLowerCase(Locale.ROOT);
-        if (!ALLOWED_IMAGE_EXTENSIONS.contains(extension)) {
-            throw new IllegalArgumentException(
-                    "이미지 파일은 png, jpeg, jpg, webp 확장자만 허용됩니다."
-            );
-        }
-
-        String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_IMAGE_CONTENT_TYPES.contains(
-                contentType.toLowerCase(Locale.ROOT)
-        )) {
-            throw new IllegalArgumentException(
-                    "PNG, JPEG, JPG, WEBP 형식의 이미지 파일만 업로드할 수 있습니다."
-            );
-        }
-
-        return safeFilename;
-    }
 }

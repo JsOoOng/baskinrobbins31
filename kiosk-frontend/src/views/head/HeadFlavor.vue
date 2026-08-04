@@ -73,6 +73,8 @@ const clearMessage = () => {
 }
 
 const handleFlavorImageError = (event, imageUrl) => {
+  // 쉬운주석: 이미지가 바로 열리지 않으면 백엔드로 연결된 /proxy-api 주소로 한 번 더 시도한다.
+  // 이미 재시도했거나 외부 절대주소라면 반복 요청 대신 이미지 칸을 숨긴다.
   const image = event.currentTarget
   if (
     !imageUrl ||

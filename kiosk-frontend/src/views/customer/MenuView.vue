@@ -379,6 +379,8 @@ const handleProductImgError = (e) => {
 }
 
 const handleFlavorImageError = (event, imageUrl) => {
+  // 쉬운주석: 원래 이미지 주소가 실패하면 백엔드 프록시 주소로 딱 한 번만 다시 찾는다.
+  // 두 번째도 실패하면 무한 반복하지 않고 깨진 이미지 칸을 숨긴다.
   const image = event.currentTarget
   if (
     !imageUrl ||

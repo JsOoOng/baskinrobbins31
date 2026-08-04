@@ -67,8 +67,8 @@ else
     DB_ARGS="-Dspring.datasource.url=${DB_URL} -Dspring.datasource.username=${RDS_USERNAME} -Dspring.datasource.password=${RDS_PASSWORD}"
 fi
 
-# Keep uploaded flavor images in the existing persistent EC2 directory.
-# Spring serves these files through /images/flavors/{filename}.
+# 쉬운주석: 새 버전을 배포해도 업로드 사진이 사라지지 않도록
+# 프로그램 밖의 고정 폴더에 저장하고 /images/flavors/{filename} 주소로 보여준다.
 export FLAVOR_UPLOAD_DIR="/home/ubuntu/kiosk-deploy/data/flavors"
 
 nohup java $DB_ARGS -jar $JAR_NAME > /home/ubuntu/kiosk-deploy/nohup.out 2>&1 &
