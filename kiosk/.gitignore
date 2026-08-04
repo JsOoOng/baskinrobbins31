@@ -24,6 +24,7 @@ buildNumber.properties
 *.rar
 *.log
 logs/
+data/
 
 # ==========================================
 # 3. IDE 설정 파일 (협업 시 충돌 방지 핵심)

@@ -157,7 +157,7 @@
             >
             <img
               v-if="flavor.imageUrl"
-              :src="`http://localhost:8889${flavor.imageUrl}`"
+              :src="`/proxy-api${flavor.imageUrl}`"
               :alt="flavor.flavorName"
               class="flavor-image"
             />

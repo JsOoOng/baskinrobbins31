@@ -2,7 +2,6 @@ package com.kiosk.headquarter.service;
 
 
 import org.springframework.web.multipart.MultipartFile;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,6 +13,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kiosk.entity.IcecreamFlavor;
@@ -55,6 +55,9 @@ public class HeadFlavorService {
     private final HeadFlavorMapper
             headFlavorMapper;
     private final AdminLogService adminLogService;
+
+    @Value("${app.upload.flavor-directory}")
+    private String flavorUploadDirectory;
 
     /*
      * 아이스크림 맛 등록
@@ -402,10 +405,9 @@ public class HeadFlavorService {
     private void saveImageFile(MultipartFile file, String filename) {
         try {
 
-            String uploadDir = System.getProperty("user.dir")
-                    + "/uploads/flavors";
-
-            Path uploadPath = Paths.get(uploadDir);
+            Path uploadPath = Paths.get(flavorUploadDirectory)
+                    .toAbsolutePath()
+                    .normalize();
 
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
