@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import static org.springframework.security.config.Customizer.withDefaults;
 
 /**
  * [코드 흐름 안내] SecurityConfig
@@ -68,21 +69,27 @@ public class SecurityConfig {
 
             // 2. CSRF 보호 비활성화: REST API 환경에서는 토큰 방식을 사용하므로 CSRF 보호가 불필요함
             .csrf(AbstractHttpConfigurer::disable)
+            
+            // 3. 보안 헤더(Security Headers) 설정 
+            .headers(headers -> headers
+                .frameOptions(frame -> frame.sameOrigin()) // 클릭재킹 방어 (동일 출처 iframe 허용)
+                .contentTypeOptions(withDefaults())     // MIME 타입 스니핑 방어
+            )
 
-            // 3. 세션 관리 설정: JWT를 사용하므로 서버에서 세션을 유지하지 않음
+            // 4. 세션 관리 설정: JWT를 사용하므로 서버에서 세션을 유지하지 않음
             .sessionManagement(session ->
                     session.sessionCreationPolicy(
                             SessionCreationPolicy.STATELESS // 세션을 생성하지도 않고, 기존 세션을 사용하지도 않음
                     )
             )
 
-            // 4. 커스텀 필터 등록: 기본 아이디/비밀번호 검증 필터가 실행되기 전에 JWT 필터를 먼저 실행
+            // 5. 커스텀 필터 등록: 기본 아이디/비밀번호 검증 필터가 실행되기 전에 JWT 필터를 먼저 실행
             .addFilterBefore(
                     new JwtFilter(jwtUtil), // 요청 헤더의 JWT를 검사하는 커스텀 필터
                     UsernamePasswordAuthenticationFilter.class // Spring Security의 기본 인증 필터
             )
 
-            // 5. 엔드포인트(URL)별 접근 권한(인가) 설정
+            // 6. 엔드포인트(URL)별 접근 권한(인가) 설정
             .authorizeHttpRequests(auth -> auth
 
                     // 브라우저가 본 요청 전에 보내는 CORS Preflight(OPTIONS) 요청은 무조건 통과
@@ -154,7 +161,7 @@ public class SecurityConfig {
                     .anyRequest().permitAll()
             )
 
-            // 6. 사용하지 않는 기본 보안 기능 비활성화 (JWT를 사용하기 때문)
+            // 7. 사용하지 않는 기본 보안 기능 비활성화 (JWT를 사용하기 때문)
             .formLogin(AbstractHttpConfigurer::disable) // Spring Security 기본 로그인 폼 화면 비활성화
             .httpBasic(AbstractHttpConfigurer::disable) // HTTP Basic 인증 방식 비활성화
             .logout(AbstractHttpConfigurer::disable);   // 기본 로그아웃 처리 비활성화 (JWT 로그아웃은 보통 프론트에서 토큰 삭제로 처리)

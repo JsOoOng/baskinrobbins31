@@ -117,10 +117,34 @@ const closeFormModal = () => {
 
 const handleFileChange = (e) => {
   const file = e.target.files[0]
+  
   if (!file) {
     form.imageFile = null
     return
   }
+
+  // 1. 파일 크기 제한 (10MB)
+  const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB (바이트 단위)
+  if (file.size > MAX_FILE_SIZE) {
+    alert('파일 크기는 10MB를 초과할 수 없습니다.')
+    e.target.value = '' // 파일 input 초기화 (선택 취소)
+    form.imageFile = null
+    return
+  }
+
+  // 2. 이미지 확장자 제한 (사진 파일만 허용)
+  const fileName = file.name
+  const extension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
+  const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp']
+
+  if (!allowedExtensions.includes(extension)) {
+    alert('업로드 가능한 이미지 확장자는 jpg, jpeg, png, webp만 허용됩니다.')
+    e.target.value = '' // 파일 input 초기화
+    form.imageFile = null
+    return
+  }
+
+  // 검증 통과 시 저장
   form.imageFile = file
 }
 
