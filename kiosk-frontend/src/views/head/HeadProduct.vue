@@ -21,7 +21,8 @@ import {
   getHeadProductDetail,
   getHeadProducts,
   updateHeadProduct,
-  updateHeadProductDisplay
+  updateHeadProductDisplay,
+  deleteHeadProduct
 } from '@/api/head/headProductApi'
 
 import {
@@ -719,6 +720,40 @@ const toggleDisplay = async (product) => {
 
   } finally {
     displayUpdatingId.value = null
+  }
+}
+
+/*
+ * 상품 삭제
+ */
+const removeProduct = async (product) => {
+  const confirmed = window.confirm(
+    `"${product.productName}" 상품을 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  clearMessage()
+
+  try {
+    await deleteHeadProduct(product.productId)
+
+    showMessage(
+      '상품이 삭제되었습니다.',
+      'success'
+    )
+
+    await loadProducts()
+  } catch (error) {
+    showMessage(
+      extractProductErrorMessage(
+        error,
+        '상품 삭제에 실패했습니다.'
+      ),
+      'error'
+    )
   }
 }
 

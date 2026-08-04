@@ -68,6 +68,21 @@ export const updateHeadStore = async (
 }
 
 /*
+ * 지점 삭제
+ *
+ * DELETE /head/stores/{storeId}
+ */
+export const deleteHeadStore = async (
+  storeId
+) => {
+  const response = await api.delete(
+    `/head/stores/${storeId}`
+  )
+
+  return response.data
+}
+
+/*
  * 지점 관리자 계정 생성
  *
  * POST /head/stores/{storeId}/employees

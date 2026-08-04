@@ -11,6 +11,15 @@ public class HeadLoginRequest {
 
     private String loginId;
     private String password;
+    private String turnstileToken;
+
+    public String getTurnstileToken() {
+        return turnstileToken;
+    }
+
+    public void setTurnstileToken(String turnstileToken) {
+        this.turnstileToken = turnstileToken;
+    }
 
     public String getLoginId() {
         return loginId;

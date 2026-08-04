@@ -279,8 +279,8 @@ public class HeadFlavorService {
 
         flavor.deleteFlavor();
 
-        adminLogService.logAction("맛", flavor.getFlavorName() + " 맛 비활성화");
-        return "아이스크림 맛 비활성화 성공";
+        adminLogService.logAction("맛", flavor.getFlavorName() + " 맛 삭제");
+        return "아이스크림 맛 삭제 성공";
     }
 
     /*

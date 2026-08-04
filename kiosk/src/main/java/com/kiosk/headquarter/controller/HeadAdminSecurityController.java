@@ -8,10 +8,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kiosk.headquarter.dto.admin.HeadAdminCreateRequestDTO;
+import com.kiosk.headquarter.dto.admin.HeadAdminUpdateRequestDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminPasswordUpdateRequestDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminResponseDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminRoleUpdateRequestDTO;

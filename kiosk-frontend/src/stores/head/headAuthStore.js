@@ -97,6 +97,13 @@ export const useHeadAuthStore = defineStore(
     })
 
     /*
+     * 일반 본사 관리자 여부
+     */
+    const isHeadAdmin = computed(() => {
+      return role.value === 'HEAD_ADMIN'
+    })
+
+    /*
      * 최고 관리자 여부
      */
     const isSuperAdmin = computed(() => {
@@ -109,6 +116,7 @@ export const useHeadAuthStore = defineStore(
     const hasHeadAccess = computed(() => {
       return [
         'ADMIN',
+        'HEAD_ADMIN',
         'SUPER_ADMIN'
       ].includes(role.value)
     })
@@ -183,7 +191,8 @@ export const useHeadAuthStore = defineStore(
      */
     const login = async (
       loginId,
-      password
+      password,
+      turnstileToken
     ) => {
       loading.value = true
       errorMessage.value = ''
@@ -192,7 +201,8 @@ export const useHeadAuthStore = defineStore(
         const responseBody =
           await loginHeadAdmin({
             loginId: loginId.trim(),
-            password
+            password,
+            turnstileToken
           })
 
         /*
@@ -229,6 +239,7 @@ export const useHeadAuthStore = defineStore(
         if (
           ![
             'ADMIN',
+            'HEAD_ADMIN',
             'SUPER_ADMIN'
           ].includes(normalizedRole)
         ) {
@@ -311,6 +322,7 @@ export const useHeadAuthStore = defineStore(
         if (
           ![
             'ADMIN',
+            'HEAD_ADMIN',
             'SUPER_ADMIN'
           ].includes(normalizedRole)
         ) {
@@ -399,6 +411,7 @@ export const useHeadAuthStore = defineStore(
       isAuthenticated,
       role,
       isAdmin,
+      isHeadAdmin,
       isSuperAdmin,
       hasHeadAccess,
       displayName,

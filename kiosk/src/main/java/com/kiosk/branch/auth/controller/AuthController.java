@@ -33,6 +33,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtUtil jwtUtil;
+    private final com.kiosk.common.service.TurnstileService turnstileService;
 
 
 
@@ -45,6 +46,10 @@ public class AuthController {
     public ResponseEntity<?> login(
             @RequestBody AuthRequest request
     ){
+
+        if (!turnstileService.verifyToken(request.getTurnstileToken())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "자동입력 방지(Turnstile) 검증에 실패했습니다. 새로고침 후 다시 시도해주세요."));
+        }
 
     	AuthResponse user =
         		authService.login(request);

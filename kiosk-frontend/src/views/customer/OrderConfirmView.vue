@@ -36,6 +36,9 @@
 
     <div class="payment-section">
       <h3>{{ $t('결제 방법을 선택해주세요 (총 ₩{total})', { total: (basketStore.totalPrice - (basketStore.totalDiscount || 0)).toLocaleString() }) }}</h3>
+      <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+        <VueTurnstile :site-key="turnstileSiteKey" v-model="turnstileToken" />
+      </div>
       <div class="pay-buttons">
         <button @click="handlePayment('CASH')">{{ $t('현금') }}</button>
         <button @click="handlePayment('CARD')">{{ $t('신용카드') }}</button>
@@ -61,6 +64,7 @@ import { useBasketStore } from '@/stores/customer/basket';
 import { useI18n } from 'vue-i18n';
 import { loadTossPayments } from '@tosspayments/payment-sdk';
 import axios from '@/api/axios';
+import VueTurnstile from 'vue-turnstile';
 
 const router = useRouter();
 const route = useRoute();
@@ -106,6 +110,8 @@ const closeAlert = () => {
 
 // 토스페이먼츠 클라이언트 키 (.env 파일에서 로드)
 const TOSS_CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY;
+const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+const turnstileToken = ref('');
 
 onMounted(() => {
   if (basketStore.cartItems.length === 0) {
@@ -133,6 +139,11 @@ const handlePayment = async (method) => {
     return;
   }
 
+  if (!turnstileToken.value) {
+    displayAlert('자동입력 방지(Turnstile) 인증을 완료해 주세요.');
+    return;
+  }
+
   // 💡 1. 결제 시도 전 현재 장바구니 내역을 안전하게 백업 (깊은 복사)
   const backupCartItems = JSON.parse(JSON.stringify(basketStore.cartItems));
 
@@ -147,6 +158,7 @@ const handlePayment = async (method) => {
       userCouponId: basketStore.usedCouponId || null,
       kioskId: Number(localStorage.getItem('kioskId')) || 1,
       storeId: Number(localStorage.getItem('storeId')) || 1,
+      turnstileToken: turnstileToken.value,
       items: basketStore.cartItems.map(item => {
         const baseItem = {
           productId: item.productId || item.id,
@@ -213,6 +225,11 @@ const handleTossPayment = async () => {
     return;
   }
 
+  if (!turnstileToken.value) {
+    displayAlert('자동입력 방지(Turnstile) 인증을 완료해 주세요.');
+    return;
+  }
+
   // 💡 1. 토스 결제 시도 전 현재 장바구니 내역을 안전하게 백업 (깊은 복사)
   const backupCartItems = JSON.parse(JSON.stringify(basketStore.cartItems));
 
@@ -227,6 +244,7 @@ const handleTossPayment = async () => {
       userCouponId: basketStore.usedCouponId || null,
       kioskId: Number(localStorage.getItem('kioskId')) || 1,
       storeId: Number(localStorage.getItem('storeId')) || 1,
+      turnstileToken: turnstileToken.value,
       items: basketStore.cartItems.map(item => {
         const baseItem = {
           productId: item.productId || item.id,

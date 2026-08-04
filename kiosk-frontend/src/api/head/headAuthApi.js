@@ -22,7 +22,8 @@ export const loginHeadAdmin = async (loginForm) => {
     '/head/auth/login',
     {
       loginId: loginForm.loginId,
-      password: loginForm.password
+      password: loginForm.password,
+      turnstileToken: loginForm.turnstileToken
     }
   )
 

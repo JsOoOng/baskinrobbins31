@@ -50,4 +50,6 @@ public interface HeadStoreProductMapper
             );
 
     List<StoreProduct> findByProduct_IdAndIsDeletedFalse(Integer productId);
+
+    void deleteByProduct(com.kiosk.entity.Product product);
 }

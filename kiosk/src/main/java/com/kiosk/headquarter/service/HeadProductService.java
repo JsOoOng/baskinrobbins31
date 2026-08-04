@@ -559,7 +559,7 @@ public class HeadProductService {
         adminLogService.logAction(
                 "상품",
                 product.getProductName()
-                        + " 삭제"
+                        + " 완전 삭제"
         );
     }
 

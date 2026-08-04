@@ -6,6 +6,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/api/axios'
+import VueTurnstile from 'vue-turnstile'
 
 const router = useRouter()
 
@@ -14,6 +15,8 @@ const password = ref('')
 const showPassword = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
+const turnstileToken = ref('')
+const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY
 
 const loginIdInput = ref(null)
 const passwordInput = ref(null)
@@ -34,12 +37,18 @@ const login = async () => {
     return
   }
 
+  if (!turnstileToken.value) {
+    errorMessage.value = '자동입력 방지(Turnstile) 인증을 완료해 주세요.'
+    return
+  }
+
   loading.value = true
 
   try {
     const response = await api.post('/branch/login', {
       loginId: loginId.value.trim(),
-      password: password.value
+      password: password.value,
+      turnstileToken: turnstileToken.value
     })
 
     localStorage.setItem('token', response.data.token)
@@ -133,9 +142,13 @@ const login = async () => {
             </button>
           </div>
 
+          <div style="display: flex; justify-content: center; margin-top: 10px;">
+            <VueTurnstile :site-key="turnstileSiteKey" v-model="turnstileToken" />
+          </div>
+
           <p v-if="errorMessage" class="error-message" role="alert">{{ errorMessage }}</p>
 
-          <button class="login-button" type="submit" :disabled="loading">
+          <button class="login-button" type="submit" :disabled="loading || !turnstileToken">
             <span v-if="loading" class="spinner" aria-hidden="true"></span>
             {{ loading ? '로그인 중...' : '로그인' }}
           </button>
