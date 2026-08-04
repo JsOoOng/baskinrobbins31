@@ -961,9 +961,8 @@ onMounted(async () => {
             </button>
 
             <button
-              type="button"
+              type="submit"
               :disabled="saving"
-              @click="closeModal"
             >
               {{
                 saving

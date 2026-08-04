@@ -10,6 +10,7 @@ import { onMounted, reactive, ref, computed, watch } from 'vue'
 
 import {
   createHeadFlavor,
+  deleteHeadFlavor,
   getHeadFlavors,
   updateHeadFlavor
 } from '@/api/head/headFlavorApi'
@@ -20,6 +21,7 @@ import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
 const flavors = ref([])
 const loading = ref(false)
 const saving = ref(false)
+const deletingId = ref(null)
 const searchKeyword = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
@@ -166,6 +168,20 @@ const submitFlavor = async () => {
 onMounted(() => {
   loadFlavors()
 })
+const removeFlavor = async (flavor) => {
+  if (!window.confirm(`"${flavor.flavorName}" 맛을 삭제하시겠습니까?`)) return
+  deletingId.value = flavor.flavorId
+  clearMessage()
+  try {
+    await deleteHeadFlavor(flavor.flavorId)
+    showMessage('아이스크림 맛이 삭제되었습니다.')
+    await loadFlavors()
+  } catch (error) {
+    showMessage(error?.response?.data?.message || '아이스크림 맛 삭제에 실패했습니다.', 'error')
+  } finally {
+    deletingId.value = null
+  }
+}
 </script>
 
 <template>
@@ -243,6 +259,14 @@ onMounted(() => {
                   @click="openEditModal(flavor)"
                 >
                   수정
+                </button>
+                <button
+                  type="button"
+                  class="delete-button"
+                  :disabled="deletingId === flavor.flavorId"
+                  @click="removeFlavor(flavor)"
+                >
+                  {{ deletingId === flavor.flavorId ? '삭제 중' : '삭제' }}
                 </button>
               </td>
             </tr>
@@ -424,6 +448,13 @@ onMounted(() => {
 }
 .edit-button:hover {
   background: #f8f9fc;
+}
+
+.delete-button {
+  margin-left: 8px;
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
 }
 .empty-state, .loading-state {
   padding: 40px;

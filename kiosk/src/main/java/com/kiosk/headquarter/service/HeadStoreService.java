@@ -238,6 +238,27 @@ public class HeadStoreService {
         return HeadStoreResponse.from(store);
     }
 
+    @Transactional
+    public void deleteStore(Integer storeId) {
+        Store store = findStore(storeId);
+        StoreStatus previousStatus = store.getStoreStatus();
+
+        if (previousStatus != StoreStatus.CLOSED) {
+            store.updateStore(
+                    store.getStoreName(),
+                    store.getBusinessNumber(),
+                    store.getRegion(),
+                    store.getAddress(),
+                    store.getPhone(),
+                    store.getBusinessHours(),
+                    StoreStatus.CLOSED
+            );
+            saveStatusHistory(store, StoreStatus.CLOSED, LocalDateTime.now());
+        }
+
+        adminLogService.logAction("지점", store.getStoreName() + " 삭제(폐점 처리)");
+    }
+
     private void saveStatusHistory(
             Store store,
             StoreStatus status,

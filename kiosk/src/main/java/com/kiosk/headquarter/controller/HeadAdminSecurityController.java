@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +17,9 @@ import com.kiosk.headquarter.dto.admin.HeadAdminResponseDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminRoleUpdateRequestDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminStatusUpdateRequestDTO;
 import com.kiosk.headquarter.service.HeadAdminSecurityService;
+import com.kiosk.headquarter.service.HeadSecurityService;
+import com.kiosk.headquarter.dto.security.HeadAdminUpdateRequest;
+import com.kiosk.headquarter.dto.security.HeadAdminResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class HeadAdminSecurityController {
 
     private final HeadAdminSecurityService headAdminSecurityService;
+    private final HeadSecurityService headSecurityService;
 
     /**
      * [요청 흐름] GET /head/admins
@@ -70,6 +76,18 @@ public class HeadAdminSecurityController {
         return headAdminSecurityService.updateAdminRole(adminId, requestDTO);
     }
 
+    @PutMapping("/head/admins/{adminId}")
+    public HeadAdminResponse updateAdmin(
+            Authentication authentication,
+            @PathVariable Integer adminId,
+            @RequestBody HeadAdminUpdateRequest request) {
+        return headSecurityService.updateAdmin(
+                (Integer) authentication.getPrincipal(),
+                adminId,
+                request
+        );
+    }
+
     /**
      * [요청 흐름] PUT /head/admins/{adminId}/status
      * 프론트 요청을 받아 updateAdminStatus() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
@@ -92,5 +110,10 @@ public class HeadAdminSecurityController {
             @RequestBody HeadAdminPasswordUpdateRequestDTO requestDTO) {
 
         return headAdminSecurityService.updateAdminPassword(adminId, requestDTO);
+    }
+
+    @DeleteMapping("/head/admins/{adminId}")
+    public String deleteAdmin(@PathVariable Integer adminId) {
+        return headAdminSecurityService.deleteAdmin(adminId);
     }
 }

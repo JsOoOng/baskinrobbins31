@@ -15,6 +15,7 @@ import {
 
 import {
   createHeadProduct,
+  deleteHeadProduct,
   extractProductData,
   extractProductErrorMessage,
   getHeadProductDetail,
@@ -45,6 +46,7 @@ const loading = ref(false)
 const saving = ref(false)
 const detailLoading = ref(false)
 const displayUpdatingId = ref(null)
+const deletingId = ref(null)
 
 const searchKeyword = ref('')
 const currentPage = ref(1)
@@ -735,6 +737,20 @@ onMounted(async () => {
     loadProducts()
   ])
 })
+const removeProduct = async (product) => {
+  if (!window.confirm(`"${product.productName}" 상품을 삭제하시겠습니까?`)) return
+  deletingId.value = product.productId
+  clearMessage()
+  try {
+    await deleteHeadProduct(product.productId)
+    showMessage('상품이 삭제되었습니다.')
+    await loadProducts()
+  } catch (error) {
+    showMessage(extractProductErrorMessage(error, '상품 삭제에 실패했습니다.'), 'error')
+  } finally {
+    deletingId.value = null
+  }
+}
 </script>
 
 <template>
@@ -995,6 +1011,14 @@ onMounted(async () => {
                     "
                   >
                     수정
+                  </button>
+                  <button
+                    type="button"
+                    class="delete-button"
+                    :disabled="deletingId === product.productId"
+                    @click="removeProduct(product)"
+                  >
+                    {{ deletingId === product.productId ? '삭제 중' : '삭제' }}
                   </button>
                 </div>
               </td>
@@ -1699,6 +1723,12 @@ td {
   border: 1px solid #dcd7fb;
   color: #6756dc;
   background: #f3f1ff;
+}
+
+.delete-button {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
 }
 
 .empty-cell {

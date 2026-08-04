@@ -133,3 +133,8 @@ export const extractProductErrorMessage = (
     defaultMessage
   )
 }
+
+export const deleteHeadProduct = async (productId) => {
+  const response = await api.delete(`/head/products/${productId}`)
+  return response.data
+}

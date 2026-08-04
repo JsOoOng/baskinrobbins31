@@ -184,6 +184,22 @@ public class HeadAdminSecurityService {
         return "본사 관리자 비밀번호 변경 성공";
     }
 
+    @Transactional
+    public String deleteAdmin(Integer adminId) {
+        HeadquarterAdmin requester = getCurrentSuperAdmin();
+        HeadquarterAdmin targetAdmin = headquarterAdminMapper.findById(adminId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 본사 관리자입니다."));
+
+        if (requester.getId().equals(targetAdmin.getId())) {
+            throw new IllegalStateException("현재 로그인한 자신의 계정은 삭제할 수 없습니다.");
+        }
+
+        preventLastSuperAdminDeactivate(targetAdmin, AdminStatus.INACTIVE);
+        targetAdmin.changeStatus(AdminStatus.INACTIVE);
+        adminLogService.logAction("관리자 계정", targetAdmin.getName() + " 삭제(비활성화)");
+        return "본사 관리자 삭제 성공";
+    }
+
     private HeadquarterAdmin getCurrentActiveAdmin() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
