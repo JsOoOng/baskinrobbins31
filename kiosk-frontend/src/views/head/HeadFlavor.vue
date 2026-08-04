@@ -72,6 +72,30 @@ const clearMessage = () => {
   message.value = ''
 }
 
+/*
+ * 쉬운주석: 백엔드가 알려 준 정확한 실패 이유를 찾아 화면에 보여준다.
+ * 백엔드 메시지가 없을 때만 마지막의 기본 안내 문장을 사용한다.
+ */
+const extractFlavorErrorMessage = (
+  error,
+  defaultMessage = '요청 처리에 실패했습니다.'
+) => {
+  const responseData = error?.response?.data
+
+  return (
+    responseData?.message ||
+    responseData?.error ||
+    (
+      typeof responseData === 'string' &&
+      !responseData.trimStart().startsWith('<')
+        ? responseData
+        : null
+    ) ||
+    error?.message ||
+    defaultMessage
+  )
+}
+
 const handleFlavorImageError = (event, imageUrl) => {
   // 쉬운주석: 이미지가 바로 열리지 않으면 백엔드로 연결된 /proxy-api 주소로 한 번 더 시도한다.
   // 이미 재시도했거나 외부 절대주소라면 반복 요청 대신 이미지 칸을 숨긴다.
@@ -200,7 +224,9 @@ const submitFlavor = async () => {
     formModal.open = false
     await loadFlavors()
   } catch (error) {
-    showMessage('요청 처리에 실패했습니다.', 'error')
+    // 쉬운주석: 개발자는 콘솔에서 원본 오류를 보고, 사용자는 화면에서 쉬운 이유를 본다.
+    console.error('맛 등록·수정 요청 실패:', error)
+    showMessage(extractFlavorErrorMessage(error), 'error')
   } finally {
     saving.value = false
   }
