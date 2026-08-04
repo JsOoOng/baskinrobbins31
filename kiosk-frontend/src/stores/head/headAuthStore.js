@@ -97,6 +97,13 @@ export const useHeadAuthStore = defineStore(
     })
 
     /*
+     * 일반 본사 관리자 여부
+     */
+    const isHeadAdmin = computed(() => {
+      return role.value === 'HEAD_ADMIN'
+    })
+
+    /*
      * 최고 관리자 여부
      */
     const isSuperAdmin = computed(() => {
@@ -109,6 +116,7 @@ export const useHeadAuthStore = defineStore(
     const hasHeadAccess = computed(() => {
       return [
         'ADMIN',
+        'HEAD_ADMIN',
         'SUPER_ADMIN'
       ].includes(role.value)
     })
@@ -229,6 +237,7 @@ export const useHeadAuthStore = defineStore(
         if (
           ![
             'ADMIN',
+            'HEAD_ADMIN',
             'SUPER_ADMIN'
           ].includes(normalizedRole)
         ) {
@@ -311,6 +320,7 @@ export const useHeadAuthStore = defineStore(
         if (
           ![
             'ADMIN',
+            'HEAD_ADMIN',
             'SUPER_ADMIN'
           ].includes(normalizedRole)
         ) {
@@ -399,6 +409,7 @@ export const useHeadAuthStore = defineStore(
       isAuthenticated,
       role,
       isAdmin,
+      isHeadAdmin,
       isSuperAdmin,
       hasHeadAccess,
       displayName,
