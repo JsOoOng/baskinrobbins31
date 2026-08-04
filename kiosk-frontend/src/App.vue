@@ -511,7 +511,7 @@ const getWebSocketUrl = () => {
 
   return (
     `${protocol}//`
-    + `${window.location.host}`
+    + `${window.location.hostname}`
     + '/proxy-api/ws'
   )
 }
