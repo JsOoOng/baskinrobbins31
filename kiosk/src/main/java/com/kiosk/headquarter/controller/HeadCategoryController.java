@@ -60,7 +60,8 @@ public class HeadCategoryController {
      */
     @GetMapping("/head/categories/{categoryId}")
     public HeadCategoryResponseDTO getCategoryDetail(
-            @PathVariable Integer categoryId) {
+            @PathVariable Integer categoryId,
+            @org.springframework.web.bind.annotation.RequestParam String confirmation) {
 
         return headCategoryService.getCategoryDetail(categoryId);
     }
@@ -85,8 +86,9 @@ public class HeadCategoryController {
      */
     @DeleteMapping("/head/categories/{categoryId}")
     public String deleteCategory(
-            @PathVariable Integer categoryId) {
+            @PathVariable Integer categoryId,
+            @org.springframework.web.bind.annotation.RequestParam String confirmation) {
 
-        return headCategoryService.deleteCategory(categoryId);
+        return headCategoryService.deleteCategory(categoryId, confirmation);
     }
 }

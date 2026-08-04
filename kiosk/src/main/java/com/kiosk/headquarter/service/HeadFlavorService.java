@@ -42,6 +42,7 @@ public class HeadFlavorService {
             headFlavorMapper;
     private final AdminLogService adminLogService;
     private final FlavorImageFileStorage flavorImageFileStorage;
+    private final DatabaseHardDeleteService databaseHardDeleteService;
 
     /*
      * 아이스크림 맛 등록
@@ -244,7 +245,7 @@ public class HeadFlavorService {
     }
 
     /*
-     * 아이스크림 맛 비활성화
+     * 아이스크림 맛과 연결 데이터 영구 삭제
      */
     @Transactional
     /**
@@ -252,7 +253,8 @@ public class HeadFlavorService {
      * Controller 또는 상위 서비스에서 호출되어 Pattern, HeadFlavorMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public String deleteFlavor(
-            Integer flavorId
+            Integer flavorId,
+            String confirmation
     ) {
 
         IcecreamFlavor flavor =
@@ -260,9 +262,17 @@ public class HeadFlavorService {
                         flavorId
                 );
 
-        flavor.deleteFlavor();
+        String flavorName = flavor.getFlavorName();
+        HardDeleteConfirmation.verify(flavorName, confirmation);
 
-        adminLogService.logAction("맛", flavor.getFlavorName() + " 맛 삭제");
+        // 쉬운주석: is_deleted 표시만 바꾸지 않고 자식 DB 행부터 지운 뒤 맛 행까지 실제 삭제한다.
+        int deleted = databaseHardDeleteService.deleteTree(
+                "icecream_flavors", "flavor_id", flavorId
+        );
+        if (deleted != 1) {
+            throw new IllegalStateException("아이스크림 맛 DB 행을 삭제하지 못했습니다.");
+        }
+        adminLogService.logAction("맛", flavorName + " 맛 영구 삭제");
         return "아이스크림 맛 삭제 성공";
     }
 

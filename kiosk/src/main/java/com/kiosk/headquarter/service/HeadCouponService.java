@@ -25,6 +25,7 @@ public class HeadCouponService {
     private final HeadCouponMapper headCouponMapper;
     private final AdminLogService adminLogService;
     private final HeadNotificationService headNotificationService;
+    private final DatabaseHardDeleteService databaseHardDeleteService;
 
     @Transactional
     /**
@@ -81,14 +82,13 @@ public class HeadCouponService {
      * [메서드 흐름] deleteCoupon
      * Controller 또는 상위 서비스에서 호출되어 HeadCouponMapper, AdminLogService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
-    public void deleteCoupon(String couponId) {
-        // 1. 외래 키로 묶여 있는 user_coupon 데이터 먼저 삭제
-        headCouponMapper.deleteUserCouponsByCouponId(couponId);
+    public void deleteCoupon(String couponId, String confirmation) {
+        // 쉬운주석: 쿠폰은 문자열 기본키 자체가 DB에서 구별하는 정확한 이름이다.
+        HardDeleteConfirmation.verify(couponId, confirmation);
+        int deleted = databaseHardDeleteService.deleteTree("Coupon", "coupon_id", couponId);
+        if (deleted != 1) throw new IllegalStateException("쿠폰 DB 행을 삭제하지 못했습니다.");
         
-        // 2. 본사 쿠폰 테이블에서 쿠폰 삭제
-        headCouponMapper.deleteCoupon(couponId);
-        
-        adminLogService.logAction("쿠폰", "쿠폰 삭제 (ID: " + couponId + ")");
+        adminLogService.logAction("쿠폰", "쿠폰 영구 삭제 (ID: " + couponId + ")");
     }
 
     /**

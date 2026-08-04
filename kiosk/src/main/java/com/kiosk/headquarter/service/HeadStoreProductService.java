@@ -49,6 +49,7 @@ public class HeadStoreProductService {
     private final HeadStoreInventoryMapper
     	headStoreInventoryMapper;
     private final AdminLogService adminLogService;
+    private final DatabaseHardDeleteService databaseHardDeleteService;
 
     /*
      * 지점 판매 메뉴 등록
@@ -275,7 +276,8 @@ public class HeadStoreProductService {
      */
     public String deleteStoreProduct(
             Integer storeId,
-            Integer storeProductId
+            Integer storeProductId,
+            String confirmation
     ) {
 
         StoreProduct storeProduct =
@@ -284,11 +286,18 @@ public class HeadStoreProductService {
                         storeProductId
                 );
 
-        headStoreProductMapper.delete(storeProduct);
+        String databaseName = storeProduct.getStore().getStoreName() + "-"
+                + storeProduct.getProduct().getProductName();
+        HardDeleteConfirmation.verify(databaseName, confirmation);
+        // 쉬운주석: is_deleted 표시가 아니라 이 지점 판매 메뉴 행을 DB에서 실제로 지운다.
+        int deleted = databaseHardDeleteService.deleteTree(
+                "store_products", "store_product_id", storeProductId
+        );
+        if (deleted != 1) throw new IllegalStateException("지점 판매 상품 DB 행을 삭제하지 못했습니다.");
 
         adminLogService.logAction("지점 상품",
                 storeProduct.getStore().getStoreName() + " - "
-                        + storeProduct.getProduct().getProductName() + " 판매 상품 삭제");
+                        + storeProduct.getProduct().getProductName() + " 판매 상품 영구 삭제");
         return "지점 판매 메뉴 삭제 성공";
     }
 

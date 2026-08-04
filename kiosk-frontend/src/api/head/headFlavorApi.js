@@ -203,13 +203,14 @@ export const updateHeadFlavor =
   }
 
 /*
- * 아이스크림 맛 비활성화
+ * 아이스크림 맛과 연결 데이터 영구 삭제
  *
  * DELETE /head/flavors/{flavorId}
  */
 export const deleteHeadFlavor =
   async (
-    flavorId
+    flavorId,
+    confirmation
   ) => {
     if (
       flavorId === null ||
@@ -222,7 +223,8 @@ export const deleteHeadFlavor =
 
     const response =
       await api.delete(
-        `/head/flavors/${flavorId}`
+        `/head/flavors/${flavorId}`,
+        { params: { confirmation } }
       )
 
     return response.data

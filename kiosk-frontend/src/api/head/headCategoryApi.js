@@ -72,9 +72,10 @@ export const updateHeadCategory = async (
  *
  * DELETE /head/categories/{categoryId}
  */
-export const deleteHeadCategory = async (categoryId) => {
+export const deleteHeadCategory = async (categoryId, confirmation) => {
   const response = await api.delete(
-    `/head/categories/${categoryId}`
+    `/head/categories/${categoryId}`,
+    { params: { confirmation } }
   )
 
   return response.data

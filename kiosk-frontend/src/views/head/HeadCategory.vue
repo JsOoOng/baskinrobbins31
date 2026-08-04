@@ -29,6 +29,7 @@ import P2ComingSoonModal from '@/components/head/P2ComingSoonModal.vue'
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
 import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
+import { requestHardDeleteConfirmation } from '@/components/head/headHardDeleteDialog'
 
 /*
  * 서버 데이터
@@ -314,13 +315,11 @@ const closeFormModal = () => {
  * 카테고리 삭제
  */
 const removeCategory = async (category) => {
-  const confirmed = window.confirm(
-    `"${category.categoryName}" 카테고리를 삭제하시겠습니까?\n\n해당 카테고리를 사용하는 상품이 있으면 삭제할 수 없습니다.`
-  )
-
-  if (!confirmed) {
-    return
-  }
+  const confirmation = await requestHardDeleteConfirmation({
+    databaseName: category.categoryName,
+    targetLabel: '카테고리와 모든 연결 상품',
+  })
+  if (!confirmation) return
 
   deletingId.value =
     category.categoryId
@@ -329,7 +328,8 @@ const removeCategory = async (category) => {
 
   try {
     await deleteHeadCategory(
-      category.categoryId
+      category.categoryId,
+      confirmation
     )
 
   await loadCategories()

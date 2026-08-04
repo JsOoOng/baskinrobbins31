@@ -26,6 +26,7 @@ import {
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
 import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
+import { requestHardDeleteConfirmation } from '@/components/head/headHardDeleteDialog'
 
 const banners = ref([])
 
@@ -381,13 +382,11 @@ const toggleActive = async (banner) => {
 }
 
 const removeBanner = async (banner) => {
-  const confirmed = window.confirm(
-    `"${banner.title}" 배너를 삭제하시겠습니까?\n삭제 후 복구할 수 없습니다.`
-  )
-
-  if (!confirmed) {
-    return
-  }
+  const confirmation = await requestHardDeleteConfirmation({
+    databaseName: banner.title,
+    targetLabel: '배너와 모든 연결 데이터',
+  })
+  if (!confirmation) return
 
   deletingId.value =
     banner.bannerId
@@ -396,7 +395,8 @@ const removeBanner = async (banner) => {
 
   try {
     await deleteHeadBanner(
-      banner.bannerId
+      banner.bannerId,
+      confirmation
     )
 
     await loadBanners()

@@ -17,6 +17,7 @@ import {
 
 import AppMessageToast from '@/components/common/AppMessageToast.vue'
 import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
+import HeadHardDeleteModal from '@/components/head/HeadHardDeleteModal.vue'
 
 const flavors = ref([])
 const loading = ref(false)
@@ -53,6 +54,11 @@ const formModal = reactive({
   open: false,
   mode: 'create', // 'create' | 'edit'
   flavorId: null
+})
+
+const deleteModal = reactive({
+  open: false,
+  flavor: null
 })
 
 const form = reactive({
@@ -235,16 +241,31 @@ const submitFlavor = async () => {
 onMounted(() => {
   loadFlavors()
 })
-const removeFlavor = async (flavor) => {
-  if (!window.confirm(`"${flavor.flavorName}" 맛을 삭제하시겠습니까?`)) return
+const openDeleteModal = (flavor) => {
+  deleteModal.flavor = flavor
+  deleteModal.open = true
+}
+
+const closeDeleteModal = () => {
+  if (deletingId.value !== null) return
+  deleteModal.open = false
+  deleteModal.flavor = null
+}
+
+const removeFlavor = async (confirmation) => {
+  const flavor = deleteModal.flavor
+  if (!flavor) return
   deletingId.value = flavor.flavorId
   clearMessage()
   try {
-    await deleteHeadFlavor(flavor.flavorId)
-    showMessage('아이스크림 맛이 삭제되었습니다.')
+    await deleteHeadFlavor(flavor.flavorId, confirmation)
+    showMessage('아이스크림 맛과 연결 데이터가 DB에서 영구 삭제되었습니다.')
+    deleteModal.open = false
+    deleteModal.flavor = null
     await loadFlavors()
   } catch (error) {
-    showMessage(error?.response?.data?.message || '아이스크림 맛 삭제에 실패했습니다.', 'error')
+    console.error('아이스크림 맛 영구 삭제 실패:', error)
+    showMessage(extractFlavorErrorMessage(error, '아이스크림 맛 삭제에 실패했습니다.'), 'error')
   } finally {
     deletingId.value = null
   }
@@ -335,7 +356,7 @@ const removeFlavor = async (flavor) => {
                   type="button"
                   class="delete-button"
                   :disabled="deletingId === flavor.flavorId"
-                  @click="removeFlavor(flavor)"
+                  @click="openDeleteModal(flavor)"
                 >
                   {{ deletingId === flavor.flavorId ? '삭제 중' : '삭제' }}
                 </button>
@@ -402,27 +423,38 @@ const removeFlavor = async (flavor) => {
         </footer>
       </div>
     </div>
+
+    <HeadHardDeleteModal
+      :open="deleteModal.open"
+      :database-name="deleteModal.flavor?.flavorName || deleteModal.flavor?.name || ''"
+      target-label="아이스크림 맛"
+      :deleting="deletingId !== null"
+      @close="closeDeleteModal"
+      @confirm="removeFlavor"
+    />
   </div>
 </template>
 
 <style scoped>
 .head-flavor-page {
-  padding: 30px;
+  display: grid;
+  gap: 18px;
+  padding: 0;
 }
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 .page-header h1 {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
   color: #1a1f36;
   margin: 0 0 8px;
 }
 .page-header p {
-  font-size: 14px;
+  font-size: 10px;
   color: #656f85;
   margin: 0;
 }
@@ -431,7 +463,7 @@ const removeFlavor = async (flavor) => {
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: nowrap;
 }
 .header-actions .table-search {
@@ -444,11 +476,12 @@ const removeFlavor = async (flavor) => {
   flex: 0 0 auto;
   gap: 6px;
   min-width: 112px;
-  padding: 10px 18px;
-  border-radius: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 9px;
   background: #3a2b99;
   color: #ffffff;
-  font-size: 14px;
+  font-size: 10px;
   font-weight: 700;
   border: none;
   cursor: pointer;
@@ -469,10 +502,10 @@ const removeFlavor = async (flavor) => {
   border-collapse: collapse;
 }
 .data-table th, .data-table td {
-  padding: 16px 20px;
+  padding: 12px 16px;
   text-align: left;
   border-bottom: 1px solid #f0f2f5;
-  font-size: 14px;
+  font-size: 10px;
 }
 .data-table th {
   background: #f8f9fc;
@@ -481,11 +514,11 @@ const removeFlavor = async (flavor) => {
   white-space: nowrap;
 }
 .td-image {
-  width: 80px;
+  width: 62px;
 }
 .flavor-img {
-  width: 60px;
-  height: 60px;
+  width: 42px;
+  height: 42px;
   object-fit: contain;
   border-radius: 8px;
   background: #f8f9fc;
@@ -495,7 +528,7 @@ const removeFlavor = async (flavor) => {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 9px;
   font-weight: 700;
 }
 .status-active {
@@ -514,12 +547,13 @@ const removeFlavor = async (flavor) => {
   color: #495057;
 }
 .edit-button {
-  padding: 6px 12px;
+  height: 29px;
+  padding: 0 10px;
   border: 1px solid #cbd5e0;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #ffffff;
   color: #4a5568;
-  font-size: 12px;
+  font-size: 9px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -528,11 +562,19 @@ const removeFlavor = async (flavor) => {
 }
 
 .delete-button {
+  height: 29px;
+  padding: 0 10px;
   margin-left: 8px;
   background: #fff1f2;
   color: #be123c;
   border: 1px solid #fecdd3;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
 }
+.delete-button:hover { background: #ffe4e8; }
+.delete-button:disabled { cursor: not-allowed; opacity: .55; }
 
 .data-table td small {
   display: block;

@@ -55,10 +55,12 @@ export const updateHeadProductOption = async (
  */
 export const deleteHeadProductOption = async (
   productId,
-  optionId
+  optionId,
+  confirmation
 ) => {
   const response = await api.delete(
-    `/head/products/${productId}/options/${optionId}`
+    `/head/products/${productId}/options/${optionId}`,
+    { params: { confirmation } }
   )
 
   return response.data

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kiosk.headquarter.dto.flavor.HeadFlavorCreateRequestDTO;
@@ -89,16 +90,17 @@ public class HeadFlavorController {
         return headFlavorService.updateFlavor(flavorId, requestDTO);
     }
 
-    // 아이스크림 맛 비활성화
+    // 쉬운주석: 확인 문구가 맞을 때 아이스크림 맛과 연결 데이터를 DB에서 영구 삭제한다.
     /**
      * [요청 흐름] DELETE /head/flavors/{flavorId}
      * 프론트 요청을 받아 deleteFlavor() 메서드가 입력을 받고 HeadFlavorService 호출 후 결과를 응답한다.
      */
     @DeleteMapping("/head/flavors/{flavorId}")
     public String deleteFlavor(
-            @PathVariable Integer flavorId) {
+            @PathVariable Integer flavorId,
+            @RequestParam String confirmation) {
 
-        return headFlavorService.deleteFlavor(flavorId);
+        return headFlavorService.deleteFlavor(flavorId, confirmation);
     }
 
 }

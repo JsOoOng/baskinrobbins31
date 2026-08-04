@@ -27,6 +27,7 @@ import {
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
 import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
+import { requestHardDeleteConfirmation } from '@/components/head/headHardDeleteDialog'
 
 import {
   createHeadStoreProduct,
@@ -556,13 +557,13 @@ const toggleSoldOut = async (product) => {
 const removeStoreProduct = async (
   product
 ) => {
-  const confirmed = window.confirm(
-    `"${product.productName}" 상품을 해당 지점 판매 메뉴에서 삭제하시겠습니까?`
-  )
-
-  if (!confirmed) {
-    return
-  }
+  const storeName = stores.value.find(store => store.storeId === selectedStoreId.value)?.storeName || ''
+  const databaseName = `${storeName}-${product.productName}`
+  const confirmation = await requestHardDeleteConfirmation({
+    databaseName,
+    targetLabel: '지점 판매 상품과 모든 연결 데이터',
+  })
+  if (!confirmation) return
 
   deletingId.value =
     product.storeProductId
@@ -572,7 +573,8 @@ const removeStoreProduct = async (
   try {
     await deleteHeadStoreProduct(
       selectedStoreId.value,
-      product.storeProductId
+      product.storeProductId,
+      confirmation
     )
 
     showMessage(

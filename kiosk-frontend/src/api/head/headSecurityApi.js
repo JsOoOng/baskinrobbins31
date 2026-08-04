@@ -111,10 +111,12 @@ export const resetHeadAdminPassword = async (
  * DELETE /head/admins/{adminId}
  */
 export const deleteHeadAdmin = async (
-  adminId
+  adminId,
+  confirmation
 ) => {
   const response = await api.delete(
-    `/head/admins/${adminId}`
+    `/head/admins/${adminId}`,
+    { params: { confirmation } }
   )
 
   return response.data

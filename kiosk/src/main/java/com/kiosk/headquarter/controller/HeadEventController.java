@@ -78,8 +78,9 @@ public class HeadEventController {
      * 프론트 요청을 받아 deleteEvent() 메서드가 입력을 받고 HeadEventService 호출 후 결과를 응답한다.
      */
     @DeleteMapping("/{eventId}")
-    public ResponseEntity<Void> deleteEvent(@PathVariable("eventId") Integer eventId) {
-        eventService.deleteEvent(eventId);
+    public ResponseEntity<Void> deleteEvent(@PathVariable("eventId") Integer eventId,
+                                            @org.springframework.web.bind.annotation.RequestParam String confirmation) {
+        eventService.deleteEvent(eventId, confirmation);
         return ResponseEntity.noContent().build();
     }
 

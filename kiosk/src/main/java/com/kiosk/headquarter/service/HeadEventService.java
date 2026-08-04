@@ -34,6 +34,7 @@ public class HeadEventService {
     private final HeadEventRepository eventRepository;
     private final AdminLogService adminLogService;
     private final HeadNotificationService headNotificationService;
+    private final DatabaseHardDeleteService databaseHardDeleteService;
 
     @Transactional(readOnly = true)
     /**
@@ -111,13 +112,16 @@ public class HeadEventService {
      * [메서드 흐름] deleteEvent
      * Controller 또는 상위 서비스에서 호출되어 HeadEventRepository, AdminLogService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
-    public void deleteEvent(Integer eventId) {
+    public void deleteEvent(Integer eventId, String confirmation) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("이벤트를 찾을 수 없습니다."));
                 
-        eventRepository.deleteById(eventId);
+        String eventName = event.getEventName();
+        HardDeleteConfirmation.verify(eventName, confirmation);
+        int deleted = databaseHardDeleteService.deleteTree("events", "event_id", eventId);
+        if (deleted != 1) throw new IllegalStateException("이벤트 DB 행을 삭제하지 못했습니다.");
         
-        adminLogService.logAction("이벤트", event.getEventName() + " 삭제");
+        adminLogService.logAction("이벤트", eventName + " 영구 삭제");
     }
 
     @Transactional

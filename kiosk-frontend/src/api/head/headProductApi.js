@@ -92,10 +92,12 @@ export const updateHeadProductDisplay = async (
  * DELETE /head/products/{productId}
  */
 export const deleteHeadProduct = async (
-  productId
+  productId,
+  confirmation
 ) => {
   const response = await api.delete(
-    `/head/products/${productId}`
+    `/head/products/${productId}`,
+    { params: { confirmation } }
   )
 
   return response.data

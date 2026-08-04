@@ -67,11 +67,11 @@ export const useHeadPolicyStore = defineStore('headPolicy', {
       }
     },
 
-    async deletePolicy(policyId) {
+    async deletePolicy(policyId, confirmation) {
       this.isLoading = true;
       this.error = null;
       try {
-        await headPolicyApi.deletePolicy(policyId);
+        await headPolicyApi.deletePolicy(policyId, confirmation);
         this.policies = this.policies.filter(p => p.policyId !== policyId);
       } catch (error) {
         this.error = '약관 삭제에 실패했습니다.';

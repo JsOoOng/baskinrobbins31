@@ -38,6 +38,7 @@ public class HeadBannerService {
     private final AdminLogService
             adminLogService;
     private final HeadNotificationService headNotificationService;
+    private final DatabaseHardDeleteService databaseHardDeleteService;
 
     /*
      * 배너 전체 목록
@@ -196,15 +197,19 @@ public class HeadBannerService {
      * Controller 또는 상위 서비스에서 호출되어 HeadBannerMapper, AdminLogService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public void deleteBanner(
-            Integer bannerId
+            Integer bannerId,
+            String confirmation
     ) {
 
         Banner banner =
                 findBanner(bannerId);
 
-        headBannerMapper.delete(banner);
+        String title = banner.getTitle();
+        HardDeleteConfirmation.verify(title, confirmation);
+        int deleted = databaseHardDeleteService.deleteTree("banners", "banner_id", bannerId);
+        if (deleted != 1) throw new IllegalStateException("배너 DB 행을 삭제하지 못했습니다.");
 
-        adminLogService.logAction("배너", "배너 삭제");
+        adminLogService.logAction("배너", title + " 배너 영구 삭제");
     }
 
     /*

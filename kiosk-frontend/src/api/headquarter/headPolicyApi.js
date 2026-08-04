@@ -34,8 +34,8 @@ export const headPolicyApi = {
   },
 
   // 방침 삭제
-  deletePolicy: async (policyId) => {
-    const response = await axios.delete(`/head/policies/${policyId}`);
+  deletePolicy: async (policyId, confirmation) => {
+    const response = await axios.delete(`/head/policies/${policyId}`, { params: { confirmation } });
     return response.data;
   },
 

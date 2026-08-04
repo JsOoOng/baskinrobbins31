@@ -27,6 +27,8 @@ import HeadNotificationBell
 
 import P2ComingSoonModal
   from './P2ComingSoonModal.vue'
+import HeadHardDeleteModalHost
+  from './HeadHardDeleteModalHost.vue'
 
 const route = useRoute()
 const THEME_KEY = 'headTheme'
@@ -182,6 +184,9 @@ onBeforeUnmount(() => {
       :description="p2Modal.description"
       @close="closeP2Modal"
     />
+
+    <!-- 쉬운주석: 상품·쿠폰·정책 등 모든 본사 화면이 함께 쓰는 이름 입력 삭제창 -->
+    <HeadHardDeleteModalHost />
 
   </div>
 </template>

@@ -29,6 +29,7 @@ public class HeadCategoryService {
     private final HeadCategoryMapper headCategoryMapper;
     private final HeadProductMapper headProductMapper;
     private final AdminLogService adminLogService;
+    private final DatabaseHardDeleteService databaseHardDeleteService;
 
     // 카테고리 등록
     @Transactional
@@ -142,20 +143,18 @@ public class HeadCategoryService {
      * [메서드 흐름] deleteCategory
      * Controller 또는 상위 서비스에서 호출되어 HeadCategoryMapper, HeadProductMapper, AdminLogService을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
-    public String deleteCategory(Integer categoryId) {
+    public String deleteCategory(Integer categoryId, String confirmation) {
 
         Category category = headCategoryMapper.findById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
 
-        long productCount = headProductMapper.countByCategory_Id(categoryId);
+        String categoryName = category.getCategoryName();
+        HardDeleteConfirmation.verify(categoryName, confirmation);
+        // 쉬운주석: 이 카테고리를 쓰는 상품과 그 아래 연결 데이터까지 아래에서부터 지운다.
+        int deleted = databaseHardDeleteService.deleteTree("categories", "category_id", categoryId);
+        if (deleted != 1) throw new IllegalStateException("카테고리 DB 행을 삭제하지 못했습니다.");
 
-        if (productCount > 0) {
-            throw new IllegalArgumentException("해당 카테고리를 사용하는 상품이 있어 삭제할 수 없습니다.");
-        }
-
-        headCategoryMapper.delete(category);
-
-        adminLogService.logAction("카테고리", category.getCategoryName() + " 카테고리 삭제");
+        adminLogService.logAction("카테고리", categoryName + " 카테고리 영구 삭제");
 
         return "카테고리 삭제 성공";
     }

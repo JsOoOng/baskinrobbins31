@@ -31,6 +31,7 @@ import {
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
 import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
+import { requestHardDeleteConfirmation } from '@/components/head/headHardDeleteDialog'
 
 
 /*
@@ -746,11 +747,15 @@ const removeProduct = async (product) => {
     showMessage('상품 번호가 없어 삭제할 수 없습니다.', 'error')
     return
   }
-  if (!window.confirm(`"${product.productName}" 상품을 삭제하시겠습니까?`)) return
+  const confirmation = await requestHardDeleteConfirmation({
+    databaseName: product.productName,
+    targetLabel: '상품과 모든 연결 데이터',
+  })
+  if (!confirmation) return
   deletingId.value = product.productId
   clearMessage()
   try {
-    await deleteHeadProduct(product.productId)
+    await deleteHeadProduct(product.productId, confirmation)
     products.value = products.value.filter(
       (item) => item.productId !== product.productId
     )

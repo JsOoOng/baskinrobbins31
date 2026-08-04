@@ -64,11 +64,11 @@ export const useHeadEventStore = defineStore('headEvent', {
       }
     },
 
-    async deleteEvent(eventId) {
+    async deleteEvent(eventId, confirmation) {
       this.isLoading = true;
       this.error = null;
       try {
-        await headEventApi.deleteEvent(eventId);
+        await headEventApi.deleteEvent(eventId, confirmation);
         this.events = this.events.filter(e => e.eventId !== eventId);
       } catch (error) {
         this.error = '이벤트 삭제에 실패했습니다.';

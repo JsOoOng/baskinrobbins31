@@ -82,8 +82,9 @@ public class HeadPolicyController {
      * 프론트 요청을 받아 deletePolicy() 메서드가 입력을 받고 HeadPolicyService 호출 후 결과를 응답한다.
      */
     @DeleteMapping("/{policyId}")
-    public ResponseEntity<Void> deletePolicy(@PathVariable("policyId") Integer policyId) {
-        policyService.deletePolicy(policyId);
+    public ResponseEntity<Void> deletePolicy(@PathVariable("policyId") Integer policyId,
+                                             @org.springframework.web.bind.annotation.RequestParam String confirmation) {
+        policyService.deletePolicy(policyId, confirmation);
         return ResponseEntity.noContent().build();
     }
 

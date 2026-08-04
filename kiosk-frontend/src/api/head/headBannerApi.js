@@ -80,10 +80,12 @@ export const updateHeadBannerActive = async (
  * 배너 삭제
  */
 export const deleteHeadBanner = async (
-  bannerId
+  bannerId,
+  confirmation
 ) => {
   const response = await api.delete(
-    `/head/banners/${bannerId}`
+    `/head/banners/${bannerId}`,
+    { params: { confirmation } }
   )
 
   return response.data

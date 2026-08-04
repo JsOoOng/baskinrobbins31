@@ -17,6 +17,7 @@ import {
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
 import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
+import { requestHardDeleteConfirmation } from '@/components/head/headHardDeleteDialog'
 
 import {
   extractProductData,
@@ -448,13 +449,11 @@ const submitOption = async () => {
 }
 
 const removeOption = async (option) => {
-  const confirmed = window.confirm(
-    `"${option.optionName}" 옵션을 삭제하시겠습니까?`
-  )
-
-  if (!confirmed) {
-    return
-  }
+  const confirmation = await requestHardDeleteConfirmation({
+    databaseName: option.optionName,
+    targetLabel: '상품 옵션과 모든 연결 데이터',
+  })
+  if (!confirmation) return
 
   deletingId.value =
     option.optionId
@@ -464,7 +463,8 @@ const removeOption = async (option) => {
   try {
     await deleteHeadProductOption(
       selectedProductId.value,
-      option.optionId
+      option.optionId,
+      confirmation
     )
 
     showMessage(

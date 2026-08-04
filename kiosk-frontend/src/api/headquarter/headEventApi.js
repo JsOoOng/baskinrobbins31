@@ -32,8 +32,8 @@ export const headEventApi = {
   },
 
   // 이벤트 삭제
-  deleteEvent: async (eventId) => {
-    const response = await axios.delete(`/head/events/${eventId}`);
+  deleteEvent: async (eventId, confirmation) => {
+    const response = await axios.delete(`/head/events/${eventId}`, { params: { confirmation } });
     return response.data;
   },
 

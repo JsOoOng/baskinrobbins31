@@ -67,7 +67,7 @@
             </td>
             <td>
               <button class="btn-sm btn-edit" @click="openModal(policy)">수정</button>
-              <button class="btn-sm btn-delete" @click="deletePolicy(policy.policyId)">삭제</button>
+              <button class="btn-sm btn-delete" @click="deletePolicy(policy)">삭제</button>
             </td>
           </tr>
         </tbody>
@@ -123,6 +123,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useHeadPolicyStore } from '@/stores/head/headPolicyStore';
+import { requestHardDeleteConfirmation } from '@/components/head/headHardDeleteDialog';
 
 const policyStore = useHeadPolicyStore();
 
@@ -243,10 +244,14 @@ const submitPolicy = async () => {
   }
 };
 
-const deletePolicy = async (policyId) => {
-  if (confirm('정말로 이 약관을 삭제하시겠습니까?')) {
-    await policyStore.deletePolicy(policyId);
-  }
+const deletePolicy = async (policy) => {
+  const databaseName = `${policy.type} ${policy.version}`;
+  const confirmation = await requestHardDeleteConfirmation({
+    databaseName,
+    targetLabel: '약관·방침과 모든 연결 데이터',
+  });
+  if (!confirmation) return;
+  await policyStore.deletePolicy(policy.policyId, confirmation);
 };
 
 const toggleActive = async (policy) => {

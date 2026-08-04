@@ -64,7 +64,8 @@ public class HeadStoreProductController {
     @GetMapping("/head/stores/{storeId}/products/{storeProductId}")
     public HeadStoreProductDetailResponseDTO getStoreProductDetail(
             @PathVariable Integer storeId,
-            @PathVariable Integer storeProductId) {
+            @PathVariable Integer storeProductId,
+            @org.springframework.web.bind.annotation.RequestParam String confirmation) {
 
         return headStoreProductService.getStoreProductDetail(storeId, storeProductId);
     }
@@ -91,8 +92,9 @@ public class HeadStoreProductController {
     @DeleteMapping("/head/stores/{storeId}/products/{storeProductId}")
     public String deleteStoreProduct(
             @PathVariable Integer storeId,
-            @PathVariable Integer storeProductId) {
+            @PathVariable Integer storeProductId,
+            @org.springframework.web.bind.annotation.RequestParam String confirmation) {
 
-        return headStoreProductService.deleteStoreProduct(storeId, storeProductId);
+        return headStoreProductService.deleteStoreProduct(storeId, storeProductId, confirmation);
     }
 }

@@ -61,6 +61,7 @@ public class HeadProductService {
 
     private final AdminLogService
             adminLogService;
+    private final DatabaseHardDeleteService databaseHardDeleteService;
 
     /*
      * 본사 상품 등록
@@ -537,7 +538,8 @@ public class HeadProductService {
      * Controller 또는 상위 서비스에서 호출되어 HeadProductMapper, HeadCategoryMapper, HeadInventoryItemMapper 등을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public void deleteProduct(
-            Integer productId
+            Integer productId,
+            String confirmation
     ) {
 
         Product product =
@@ -551,15 +553,17 @@ public class HeadProductService {
                                 )
                         );
 
-        product.deleteProduct();
-        headStoreProductMapper
-                .findByProduct_IdAndIsDeletedFalse(productId)
-                .forEach(StoreProduct::deleteStoreProduct);
+        String productName = product.getProductName();
+        HardDeleteConfirmation.verify(productName, confirmation);
+        // 쉬운주석: 숨김 표시만 하지 않고 연결된 선택 옵션·지점 메뉴부터 실제로 지운다.
+        int deleted = databaseHardDeleteService.deleteTree("products", "product_id", productId);
+        if (deleted != 1) {
+            throw new IllegalStateException("상품 DB 행을 삭제하지 못했습니다.");
+        }
 
         adminLogService.logAction(
                 "상품",
-                product.getProductName()
-                        + " 완전 삭제"
+                productName + " 영구 삭제"
         );
     }
 

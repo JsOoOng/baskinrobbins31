@@ -68,15 +68,17 @@ export const updateHeadStore = async (
 }
 
 /*
- * 지점 삭제
+ * 지점과 연결 데이터 영구 삭제
  *
  * DELETE /head/stores/{storeId}
  */
 export const deleteHeadStore = async (
-  storeId
+  storeId,
+  confirmation
 ) => {
   const response = await api.delete(
-    `/head/stores/${storeId}`
+    `/head/stores/${storeId}`,
+    { params: { confirmation } }
   )
 
   return response.data

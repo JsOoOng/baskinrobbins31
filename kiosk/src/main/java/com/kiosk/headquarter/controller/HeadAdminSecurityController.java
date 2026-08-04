@@ -114,7 +114,8 @@ public class HeadAdminSecurityController {
     }
 
     @DeleteMapping("/head/admins/{adminId}")
-    public String deleteAdmin(@PathVariable Integer adminId) {
-        return headAdminSecurityService.deleteAdmin(adminId);
+    public String deleteAdmin(@PathVariable Integer adminId,
+                              @org.springframework.web.bind.annotation.RequestParam String confirmation) {
+        return headAdminSecurityService.deleteAdmin(adminId, confirmation);
     }
 }

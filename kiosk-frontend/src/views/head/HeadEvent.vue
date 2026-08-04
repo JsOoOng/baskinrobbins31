@@ -78,7 +78,7 @@
             <td>
               <button class="btn-sm btn-edit" @click="openModal(event)">수정</button>
               <button class="btn-sm btn-edit" @click="extendEvent(event)">연장</button>
-              <button class="btn-sm btn-delete" @click="deleteEvent(event.eventId)">삭제</button>
+              <button class="btn-sm btn-delete" @click="deleteEvent(event)">삭제</button>
             </td>
           </tr>
         </tbody>
@@ -160,6 +160,7 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useHeadEventStore } from '@/stores/head/headEventStore';
 import HeadTablePagination from '@/components/head/HeadTablePagination.vue';
+import { requestHardDeleteConfirmation } from '@/components/head/headHardDeleteDialog';
 
 const eventStore = useHeadEventStore();
 
@@ -277,10 +278,13 @@ const submitEvent = async () => {
   }
 };
 
-const deleteEvent = async (eventId) => {
-  if (confirm('정말로 이 이벤트를 삭제하시겠습니까?')) {
-    await eventStore.deleteEvent(eventId);
-  }
+const deleteEvent = async (event) => {
+  const confirmation = await requestHardDeleteConfirmation({
+    databaseName: event.eventName,
+    targetLabel: '이벤트와 모든 연결 데이터',
+  });
+  if (!confirmation) return;
+  await eventStore.deleteEvent(event.eventId, confirmation);
 };
 
 const toggleVisibility = async (event) => {

@@ -30,6 +30,7 @@ public class HeadProductOptionService {
     private final HeadProductOptionMapper headProductOptionMapper;
     private final HeadProductMapper headProductMapper;
     private final AdminLogService adminLogService;
+    private final DatabaseHardDeleteService databaseHardDeleteService;
 
     // 상품 옵션 등록
     @Transactional
@@ -140,15 +141,18 @@ public class HeadProductOptionService {
      * [메서드 흐름] deleteProductOption
      * Controller 또는 상위 서비스에서 호출되어 HeadProductOptionMapper, HeadProductMapper을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
-    public String deleteProductOption(Integer productId, Integer optionId) {
+    public String deleteProductOption(Integer productId, Integer optionId, String confirmation) {
 
         ProductOption productOption = headProductOptionMapper
                 .findByProduct_IdAndId(productId, optionId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품 옵션입니다."));
 
+        String optionName = productOption.getOptionName();
+        HardDeleteConfirmation.verify(optionName, confirmation);
         String action = productOption.getProduct().getProductName()
-                + " - " + productOption.getOptionName() + " 옵션 삭제";
-        headProductOptionMapper.delete(productOption);
+                + " - " + optionName + " 옵션 영구 삭제";
+        int deleted = databaseHardDeleteService.deleteTree("product_options", "option_id", optionId);
+        if (deleted != 1) throw new IllegalStateException("상품 옵션 DB 행을 삭제하지 못했습니다.");
 
         adminLogService.logAction("상품 옵션", action);
         return "상품 옵션 삭제 성공";

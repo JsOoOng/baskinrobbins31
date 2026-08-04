@@ -27,6 +27,7 @@ import {
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
 import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
+import HeadHardDeleteModal from '@/components/head/HeadHardDeleteModal.vue'
 
 const stores = ref([])
 
@@ -68,6 +69,11 @@ const employeeModal = reactive({
   open: false,
   storeId: null,
   storeName: ''
+})
+
+const deleteModal = reactive({
+  open: false,
+  store: null
 })
 
 const storeForm = reactive({
@@ -711,13 +717,27 @@ const submitEmployee = async () => {
 onMounted(() => {
   loadStores()
 })
-const removeStore = async (store) => {
-  if (!window.confirm(`"${store.storeName}" 지점을 삭제(폐점 처리)하시겠습니까?`)) return
+const openDeleteModal = (store) => {
+  deleteModal.store = store
+  deleteModal.open = true
+}
+
+const closeDeleteModal = () => {
+  if (deletingId.value !== null) return
+  deleteModal.open = false
+  deleteModal.store = null
+}
+
+const removeStore = async (confirmation) => {
+  const store = deleteModal.store
+  if (!store) return
   deletingId.value = store.storeId
   clearMessage()
   try {
-    await deleteHeadStore(store.storeId)
-    showMessage('지점이 삭제(폐점 처리)되었습니다.')
+    await deleteHeadStore(store.storeId, confirmation)
+    showMessage('지점과 연결 데이터가 DB에서 영구 삭제되었습니다.')
+    deleteModal.open = false
+    deleteModal.store = null
     await loadStores()
   } catch (error) {
     showMessage(extractStoreErrorMessage(error, '지점 삭제에 실패했습니다.'), 'error')
@@ -938,8 +958,8 @@ const removeStore = async (store) => {
                   <button
                     type="button"
                     class="delete-button"
-                    :disabled="deletingId === store.storeId || store.storeStatus === 'CLOSED'"
-                    @click="removeStore(store)"
+                    :disabled="deletingId === store.storeId"
+                    @click="openDeleteModal(store)"
                   >
                     {{ deletingId === store.storeId ? '삭제 중' : '삭제' }}
                   </button>
@@ -954,13 +974,6 @@ const removeStore = async (store) => {
                     계정 발급
                   </button>
 
-                  <button
-                    type="button"
-                    class="delete-button"
-                    @click="removeStore(store)"
-                  >
-                    삭제
-                  </button>
                 </div>
               </td>
             </tr>
@@ -1410,6 +1423,15 @@ const removeStore = async (store) => {
         </section>
       </div>
     </Teleport>
+
+    <HeadHardDeleteModal
+      :open="deleteModal.open"
+      :database-name="deleteModal.store?.storeName || ''"
+      target-label="지점"
+      :deleting="deletingId !== null"
+      @close="closeDeleteModal"
+      @confirm="removeStore"
+    />
   </section>
 </template>
 

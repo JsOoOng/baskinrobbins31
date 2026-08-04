@@ -36,6 +36,7 @@ public class HeadAdminSecurityService {
     private final HeadquarterAdminMapper headquarterAdminMapper;
     private final PasswordEncoder passwordEncoder;
     private final AdminLogService adminLogService;
+    private final DatabaseHardDeleteService databaseHardDeleteService;
 
     /**
      * [메서드 흐름] getAdminList
@@ -223,7 +224,7 @@ public class HeadAdminSecurityService {
     }
 
     @Transactional
-    public String deleteAdmin(Integer adminId) {
+    public String deleteAdmin(Integer adminId, String confirmation) {
         HeadquarterAdmin requester = getCurrentSuperAdmin();
 
         HeadquarterAdmin targetAdmin = headquarterAdminMapper.findById(adminId)
@@ -233,9 +234,14 @@ public class HeadAdminSecurityService {
             throw new IllegalStateException("현재 로그인한 자신의 계정은 삭제할 수 없습니다.");
         }
 
+        String adminName = targetAdmin.getName();
+        HardDeleteConfirmation.verify(adminName, confirmation);
         preventLastSuperAdminDeactivate(targetAdmin, AdminStatus.INACTIVE);
-        targetAdmin.changeStatus(AdminStatus.INACTIVE);
-        adminLogService.logAction("관리자 계정", targetAdmin.getName() + " 삭제(비활성화)");
+        int deleted = databaseHardDeleteService.deleteTree(
+                "headquarter_admins", "admin_id", adminId
+        );
+        if (deleted != 1) throw new IllegalStateException("관리자 계정 DB 행을 삭제하지 못했습니다.");
+        adminLogService.logAction("관리자 계정", adminName + " 영구 삭제");
         return "본사 관리자 삭제 성공";
     }
 

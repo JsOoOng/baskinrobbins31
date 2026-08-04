@@ -35,6 +35,7 @@ public class HeadStoreService {
     private final AdminLogService
             adminLogService;
     private final StoreStatusHistoryRepository storeStatusHistoryRepository;
+    private final DatabaseHardDeleteService databaseHardDeleteService;
 
     /*
      * 전체 지점 목록 조회
@@ -239,24 +240,17 @@ public class HeadStoreService {
     }
 
     @Transactional
-    public void deleteStore(Integer storeId) {
+    public void deleteStore(Integer storeId, String confirmation) {
         Store store = findStore(storeId);
-        StoreStatus previousStatus = store.getStoreStatus();
+        String storeName = store.getStoreName();
+        HardDeleteConfirmation.verify(storeName, confirmation);
 
-        if (previousStatus != StoreStatus.CLOSED) {
-            store.updateStore(
-                    store.getStoreName(),
-                    store.getBusinessNumber(),
-                    store.getRegion(),
-                    store.getAddress(),
-                    store.getPhone(),
-                    store.getBusinessHours(),
-                    StoreStatus.CLOSED
-            );
-            saveStatusHistory(store, StoreStatus.CLOSED, LocalDateTime.now());
+        // 쉬운주석: CLOSED로 바꾸는 대신 자식 DB 행부터 지우고 마지막에 stores 행까지 실제 삭제한다.
+        int deleted = databaseHardDeleteService.deleteTree("stores", "store_id", storeId);
+        if (deleted != 1) {
+            throw new IllegalStateException("지점 DB 행을 삭제하지 못했습니다.");
         }
-
-        adminLogService.logAction("지점", store.getStoreName() + " 삭제(폐점 처리)");
+        adminLogService.logAction("지점", storeName + " 영구 삭제");
     }
 
     private void saveStatusHistory(

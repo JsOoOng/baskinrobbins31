@@ -60,7 +60,8 @@ public class HeadProductController {
      */
     @GetMapping("/head/products/{productId}")
     public HeadProductResponseDTO getProductDetail(
-            @PathVariable Integer productId) {
+            @PathVariable Integer productId,
+            @org.springframework.web.bind.annotation.RequestParam String confirmation) {
 
         return headProductService.getProductDetail(productId);
     }
@@ -101,9 +102,10 @@ public class HeadProductController {
      */
     @DeleteMapping("/head/products/{productId}")
     public String deleteProduct(
-            @PathVariable Integer productId) {
+            @PathVariable Integer productId,
+            @org.springframework.web.bind.annotation.RequestParam String confirmation) {
 
-        headProductService.deleteProduct(productId);
+        headProductService.deleteProduct(productId, confirmation);
         return "본사 상품 삭제 성공";
     }
 }

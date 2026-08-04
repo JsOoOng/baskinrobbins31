@@ -15,6 +15,7 @@ import {
 
 import AppMessageToast
   from '@/components/common/AppMessageToast.vue'
+import { requestHardDeleteConfirmation } from '@/components/head/headHardDeleteDialog'
 
 import {
   createHeadAdmin,
@@ -709,12 +710,16 @@ onMounted(() => {
   loadAdmins()
 })
 const removeAdmin = async (admin) => {
-  if (!window.confirm(`"${admin.name}" 관리자 계정을 삭제(비활성화)하시겠습니까?`)) return
+  const confirmation = await requestHardDeleteConfirmation({
+    databaseName: admin.name,
+    targetLabel: '관리자 계정과 모든 연결 데이터',
+  })
+  if (!confirmation) return
   deletingId.value = admin.adminId
   clearMessage()
   try {
-    await deleteHeadAdmin(admin.adminId)
-    showMessage('관리자 계정이 삭제(비활성화)되었습니다.')
+    await deleteHeadAdmin(admin.adminId, confirmation)
+    showMessage('관리자 계정이 DB에서 영구 삭제되었습니다.')
     await loadAdmins(true)
   } catch (error) {
     showMessage(extractSecurityErrorMessage(error, '관리자 계정 삭제에 실패했습니다.'), 'error')

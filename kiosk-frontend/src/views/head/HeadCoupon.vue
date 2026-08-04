@@ -103,7 +103,7 @@
               >
                 회수
               </button>
-              <button @click="deleteCoupon(coupon.couponId)" class="btn-delete">삭제</button>
+              <button @click="deleteCoupon(coupon)" class="btn-delete">삭제</button>
             </td>
           </tr>
         </tbody>
@@ -171,6 +171,8 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import HeadTablePagination from '@/components/head/HeadTablePagination.vue';
+import api from '@/api/axios';
+import { requestHardDeleteConfirmation } from '@/components/head/headHardDeleteDialog';
 
 const router = useRouter();
 
@@ -324,11 +326,16 @@ const saveCoupon = async () => {
   }
 };
 
-const deleteCoupon = async (couponId) => {
-  if (!confirm(`정말 쿠폰 [${couponId}]을 삭제하시겠습니까?`)) return;
+const deleteCoupon = async (coupon) => {
+  const couponId = coupon.couponId;
+  const confirmation = await requestHardDeleteConfirmation({
+    databaseName: couponId,
+    targetLabel: `쿠폰 ${coupon.couponName || couponId}와 모든 발급 내역`,
+  });
+  if (!confirmation) return;
 
   try {
-    await axios.delete(`http://localhost:8889/head/coupon/${couponId}`);
+    await api.delete(`/head/coupon/${couponId}`, { params: { confirmation } });
     alert('쿠폰이 삭제되었습니다.');
     fetchCoupons();
   } catch (error) {

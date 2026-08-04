@@ -66,8 +66,9 @@ public class HeadCouponController {
      * 프론트 요청을 받아 deleteCoupon() 메서드가 입력을 받고 HeadCouponService 호출 후 결과를 응답한다.
      */
     @DeleteMapping("/{couponId}")
-    public String deleteCoupon(@PathVariable("couponId") String couponId) {
-        headCouponService.deleteCoupon(couponId);
+    public String deleteCoupon(@PathVariable("couponId") String couponId,
+                               @RequestParam String confirmation) {
+        headCouponService.deleteCoupon(couponId, confirmation);
         return "Coupon deleted successfully";
     }
     

@@ -69,7 +69,8 @@ public class HeadBannerController {
     public ResponseEntity<HeadBannerResponse>
             getBanner(
                     @PathVariable
-                    Integer bannerId
+                    Integer bannerId,
+                    @org.springframework.web.bind.annotation.RequestParam String confirmation
             ) {
 
         return ResponseEntity.ok(
@@ -175,11 +176,13 @@ public class HeadBannerController {
     public ResponseEntity<Void>
             deleteBanner(
                     @PathVariable
-                    Integer bannerId
+                    Integer bannerId,
+                    @org.springframework.web.bind.annotation.RequestParam String confirmation
             ) {
 
         headBannerService.deleteBanner(
-                bannerId
+                bannerId,
+                confirmation
         );
 
         return ResponseEntity

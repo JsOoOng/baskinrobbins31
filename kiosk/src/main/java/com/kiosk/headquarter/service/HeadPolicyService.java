@@ -27,6 +27,7 @@ public class HeadPolicyService {
 
     private final HeadPolicyRepository policyRepository;
     private final AdminLogService adminLogService;
+    private final DatabaseHardDeleteService databaseHardDeleteService;
 
     @Transactional(readOnly = true)
     /**
@@ -111,11 +112,14 @@ public class HeadPolicyService {
      * [메서드 흐름] deletePolicy
      * Controller 또는 상위 서비스에서 호출되어 HeadPolicyRepository을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
-    public void deletePolicy(Integer policyId) {
+    public void deletePolicy(Integer policyId, String confirmation) {
         Policy policy = policyRepository.findById(policyId)
                 .orElseThrow(() -> new IllegalArgumentException("약관/방침을 찾을 수 없습니다."));
-        String action = policy.getType() + " " + policy.getVersion() + " 삭제";
-        policyRepository.delete(policy);
+        String databaseName = policy.getType() + " " + policy.getVersion();
+        HardDeleteConfirmation.verify(databaseName, confirmation);
+        String action = databaseName + " 영구 삭제";
+        int deleted = databaseHardDeleteService.deleteTree("policies", "policy_id", policyId);
+        if (deleted != 1) throw new IllegalStateException("약관 DB 행을 삭제하지 못했습니다.");
         adminLogService.logAction("정책", action);
     }
 
