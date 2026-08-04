@@ -72,6 +72,21 @@ const clearMessage = () => {
   message.value = ''
 }
 
+const handleFlavorImageError = (event, imageUrl) => {
+  const image = event.currentTarget
+  if (
+    !imageUrl ||
+    image.dataset.backendFallback === 'true' ||
+    /^https?:\/\//i.test(imageUrl)
+  ) {
+    image.style.display = 'none'
+    return
+  }
+
+  image.dataset.backendFallback = 'true'
+  image.src = `/proxy-api${imageUrl}`
+}
+
 const loadFlavors = async () => {
   loading.value = true
   try {
@@ -260,9 +275,10 @@ const removeFlavor = async (flavor) => {
               <td>{{ (currentPage - 1) * pageSize + index + 1 }}</td>
               <td class="td-image">
                 <img
-                  :src="`/proxy-api${flavor.imageUrl || flavor.image}`"
+                  :src="flavor.imageUrl || flavor.image"
                   :alt="flavor.flavorName || flavor.name"
                   class="flavor-img"
+                  @error="handleFlavorImageError($event, flavor.imageUrl || flavor.image)"
                 />
               </td>
 

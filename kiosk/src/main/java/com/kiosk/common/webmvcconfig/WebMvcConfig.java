@@ -26,19 +26,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .normalize()
                 .toUri()
                 .toString();
-        String bundledDevelopmentLocation = Paths.get(
-                        "..", "kiosk-frontend", "public", "images", "flavors"
-                )
-                .toAbsolutePath()
-                .normalize()
-                .toUri()
-                .toString();
-
         registry.addResourceHandler("/images/flavors/**")
                 .addResourceLocations(
                         persistentLocation,
                         legacyUploadLocation,
-                        bundledDevelopmentLocation
+                        "classpath:/static/images/flavors/"
                 );
     }
 }

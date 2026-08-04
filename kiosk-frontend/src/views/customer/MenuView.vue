@@ -157,9 +157,10 @@
             >
             <img
               v-if="flavor.imageUrl"
-              :src="`/proxy-api${flavor.imageUrl}`"
+              :src="flavor.imageUrl"
               :alt="flavor.flavorName"
               class="flavor-image"
+              @error="handleFlavorImageError($event, flavor.imageUrl)"
             />
               <div v-else class="flavor-image-placeholder">🍦</div>
               <img v-if="flavor.isSoldOut" src="/images/etc/flavor_sold_out.png" alt="sold out" class="sold-out-overlay" />
@@ -191,7 +192,8 @@
                 <div class="slot-circle" :class="{filled: selectedFlavors[i-1]}">
                    <img v-if="selectedFlavors[i-1] && getFlavorImage(selectedFlavors[i-1])" 
                         :src="getFlavorImage(selectedFlavors[i-1])" 
-                        class="slot-flavor-image" />
+                        class="slot-flavor-image"
+                        @error="handleFlavorImageError($event, getFlavorImage(selectedFlavors[i-1]))" />
                 </div>
                 <div class="slot-badge">{{ i }}</div>
              </div>
@@ -374,6 +376,21 @@ const handleProductImgError = (e) => {
   if (e.target.nextElementSibling) {
     e.target.nextElementSibling.style.display = 'flex';
   }
+}
+
+const handleFlavorImageError = (event, imageUrl) => {
+  const image = event.currentTarget
+  if (
+    !imageUrl ||
+    image.dataset.backendFallback === 'true' ||
+    /^https?:\/\//i.test(imageUrl)
+  ) {
+    image.style.display = 'none'
+    return
+  }
+
+  image.dataset.backendFallback = 'true'
+  image.src = `/proxy-api${imageUrl}`
 }
 
 // API 통신
