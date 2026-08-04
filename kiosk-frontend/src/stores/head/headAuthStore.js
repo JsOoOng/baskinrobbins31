@@ -191,7 +191,8 @@ export const useHeadAuthStore = defineStore(
      */
     const login = async (
       loginId,
-      password
+      password,
+      turnstileToken
     ) => {
       loading.value = true
       errorMessage.value = ''
@@ -200,7 +201,8 @@ export const useHeadAuthStore = defineStore(
         const responseBody =
           await loginHeadAdmin({
             loginId: loginId.trim(),
-            password
+            password,
+            turnstileToken
           })
 
         /*

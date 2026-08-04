@@ -6,10 +6,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kiosk.headquarter.dto.admin.HeadAdminCreateRequestDTO;
+import com.kiosk.headquarter.dto.admin.HeadAdminUpdateRequestDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminPasswordUpdateRequestDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminResponseDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminRoleUpdateRequestDTO;
@@ -92,5 +94,26 @@ public class HeadAdminSecurityController {
             @RequestBody HeadAdminPasswordUpdateRequestDTO requestDTO) {
 
         return headAdminSecurityService.updateAdminPassword(adminId, requestDTO);
+    }
+
+    /**
+     * [요청 흐름] PUT /head/admins/{adminId}
+     * 프론트 요청을 받아 updateAdmin() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
+     */
+    @PutMapping("/head/admins/{adminId}")
+    public String updateAdmin(
+            @PathVariable Integer adminId,
+            @RequestBody HeadAdminUpdateRequestDTO requestDTO) {
+
+        return headAdminSecurityService.updateAdmin(adminId, requestDTO);
+    }
+
+    /**
+     * [요청 흐름] DELETE /head/admins/{adminId}
+     * 프론트 요청을 받아 deleteAdmin() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
+     */
+    @DeleteMapping("/head/admins/{adminId}")
+    public String deleteAdmin(@PathVariable Integer adminId) {
+        return headAdminSecurityService.deleteAdmin(adminId);
     }
 }

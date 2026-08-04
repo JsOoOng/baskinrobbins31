@@ -551,12 +551,22 @@ public class HeadProductService {
                                 )
                         );
 
-        product.hideProduct();
+        // 연관된 StoreProduct(지점 판매 상품) 삭제
+        headStoreProductMapper.deleteByProduct(product);
+
+        // 연관된 InventoryItem(재고 품목) 조회 및 StoreInventory 삭제
+        headInventoryItemMapper.findByProduct(product).ifPresent(item -> {
+            headStoreInventoryMapper.deleteByItem(item);
+            headInventoryItemMapper.delete(item);
+        });
+
+        // 최종적으로 Product 삭제 (DB에서 실제 삭제)
+        headProductMapper.delete(product);
 
         adminLogService.logAction(
                 "상품",
                 product.getProductName()
-                        + " 삭제"
+                        + " 완전 삭제"
         );
     }
 

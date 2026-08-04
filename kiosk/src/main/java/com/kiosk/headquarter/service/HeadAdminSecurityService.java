@@ -14,8 +14,9 @@ import com.kiosk.entity.enums.AdminStatus;
 import com.kiosk.headquarter.dto.admin.HeadAdminCreateRequestDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminPasswordUpdateRequestDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminResponseDTO;
-import com.kiosk.headquarter.dto.admin.HeadAdminRoleUpdateRequestDTO;
+import com.kiosk.headquarter.dto.admin.HeadAdminUpdateRequestDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminStatusUpdateRequestDTO;
+import com.kiosk.headquarter.dto.admin.HeadAdminRoleUpdateRequestDTO;
 import com.kiosk.headquarter.repository.HeadquarterAdminMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -182,6 +183,62 @@ public class HeadAdminSecurityService {
 
         adminLogService.logAction("관리자 계정", targetAdmin.getName() + " 비밀번호 변경");
         return "본사 관리자 비밀번호 변경 성공";
+    }
+
+    @Transactional
+    public String updateAdmin(Integer adminId, HeadAdminUpdateRequestDTO requestDTO) {
+        getCurrentSuperAdmin();
+
+        HeadquarterAdmin targetAdmin = headquarterAdminMapper.findById(adminId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 본사 관리자입니다."));
+
+        if (requestDTO.getName() == null || requestDTO.getName().isBlank()) {
+            throw new IllegalArgumentException("관리자 이름을 입력해주세요.");
+        }
+
+        if (requestDTO.getRole() != null && requestDTO.getRole() != targetAdmin.getRole()) {
+            preventLastSuperAdminRoleChange(targetAdmin, requestDTO.getRole());
+        }
+
+        if (requestDTO.getStatus() != null && requestDTO.getStatus() != targetAdmin.getStatus()) {
+            HeadquarterAdmin requester = getCurrentSuperAdmin();
+            if (requester.getId().equals(targetAdmin.getId()) && requestDTO.getStatus() == AdminStatus.INACTIVE) {
+                throw new IllegalStateException("자기 자신의 계정은 비활성화할 수 없습니다.");
+            }
+            preventLastSuperAdminDeactivate(targetAdmin, requestDTO.getStatus());
+        }
+
+        targetAdmin.updateAdmin(
+                requestDTO.getName(),
+                requestDTO.getDepartment(),
+                requestDTO.getRole() != null ? requestDTO.getRole() : targetAdmin.getRole()
+        );
+
+        if (requestDTO.getStatus() != null) {
+            targetAdmin.changeStatus(requestDTO.getStatus());
+        }
+
+        adminLogService.logAction("관리자 계정", targetAdmin.getName() + " 정보 수정");
+        return "본사 관리자 정보 수정 성공";
+    }
+
+    @Transactional
+    public String deleteAdmin(Integer adminId) {
+        HeadquarterAdmin requester = getCurrentSuperAdmin();
+
+        HeadquarterAdmin targetAdmin = headquarterAdminMapper.findById(adminId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 본사 관리자입니다."));
+
+        if (requester.getId().equals(targetAdmin.getId())) {
+            throw new IllegalStateException("자기 자신의 계정은 삭제할 수 없습니다.");
+        }
+
+        preventLastSuperAdminDeactivate(targetAdmin, AdminStatus.INACTIVE);
+
+        headquarterAdminMapper.delete(targetAdmin);
+
+        adminLogService.logAction("관리자 계정", targetAdmin.getName() + " 계정 삭제");
+        return "본사 관리자 계정 삭제 성공";
     }
 
     private HeadquarterAdmin getCurrentActiveAdmin() {

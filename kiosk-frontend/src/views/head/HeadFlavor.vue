@@ -11,7 +11,8 @@ import { onMounted, reactive, ref, computed, watch } from 'vue'
 import {
   createHeadFlavor,
   getHeadFlavors,
-  updateHeadFlavor
+  updateHeadFlavor,
+  deleteHeadFlavor
 } from '@/api/head/headFlavorApi'
 
 import AppMessageToast from '@/components/common/AppMessageToast.vue'
@@ -187,6 +188,24 @@ const submitFlavor = async () => {
   }
 }
 
+const removeFlavor = async (flavor) => {
+  const flavorName = flavor.flavorName || flavor.name
+  const flavorId = flavor.flavorId || flavor.id
+  const confirmed = window.confirm(
+    `"${flavorName}" 아이스크림을 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
+  )
+  if (!confirmed) return
+
+  clearMessage()
+  try {
+    await deleteHeadFlavor(flavorId)
+    showMessage('아이스크림 맛이 삭제되었습니다.', 'success')
+    await loadFlavors()
+  } catch (error) {
+    showMessage('맛 삭제에 실패했습니다.', 'error')
+  }
+}
+
 onMounted(() => {
   loadFlavors()
 })
@@ -267,6 +286,13 @@ onMounted(() => {
                   @click="openEditModal(flavor)"
                 >
                   수정
+                </button>
+                <button
+                  type="button"
+                  class="delete-button"
+                  @click="removeFlavor(flavor)"
+                >
+                  삭제
                 </button>
               </td>
             </tr>
@@ -448,6 +474,20 @@ onMounted(() => {
 }
 .edit-button:hover {
   background: #f8f9fc;
+}
+.delete-button {
+  padding: 6px 12px;
+  border: 1px solid #fc8181;
+  border-radius: 6px;
+  background: #fff5f5;
+  color: #c53030;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 6px;
+}
+.delete-button:hover {
+  background: #fed7d7;
 }
 .empty-state, .loading-state {
   padding: 40px;
