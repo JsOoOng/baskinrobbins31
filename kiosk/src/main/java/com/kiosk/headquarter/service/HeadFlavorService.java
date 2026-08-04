@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
@@ -34,6 +36,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class HeadFlavorService {
+
+    private static final Set<String> ALLOWED_IMAGE_EXTENSIONS =
+            Set.of("png", "jpeg", "jpg", "webp");
+
+    private static final Set<String> ALLOWED_IMAGE_CONTENT_TYPES =
+            Set.of("image/png", "image/jpeg", "image/webp");
 	
 	private static final Pattern
     FLAVOR_IMAGE_URL_PATTERN =
@@ -79,10 +87,7 @@ public class HeadFlavorService {
             throw new IllegalArgumentException("이미지 파일을 첨부해주세요.");
         }
         
-        String originalFilename = imageFile.getOriginalFilename();
-        if (originalFilename == null || originalFilename.isBlank()) {
-            throw new IllegalArgumentException("올바른 파일이 아닙니다.");
-        }
+        String originalFilename = validateImageFile(imageFile);
         
         String imageUrl = "/images/flavors/" + originalFilename;
 
@@ -224,11 +229,9 @@ public class HeadFlavorService {
         MultipartFile imageFile = requestDTO.getImageFile();
         
         if (imageFile != null && !imageFile.isEmpty()) {
-            String originalFilename = imageFile.getOriginalFilename();
-            if (originalFilename != null && !originalFilename.isBlank()) {
-                imageUrl = "/images/flavors/" + originalFilename;
-                saveImageFile(imageFile, originalFilename);
-            }
+            String originalFilename = validateImageFile(imageFile);
+            imageUrl = "/images/flavors/" + originalFilename;
+            saveImageFile(imageFile, originalFilename);
         }
 
         boolean alreadyExists =
@@ -420,5 +423,46 @@ public class HeadFlavorService {
                     e
             );
         }
+    }
+
+    private String validateImageFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("이미지 파일을 첨부해주세요.");
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            throw new IllegalArgumentException("올바른 파일이 아닙니다.");
+        }
+
+        String safeFilename = Paths.get(
+                originalFilename.replace('\\', '/')
+        ).getFileName().toString();
+        int extensionSeparator = safeFilename.lastIndexOf('.');
+        if (extensionSeparator <= 0 || extensionSeparator == safeFilename.length() - 1) {
+            throw new IllegalArgumentException(
+                    "이미지 파일은 png, jpeg, jpg, webp 확장자만 허용됩니다."
+            );
+        }
+
+        String extension = safeFilename
+                .substring(extensionSeparator + 1)
+                .toLowerCase(Locale.ROOT);
+        if (!ALLOWED_IMAGE_EXTENSIONS.contains(extension)) {
+            throw new IllegalArgumentException(
+                    "이미지 파일은 png, jpeg, jpg, webp 확장자만 허용됩니다."
+            );
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_IMAGE_CONTENT_TYPES.contains(
+                contentType.toLowerCase(Locale.ROOT)
+        )) {
+            throw new IllegalArgumentException(
+                    "PNG, JPEG, JPG, WEBP 형식의 이미지 파일만 업로드할 수 있습니다."
+            );
+        }
+
+        return safeFilename;
     }
 }

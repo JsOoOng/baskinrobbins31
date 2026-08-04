@@ -331,7 +331,13 @@ const removeFlavor = async (flavor) => {
               <strong v-if="formModal.mode === 'create'">*</strong>
               <template v-else>(변경 시에만 선택)</template>
             </span>
-          <input type="file" accept="image/*" @change="handleFileChange" ref="fileInputRef" :disabled="saving" />
+          <input
+            type="file"
+            accept=".png,.jpeg,.jpg,.webp,image/png,image/jpeg,image/webp"
+            @change="handleFileChange"
+            ref="fileInputRef"
+            :disabled="saving"
+          />
           </label>
           
           <label class="form-field toggle-field">
