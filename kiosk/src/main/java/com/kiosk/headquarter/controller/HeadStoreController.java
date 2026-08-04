@@ -3,16 +3,14 @@ package com.kiosk.headquarter.controller;
 import java.net.URI;
 import java.util.List;
 
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kiosk.headquarter.dto.store.HeadStoreCreateRequest;
@@ -20,6 +18,7 @@ import com.kiosk.headquarter.dto.store.HeadStoreResponse;
 import com.kiosk.headquarter.dto.store.HeadStoreUpdateRequest;
 import com.kiosk.headquarter.service.HeadStoreService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -79,12 +78,7 @@ public class HeadStoreController {
         return ResponseEntity.ok(store);
     }
 
-    @DeleteMapping("/{storeId}")
-    public ResponseEntity<Void> deleteStore(@PathVariable Integer storeId) {
-        headStoreService.deleteStore(storeId);
-        return ResponseEntity.noContent().build();
-    }
-
+  
     /*
      * 신규 지점 등록
      *
