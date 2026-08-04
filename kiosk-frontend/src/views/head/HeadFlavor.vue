@@ -10,6 +10,7 @@ import { onMounted, reactive, ref, computed, watch } from 'vue'
 
 import {
   createHeadFlavor,
+  deleteHeadFlavor,
   getHeadFlavors,
   updateHeadFlavor,
   deleteHeadFlavor
@@ -21,6 +22,7 @@ import HeadTablePagination from '@/components/head/HeadTablePagination.vue'
 const flavors = ref([])
 const loading = ref(false)
 const saving = ref(false)
+const deletingId = ref(null)
 const searchKeyword = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
@@ -209,6 +211,20 @@ const removeFlavor = async (flavor) => {
 onMounted(() => {
   loadFlavors()
 })
+const removeFlavor = async (flavor) => {
+  if (!window.confirm(`"${flavor.flavorName}" 맛을 삭제하시겠습니까?`)) return
+  deletingId.value = flavor.flavorId
+  clearMessage()
+  try {
+    await deleteHeadFlavor(flavor.flavorId)
+    showMessage('아이스크림 맛이 삭제되었습니다.')
+    await loadFlavors()
+  } catch (error) {
+    showMessage(error?.response?.data?.message || '아이스크림 맛 삭제에 실패했습니다.', 'error')
+  } finally {
+    deletingId.value = null
+  }
+}
 </script>
 
 <template>
@@ -250,6 +266,7 @@ onMounted(() => {
         <table class="data-table">
           <thead>
             <tr>
+              <th>번호</th>
               <th>이미지</th>
               <th>맛 이름</th>
               <th>노출 상태</th>
@@ -258,10 +275,11 @@ onMounted(() => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="flavor in paginatedFlavors" :key="flavor.flavorId || flavor.id">
+            <tr v-for="(flavor, index) in paginatedFlavors" :key="flavor.flavorId || flavor.id">
+              <td>{{ (currentPage - 1) * pageSize + index + 1 }}</td>
               <td class="td-image">
                 <img
-                  :src="`http://localhost:8889${flavor.imageUrl || flavor.image}`"
+                  :src="`/proxy-api${flavor.imageUrl || flavor.image}`"
                   :alt="flavor.flavorName || flavor.name"
                   class="flavor-img"
                 />
@@ -270,6 +288,7 @@ onMounted(() => {
 
               <td>
                 <strong>{{ flavor.flavorName || flavor.name }}</strong>
+                <small>맛 #{{ flavor.flavorId || flavor.id }}</small>
               </td>
               <td>
                 <span :class="['status-badge', (flavor.isActive !== undefined ? flavor.isActive : flavor.active) ? 'status-active' : 'status-inactive']">
@@ -290,9 +309,10 @@ onMounted(() => {
                 <button
                   type="button"
                   class="delete-button"
+                  :disabled="deletingId === flavor.flavorId"
                   @click="removeFlavor(flavor)"
                 >
-                  삭제
+                  {{ deletingId === flavor.flavorId ? '삭제 중' : '삭제' }}
                 </button>
               </td>
             </tr>
@@ -475,19 +495,19 @@ onMounted(() => {
 .edit-button:hover {
   background: #f8f9fc;
 }
+
 .delete-button {
-  padding: 6px 12px;
-  border: 1px solid #fc8181;
-  border-radius: 6px;
-  background: #fff5f5;
-  color: #c53030;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-left: 6px;
+  margin-left: 8px;
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
 }
-.delete-button:hover {
-  background: #fed7d7;
+
+.data-table td small {
+  display: block;
+  margin-top: 4px;
+  color: #8a94a6;
+  font-size: 11px;
 }
 .empty-state, .loading-state {
   padding: 40px;

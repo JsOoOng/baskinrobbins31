@@ -238,14 +238,25 @@ public class HeadStoreService {
         return HeadStoreResponse.from(store);
     }
 
-    /*
-     * 지점 삭제
-     */
     @Transactional
     public void deleteStore(Integer storeId) {
         Store store = findStore(storeId);
-        headStoreMapper.delete(store);
-        adminLogService.logAction("지점", store.getStoreName() + " 지점 삭제");
+        StoreStatus previousStatus = store.getStoreStatus();
+
+        if (previousStatus != StoreStatus.CLOSED) {
+            store.updateStore(
+                    store.getStoreName(),
+                    store.getBusinessNumber(),
+                    store.getRegion(),
+                    store.getAddress(),
+                    store.getPhone(),
+                    store.getBusinessHours(),
+                    StoreStatus.CLOSED
+            );
+            saveStatusHistory(store, StoreStatus.CLOSED, LocalDateTime.now());
+        }
+
+        adminLogService.logAction("지점", store.getStoreName() + " 삭제(폐점 처리)");
     }
 
     private void saveStatusHistory(

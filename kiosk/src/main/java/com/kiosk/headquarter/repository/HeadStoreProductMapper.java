@@ -27,7 +27,7 @@ public interface HeadStoreProductMapper
      * 동일 상품이 존재하는지 확인
      */
     boolean
-            existsByStore_IdAndProduct_IdAndIsDeletedFalse(
+            existsByStore_IdAndProduct_IdAndIsDeletedFalseAndProduct_IsDeletedFalse(
                     Integer storeId,
                     Integer productId
             );
@@ -36,7 +36,7 @@ public interface HeadStoreProductMapper
      * 특정 지점의 삭제되지 않은 판매 메뉴 목록
      */
     List<StoreProduct>
-            findByStore_IdAndIsDeletedFalseOrderByIdDesc(
+            findByStore_IdAndIsDeletedFalseAndProduct_IsDeletedFalseOrderByIdDesc(
                     Integer storeId
             );
 
@@ -44,10 +44,12 @@ public interface HeadStoreProductMapper
      * 특정 지점의 판매 메뉴 상세 조회
      */
     Optional<StoreProduct>
-            findByStore_IdAndIdAndIsDeletedFalse(
+            findByStore_IdAndIdAndIsDeletedFalseAndProduct_IsDeletedFalse(
                     Integer storeId,
                     Integer storeProductId
             );
+
+    List<StoreProduct> findByProduct_IdAndIsDeletedFalse(Integer productId);
 
     void deleteByProduct(com.kiosk.entity.Product product);
 }

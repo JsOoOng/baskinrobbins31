@@ -76,7 +76,7 @@ export const updateHeadAdminStatus = async (
   adminId,
   status
 ) => {
-  const response = await api.patch(
+  const response = await api.put(
     `/head/admins/${adminId}/status`,
     {
       status
@@ -95,7 +95,7 @@ export const resetHeadAdminPassword = async (
   adminId,
   newPassword
 ) => {
-  const response = await api.patch(
+  const response = await api.put(
     `/head/admins/${adminId}/password`,
     {
       newPassword
@@ -161,4 +161,9 @@ export const extractSecurityErrorMessage = (
     error?.message ||
     defaultMessage
   )
+}
+
+export const deleteHeadAdmin = async (adminId) => {
+  const response = await api.delete(`/head/admins/${adminId}`)
+  return response.data
 }

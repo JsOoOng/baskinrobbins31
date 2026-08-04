@@ -20,7 +20,9 @@ public interface IcecreamFlavorMapper
 extends JpaRepository<IcecreamFlavor, Integer>{
 
 
-    List<IcecreamFlavor> findByIsActiveTrue();
+    List<IcecreamFlavor> findByIsActiveTrueAndIsDeletedFalse();
+
+    java.util.Optional<IcecreamFlavor> findByIdAndIsDeletedFalse(Integer flavorId);
 
 
 }

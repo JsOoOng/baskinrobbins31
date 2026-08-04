@@ -86,7 +86,7 @@ public class HeadStoreProductService {
 
         Product product =
                 headProductMapper
-                        .findById(
+                        .findByIdAndIsDeletedFalse(
                                 requestDTO.getProductId()
                         )
                         .orElseThrow(
@@ -98,7 +98,7 @@ public class HeadStoreProductService {
 
         boolean alreadyExists =
                 headStoreProductMapper
-                        .existsByStore_IdAndProduct_IdAndIsDeletedFalse(
+                        .existsByStore_IdAndProduct_IdAndIsDeletedFalseAndProduct_IsDeletedFalse(
                                 storeId,
                                 requestDTO.getProductId()
                         );
@@ -184,7 +184,7 @@ public class HeadStoreProductService {
         }
 
         return headStoreProductMapper
-                .findByStore_IdAndIsDeletedFalseOrderByIdDesc(
+                .findByStore_IdAndIsDeletedFalseAndProduct_IsDeletedFalseOrderByIdDesc(
                         storeId
                 )
                 .stream()
@@ -301,7 +301,7 @@ public class HeadStoreProductService {
     ) {
 
         return headStoreProductMapper
-                .findByStore_IdAndIdAndIsDeletedFalse(
+                .findByStore_IdAndIdAndIsDeletedFalseAndProduct_IsDeletedFalse(
                         storeId,
                         storeProductId
                 )

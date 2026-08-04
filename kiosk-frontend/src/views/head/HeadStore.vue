@@ -15,6 +15,7 @@ import {
 
 import {
   createHeadStore,
+  deleteHeadStore,
   createHeadStoreEmployee,
   extractStoreData,
   extractStoreErrorMessage,
@@ -34,6 +35,7 @@ const loading = ref(false)
 const detailLoading = ref(false)
 const saving = ref(false)
 const employeeSaving = ref(false)
+const deletingId = ref(null)
 
 const searchKeyword = ref('')
 const currentPage = ref(1)
@@ -729,6 +731,20 @@ const removeStore = async (store) => {
 onMounted(() => {
   loadStores()
 })
+const removeStore = async (store) => {
+  if (!window.confirm(`"${store.storeName}" 지점을 삭제(폐점 처리)하시겠습니까?`)) return
+  deletingId.value = store.storeId
+  clearMessage()
+  try {
+    await deleteHeadStore(store.storeId)
+    showMessage('지점이 삭제(폐점 처리)되었습니다.')
+    await loadStores()
+  } catch (error) {
+    showMessage(extractStoreErrorMessage(error, '지점 삭제에 실패했습니다.'), 'error')
+  } finally {
+    deletingId.value = null
+  }
+}
 </script>
 
 <template>
@@ -938,6 +954,14 @@ onMounted(() => {
                     "
                   >
                     수정
+                  </button>
+                  <button
+                    type="button"
+                    class="delete-button"
+                    :disabled="deletingId === store.storeId || store.storeStatus === 'CLOSED'"
+                    @click="removeStore(store)"
+                  >
+                    {{ deletingId === store.storeId ? '삭제 중' : '삭제' }}
                   </button>
 
                   <button
@@ -1638,6 +1662,12 @@ td {
   border: 1px solid #dcd7fb;
   color: #6756dc;
   background: #f3f1ff;
+}
+
+.delete-button {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
 }
 
 .employee-button {

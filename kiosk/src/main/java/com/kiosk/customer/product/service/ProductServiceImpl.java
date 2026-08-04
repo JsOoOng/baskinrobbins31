@@ -94,7 +94,7 @@ public class ProductServiceImpl implements ProductService {
      * Controller 또는 상위 서비스에서 호출되어 ProductRepository, ProductOptionRepository, EntityManager을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
     public ProductDetailResponse getProductDetail(Long storeId, Long productId) {
-        Product product = productRepository.findById(productId.intValue())
+        Product product = productRepository.findByIdAndIsDeletedFalse(productId.intValue())
             .orElseThrow(() -> new IllegalArgumentException("Product not found"));
             
         List<com.kiosk.entity.ProductOption> options = productOptionRepository.findByProductId(productId.intValue());

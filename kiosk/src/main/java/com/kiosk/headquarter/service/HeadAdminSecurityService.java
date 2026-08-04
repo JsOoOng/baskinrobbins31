@@ -230,15 +230,13 @@ public class HeadAdminSecurityService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 본사 관리자입니다."));
 
         if (requester.getId().equals(targetAdmin.getId())) {
-            throw new IllegalStateException("자기 자신의 계정은 삭제할 수 없습니다.");
+            throw new IllegalStateException("현재 로그인한 자신의 계정은 삭제할 수 없습니다.");
         }
 
         preventLastSuperAdminDeactivate(targetAdmin, AdminStatus.INACTIVE);
-
-        headquarterAdminMapper.delete(targetAdmin);
-
-        adminLogService.logAction("관리자 계정", targetAdmin.getName() + " 계정 삭제");
-        return "본사 관리자 계정 삭제 성공";
+        targetAdmin.changeStatus(AdminStatus.INACTIVE);
+        adminLogService.logAction("관리자 계정", targetAdmin.getName() + " 삭제(비활성화)");
+        return "본사 관리자 삭제 성공";
     }
 
     private HeadquarterAdmin getCurrentActiveAdmin() {

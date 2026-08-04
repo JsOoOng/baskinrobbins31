@@ -18,6 +18,7 @@ import AppMessageToast
 
 import {
   createHeadAdmin,
+  deleteHeadAdmin,
   extractSecurityData,
   extractSecurityErrorMessage,
   getHeadAdmins,
@@ -39,6 +40,7 @@ const loading = ref(false)
 const saving = ref(false)
 const passwordSaving = ref(false)
 const statusUpdatingId = ref(null)
+const deletingId = ref(null)
 
 /*
  * 검색·필터
@@ -730,6 +732,20 @@ const submitPasswordReset = async () => {
 onMounted(() => {
   loadAdmins()
 })
+const removeAdmin = async (admin) => {
+  if (!window.confirm(`"${admin.name}" 관리자 계정을 삭제(비활성화)하시겠습니까?`)) return
+  deletingId.value = admin.adminId
+  clearMessage()
+  try {
+    await deleteHeadAdmin(admin.adminId)
+    showMessage('관리자 계정이 삭제(비활성화)되었습니다.')
+    await loadAdmins(true)
+  } catch (error) {
+    showMessage(extractSecurityErrorMessage(error, '관리자 계정 삭제에 실패했습니다.'), 'error')
+  } finally {
+    deletingId.value = null
+  }
+}
 </script>
 
 <template>
@@ -1020,13 +1036,13 @@ onMounted(() => {
                   >
                     비밀번호 초기화
                   </button>
-
                   <button
                     type="button"
                     class="delete-button"
+                    :disabled="deletingId === admin.adminId || admin.status === 'INACTIVE'"
                     @click="removeAdmin(admin)"
                   >
-                    삭제
+                    {{ deletingId === admin.adminId ? '삭제 중' : '삭제' }}
                   </button>
                 </div>
               </td>
@@ -1669,6 +1685,12 @@ tbody tr:hover {
   border: 1px solid #dcd7fb;
   color: #6756dc;
   background: #f3f1ff;
+}
+
+.delete-button {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
 }
 
 .password-button {

@@ -25,6 +25,7 @@ public interface FlavorRepository extends JpaRepository<IcecreamFlavor, Integer>
         FROM StoreFlavor sf
         WHERE sf.store.id = :storeId
           AND sf.flavor.isActive = true
+          AND sf.flavor.isDeleted = false
     """)
     List<com.kiosk.entity.StoreFlavor> findAvailableFlavorsByStoreId(
             @Param("storeId") Long storeId

@@ -738,6 +738,7 @@ onMounted(async () => {
         <table>
           <thead>
             <tr>
+              <th>번호</th>
               <th>상품</th>
               <th>본사 가격</th>
               <th>지점 가격</th>
@@ -749,9 +750,10 @@ onMounted(async () => {
 
           <tbody>
             <tr
-              v-for="product in paginatedStoreProducts"
+              v-for="(product, index) in paginatedStoreProducts"
               :key="product.storeProductId"
             >
+              <td>{{ (currentPage - 1) * pageSize + index + 1 }}</td>
               <td>
                 <strong>
                   {{ product.productName }}
@@ -962,7 +964,6 @@ onMounted(async () => {
 
             <button
               type="submit"
-              class="save-button"
               :disabled="saving"
             >
               {{

@@ -15,6 +15,7 @@ import {
 
 import {
   createHeadProduct,
+  deleteHeadProduct,
   extractProductData,
   extractProductErrorMessage,
   getHeadProductDetail,
@@ -46,6 +47,7 @@ const loading = ref(false)
 const saving = ref(false)
 const detailLoading = ref(false)
 const displayUpdatingId = ref(null)
+const deletingId = ref(null)
 
 const searchKeyword = ref('')
 const currentPage = ref(1)
@@ -617,6 +619,10 @@ const submitProduct = async () => {
  * 상품 상세 조회
  */
 const openDetailModal = async (productId) => {
+  if (productId === null || productId === undefined) {
+    showMessage('상품 번호가 없어 상세 정보를 조회할 수 없습니다.', 'error')
+    return
+  }
   detailModal.open = true
   detailModal.product = null
   detailLoading.value = true
@@ -770,6 +776,29 @@ onMounted(async () => {
     loadProducts()
   ])
 })
+const removeProduct = async (product) => {
+  if (!product?.productId) {
+    showMessage('상품 번호가 없어 삭제할 수 없습니다.', 'error')
+    return
+  }
+  if (!window.confirm(`"${product.productName}" 상품을 삭제하시겠습니까?`)) return
+  deletingId.value = product.productId
+  clearMessage()
+  try {
+    await deleteHeadProduct(product.productId)
+    products.value = products.value.filter(
+      (item) => item.productId !== product.productId
+    )
+    detailModal.open = false
+    detailModal.product = null
+    showMessage('상품이 삭제되었습니다.')
+    await loadProducts()
+  } catch (error) {
+    showMessage(extractProductErrorMessage(error, '상품 삭제에 실패했습니다.'), 'error')
+  } finally {
+    deletingId.value = null
+  }
+}
 </script>
 
 <template>
@@ -921,6 +950,7 @@ onMounted(async () => {
         <table>
           <thead>
             <tr>
+              <th>번호</th>
               <th>상품</th>
               <th>카테고리</th>
               <th>기본 가격</th>
@@ -933,9 +963,10 @@ onMounted(async () => {
 
           <tbody>
             <tr
-              v-for="product in paginatedProducts"
+              v-for="(product, index) in paginatedProducts"
               :key="product.productId"
             >
+              <td>{{ (currentPage - 1) * pageSize + index + 1 }}</td>
               <td>
                 <div class="product-info">
                   <div>
@@ -944,8 +975,7 @@ onMounted(async () => {
                     </strong>
 
                     <small>
-                      상품 ID:
-                      {{ product.productId }}
+                      상품 #{{ product.productId }}
                     </small>
                   </div>
                 </div>
@@ -1031,13 +1061,13 @@ onMounted(async () => {
                   >
                     수정
                   </button>
-
                   <button
                     type="button"
                     class="delete-button"
+                    :disabled="deletingId === product.productId"
                     @click="removeProduct(product)"
                   >
-                    삭제
+                    {{ deletingId === product.productId ? '삭제 중' : '삭제' }}
                   </button>
                 </div>
               </td>
@@ -1745,9 +1775,9 @@ td {
 }
 
 .delete-button {
-  border: 1px solid #ffd7e2;
-  color: #df4a72;
-  background: #fff0f4;
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
 }
 
 .empty-cell {

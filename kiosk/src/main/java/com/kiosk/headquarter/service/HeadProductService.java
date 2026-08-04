@@ -250,7 +250,7 @@ public class HeadProductService {
              */
             boolean storeProductExists =
                     headStoreProductMapper
-                            .existsByStore_IdAndProduct_IdAndIsDeletedFalse(
+                            .existsByStore_IdAndProduct_IdAndIsDeletedFalseAndProduct_IsDeletedFalse(
                                     store.getId(),
                                     savedProduct.getId()
                             );
@@ -367,7 +367,7 @@ public class HeadProductService {
             getProductList() {
 
         return headProductMapper
-                .findAllByOrderByIdDesc()
+                .findByIsDeletedFalseOrderByIdDesc()
                 .stream()
                 .map(
                         this::toResponseDTO
@@ -389,7 +389,7 @@ public class HeadProductService {
 
         Product product =
                 headProductMapper
-                        .findById(
+                        .findByIdAndIsDeletedFalse(
                                 productId
                         )
                         .orElseThrow(() ->
@@ -413,7 +413,7 @@ public class HeadProductService {
             Integer productId,
             Boolean isDisplay
     ) {
-        Product product = headProductMapper.findById(productId)
+        Product product = headProductMapper.findByIdAndIsDeletedFalse(productId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "존재하지 않는 상품입니다."
                 ));
@@ -551,17 +551,10 @@ public class HeadProductService {
                                 )
                         );
 
-        // 연관된 StoreProduct(지점 판매 상품) 삭제
-        headStoreProductMapper.deleteByProduct(product);
-
-        // 연관된 InventoryItem(재고 품목) 조회 및 StoreInventory 삭제
-        headInventoryItemMapper.findByProduct(product).ifPresent(item -> {
-            headStoreInventoryMapper.deleteByItem(item);
-            headInventoryItemMapper.delete(item);
-        });
-
-        // 최종적으로 Product 삭제 (DB에서 실제 삭제)
-        headProductMapper.delete(product);
+        product.deleteProduct();
+        headStoreProductMapper
+                .findByProduct_IdAndIsDeletedFalse(productId)
+                .forEach(StoreProduct::deleteStoreProduct);
 
         adminLogService.logAction(
                 "상품",
