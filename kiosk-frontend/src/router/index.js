@@ -510,7 +510,7 @@ router.beforeEach(async (to) => {
   // 지점 인증
   // ============================
   if (requiresBranchAuth) {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('branchToken')
     const branchUser = localStorage.getItem('branchUser')
 
     if (!token || !branchUser) {
