@@ -32,6 +32,7 @@ import {
   readBranchNotification
 } from '@/api/branch/statusApi'
 
+import orderSound from '@/assets/order.wav'
 
 const route = useRoute()
 const router = useRouter()
@@ -124,6 +125,17 @@ const isKiosk = computed(() => {
 const toastMessage = ref('')
 const showToastBox = ref(false)
 
+const audio = new Audio(orderSound)
+
+watch(showToastBox, (show) => {
+  if (show) {
+    audio.currentTime = 0
+    audio.play().catch(() => {})
+  } else {
+    audio.pause()
+    audio.currentTime = 0
+  }
+})
 
 const showToast = (message) => {
 
