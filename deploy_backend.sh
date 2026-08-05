@@ -71,7 +71,7 @@ fi
 # 프로그램 밖의 고정 폴더에 저장하고 /images/flavors/{filename} 주소로 보여준다.
 export FLAVOR_UPLOAD_DIR="/home/ubuntu/kiosk-deploy/data/flavors"
 
-nohup java $DB_ARGS -jar $JAR_NAME > /home/ubuntu/kiosk-deploy/nohup.out 2>&1 &
+nohup java -Xms128m -Xmx384m $DB_ARGS -jar $JAR_NAME > /home/ubuntu/kiosk-deploy/nohup.out 2>&1 &
 
 echo "=========================================="
 echo "🎉 백엔드 배포가 성공적으로 완료되었습니다!"
