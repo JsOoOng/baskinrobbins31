@@ -127,6 +127,7 @@ const router = createRouter({
       path: '/branch',
       // 로그인 이후 지점 화면은 모두 같은 사이드바와 헤더 안에서 열린다.
       component: () => import('../components/branch/BranchLayout.vue'),
+      meta: { requiresBranchAuth: true }, // 추가
       children: [
         {
           path: 'main',
@@ -469,20 +470,12 @@ const router = createRouter({
     }
   ]
 })
-
-// ====================================================
-// 라우터 전역 가드 (본사 권한 체크)
-// ====================================================
-/*
- * 모든 화면 이동 전에 실행되는 인증 검사
- */
 router.beforeEach(async (to) => {
   const headAuthStore = useHeadAuthStore(pinia)
 
-  /*
-   * 본사 로그인 화면에 접근한 경우
-   * 이미 정상적인 본사 계정으로 로그인했다면 대시보드로 이동합니다.
-   */
+  // ============================
+  // 본사 로그인 페이지
+  // ============================
   if (to.name === 'head-login') {
     if (
       headAuthStore.token &&
@@ -491,26 +484,55 @@ router.beforeEach(async (to) => {
     ) {
       return { name: 'head-dashboard' }
     }
+
     return true
   }
 
-  /*
-   * 부모 또는 현재 Route에 requiresHeadAuth가 있는지 확인
-   */
+  // ============================
+  // 지점 로그인 페이지
+  // ============================
+  if (to.name === 'branch-login') {
+    return true
+  }
+
+  // ============================
+  // 인증 필요 여부 확인
+  // ============================
   const requiresHeadAuth = to.matched.some(
     (routeRecord) => routeRecord.meta.requiresHeadAuth
   )
 
-  /*
-   * 본사 인증이 필요하지 않은 화면 (키오스크, 지점 등)은 통과
-   */
+  const requiresBranchAuth = to.matched.some(
+    (routeRecord) => routeRecord.meta.requiresBranchAuth
+  )
+
+  // ============================
+  // 지점 인증
+  // ============================
+  if (requiresBranchAuth) {
+    const token = localStorage.getItem('token')
+    const branchUser = localStorage.getItem('branchUser')
+
+    if (!token || !branchUser) {
+      return {
+        name: 'branch-login',
+        query: { redirect: to.fullPath }
+      }
+    }
+
+    return true
+  }
+
+  // ============================
+  // 본사 인증이 필요 없는 화면
+  // ============================
   if (!requiresHeadAuth) {
     return true
   }
 
-  /*
-   * JWT 토큰이 없다면 본사 로그인 화면 이동
-   */
+  // ============================
+  // 본사 JWT 검사
+  // ============================
   if (!headAuthStore.token) {
     return {
       name: 'head-login',
@@ -518,9 +540,9 @@ router.beforeEach(async (to) => {
     }
   }
 
-  /*
-   * 토큰은 있지만 localStorage에 사용자 정보가 없다면 복구 시도
-   */
+  // ============================
+  // 세션 복구
+  // ============================
   if (!headAuthStore.headUser) {
     const restored = await headAuthStore.restoreSession()
 
@@ -532,25 +554,41 @@ router.beforeEach(async (to) => {
     }
   }
 
-  /*
-   * 본사 관리자 역할인지 확인
-   */
+  // ============================
+  // 본사 역할 검사
+  // ============================
   if (!hasHeadAccessRole(headAuthStore.role)) {
     headAuthStore.clearAuthentication()
-    return { name: 'head-login' }
+
+    return {
+      name: 'head-login'
+    }
   }
 
-  /*
-   * 특정 역할 전용 화면 검사 (예: SUPER_ADMIN 전용)
-   */
+  // ============================
+  // 특정 권한 검사
+  // ============================
   const allowedRoles = to.meta.roles
 
-  if (Array.isArray(allowedRoles) && allowedRoles.length > 0) {
-    const currentRole = normalizeRole(headAuthStore.role)
-    const normalizedAllowedRoles = allowedRoles.map(normalizeRole)
+  if (
+    Array.isArray(allowedRoles) &&
+    allowedRoles.length > 0
+  ) {
+    const currentRole = normalizeRole(
+      headAuthStore.role
+    )
 
-    if (!normalizedAllowedRoles.includes(currentRole)) {
-      return { name: 'head-not-authorized' }
+    const normalizedAllowedRoles =
+      allowedRoles.map(normalizeRole)
+
+    if (
+      !normalizedAllowedRoles.includes(
+        currentRole
+      )
+    ) {
+      return {
+        name: 'head-not-authorized'
+      }
     }
   }
 
