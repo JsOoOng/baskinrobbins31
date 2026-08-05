@@ -33,6 +33,28 @@ public class BranchKioskResponse {
 
     private String storeName;
 
+    private Integer bannerId;
+
+    public BranchKioskResponse(
+            Integer kioskId,
+            Integer kioskNumber,
+            String deviceSerial,
+            KioskStatus kioskStatus,
+            LocalDateTime createdAt,
+            Integer storeId,
+            String storeName,
+            Integer bannerId
+    ) {
+        this.kioskId = kioskId;
+        this.kioskNumber = kioskNumber;
+        this.deviceSerial = deviceSerial;
+        this.kioskStatus = kioskStatus;
+        this.createdAt = createdAt;
+        this.storeId = storeId;
+        this.storeName = storeName;
+        this.bannerId = bannerId;
+    }
+
     public static BranchKioskResponse from(Kiosk kiosk){
 
         return BranchKioskResponse.builder()
@@ -43,6 +65,7 @@ public class BranchKioskResponse {
                 .createdAt(kiosk.getCreatedAt())
                 .storeId(kiosk.getStore() != null ? kiosk.getStore().getId() : null)
                 .storeName(kiosk.getStore() != null ? kiosk.getStore().getStoreName() : null)
+                .bannerId(null)
                 .build();
 
     }

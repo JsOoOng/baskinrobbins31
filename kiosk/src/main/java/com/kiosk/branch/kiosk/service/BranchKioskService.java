@@ -93,10 +93,7 @@ public class BranchKioskService {
             Integer storeId
     ){
 
-        return kioskRepository.findByStore_Id(storeId)
-                .stream()
-                .map(BranchKioskResponse::from)
-                .toList();
+        return kioskRepository.findResponsesWithBannerByStoreId(storeId);
 
     }
 

@@ -43,19 +43,14 @@ const loadKiosks = async () => {
         const response = await api.get(`/branch/kiosk/${user.storeId}`)
         kiosks.value = response.data
 
-        // 키오스크마다 현재 매핑된 배너 조회
-        await Promise.all(kiosks.value.map(async (kiosk) => {
-            try {
-                const bRes = await api.get(`/api/kiosk-banners/${kiosk.kioskId}`)
-                if (bRes.data && bRes.data.bannerId) {
-                    kioskBanners.value[kiosk.kioskId] = bRes.data.bannerId
-                } else {
-                    kioskBanners.value[kiosk.kioskId] = 0 // 기본 화면
-                }
-            } catch(e) {
-                kioskBanners.value[kiosk.kioskId] = 0 // 기본 화면
-            }
-        }))
+        // 백엔드가 키오스크와 배너 ID를 LEFT JOIN 한 번으로 함께 반환한다.
+        // 키오스크 수만큼 API를 동시에 호출하던 Promise.all은 사용하지 않는다.
+        kioskBanners.value = Object.fromEntries(
+            kiosks.value.map(kiosk => [
+                kiosk.kioskId,
+                kiosk.bannerId ?? 0
+            ])
+        )
     } catch(e) {
         console.error('키오스크 조회 실패', e)
     }
