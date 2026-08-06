@@ -1,5 +1,6 @@
 package com.kiosk.customer.order.controller;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 
@@ -145,7 +146,9 @@ public class OrderController {
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        String encodedAuth = Base64.getEncoder().encodeToString((tossSecretKey + ":").getBytes());
+        String encodedAuth = Base64.getEncoder().encodeToString(
+                (tossSecretKey + ":").getBytes(StandardCharsets.UTF_8)
+        );
         headers.set("Authorization", "Basic " + encodedAuth);
         
         HttpEntity<TossConfirmRequest> entity = new HttpEntity<>(tossReq, headers);

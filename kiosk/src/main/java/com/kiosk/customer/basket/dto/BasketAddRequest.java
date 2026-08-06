@@ -2,6 +2,8 @@ package com.kiosk.customer.basket.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -13,7 +15,11 @@ import java.util.List;
  */
 @Getter
 @Setter
-public class BasketAddRequest {
+public class BasketAddRequest implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     private Integer productId;        // 상품 ID (예: 하프갤런)
     private String productName;       // 상품 이름 추가
     private Integer quantity;         // 수량
@@ -24,7 +30,11 @@ public class BasketAddRequest {
 
     @Getter
     @Setter
-    public static class FlavorDto {
+    public static class FlavorDto implements Serializable {
+
+        @Serial
+        private static final long serialVersionUID = 1L;
+
         private Integer flavorId;
         private String flavorName;    // 맛 이름 추가
         private Integer quantity;
