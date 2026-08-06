@@ -29,7 +29,8 @@ public class SecurityConfig {
      */
     public SecurityFilterChain filterChain(
             HttpSecurity http, // HTTP 보안 설정을 구성할 수 있는 객체
-            JwtUtil jwtUtil // JWT 토큰 생성 및 검증을 위한 커스텀 유틸리티 객체
+            JwtUtil jwtUtil, // JWT 토큰 생성 및 검증을 위한 커스텀 유틸리티 객체
+            JwtTokenStore jwtTokenStore
     ) throws Exception {
 
         http
@@ -85,8 +86,11 @@ public class SecurityConfig {
 
             // 5. 커스텀 필터 등록: 기본 아이디/비밀번호 검증 필터가 실행되기 전에 JWT 필터를 먼저 실행
             .addFilterBefore(
-                    new JwtFilter(jwtUtil), // 요청 헤더의 JWT를 검사하는 커스텀 필터
-                    UsernamePasswordAuthenticationFilter.class // Spring Security의 기본 인증 필터
+                    new JwtFilter(
+                            jwtUtil,
+                            jwtTokenStore
+                    ),
+                    UsernamePasswordAuthenticationFilter.class
             )
 
             // 6. 엔드포인트(URL)별 접근 권한(인가) 설정

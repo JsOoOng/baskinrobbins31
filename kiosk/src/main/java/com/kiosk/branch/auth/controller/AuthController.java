@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kiosk.branch.auth.dto.AuthRequest;
 import com.kiosk.branch.auth.dto.AuthResponse;
 import com.kiosk.branch.auth.service.AuthService;
+import com.kiosk.common.config.JwtTokenStore;
 import com.kiosk.common.config.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class AuthController {
     private final AuthService authService;
     private final JwtUtil jwtUtil;
     private final com.kiosk.common.service.TurnstileService turnstileService;
-
+    private final JwtTokenStore jwtTokenStore;
 
 
     
@@ -57,6 +58,11 @@ public class AuthController {
 
         String token =
             jwtUtil.createToken(user);
+        
+        jwtTokenStore.save(
+                "BRANCH_" + user.getEmployeeId(),
+                token
+        );
 
 
         return ResponseEntity.ok(
