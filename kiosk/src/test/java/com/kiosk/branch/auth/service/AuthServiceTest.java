@@ -82,7 +82,7 @@ class AuthServiceTest {
         )
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(
-                        "아이디 또는 비밀번호가 일치하지 않습니다."
+                        "로그인에 실패하였습니다."
                 );
     }
 

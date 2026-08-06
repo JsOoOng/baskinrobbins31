@@ -405,7 +405,7 @@ const closeAdminModal = () => {
 /*
  * 관리자 입력 검증
  */
-const validateAdminForm = () => {
+ const validateAdminForm = () => {
   if (
     adminModal.mode === 'create' &&
     !adminForm.loginId.trim()
@@ -446,9 +446,19 @@ const validateAdminForm = () => {
       return false
     }
 
-    if (adminForm.password.length < 4) {
+    if (adminForm.password.length < 8) {
       showMessage(
-        '비밀번호는 4자 이상이어야 합니다.',
+        '비밀번호는 영문, 숫자, 특수문자를 포함하여 8자 이상이어야 합니다.',
+        'error'
+      )
+
+      return false
+    }
+
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/
+    if (!passwordRegex.test(adminForm.password)) {
+      showMessage(
+        '비밀번호는 영문, 숫자, 특수문자를 포함하여 8자 이상이어야 합니다.',
         'error'
       )
 
@@ -652,10 +662,10 @@ const submitPasswordReset = async () => {
   }
 
   if (
-    passwordForm.newPassword.length < 4
+    passwordForm.newPassword.length < 8
   ) {
     showMessage(
-      '비밀번호는 4자 이상이어야 합니다.',
+      '비밀번호는 8자 이상이어야 합니다.',
       'error'
     )
 
@@ -1187,7 +1197,7 @@ const removeAdmin = async (admin) => {
                     "
                     type="password"
                     autocomplete="new-password"
-                    placeholder="4자 이상"
+                    placeholder="8자 이상"
                   />
                 </label>
 
@@ -1327,7 +1337,7 @@ const removeAdmin = async (admin) => {
                 "
                 type="password"
                 autocomplete="new-password"
-                placeholder="4자 이상"
+                placeholder="8자 이상"
               />
             </label>
 

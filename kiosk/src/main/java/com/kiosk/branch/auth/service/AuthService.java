@@ -27,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthService {
 
     private static final String LOGIN_FAILED_MESSAGE =
-            "아이디 또는 비밀번호가 일치하지 않습니다.";
+            "로그인에 실패하였습니다.";
 
     private final EmployeeMapper employeeMapper;
     private final PasswordEncoder passwordEncoder;
