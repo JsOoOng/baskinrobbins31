@@ -11,6 +11,8 @@ import com.kiosk.headquarter.dto.auth.HeadLoginRequest;
 import com.kiosk.headquarter.dto.auth.HeadLoginResponse;
 import com.kiosk.headquarter.repository.HeadAuthMapper;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * [코드 흐름 안내] HeadAuthService
  *
@@ -20,6 +22,7 @@ import com.kiosk.headquarter.repository.HeadAuthMapper;
  */
 @Service
 @Transactional(readOnly = true)
+@Slf4j
 public class HeadAuthService {
 
     private final HeadAuthMapper headAuthMapper;
@@ -92,13 +95,11 @@ public class HeadAuthService {
         }
 
         // 개발 중 확인용
-        System.out.println(
-                "[본사 로그인 조회]"
-                        + " adminId=" + employee.getEmployeeId()
-                        + ", loginId=[" + employee.getLoginId() + "]"
-                        + ", role=[" + employee.getRole() + "]"
-                        + ", status=[" + employee.getStatus() + "]"
-        );
+        log.info("[본사 로그인 조회] adminId={}, loginId=[{}], role=[{}], status=[{}]",
+                employee.getEmployeeId(),
+                employee.getLoginId(),
+                employee.getRole(),
+                employee.getStatus());
 
         // 5. 본사 관리자 권한 검사
         if (!isHeadRole(employee.getRole())) {

@@ -1,17 +1,23 @@
 package com.kiosk.customer.order.controller;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.kiosk.customer.order.dto.UserPointResponseDto;
 import com.kiosk.customer.order.repository.UserCouponRepository;
 import com.kiosk.customer.order.repository.UserRepository;
 import com.kiosk.entity.User;
 import com.kiosk.entity.UserCoupon;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * [코드 흐름 안내] UserController
@@ -23,6 +29,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     private final UserRepository userRepository;
@@ -35,7 +42,7 @@ public class UserController {
     @GetMapping("/points")
     public ResponseEntity<?> getUserPoints(@RequestParam(value = "phone") String phone) {
         try {
-            System.out.println(">>> 받은 전화번호 파라미터: " + phone);
+        	log.info(">>> 받은 전화번호 파라미터: {}", phone);
 
             User user = userRepository.findByPhoneIgnoringHyphen(phone)
                     .orElseGet(() -> {

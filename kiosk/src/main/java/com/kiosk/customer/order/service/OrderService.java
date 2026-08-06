@@ -43,6 +43,8 @@ import com.kiosk.entity.enums.OrderType;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 /**
@@ -54,6 +56,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderService {
 
     private final OrderMapper orderMapper;
@@ -241,18 +244,18 @@ public class OrderService {
         int couponDiscount = 0;
 
      // 2. 쿠폰 계산 및 적용 부분에 로그 추가
-        System.out.println(">>> 전달받은 userCouponId: " + userCouponId);
+        log.info(">>> 전달받은 userCouponId: {}", userCouponId);
 
         if (userCouponId > 0) {
-            System.out.println(">>> 쿠폰 사용 로직 진입 성공!");
+        	log.info(">>> 쿠폰 사용 로직 진입 성공!");
             UserCoupon uc = userCouponRepository.findById(userCouponId)
                     .orElseThrow(() -> new RuntimeException("쿠폰을 찾을 수 없습니다."));
             
             couponDiscount = calculateDiscount(finalAmount, uc.getCoupon());
-            System.out.println("쿠폰 할인액: " + couponDiscount);
+            log.info("쿠폰 할인액: {}", couponDiscount);
             
             if (finalAmount - couponDiscount < 0) {
-                System.out.println(">>> [예외 발생] 쿠폰 할인 금액이 결제 총액을 초과했습니다.");
+            	log.warn(">>> [예외 발생] 쿠폰 할인 금액이 결제 총액을 초과했습니다.");
                 throw new IllegalArgumentException("상품 금액보다 할인 쿠폰 금액이 커서 사용할 수 없습니다.");
             }
             
@@ -260,7 +263,7 @@ public class OrderService {
             uc.useCoupon(); 
             userCouponRepository.save(uc);
         } else {
-            System.out.println(">>> userCouponId가 0이거나 전달되지 않아 쿠폰 로직을 타지 않습니다.");
+        	log.info(">>> userCouponId가 0이거나 전달되지 않아 쿠폰 로직을 타지 않습니다.");
         }
 
         // 3. 포인트 사용 적용 및 5% 적립 (dev1 + feature 혼합)

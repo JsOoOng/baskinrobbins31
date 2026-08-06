@@ -13,6 +13,7 @@ import com.kiosk.headquarter.inventory.AutoRestockService;
 import com.kiosk.headquarter.repository.HeadStoreInventoryMapper;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * [코드 흐름 안내] HeadInventoryService
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class HeadInventoryService {
 
     private final HeadStoreInventoryMapper
@@ -142,15 +144,10 @@ public class HeadInventoryService {
         inventoryShortageAlertService.detectOrRefreshShortage(inventory);
 
         if (restockedQuantity > 0) {
-            System.out.println(
-                    "재고 설정 저장 후 임계 자동 보충: "
-                            + "storeInventoryId="
-                            + inventory.getId()
-                            + ", restockedQuantity="
-                            + restockedQuantity
-                            + ", currentStock="
-                            + inventory.getCurrentStock()
-            );
+        	log.info("재고 설정 저장 후 임계 자동 보충: storeInventoryId={}, restockedQuantity={}, currentStock={}",
+        	        inventory.getId(),
+        	        restockedQuantity,
+        	        inventory.getCurrentStock());
         }
 
         adminLogService.logAction("상품 재고",

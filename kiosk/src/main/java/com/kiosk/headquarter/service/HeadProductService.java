@@ -24,6 +24,7 @@ import com.kiosk.headquarter.repository.HeadStoreMapper;
 import com.kiosk.headquarter.repository.HeadStoreProductMapper;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * [코드 흐름 안내] HeadProductService
@@ -35,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class HeadProductService {
 
     private final HeadProductMapper
@@ -165,10 +167,7 @@ public class HeadProductService {
                                 product
                         );
 
-        System.out.println(
-                "상품 저장 완료: productId="
-                        + savedProduct.getId()
-        );
+        log.info("상품 저장 완료: productId={}", savedProduct.getId());
 
         /*
          * 3. INVENTORY_ITEMS 저장
@@ -195,10 +194,7 @@ public class HeadProductService {
                                 inventoryItem
                         );
 
-        System.out.println(
-                "재고 품목 저장 완료: itemId="
-                        + savedItem.getId()
-        );
+        log.info("재고 품목 저장 완료: itemId={}", savedItem.getId());
 
         /*
          * 중복 지점 ID 제거
@@ -280,17 +276,11 @@ public class HeadProductService {
                                         storeProduct
                                 );
 
-                System.out.println(
-                        "지점 판매 상품 저장 완료: "
-                                + "storeProductId="
-                                + savedStoreProduct.getId()
-                                + ", storeId="
-                                + store.getId()
-                                + ", productId="
-                                + savedProduct.getId()
-                                + ", storeProductPrice="
-                                + savedProduct.getBasePrice()
-                );
+                log.info("지점 판매 상품 저장 완료: storeProductId={}, storeId={}, productId={}, storeProductPrice={}",
+                        savedStoreProduct.getId(),
+                        store.getId(),
+                        savedProduct.getId(),
+                        savedProduct.getBasePrice());
             }
 
             /*
@@ -331,18 +321,11 @@ public class HeadProductService {
                                         storeInventory
                                 );
 
-                System.out.println(
-                        "지점 재고 저장 완료: "
-                                + "storeInventoryId="
-                                + savedStoreInventory.getId()
-                                + ", storeId="
-                                + store.getId()
-                                + ", itemId="
-                                + savedItem.getId()
-                                + ", currentStock="
-                                + savedStoreInventory
-                                        .getCurrentStock()
-                );
+                log.info("지점 재고 저장 완료: storeInventoryId={}, storeId={}, itemId={}, currentStock={}",
+                        savedStoreInventory.getId(),
+                        store.getId(),
+                        savedItem.getId(),
+                        savedStoreInventory.getCurrentStock());
             }
         }
 
