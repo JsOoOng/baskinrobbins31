@@ -17,6 +17,7 @@ const loading = ref(false)
 const errorMessage = ref('')
 const turnstileToken = ref('')
 const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY
+const turnstileRef = ref(null)
 
 const loginIdInput = ref(null)
 const passwordInput = ref(null)
@@ -60,6 +61,13 @@ const login = async () => {
     errorMessage.value = error.response
       ? '아이디 또는 비밀번호가 일치하지 않습니다.'
       : '서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.'
+
+      // 기존 Turnstile 폐기
+      turnstileToken.value = ''
+
+      // 새 인증창 발급
+      turnstileRef.value?.reset()
+
     loginIdInput.value?.focus()
   } finally {
     loading.value = false
@@ -144,6 +152,10 @@ const login = async () => {
 
           <div style="display: flex; justify-content: center; margin-top: 10px;">
             <VueTurnstile :site-key="turnstileSiteKey" v-model="turnstileToken" />
+          </div>
+
+          <div>
+            <VueTurnstile ref="turnstileRef" :sitekey="turnstileSiteKey" @verify="turnstileToken = $event" />
           </div>
 
           <p v-if="errorMessage" class="error-message" role="alert">{{ errorMessage }}</p>

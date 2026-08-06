@@ -115,12 +115,21 @@ const isSubmitDisabled = computed(() => {
     })
 
   } catch {
+
+    form.turnstileToken = ''
+
+    if(turnstileRef.value){
+        turnstileRef.value.reset()
+    }
+
     /*
      * 실제 오류 메시지는 Store의
      * errorMessage에 저장됩니다.
      */
   }
 }
+
+const turnstileRef = ref(null)
 
 /*
  * 비밀번호 입력창 표시 전환
@@ -359,7 +368,7 @@ onMounted(() => {
           </div>
           
           <div class="form-field" style="display: flex; justify-content: center; margin-top: 10px;">
-            <VueTurnstile :site-key="turnstileSiteKey" v-model="form.turnstileToken" />
+            <VueTurnstile ref="turnstileRef" :site-key="turnstileSiteKey" v-model="form.turnstileToken" />
           </div>
 
           <!-- 로그인 버튼 -->
