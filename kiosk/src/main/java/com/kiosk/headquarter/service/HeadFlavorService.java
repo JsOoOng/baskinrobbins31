@@ -2,7 +2,6 @@ package com.kiosk.headquarter.service;
 
 
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,20 +28,11 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class HeadFlavorService {
 
-	private static final Pattern
-    FLAVOR_IMAGE_URL_PATTERN =
-    Pattern.compile(
-            "^/images/flavors/"
-            + "[a-z0-9]+"
-            + "(?:_[a-z0-9]+)*"
-            + "\\.(?:png|jpe?g|webp)$"
-    );
-
-    private final HeadFlavorMapper
-            headFlavorMapper;
-    private final AdminLogService adminLogService;
-    private final FlavorImageFileStorage flavorImageFileStorage;
-    private final DatabaseHardDeleteService databaseHardDeleteService;
+	private final HeadFlavorMapper headFlavorMapper;
+	private final AdminLogService adminLogService;
+	private final FlavorImageFileStorage flavorImageFileStorage;
+	private final FlavorImageUrlResolver flavorImageUrlResolver;
+	private final DatabaseHardDeleteService databaseHardDeleteService;
 
     /*
      * 아이스크림 맛 등록
@@ -322,7 +312,9 @@ public class HeadFlavorService {
                         flavor.getIsActive()
                 )
                 .imageUrl(
-                        flavor.getImageUrl()
+                        flavorImageUrlResolver.resolve(
+                                flavor.getImageUrl()
+                        )
                 )
                 .build();
     }
@@ -353,40 +345,4 @@ public class HeadFlavorService {
      * 허용 형식:
      * /images/flavors/black_sorbet.png
      */
-    private void validateImageUrl(
-            String imageUrl
-    ) {
-
-        if (
-                imageUrl == null ||
-                imageUrl.isBlank()
-        ) {
-            throw new IllegalArgumentException(
-                    "맛 이미지 URL을 입력해주세요."
-            );
-        }
-
-        String normalizedImageUrl =
-                imageUrl.trim();
-
-        boolean validImageUrl =
-                FLAVOR_IMAGE_URL_PATTERN
-                        .matcher(
-                                normalizedImageUrl
-                        )
-                        .matches();
-
-        if (!validImageUrl) {
-            throw new IllegalArgumentException(
-                    "맛 이미지 URL은 "
-                    + "/images/flavors/파일명.png "
-                    + "이거나"		
-                    + "/images/flavors/파일명.jpg "
-                    + "형식이어야 합니다. "
-                    + "파일명은 영문 소문자, 숫자, "
-                    + "언더스코어만 사용할 수 있습니다."
-            );
-        }
-    }
-
 }
