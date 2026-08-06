@@ -21,7 +21,20 @@
 
 <properties>
     <java.version>21</java.version>
+    <aws.sdk.version>2.49.3</aws.sdk.version>
 </properties>
+
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>bom</artifactId>
+            <version>${aws.sdk.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
 
 <dependencies>
 
@@ -161,6 +174,18 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-websocket</artifactId>
     </dependency>
+    
+    <!-- Amazon S3 -->
+	<dependency>
+	    <groupId>software.amazon.awssdk</groupId>
+	    <artifactId>s3</artifactId>
+	</dependency>
+	
+	<!-- AWS SDK 동기 HTTP 클라이언트 -->
+	<dependency>
+	    <groupId>software.amazon.awssdk</groupId>
+	    <artifactId>url-connection-client</artifactId>
+	</dependency>
 	
 </dependencies>
 

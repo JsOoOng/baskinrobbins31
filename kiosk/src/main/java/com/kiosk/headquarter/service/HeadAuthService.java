@@ -4,6 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kiosk.common.config.JwtTokenStore;
 import com.kiosk.common.config.JwtUtil;
 import com.kiosk.headquarter.dto.auth.HeadLoginEmployeeDTO;
 import com.kiosk.headquarter.dto.auth.HeadLoginRequest;
@@ -24,15 +25,18 @@ public class HeadAuthService {
     private final HeadAuthMapper headAuthMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final JwtTokenStore jwtTokenStore;
 
     public HeadAuthService(
             HeadAuthMapper headAuthMapper,
             PasswordEncoder passwordEncoder,
-            JwtUtil jwtUtil
+            JwtUtil jwtUtil,
+            JwtTokenStore jwtTokenStore
     ) {
         this.headAuthMapper = headAuthMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.jwtTokenStore = jwtTokenStore;
     }
 
     /*
@@ -152,6 +156,12 @@ public class HeadAuthService {
         // 10. JWT 생성
         String token =
                 jwtUtil.createToken(loginUser);
+
+
+        jwtTokenStore.save(
+                "HEAD_" + loginUser.getEmployeeId(),
+                token
+        );
 
         // 11. 응답 DTO에 토큰 저장
         loginUser.setToken(token);
