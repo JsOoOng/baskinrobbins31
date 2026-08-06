@@ -631,9 +631,9 @@ const validateEmployeeForm = () => {
     return false
     }
 
-    if (employeeForm.password.length < 4) {
+    if (employeeForm.password.length < 8) {
       showMessage(
-        '비밀번호는 4자 이상이어야 합니다.',
+        '비밀번호는 8자 이상이어야 합니다.',
         'error'
       )
 

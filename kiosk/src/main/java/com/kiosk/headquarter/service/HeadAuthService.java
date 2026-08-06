@@ -87,7 +87,7 @@ public class HeadAuthService {
 
         if (employee == null) {
             throw new IllegalArgumentException(
-                    "존재하지 않는 계정입니다."
+                    "로그인에 실패하였습니다."
             );
         }
 
@@ -120,7 +120,7 @@ public class HeadAuthService {
                 employee.getPassword()
         )) {
             throw new IllegalArgumentException(
-                    "비밀번호가 일치하지 않습니다."
+                   "로그인에 실패하였습니다."
             );
         }
 

@@ -1,5 +1,8 @@
 package com.kiosk.headquarter.dto.auth;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * [코드 흐름 안내] HeadLoginResponse
  *
@@ -7,6 +10,8 @@ package com.kiosk.headquarter.dto.auth;
  * <p>호출 흐름: Entity/조회 결과 -> Service 변환 -> 이 DTO -> Controller JSON 응답 순서로 사용한다.</p>
  * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
  */
+@Getter
+@Setter
 public class HeadLoginResponse {
 
     private Integer employeeId;

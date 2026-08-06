@@ -1,5 +1,9 @@
 package com.kiosk.headquarter.dto.auth;
 
+import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * [코드 흐름 안내] HeadLoginRequest
  *
@@ -7,33 +11,15 @@ package com.kiosk.headquarter.dto.auth;
  * <p>호출 흐름: 프론트 JSON -> Controller의 @RequestBody -> 이 DTO -> Service 검증 순서로 사용한다.</p>
  * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
  */
+@Getter
+@Setter
 public class HeadLoginRequest {
 
+    @NotBlank(message = "아이디를 입력해주세요.")
     private String loginId;
+
+    @NotBlank(message = "비밀번호를 입력해주세요.")
     private String password;
+
     private String turnstileToken;
-
-    public String getTurnstileToken() {
-        return turnstileToken;
-    }
-
-    public void setTurnstileToken(String turnstileToken) {
-        this.turnstileToken = turnstileToken;
-    }
-
-    public String getLoginId() {
-        return loginId;
-    }
-
-    public void setLoginId(String loginId) {
-        this.loginId = loginId;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 }
