@@ -34,7 +34,7 @@ const filteredFlavors = computed(() => {
   const keyword = searchKeyword.value.trim().toLowerCase()
   if (!keyword) return flavors.value
   return flavors.value.filter((flavor) =>
-    [flavor.flavorName, flavor.name, flavor.imageUrl, flavor.image]
+    [flavor.flavorName, flavor.name]
       .some((value) => String(value ?? '').toLowerCase().includes(keyword))
   )
 })
@@ -287,7 +287,7 @@ const removeFlavor = async (confirmation) => {
       </div>
 
       <div class="header-actions">
-        <input v-model="searchKeyword" class="table-search" type="search" placeholder="맛 이름·이미지 경로 검색" />
+        <input v-model="searchKeyword" class="table-search" type="search" placeholder="맛 이름 검색" />
         <button
           type="button"
           class="create-button"
@@ -315,7 +315,6 @@ const removeFlavor = async (confirmation) => {
               <th>이미지</th>
               <th>맛 이름</th>
               <th>노출 상태</th>
-              <th>이미지 경로</th>
               <th>관리</th>
             </tr>
           </thead>
@@ -340,9 +339,6 @@ const removeFlavor = async (confirmation) => {
                 <span :class="['status-badge', (flavor.isActive !== undefined ? flavor.isActive : flavor.active) ? 'status-active' : 'status-inactive']">
                   {{ (flavor.isActive !== undefined ? flavor.isActive : flavor.active) ? '노출' : '숨김' }}
                 </span>
-              </td>
-              <td class="td-url">
-                <code>{{ flavor.imageUrl || flavor.image }}</code>
               </td>
               <td>
                 <button
@@ -538,13 +534,6 @@ const removeFlavor = async (confirmation) => {
 .status-inactive {
   background: #fcedf0;
   color: #d12953;
-}
-.td-url code {
-  background: #f1f3f5;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  color: #495057;
 }
 .edit-button {
   height: 29px;
