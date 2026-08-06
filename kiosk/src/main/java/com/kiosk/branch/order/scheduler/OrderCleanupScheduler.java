@@ -10,6 +10,7 @@ import com.kiosk.entity.Order;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * [코드 흐름 안내] OrderCleanupScheduler
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class OrderCleanupScheduler {
 
     private final BranchOrderMapper orderMapper;
@@ -30,15 +32,15 @@ public class OrderCleanupScheduler {
 
         List<Order> orders = orderMapper.findByPaymentIsNull();
 
-        System.out.println("삭제 대상 주문 수 : " + orders.size());
+        log.info("삭제 대상 주문 수 : {}", orders.size());
 
         for (Order order : orders) {
-            System.out.println("삭제 시도 : " + order.getId());
+        	log.info("삭제 시도 : {}", order.getId());
             orderMapper.delete(order);
         }
 
         orderMapper.flush();
 
-        System.out.println("삭제 완료");
+        log.info("삭제 완료");
     }
 }

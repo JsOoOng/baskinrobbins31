@@ -1,12 +1,23 @@
 package com.kiosk.customer.basket.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.kiosk.customer.basket.dto.BasketAddRequest;
 import com.kiosk.customer.basket.dto.BasketResponse;
 import com.kiosk.customer.basket.service.BasketService;
+
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * [코드 흐름 안내] BasketController
@@ -18,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/customer/basket")
 @RequiredArgsConstructor
+@Slf4j
 public class BasketController {
 
     private final BasketService basketService;
@@ -41,7 +53,7 @@ public class BasketController {
     public ResponseEntity<String> addItem(@RequestBody BasketAddRequest request, HttpSession session) {
         
         // 💡 이 코드를 한 줄 추가해 보세요!
-        System.out.println("프론트엔드 상품 ID : " + request.getProductId());
+    	log.info("프론트엔드 상품 ID : {}", request.getProductId());
         
         basketService.addItem(session, request);
         return ResponseEntity.ok("장바구니에 담겼습니다.\n"); // \n을 붙이면 CMD에서 잘 보입니다.

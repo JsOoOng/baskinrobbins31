@@ -23,6 +23,7 @@ import com.kiosk.customer.order.service.OrderService;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * [코드 흐름 안내] OrderController
@@ -34,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/orders")
+@Slf4j
 public class OrderController {
 	
 	private final OrderService orderService;
@@ -179,14 +181,14 @@ public class OrderController {
      */
     @PostMapping("/receipt")
     public ResponseEntity<String> printReceipt(@RequestBody java.util.Map<String, String> receiptData) {
-        System.out.println("===============================================");
-        System.out.println("                영수증 출력 완료                 ");
-        System.out.println("===============================================");
-        System.out.println("주문번호: " + receiptData.get("orderNo"));
-        System.out.println("주문상품: " + receiptData.get("orderItem"));
-        System.out.println("결제금액: " + receiptData.get("price"));
-        System.out.println("주문일자: " + receiptData.get("orderDate"));
-        System.out.println("===============================================");
+    	log.info("===============================================");
+    	log.info("                영수증 출력 완료                 ");
+    	log.info("===============================================");
+    	log.info("주문번호: {}", receiptData.get("orderNo"));
+    	log.info("주문상품: {}", receiptData.get("orderItem"));
+    	log.info("결제금액: {}", receiptData.get("price"));
+    	log.info("주문일자: {}", receiptData.get("orderDate"));
+    	log.info("===============================================");
         return ResponseEntity.ok("영수증 출력 성공");
     }
 

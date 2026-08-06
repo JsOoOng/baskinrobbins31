@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * [코드 흐름 안내] DatabaseMigrationConfig
  *
@@ -13,6 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
  */
 @Configuration
+@Slf4j
 public class DatabaseMigrationConfig {
 
     @Bean
@@ -24,9 +27,9 @@ public class DatabaseMigrationConfig {
         return args -> {
             try {
                 jdbcTemplate.execute("ALTER TABLE payments MODIFY COLUMN payment_method ENUM('CARD', 'CASH', 'E_PAY', 'COUPON', 'TOSS')");
-                System.out.println("데이터베이스 마이그레이션 완료: payment_method ENUM에 'TOSS' 추가됨");
+                log.info("데이터베이스 마이그레이션 완료: payment_method ENUM에 'TOSS' 추가됨");
             } catch (Exception e) {
-                System.out.println("payment_method 마이그레이션 실패: " + e.getMessage());
+            	log.error("payment_method 마이그레이션 실패: {}", e.getMessage(), e);
             }
 
             /*
@@ -38,9 +41,9 @@ public class DatabaseMigrationConfig {
                         "ALTER TABLE deliveries MODIFY COLUMN delivery_status "
                         + "ENUM('READY', 'STARTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELED') NOT NULL"
                 );
-                System.out.println("데이터베이스 마이그레이션 완료: delivery_status에 'CANCELED' 추가됨");
+                log.info("데이터베이스 마이그레이션 완료: delivery_status에 'CANCELED' 추가됨");
             } catch (Exception e) {
-                System.out.println("delivery_status 마이그레이션 실패: " + e.getMessage());
+            	log.error("delivery_status 마이그레이션 실패: {}", e.getMessage(), e);
             }
         };
     }
