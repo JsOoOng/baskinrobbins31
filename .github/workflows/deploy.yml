@@ -2,7 +2,7 @@ name: Deploy to EC2 (3-Tier Bastion)
 
 on:
   push:
-    branches: [ "dev1" ]
+    branches: [ "security/csp" ]
 
 jobs:
   build-and-deploy:
