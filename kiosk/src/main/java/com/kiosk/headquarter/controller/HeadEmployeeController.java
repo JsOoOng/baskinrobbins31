@@ -11,6 +11,7 @@ import com.kiosk.headquarter.dto.employee.HeadEmployeeCreateRequest;
 import com.kiosk.headquarter.dto.employee.HeadEmployeeCreateResponse;
 import com.kiosk.headquarter.service.HeadEmployeeService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -39,7 +40,7 @@ public class HeadEmployeeController {
                     Integer storeId,
 
                     @RequestBody
-                    HeadEmployeeCreateRequest request
+                    @Valid HeadEmployeeCreateRequest request
             ) {
 
         request.setStoreId(storeId);

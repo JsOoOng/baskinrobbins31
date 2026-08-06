@@ -1,5 +1,12 @@
 package com.kiosk.headquarter.dto.employee;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * [코드 흐름 안내] HeadEmployeeCreateRequest
  *
@@ -7,42 +14,25 @@ package com.kiosk.headquarter.dto.employee;
  * <p>호출 흐름: 프론트 JSON -> Controller의 @RequestBody -> 이 DTO -> Service 검증 순서로 사용한다.</p>
  * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
  */
+@Getter
+@Setter
 public class HeadEmployeeCreateRequest {
 
+    @NotNull(message = "지점 ID는 필수 입력 값입니다.")
     private Integer storeId;
+
+    @NotBlank(message = "아이디는 필수 입력 값입니다.")
     private String loginId;
+
+    @NotBlank(message = "비밀번호는 필수 입력 값입니다.")
+    @NotBlank(message = "비밀번호는 필수 입력 값입니다.")
+    @Size(min = 8, message = "비밀번호는 8자 이상이어야 합니다.")
+    @Pattern(
+        regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]+$",
+        message = "비밀번호는 영문, 숫자, 특수문자를 포함해야 합니다."
+    )
     private String password;
+
+    @NotBlank(message = "이름은 필수 입력 값입니다.")
     private String name;
-
-    public Integer getStoreId() {
-        return storeId;
-    }
-
-    public void setStoreId(Integer storeId) {
-        this.storeId = storeId;
-    }
-
-    public String getLoginId() {
-        return loginId;
-    }
-
-    public void setLoginId(String loginId) {
-        this.loginId = loginId;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 }

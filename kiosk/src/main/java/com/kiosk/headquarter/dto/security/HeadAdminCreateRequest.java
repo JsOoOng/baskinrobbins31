@@ -3,6 +3,10 @@ package com.kiosk.headquarter.dto.security;
 import com.kiosk.entity.enums.AdminRole;
 import com.kiosk.entity.enums.AdminStatus;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,21 +26,30 @@ public class HeadAdminCreateRequest {
     /*
      * 관리자 로그인 ID
      */
+    @NotBlank(message = "로그인 ID는 필수 입력 값입니다.")
     private String loginId;
 
     /*
      * 초기 비밀번호
      */
+    @NotBlank(message = "비밀번호는 필수 입력 값입니다.")
+    @Size(min = 8, message = "비밀번호는 8자 이상이어야 합니다.")
+    @Pattern(
+        regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]+$",
+        message = "비밀번호는 영문, 숫자, 특수문자를 포함해야 합니다."
+    )
     private String password;
 
     /*
      * 관리자 이름
      */
+    @NotBlank(message = "이름은 필수 입력 값입니다.")
     private String name;
 
     /*
      * 소속 부서
      */
+    @NotBlank(message = "부서는 필수 입력 값입니다.")
     private String department;
 
     /*
@@ -46,6 +59,7 @@ public class HeadAdminCreateRequest {
      * HEAD_ADMIN
      * ADMIN
      */
+    @NotNull(message = "관리자 역할은 필수 선택 값입니다.")
     private AdminRole role;
 
     /*
@@ -54,5 +68,6 @@ public class HeadAdminCreateRequest {
      * ACTIVE
      * INACTIVE
      */
+    @NotNull(message = "계정 상태는 필수 선택 값입니다.")
     private AdminStatus status;
 }

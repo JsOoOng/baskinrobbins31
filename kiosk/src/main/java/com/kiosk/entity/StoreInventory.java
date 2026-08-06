@@ -399,7 +399,9 @@ public class StoreInventory {
             return false;
         }
 
-        return currentStock <= minStock;
+        // 최소 재고와 같은 경우에는 부족 수량이 0이므로 정상 범위로 본다.
+        // 실제 재고가 최소 재고보다 적을 때만 부족 알림을 생성한다.
+        return currentStock < minStock;
     }
 
     /*

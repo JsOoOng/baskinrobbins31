@@ -59,7 +59,7 @@ const login = async () => {
   } catch (error) {
     console.error(error)
     errorMessage.value = error.response
-      ? '아이디 또는 비밀번호가 일치하지 않습니다.'
+      ? '로그인에 실패하였습니다.'
       : '서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.'
 
       // 기존 Turnstile 폐기

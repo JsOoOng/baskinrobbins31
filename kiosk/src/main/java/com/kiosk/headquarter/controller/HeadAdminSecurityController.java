@@ -2,26 +2,26 @@ package com.kiosk.headquarter.controller;
 
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kiosk.headquarter.dto.admin.HeadAdminCreateRequestDTO;
-import com.kiosk.headquarter.dto.admin.HeadAdminUpdateRequestDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminPasswordUpdateRequestDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminResponseDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminRoleUpdateRequestDTO;
 import com.kiosk.headquarter.dto.admin.HeadAdminStatusUpdateRequestDTO;
+import com.kiosk.headquarter.dto.security.HeadAdminResponse;
+import com.kiosk.headquarter.dto.security.HeadAdminUpdateRequest;
 import com.kiosk.headquarter.service.HeadAdminSecurityService;
 import com.kiosk.headquarter.service.HeadSecurityService;
-import com.kiosk.headquarter.dto.security.HeadAdminUpdateRequest;
-import com.kiosk.headquarter.dto.security.HeadAdminResponse;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -38,19 +38,11 @@ public class HeadAdminSecurityController {
     private final HeadAdminSecurityService headAdminSecurityService;
     private final HeadSecurityService headSecurityService;
 
-    /**
-     * [요청 흐름] GET /head/admins
-     * 프론트 요청을 받아 getAdminList() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
-     */
     @GetMapping("/head/admins")
     public List<HeadAdminResponseDTO> getAdminList() {
         return headAdminSecurityService.getAdminList();
     }
 
-    /**
-     * [요청 흐름] GET /head/admins/{adminId}
-     * 프론트 요청을 받아 getAdminDetail() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
-     */
     @GetMapping("/head/admins/{adminId}")
     public HeadAdminResponseDTO getAdminDetail(@PathVariable Integer adminId) {
         return headAdminSecurityService.getAdminDetail(adminId);
@@ -58,22 +50,22 @@ public class HeadAdminSecurityController {
 
     /**
      * [요청 흐름] POST /head/admins
-     * 프론트 요청을 받아 createAdmin() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
      */
     @PostMapping("/head/admins")
-    public String createAdmin(@RequestBody HeadAdminCreateRequestDTO requestDTO) {
+    public String createAdmin(
+            @RequestBody @Valid HeadAdminCreateRequestDTO requestDTO 
+    ) {
         return headAdminSecurityService.createAdmin(requestDTO);
     }
 
     /**
      * [요청 흐름] PUT /head/admins/{adminId}/role
-     * 프론트 요청을 받아 updateAdminRole() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
      */
     @PutMapping("/head/admins/{adminId}/role")
     public String updateAdminRole(
             @PathVariable Integer adminId,
-            @RequestBody HeadAdminRoleUpdateRequestDTO requestDTO) {
-
+            @RequestBody @Valid HeadAdminRoleUpdateRequestDTO requestDTO 
+    ) {
         return headAdminSecurityService.updateAdminRole(adminId, requestDTO);
     }
 
@@ -81,7 +73,8 @@ public class HeadAdminSecurityController {
     public HeadAdminResponse updateAdmin(
             Authentication authentication,
             @PathVariable Integer adminId,
-            @RequestBody HeadAdminUpdateRequest request) {
+            @RequestBody @Valid HeadAdminUpdateRequest request 
+    ) {
         return headSecurityService.updateAdmin(
                 (Integer) authentication.getPrincipal(),
                 adminId,
@@ -91,25 +84,23 @@ public class HeadAdminSecurityController {
 
     /**
      * [요청 흐름] PUT /head/admins/{adminId}/status
-     * 프론트 요청을 받아 updateAdminStatus() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
      */
     @PutMapping("/head/admins/{adminId}/status")
     public String updateAdminStatus(
             @PathVariable Integer adminId,
-            @RequestBody HeadAdminStatusUpdateRequestDTO requestDTO) {
-
+            @RequestBody @Valid HeadAdminStatusUpdateRequestDTO requestDTO 
+    ) {
         return headAdminSecurityService.updateAdminStatus(adminId, requestDTO);
     }
 
     /**
      * [요청 흐름] PUT /head/admins/{adminId}/password
-     * 프론트 요청을 받아 updateAdminPassword() 메서드가 입력을 받고 HeadAdminSecurityService 호출 후 결과를 응답한다.
      */
     @PutMapping("/head/admins/{adminId}/password")
     public String updateAdminPassword(
             @PathVariable Integer adminId,
-            @RequestBody HeadAdminPasswordUpdateRequestDTO requestDTO) {
-
+            @RequestBody @Valid HeadAdminPasswordUpdateRequestDTO requestDTO 
+    ) {
         return headAdminSecurityService.updateAdminPassword(adminId, requestDTO);
     }
 

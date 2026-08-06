@@ -16,6 +16,7 @@ import com.kiosk.branch.auth.service.AuthService;
 import com.kiosk.common.config.JwtTokenStore;
 import com.kiosk.common.config.JwtUtil;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 
@@ -45,7 +46,7 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(
-            @RequestBody AuthRequest request
+            @RequestBody @Valid AuthRequest request
     ){
 
         if (!turnstileService.verifyToken(request.getTurnstileToken())) {

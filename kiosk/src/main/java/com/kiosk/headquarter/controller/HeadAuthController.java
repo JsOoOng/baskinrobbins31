@@ -8,6 +8,8 @@ import com.kiosk.headquarter.dto.auth.HeadLoginResponse;
 import com.kiosk.headquarter.dto.common.HeadApiResponse;
 import com.kiosk.headquarter.service.HeadAuthService;
 
+import jakarta.validation.Valid;
+
 /**
  * [코드 흐름 안내] HeadAuthController
  *
@@ -54,7 +56,7 @@ public class HeadAuthController {
      */
     @PostMapping("/login")
     public HeadApiResponse<HeadLoginResponse> login(
-            @RequestBody HeadLoginRequest request
+            @RequestBody @Valid HeadLoginRequest request
     ) {
 
         if (!turnstileService.verifyToken(request.getTurnstileToken())) {
