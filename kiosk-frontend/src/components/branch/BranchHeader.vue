@@ -2,6 +2,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import api from '@/api/axios'
 
 defineEmits(['toggle-sidebar'])
 const route = useRoute()
@@ -19,9 +20,16 @@ const avatar = computed(() => displayName.value.trim().charAt(0) || '관')
 
 // 인증 정보를 모두 지운 다음 지점 로그인 화면으로 돌아간다.
 const logout = async () => {
-  localStorage.removeItem('branchToken')
-  localStorage.removeItem('branchUser')
-  await router.replace({ name: 'branch-login' })
+  try {
+    await api.post('/branch/logout')
+  } finally {
+    localStorage.removeItem('branchToken')
+    localStorage.removeItem('branchUser')
+
+    await router.replace({
+      name: 'branch-login'
+    })
+  }
 }
 const outsideClick = (event) => {
   // 프로필 메뉴 바깥을 누르면 펼쳐진 메뉴를 닫는다.
