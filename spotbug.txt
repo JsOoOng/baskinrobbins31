@@ -42,3 +42,22 @@ SpotBugs / 정적 분석 및 결함 수정 기록
 - 수정
   - logback-spring.xml의 com.kiosk logger에 CONSOLE appender를 추가했다.
   - 재배포 이후 프로젝트 로그를 journalctl -u kiosk-backend에서도 확인할 수 있다.
+
+4. 운영 로그 과다 기록 및 디스크 사용
+-------------------------------------
+- 원인
+  - application.properties의 INFO는 로그 비활성화가 아니라 INFO/WARN/ERROR를
+    모두 기록하는 설정이다.
+  - logback-spring.xml에는 root=INFO, com.kiosk=DEBUG가 별도로 지정돼 있었다.
+- 수정
+  - 외부 라이브러리 root는 WARN, 프로젝트 com.kiosk는 INFO로 통일했다.
+  - Hibernate 상세 로그는 WARN으로 낮췄다.
+  - 일반 로그 보관을 14일, 전체 크기 상한을 512MB로 제한했다.
+
+5. Turnstile iframe의 CSP eval 경고
+-----------------------------------
+- challenges.cloudflare.com 내부 프레임에서 발생하는 CSP 경고는 우리 서버가
+  그 프레임의 정책을 변경해 해결할 수 없다.
+- Turnstile 검증이 정상 완료된다면 기능 장애가 아니다.
+- 우리 페이지의 unsafe-eval은 해당 경고를 해결하지 못하고 보안만 약화하므로
+  Nginx CSP의 script-src에서 제거했다.

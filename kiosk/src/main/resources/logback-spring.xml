@@ -42,12 +42,12 @@
             <maxFileSize>100MB</maxFileSize>
 
 
-            <!-- 30일 보관 -->
-            <maxHistory>30</maxHistory>
+            <!-- 14일 보관 -->
+            <maxHistory>14</maxHistory>
 
 
             <!-- 전체 로그 최대 용량 -->
-            <totalSizeCap>3GB</totalSizeCap>
+            <totalSizeCap>512MB</totalSizeCap>
 
         </rollingPolicy>
 
@@ -138,7 +138,7 @@
     <!-- 기본 로그 설정 -->
     <!-- =============================== -->
 
-    <root level="INFO">
+    <root level="WARN">
 
         <appender-ref ref="FILE"/>
 
@@ -157,7 +157,7 @@
     <!-- =============================== -->
 
     <logger name="com.kiosk"
-            level="DEBUG"
+            level="INFO"
             additivity="false">
 
         <appender-ref ref="FILE"/>
@@ -178,11 +178,11 @@
     <!-- =============================== -->
 
     <logger name="org.hibernate.SQL"
-            level="INFO"/>
+            level="WARN"/>
 
 
     <logger name="org.hibernate.orm.jdbc.bind"
-            level="INFO"/>
+            level="WARN"/>
 
 
 </configuration>

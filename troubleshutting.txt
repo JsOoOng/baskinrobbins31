@@ -59,3 +59,40 @@
   로그인 API 실패의 직접 원인이 아니었다.
 - 노출된 Turnstile 시크릿 키는 Cloudflare에서 회전한 뒤 운영 환경 변수와
   배포 시크릿을 함께 갱신해야 한다.
+- challenges.cloudflare.com/normal 내부에서 발생하는 eval/WebGL/글꼴 경고는
+  Turnstile 성공 토큰이 발급되고 로그인이 정상이라면 기능 장애가 아니다.
+- 우리 CSP에 unsafe-eval을 추가해도 Cloudflare iframe 자체 CSP는 변경되지
+  않으므로 이를 해결하려고 unsafe-eval을 허용하지 않는다.
+
+EC2 루트 EBS 용량 확장 (15 GiB)
+-------------------------------
+1. 변경 전 서버에서 루트 장치와 파일시스템을 확인한다.
+
+   df -hT /
+   findmnt -no SOURCE,FSTYPE /
+   lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINTS
+
+2. AWS EC2 콘솔의 인스턴스 Storage에서 루트 Volume ID를 연 뒤
+   Actions > Modify volume에서 Size를 15 GiB로 변경한다.
+3. 볼륨 상태가 optimizing 또는 completed가 된 뒤 서버에서 파티션을 확장한다.
+   Nitro Ubuntu의 루트가 /dev/nvme0n1p1인 경우:
+
+   sudo growpart /dev/nvme0n1 1
+
+4. 파일시스템 종류에 맞는 명령 하나만 실행한다.
+   ext4인 경우:
+
+   sudo resize2fs /dev/nvme0n1p1
+
+   XFS인 경우:
+
+   sudo xfs_growfs /
+
+5. 최종 확인:
+
+   lsblk
+   df -hT /
+
+주의: 실제 장치명이 /dev/xvda1 등으로 다르면 findmnt와 lsblk 결과에 맞춰
+장치명과 파티션 번호를 사용한다. EBS 크기를 먼저 변경하지 않은 상태에서
+growpart를 실행하지 않는다.
