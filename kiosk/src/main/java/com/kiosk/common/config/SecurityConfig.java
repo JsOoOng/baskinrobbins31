@@ -40,9 +40,13 @@ public class SecurityConfig {
                 // CORS 설정 객체 생성
                 var config = new org.springframework.web.cors.CorsConfiguration();
 
-                // 모든 출처(Origin)에서의 접근을 허용 (예: 프론트엔드 도메인)
-                config.setAllowedOriginPatterns(
-                        java.util.List.of("*")
+                // 명시된 프론트엔드 도메인(출처)에서의 접근만 허용 (화이트리스트)
+                config.setAllowedOrigins(
+                        java.util.List.of(
+                                "http://localhost:5173",           // 로컬 프론트엔드 개발 환경
+                                "https://baskinrobbins31.store",   // 실서버 프론트엔드 도메인
+                                "https://www.baskinrobbins31.store" // 실서버 프론트엔드 도메인(www 포함)
+                        )
                 );
 
                 // 허용할 HTTP 메서드(GET, POST 등)를 명시적으로 지정
