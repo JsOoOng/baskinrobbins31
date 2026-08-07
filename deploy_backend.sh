@@ -8,6 +8,14 @@ echo "=========================================="
 echo "🚀 백엔드 배포를 시작합니다..."
 echo "=========================================="
 
+# JWT 비밀키가 없으면 기존 서버를 종료하기 전에 배포를 중단합니다.
+# Java 실행 인자로 붙이지 않고 환경변수로 상속하여
+# EC2 프로세스 목록에 Secret 값이 노출되지 않게 합니다.
+if [ -z "${JWT_SECRET:-}" ]; then
+    echo "ERROR: JWT_SECRET environment variable is not set."
+    exit 1
+fi
+
 # -1. 필수 패키지 점검 (JAVA)
 echo "[Step -1] 필수 패키지(JAVA) 설치 점검"
 if ! command -v java &> /dev/null

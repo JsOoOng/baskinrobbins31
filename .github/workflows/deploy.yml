@@ -105,4 +105,5 @@ jobs:
           export RDS_ENDPOINT="${{ secrets.BE_RDS_ENDPOINT }}"
           export RDS_USERNAME="${{ secrets.BE_RDS_USERNAME }}"
           export RDS_PASSWORD="${{ secrets.BE_RDS_PASSWORD }}"
+          export JWT_SECRET="${{ secrets.JWT_SECRET }}"
           ./deploy_backend.sh

@@ -3,7 +3,12 @@ package com.kiosk.common.config;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import jakarta.annotation.PostConstruct;
 
 import com.kiosk.branch.auth.dto.AuthResponse;
 import com.kiosk.headquarter.dto.auth.HeadLoginResponse;
@@ -22,11 +27,40 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtUtil {
 
-    private final String SECRET =
-            "mySecretKeymySecretKeymySecretKey123456";
+    private static final int MINIMUM_SECRET_BYTES = 32;
 
-    private final long EXPIRATION_TIME =
-            1000L * 60 * 60 * 20; // 20시간
+    private final String secret;
+    private final long expirationTime;
+    private SecretKey signingKey;
+
+    public JwtUtil(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.expiration-time:72000000}") long expirationTime
+    ) {
+        this.secret = secret;
+        this.expirationTime = expirationTime;
+    }
+
+    @PostConstruct
+    void validateConfiguration() {
+        byte[] secretBytes = secret == null
+                ? new byte[0]
+                : secret.getBytes(StandardCharsets.UTF_8);
+
+        if (secretBytes.length < MINIMUM_SECRET_BYTES) {
+            throw new IllegalArgumentException(
+                    "JWT_SECRET은 UTF-8 기준 32바이트 이상이어야 합니다."
+            );
+        }
+
+        if (expirationTime <= 0) {
+            throw new IllegalArgumentException(
+                    "JWT 만료 시간은 0보다 커야 합니다."
+            );
+        }
+
+        this.signingKey = Keys.hmacShaKeyFor(secretBytes);
+    }
 
     // 지점 관리자 JWT 생성
     public String createToken(AuthResponse user) {
@@ -43,13 +77,11 @@ public class JwtUtil {
                 .expiration(
                         new Date(
                                 System.currentTimeMillis()
-                                        + EXPIRATION_TIME
+                                        + expirationTime
                         )
                 )
                 .signWith(
-                        Keys.hmacShaKeyFor(
-                                SECRET.getBytes(StandardCharsets.UTF_8)
-                        )
+                        signingKey
                 )
                 .compact();
     }
@@ -70,13 +102,11 @@ public class JwtUtil {
                 .expiration(
                         new Date(
                                 System.currentTimeMillis()
-                                        + EXPIRATION_TIME
+                                        + expirationTime
                         )
                 )
                 .signWith(
-                        Keys.hmacShaKeyFor(
-                                SECRET.getBytes(StandardCharsets.UTF_8)
-                        )
+                        signingKey
                 )
                 .compact();
     }
@@ -97,9 +127,7 @@ public class JwtUtil {
 
         return Jwts.parser()
                 .verifyWith(
-                        Keys.hmacShaKeyFor(
-                                SECRET.getBytes(StandardCharsets.UTF_8)
-                        )
+                        signingKey
                 )
                 .build()
                 .parseSignedClaims(token)
