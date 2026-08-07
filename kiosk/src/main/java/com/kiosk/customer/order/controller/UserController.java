@@ -77,9 +77,9 @@ public class UserController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            // 어떤 에러 때문에 400(또는 내부 오류)이 나는지 콘솔에 상세히 출력
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body("에러 발생 원인: " + e.getMessage());
+            log.error("회원 포인트 조회 중 서버 오류", e);
+            return ResponseEntity.internalServerError()
+                    .body("회원 정보를 조회하지 못했습니다.");
         }
     }
 }

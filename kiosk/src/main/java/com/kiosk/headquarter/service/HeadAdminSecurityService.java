@@ -176,8 +176,8 @@ public class HeadAdminSecurityService {
             throw new IllegalArgumentException("새 비밀번호를 입력해주세요.");
         }
 
-        if (requestDTO.getNewPassword().length() < 4) {
-            throw new IllegalArgumentException("비밀번호는 최소 4자 이상이어야 합니다.");
+        if (requestDTO.getNewPassword().length() < 8) {
+            throw new IllegalArgumentException("비밀번호는 최소 8자 이상이어야 합니다.");
         }
 
         targetAdmin.changePassword(passwordEncoder.encode(requestDTO.getNewPassword()));
@@ -295,8 +295,8 @@ public class HeadAdminSecurityService {
             throw new IllegalArgumentException("비밀번호를 입력해주세요.");
         }
 
-        if (requestDTO.getPassword().length() < 4) {
-            throw new IllegalArgumentException("비밀번호는 최소 4자 이상이어야 합니다.");
+        if (requestDTO.getPassword().length() < 8) {
+            throw new IllegalArgumentException("비밀번호는 최소 8자 이상이어야 합니다.");
         }
 
         if (requestDTO.getName() == null || requestDTO.getName().isBlank()) {

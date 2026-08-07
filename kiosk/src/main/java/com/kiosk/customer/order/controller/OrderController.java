@@ -169,12 +169,13 @@ public class OrderController {
 
             return ResponseEntity.ok("토스 결제 승인 및 주문 처리 완료");
         } catch (org.springframework.web.client.HttpStatusCodeException e) {
-            System.err.println("토스 승인 실패 (HTTP 상태 코드): " + e.getStatusCode());
-            System.err.println("토스 에러 응답: " + e.getResponseBodyAsString());
-            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
+            log.warn("토스 결제 승인 거절: status={}", e.getStatusCode(), e);
+            return ResponseEntity.status(e.getStatusCode())
+                    .body("결제 승인에 실패했습니다.");
         } catch (Exception e) {
-            System.err.println("토스 승인 중 서버 내부 오류: " + e.getMessage());
-            return ResponseEntity.status(500).body("{\"error\": \"서버 내부 오류: " + e.getMessage() + "\"}");
+            log.error("토스 결제 승인 중 서버 오류", e);
+            return ResponseEntity.internalServerError()
+                    .body("결제 처리 중 서버 오류가 발생했습니다.");
         }
     }
 
@@ -217,7 +218,7 @@ public class OrderController {
             String receiptUrl = "http://localhost:" + this.printServerPort + "/receipt";
             restTemplate.postForEntity(receiptUrl, receiptEntity, String.class);
         } catch (Exception ex) {
-            System.err.println("영수증 출력 요청 중 오류 (결제는 성공): " + ex.getMessage());
+            log.warn("영수증 출력 요청 실패(결제는 완료됨)", ex);
         }
     }
 }

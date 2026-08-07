@@ -79,12 +79,8 @@ public class HeadCouponController {
      */
     @PostMapping("/issue-all/{couponId}")
     public ResponseEntity<String> issueCouponToAllUsers(@PathVariable("couponId") String couponId) {
-        try {
-            headCouponService.issueCouponToAllUsers(couponId);
-            return ResponseEntity.ok("쿠폰이 모든 유저에게 성공적으로 발급되었습니다.");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("쿠폰 일괄 발급 실패: " + e.getMessage());
-        }
+        headCouponService.issueCouponToAllUsers(couponId);
+        return ResponseEntity.ok("쿠폰이 모든 유저에게 성공적으로 발급되었습니다.");
     }
 
     /**
@@ -94,11 +90,7 @@ public class HeadCouponController {
     public ResponseEntity<String> revokeCouponFromAllUsers(
             @PathVariable("couponId") String couponId
     ) {
-        try {
-            headCouponService.revokeCouponFromAllUsers(couponId);
-            return ResponseEntity.ok("쿠폰이 모든 유저에게서 회수되었습니다.");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("쿠폰 회수 실패: " + e.getMessage());
-        }
+        headCouponService.revokeCouponFromAllUsers(couponId);
+        return ResponseEntity.ok("쿠폰이 모든 유저에게서 회수되었습니다.");
     }
 }

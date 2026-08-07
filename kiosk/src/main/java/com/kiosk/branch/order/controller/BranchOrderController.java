@@ -65,21 +65,6 @@ public class BranchOrderController {
         return orderService.getOrderDetail(orderId);
 
     }
-    
-    
-    /*
-    
-    @GetMapping("/detail/{orderId}")
-    public BranchOrderDetailResponse detail(@PathVariable Integer orderId) {
-
-        try {
-            return orderService.getOrderDetail(orderId);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
-    }*/
-    
     /**
      * [요청 흐름] PATCH /branch/order/{orderId}/status
      * 프론트 요청을 받아 changeStatus() 메서드가 입력을 받고 BranchOrderService 호출 후 결과를 응답한다.

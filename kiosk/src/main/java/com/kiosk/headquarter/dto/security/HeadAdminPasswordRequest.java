@@ -1,5 +1,8 @@
 package com.kiosk.headquarter.dto.security;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,5 +22,11 @@ public class HeadAdminPasswordRequest {
     /*
      * 초기화할 새 비밀번호
      */
+    @NotBlank(message = "새 비밀번호는 필수입니다.")
+    @Size(min = 8, max = 72, message = "비밀번호는 8자 이상 72자 이하여야 합니다.")
+    @Pattern(
+            regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]+$",
+            message = "비밀번호는 영문, 숫자, 특수문자를 포함해야 합니다."
+    )
     private String newPassword;
 }

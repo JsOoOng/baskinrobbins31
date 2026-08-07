@@ -1,28 +1,66 @@
 package com.kiosk.customer.order.exception;
 
+import java.util.Map;
+import java.util.NoSuchElementException;
+
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import java.util.Map;
-import java.util.HashMap;
 
-/**
- * [코드 흐름 안내] GlobalExceptionHandler
- *
- * <p>역할: 고객 키오스크의 주문 HTTP 요청을 받는 진입점이다.</p>
- * <p>호출 흐름: Vue/API 요청 -> 이 컨트롤러 -> 응답 DTO 또는 JSON -> 화면 갱신 순서로 이동한다.</p>
- * <p>데이터 기준: 제공된 SQL 초안보다 현재 Entity·Repository/Mapper·DTO 정의를 우선한다.</p>
- */
-// @RestControllerAdvice: 모든 컨트롤러의 예외를 여기서 가로채겠다!
+import lombok.extern.slf4j.Slf4j;
+
+/** 모든 API에서 발생한 예외를 안전한 고정 메시지와 올바른 HTTP 상태로 변환합니다. */
 @RestControllerAdvice
+@Order(Ordered.LOWEST_PRECEDENCE)
+@Slf4j
 public class GlobalExceptionHandler {
 
-    // 1. 재고 부족, 잘못된 요청 등(400 Bad Request)
-    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
-    public ResponseEntity<Map<String, String>> handleBusinessException(RuntimeException e) {
-        Map<String, String> response = new HashMap<>();
-        response.put("error", e.getMessage()); // 서비스에서 던진 메시지를 JSON으로 변환
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    @ExceptionHandler({IllegalArgumentException.class, MethodArgumentNotValidException.class})
+    public ResponseEntity<Map<String, String>> handleBadRequest(Exception e) {
+        log.warn("잘못된 요청", e);
+        return error(HttpStatus.BAD_REQUEST, "요청값이 올바르지 않습니다.");
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, String>> handleConflict(IllegalStateException e) {
+        log.warn("현재 상태에서 처리할 수 없는 요청", e);
+        return error(HttpStatus.CONFLICT, "현재 상태에서는 요청을 처리할 수 없습니다.");
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<Map<String, String>> handleNotFound(NoSuchElementException e) {
+        log.warn("요청한 리소스를 찾지 못함", e);
+        return error(HttpStatus.NOT_FOUND, "요청한 정보를 찾을 수 없습니다.");
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, String>> handleUnauthorized(AuthenticationException e) {
+        log.warn("인증되지 않은 요청", e);
+        return error(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleForbidden(AccessDeniedException e) {
+        log.warn("권한이 부족한 요청", e);
+        return error(HttpStatus.FORBIDDEN, "요청을 수행할 권한이 없습니다.");
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleUnexpected(Exception e) {
+        log.error("처리되지 않은 서버 오류", e);
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, "서버에서 요청을 처리하지 못했습니다.");
+    }
+
+    private ResponseEntity<Map<String, String>> error(HttpStatus status, String message) {
+        return ResponseEntity.status(status).body(Map.of(
+                "code", status.name(),
+                "message", message
+        ));
     }
 }

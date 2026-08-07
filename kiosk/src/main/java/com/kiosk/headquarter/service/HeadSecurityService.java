@@ -296,10 +296,10 @@ public class HeadSecurityService {
         }
 
         if (
-                request.getNewPassword().length() < 4
+                request.getNewPassword().length() < 8
         ) {
             throw new IllegalArgumentException(
-                    "비밀번호는 4자 이상이어야 합니다."
+                    "비밀번호는 8자 이상이어야 합니다."
             );
         }
 
@@ -371,10 +371,10 @@ public class HeadSecurityService {
         }
 
         if (
-                request.getPassword().length() < 4
+                request.getPassword().length() < 8
         ) {
             throw new IllegalArgumentException(
-                    "비밀번호는 4자 이상이어야 합니다."
+                    "비밀번호는 8자 이상이어야 합니다."
             );
         }
 

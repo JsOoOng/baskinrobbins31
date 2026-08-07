@@ -41,17 +41,14 @@ class AuthServiceTest {
     }
 
     @Test
-    void logsInWithLegacyPlainTextPassword() {
+    void rejectsLegacyPlainTextPassword() {
         Employee employee = employeeWithPassword("1234");
         when(employeeMapper.findByLoginId("emp001"))
                 .thenReturn(Optional.of(employee));
 
-        AuthResponse response =
-                authService.login(request(" emp001 ", "1234"));
-
-        assertThat(response.getEmployeeId()).isEqualTo(1);
-        assertThat(response.getRole()).isEqualTo("MANAGER");
-        assertThat(response.getStoreId()).isEqualTo(1);
+        assertThatThrownBy(() -> authService.login(request(" emp001 ", "1234")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("로그인에 실패하였습니다.");
     }
 
     @Test
@@ -70,8 +67,8 @@ class AuthServiceTest {
     }
 
     @Test
-    void rejectsWrongPlainTextPassword() {
-        Employee employee = employeeWithPassword("1234");
+    void rejectsWrongBCryptPassword() {
+        Employee employee = employeeWithPassword(passwordEncoder.encode("1234"));
         when(employeeMapper.findByLoginId("emp001"))
                 .thenReturn(Optional.of(employee));
 

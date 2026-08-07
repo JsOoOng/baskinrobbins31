@@ -111,22 +111,26 @@ public class SecurityConfig {
                             "/images/flavors/**"
                     ).permitAll()
 
+                    // WebSocket는 Origin을 별도 설정에서 제한하며 초기 연결 경로만 공개
+                    .requestMatchers("/ws", "/ws/**", "/error").permitAll()
+
                     // 고객이 사용하는 공개 API는 인증 없이 접근 가능
                     .requestMatchers(
                             "/api/customer/**"
                     ).permitAll()
 
-                    // 서버 상태를 확인하는 Actuator 엔드포인트 접근 허용
+                    // 외부 상태 점검에는 health만 공개하고 나머지 Actuator는 공개하지 않음
                     .requestMatchers(
-                            "/actuator/**"
+                            "/actuator/health"
                     ).permitAll()
 
                     // 지점 직원의 로그인 엔드포인트 및 키오스크 조회/SSE 접근 허용 (키오스크 기기용)
                     .requestMatchers(
                             "/branch/login"
                     ).permitAll()
-                    .requestMatchers(
-                            HttpMethod.GET, "/branch/kiosk/**"
+                    .requestMatchers(HttpMethod.GET,
+                            "/branch/kiosk/list-all",
+                            "/branch/kiosk/stream/**"
                     ).permitAll()
 
                     // 본사 직원의 로그인 엔드포인트는 인증 없이 접근 가능
@@ -134,10 +138,32 @@ public class SecurityConfig {
                             "/head/auth/login"
                     ).permitAll()
                     
-                    // 쿠폰 등록
-                    .requestMatchers(
-                            "/head/coupon/**"
+                    // 고객 화면이 읽는 키오스크 공개 API
+                    .requestMatchers(HttpMethod.GET,
+                            "/api/banners/**",
+                            "/api/kiosk-banners/**",
+                            "/api/v1/categories/**",
+                            "/api/v1/stores/*/flavors/**",
+                            "/api/v1/kiosk/**"
                     ).permitAll()
+
+                    // 주문·호출·회원 조회 등 고객 키오스크 공개 API
+                    .requestMatchers(
+                            "/api/calls/**",
+                            "/api/orders/**",
+                            "/api/users/**"
+                    ).permitAll()
+
+                    // 이름이 admin인 상품 생성 API는 본사 관리자만 사용
+                    .requestMatchers(HttpMethod.POST,
+                            "/api/v1/admin/products",
+                            "/api/v1/admin/products/**"
+                    ).hasAnyRole("ADMIN", "HEAD_ADMIN", "SUPER_ADMIN")
+
+                    // 지점 배너 변경은 지점 책임자만 사용하고 GET/SSE는 위에서 공개
+                    .requestMatchers(HttpMethod.PUT,
+                            "/api/kiosk-banners/**"
+                    ).hasRole("MANAGER")
 
                     /*
                      * 최고 관리자 전용 API 구역
@@ -165,8 +191,8 @@ public class SecurityConfig {
                             "STAFF"
                     )
 
-                    // 위에서 명시적으로 설정하지 않은 나머지 모든 요청은 인증 없이 허용
-                    .anyRequest().permitAll()
+                    // 공개·인증 API 목록에 없는 새 URL은 실수로 외부에 노출되지 않도록 기본 차단
+                    .anyRequest().denyAll()
             )
 
             // 7. 사용하지 않는 기본 보안 기능 비활성화 (JWT를 사용하기 때문)

@@ -7,6 +7,7 @@ import com.kiosk.headquarter.dto.auth.HeadLoginRequest;
 import com.kiosk.headquarter.dto.auth.HeadLoginResponse;
 import com.kiosk.headquarter.dto.common.HeadApiResponse;
 import com.kiosk.headquarter.service.HeadAuthService;
+import com.kiosk.common.config.JwtTokenStore;
 
 import jakarta.validation.Valid;
 
@@ -23,10 +24,16 @@ public class HeadAuthController {
 
     private final HeadAuthService headAuthService;
     private final com.kiosk.common.service.TurnstileService turnstileService;
+    private final JwtTokenStore jwtTokenStore;
 
-    public HeadAuthController(HeadAuthService headAuthService, com.kiosk.common.service.TurnstileService turnstileService) {
+    public HeadAuthController(
+            HeadAuthService headAuthService,
+            com.kiosk.common.service.TurnstileService turnstileService,
+            JwtTokenStore jwtTokenStore
+    ) {
         this.headAuthService = headAuthService;
         this.turnstileService = turnstileService;
+        this.jwtTokenStore = jwtTokenStore;
     }
 
     /*
@@ -142,10 +149,19 @@ public class HeadAuthController {
      * 프론트 요청을 받아 logout() 메서드가 입력을 받고 HeadAuthService 호출 후 결과를 응답한다.
      */
     @PostMapping("/logout")
-    public HeadApiResponse<Void> logout() {
+    public HeadApiResponse<Void> logout(Authentication authentication) {
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new org.springframework.security.authentication.AuthenticationCredentialsNotFoundException(
+                    "로그인이 필요합니다."
+            );
+        }
+
+        Integer employeeId = Integer.valueOf(authentication.getName());
+        jwtTokenStore.remove("HEAD_" + employeeId);
 
         return HeadApiResponse.ok(
-                "로그아웃되었습니다. 프론트에서 JWT 토큰을 삭제해주세요.",
+                "로그아웃되었습니다.",
                 null
         );
     }

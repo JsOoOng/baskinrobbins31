@@ -2,7 +2,7 @@
   [화면 흐름 안내] HeadCoupon
   역할: 본사 관리에서 사용자가 보는 화면이다.
   진입: /head/coupons -> 이 Vue 파일 렌더링
-  데이터: 사용자 동작 -> http://localhost:8889/head/coupon, http://localhost:8889/head/coupon/${couponId}, http://localhost:8889/head/coupon/issue-all/${couponId} -> 응답/상태 반영
+  데이터: 사용자 동작 -> 인증 API 모듈 -> /head/coupon 관련 API -> 응답/상태 반영
   다음 이동: 현재 상태를 갱신하거나 부모 화면에 이벤트를 전달
 -->
 <template>
@@ -169,7 +169,6 @@
   <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
 import HeadTablePagination from '@/components/head/HeadTablePagination.vue';
 import api from '@/api/axios';
 import { requestHardDeleteConfirmation } from '@/components/head/headHardDeleteDialog';
@@ -273,7 +272,7 @@ const form = ref({
 
 const fetchCoupons = async () => {
   try {
-    const res = await axios.get('http://localhost:8889/head/coupon');
+    const res = await api.get('/head/coupon');
     coupons.value = res.data;
   } catch (error) {
     console.error('쿠폰 목록 조회 실패:', error);
@@ -311,10 +310,10 @@ const saveCoupon = async () => {
 
   try {
     if (isEditMode.value) {
-      await axios.put('http://localhost:8889/head/coupon', form.value);
+      await api.put('/head/coupon', form.value);
       alert('쿠폰이 수정되었습니다.');
     } else {
-      await axios.post('http://localhost:8889/head/coupon', form.value);
+      await api.post('/head/coupon', form.value);
       alert('새 쿠폰이 등록되었습니다.');
     }
     
@@ -354,7 +353,7 @@ const executeIssueAll = async (couponId) => {
   if (!confirm('이 쿠폰을 일괄 발급하시겠습니까?')) return;
 
   try {
-    await axios.post(`http://localhost:8889/head/coupon/issue-all/${couponId}`);
+    await api.post(`/head/coupon/issue-all/${couponId}`);
     const issuedCoupon = coupons.value.find(coupon => coupon.couponId === couponId);
     if (issuedCoupon) issuedCoupon.isIssuedAll = true;
     alert('쿠폰이 모든 유저에게 성공적으로 뿌려졌습니다!');
@@ -373,7 +372,7 @@ const revokeCoupon = async (couponId) => {
   if (!confirm(`쿠폰 [${couponId}]을 모든 유저에게서 회수하시겠습니까?`)) return;
 
   try {
-    await axios.delete(`http://localhost:8889/head/coupon/issue-all/${couponId}`);
+    await api.delete(`/head/coupon/issue-all/${couponId}`);
     alert('쿠폰이 모든 유저에게서 회수되었습니다.');
     await fetchCoupons();
   } catch (error) {

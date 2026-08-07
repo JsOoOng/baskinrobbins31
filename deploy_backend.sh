@@ -18,7 +18,7 @@ echo "백엔드 배포와 자동 실행 설정을 시작합니다."
 echo "=========================================="
 
 # 서버를 멈추기 전에 필수 Secret이 모두 전달됐는지 먼저 검사합니다.
-for required_name in RDS_ENDPOINT RDS_USERNAME RDS_PASSWORD JWT_SECRET; do
+for required_name in RDS_ENDPOINT RDS_USERNAME RDS_PASSWORD JWT_SECRET TOSS_SECRET_KEY TURNSTILE_SECRET_KEY; do
     if [ -z "${!required_name:-}" ]; then
         echo "ERROR: ${required_name} environment variable is not set."
         exit 1
@@ -61,6 +61,8 @@ chmod 600 "$TEMP_ENV"
     printf 'RDS_USERNAME="%s"\n' "$(escape_env_value "$RDS_USERNAME")"
     printf 'RDS_PASSWORD="%s"\n' "$(escape_env_value "$RDS_PASSWORD")"
     printf 'JWT_SECRET="%s"\n' "$(escape_env_value "$JWT_SECRET")"
+    printf 'TOSS_SECRET_KEY="%s"\n' "$(escape_env_value "$TOSS_SECRET_KEY")"
+    printf 'TURNSTILE_SECRET_KEY="%s"\n' "$(escape_env_value "$TURNSTILE_SECRET_KEY")"
     printf 'FLAVOR_UPLOAD_DIR="%s"\n' "${DEPLOY_DIR}/data/flavors"
 } > "$TEMP_ENV"
 
@@ -124,9 +126,19 @@ fi
 
 sudo systemctl enable "$APP_NAME"
 sudo systemctl restart "$APP_NAME"
-sleep 5
+# Spring 초기화가 끝나기 전에 성공으로 오판하지 않도록 최대 60초 동안 포트를 확인합니다.
+for attempt in $(seq 1 30); do
+    if ! sudo systemctl is-active --quiet "$APP_NAME"; then
+        break
+    fi
+    if (echo > /dev/tcp/127.0.0.1/8889) >/dev/null 2>&1; then
+        break
+    fi
+    sleep 2
+done
 
-if ! sudo systemctl is-active --quiet "$APP_NAME"; then
+if ! sudo systemctl is-active --quiet "$APP_NAME" \
+        || ! (echo > /dev/tcp/127.0.0.1/8889) >/dev/null 2>&1; then
     echo "ERROR: 백엔드 서비스가 정상적으로 시작되지 않았습니다."
     sudo journalctl -u "$APP_NAME" -n 50 --no-pager
     exit 1

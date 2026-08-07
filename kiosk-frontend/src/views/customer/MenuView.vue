@@ -54,7 +54,7 @@
           >
             <div class="product-img-wrapper" style="position: relative;">
               <img :src="product.imageUrl || `/images/products/${product.productName}.png`" @error="handleProductImgError" alt="product" class="placeholder-img" />
-              <img v-if="product.isSoldOut" src="/images/etc/sold_out.png" alt="sold out" class="sold-out-overlay" />
+              <img v-if="product.isSoldOut" :src="'/images/etc/sold_out.png'" alt="sold out" class="sold-out-overlay" />
               <div class="emoji-placeholder fallback-emoji" style="display:none;">🍦</div>
             </div>
             <div class="product-info">
@@ -163,7 +163,7 @@
               @error="handleFlavorImageError($event, flavor.imageUrl)"
             />
               <div v-else class="flavor-image-placeholder">🍦</div>
-              <img v-if="flavor.isSoldOut" src="/images/etc/flavor_sold_out.png" alt="sold out" class="sold-out-overlay" />
+              <img v-if="flavor.isSoldOut" :src="'/images/etc/flavor_sold_out.png'" alt="sold out" class="sold-out-overlay" />
               <div class="flavor-name">{{ $t(flavor.flavorName) }}</div>
             </div>
           </div>
