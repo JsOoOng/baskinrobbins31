@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+
+    <!-- 로그 저장 위치 -->
+    <property name="LOG_PATH" value="/home/ubuntu/kiosk-deploy/logs"/>
+
+    <!-- 로그 출력 형식 -->
+    <property name="LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+
+    <!-- =============================== -->
+    <!-- 일반 로그 파일 -->
+    <!-- INFO / WARN 저장 -->
+    <!-- =============================== -->
+
+    <appender name="FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+        <file>${LOG_PATH}/application.log</file>
+
+
+        <!-- ERROR 제외 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+            <onMismatch>ACCEPT</onMismatch>
+        </filter>
+
+
+        <rollingPolicy
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+
+            <!-- 날짜별 + 파일 크기별 분리 -->
+            <fileNamePattern>
+                ${LOG_PATH}/application.%d{yyyy-MM-dd}.%i.log
+            </fileNamePattern>
+
+
+            <!-- 파일 하나 최대 크기 -->
+            <maxFileSize>100MB</maxFileSize>
+
+
+            <!-- 30일 보관 -->
+            <maxHistory>30</maxHistory>
+
+
+            <!-- 전체 로그 최대 용량 -->
+            <totalSizeCap>3GB</totalSizeCap>
+
+        </rollingPolicy>
+
+
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+
+    </appender>
+
+
+
+    <!-- =============================== -->
+    <!-- ERROR 전용 로그 -->
+    <!-- =============================== -->
+
+    <appender name="ERROR_FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+
+        <file>${LOG_PATH}/error.log</file>
+
+
+        <!-- ERROR만 저장 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+
+            <level>ERROR</level>
+
+            <onMatch>ACCEPT</onMatch>
+
+            <onMismatch>DENY</onMismatch>
+
+        </filter>
+
+
+
+        <rollingPolicy
+                class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+
+
+            <fileNamePattern>
+                ${LOG_PATH}/error.%d{yyyy-MM-dd}.log
+            </fileNamePattern>
+
+
+            <!-- 30일 보관 -->
+            <maxHistory>30</maxHistory>
+
+
+        </rollingPolicy>
+
+
+
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+
+
+    </appender>
+
+
+
+
+    <!-- =============================== -->
+    <!-- Console 로그 -->
+    <!-- 개발 확인용 -->
+    <!-- =============================== -->
+
+    <appender name="CONSOLE"
+              class="ch.qos.logback.core.ConsoleAppender">
+
+
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+
+
+    </appender>
+
+
+
+
+
+    <!-- =============================== -->
+    <!-- 기본 로그 설정 -->
+    <!-- =============================== -->
+
+    <root level="INFO">
+
+        <appender-ref ref="FILE"/>
+
+        <appender-ref ref="ERROR_FILE"/>
+
+        <!-- 필요하면 유지 -->
+        <appender-ref ref="CONSOLE"/>
+
+    </root>
+
+
+
+
+    <!-- =============================== -->
+    <!-- 프로젝트 로그 -->
+    <!-- =============================== -->
+
+    <logger name="com.kiosk"
+            level="DEBUG"
+            additivity="false">
+
+        <appender-ref ref="FILE"/>
+
+        <appender-ref ref="ERROR_FILE"/>
+
+    </logger>
+
+
+
+
+    <!-- =============================== -->
+    <!-- Hibernate SQL -->
+    <!-- 운영에서는 필요 시 DEBUG -->
+    <!-- =============================== -->
+
+    <logger name="org.hibernate.SQL"
+            level="INFO"/>
+
+
+    <logger name="org.hibernate.orm.jdbc.bind"
+            level="INFO"/>
+
+
+</configuration>
