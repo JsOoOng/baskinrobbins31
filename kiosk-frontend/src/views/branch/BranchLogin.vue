@@ -7,6 +7,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/api/axios'
 import VueTurnstile from 'vue-turnstile'
+import VirtualKeyboard from '@/components/common/VirtualKeyboard.vue'
 
 const router = useRouter()
 
@@ -21,6 +22,8 @@ const turnstileRef = ref(null)
 
 const loginIdInput = ref(null)
 const passwordInput = ref(null)
+
+const showKeyboard = ref(false)
 
 // 필수값 검사 후 서버 인증을 요청하고, 오류는 브라우저 alert 대신 화면 안에 표시한다.
 const login = async () => {
@@ -71,6 +74,14 @@ const login = async () => {
     loginIdInput.value?.focus()
   } finally {
     loading.value = false
+  }
+}
+
+function handleVirtualKey(key) {
+  if (key === '{bksp}') {
+    password.value = password.value.slice(0, -1)
+  } else {
+    password.value += key
   }
 }
 </script>
@@ -148,7 +159,21 @@ const login = async () => {
             >
               {{ showPassword ? '숨김' : '보기' }}
             </button>
+              
           </div>
+
+          <button
+              type="button"
+              class="keyboard-toggle"
+              @click="showKeyboard = !showKeyboard"
+            >
+              ⌨️ 가상 키보드
+            </button>
+
+          <VirtualKeyboard
+            v-if="showKeyboard"
+            @key="handleVirtualKey"
+          />
 
           <div style="display: flex; justify-content: center; margin-top: 10px;">
             <VueTurnstile :site-key="turnstileSiteKey" v-model="turnstileToken" />
@@ -497,5 +522,19 @@ form label {
   .form-description {
     margin-bottom: 28px;
   }
+}
+
+.keyboard-toggle {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.keyboard-toggle:hover {
+  background: #f5f5f5;
 }
 </style>
