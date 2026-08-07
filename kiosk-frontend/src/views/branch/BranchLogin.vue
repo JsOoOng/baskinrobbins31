@@ -7,6 +7,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/api/axios'
 import VueTurnstile from 'vue-turnstile'
+import VirtualKeyboard from '@/components/common/VirtualKeyboard.vue'
 
 const router = useRouter()
 
@@ -21,6 +22,8 @@ const turnstileRef = ref(null)
 
 const loginIdInput = ref(null)
 const passwordInput = ref(null)
+
+const showKeyboard = ref(false)
 
 // 필수값 검사 후 서버 인증을 요청하고, 오류는 브라우저 alert 대신 화면 안에 표시한다.
 const login = async () => {
@@ -46,31 +49,70 @@ const login = async () => {
   loading.value = true
 
   try {
-    const response = await api.post('/branch/login', {
-      loginId: loginId.value.trim(),
-      password: password.value,
-      turnstileToken: turnstileToken.value
-    })
 
-    localStorage.setItem('branchToken', response.data.token)
-    // 공통 헤더·사이드바에서도 지점명과 관리자명을 사용할 수 있도록 함께 저장한다.
-    localStorage.setItem('branchUser', JSON.stringify(response.data.user))
-    await router.push('/branch/main')
-  } catch (error) {
-    console.error(error)
-    errorMessage.value = error.response
-      ? '로그인에 실패하였습니다.'
-      : '서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.'
+const formData = new URLSearchParams()
 
-      // 기존 Turnstile 폐기
-      turnstileToken.value = ''
+formData.append(
+  'loginId',
+  loginId.value.trim()
+)
 
-      // 새 인증창 발급
-      turnstileRef.value?.reset()
+formData.append(
+  'password',
+  password.value
+)
 
-    loginIdInput.value?.focus()
-  } finally {
-    loading.value = false
+formData.append(
+  'turnstileToken',
+  turnstileToken.value
+)
+
+
+const response = await api.post(
+  '/branch/login',
+  formData,
+  {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  }
+)
+
+
+localStorage.setItem(
+  'branchToken',
+  response.data.token
+)
+
+localStorage.setItem(
+  'branchUser',
+  JSON.stringify(response.data.user)
+)
+
+await router.push('/branch/main')
+
+
+} catch (error) {
+
+console.error(error)
+
+errorMessage.value = error.response
+  ? '로그인에 실패하였습니다.'
+  : '서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.'
+
+turnstileToken.value = ''
+turnstileRef.value?.reset()
+loginIdInput.value?.focus()
+} finally {
+loading.value = false
+}
+}
+
+function handleVirtualKey(key) {
+  if (key === '{bksp}') {
+    password.value = password.value.slice(0, -1)
+  } else {
+    password.value += key
   }
 }
 </script>
@@ -148,7 +190,21 @@ const login = async () => {
             >
               {{ showPassword ? '숨김' : '보기' }}
             </button>
+              
           </div>
+
+          <button
+              type="button"
+              class="keyboard-toggle"
+              @click="showKeyboard = !showKeyboard"
+            >
+              ⌨️ 가상 키보드
+            </button>
+
+          <VirtualKeyboard
+            v-if="showKeyboard"
+            @key="handleVirtualKey"
+          />
 
           <div style="display: flex; justify-content: center; margin-top: 10px;">
             <VueTurnstile :site-key="turnstileSiteKey" v-model="turnstileToken" />
@@ -497,5 +553,19 @@ form label {
   .form-description {
     margin-bottom: 28px;
   }
+}
+
+.keyboard-toggle {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.keyboard-toggle:hover {
+  background: #f5f5f5;
 }
 </style>

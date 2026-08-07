@@ -4,9 +4,11 @@ package com.kiosk.branch.auth.controller;
 
 import java.util.Map;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -44,9 +46,12 @@ public class AuthController {
      * [요청 흐름] POST /branch/login
      * 프론트 요청을 받아 login() 메서드가 입력을 받고 AuthService, JwtUtil 호출 후 결과를 응답한다.
      */
-    @PostMapping("/login")
+    @PostMapping(
+    	    value = "/login",
+    	    consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE
+    	)
     public ResponseEntity<?> login(
-            @RequestBody @Valid AuthRequest request
+    		@ModelAttribute @Valid AuthRequest request
     ){
 
         if (!turnstileService.verifyToken(request.getTurnstileToken())) {
@@ -74,14 +79,27 @@ public class AuthController {
         );
     }
     
-    /*  vue에서 관리시 불필요 기능
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpSession session) {
+    public ResponseEntity<?> logout(
+            @RequestHeader("Authorization") String authorization
+    ) {
 
-        session.invalidate();
+        String token = authorization.replace("Bearer ", "");
 
-        return ResponseEntity.ok("로그아웃 완료");
+        Integer employeeId = jwtUtil.getEmployeeId(token);
+
+        jwtTokenStore.remove(
+                "BRANCH_" + employeeId
+        );
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "message",
+                        "로그아웃 완료"
+                )
+        );
     }
-	*/
+    
+    
 	
 }
