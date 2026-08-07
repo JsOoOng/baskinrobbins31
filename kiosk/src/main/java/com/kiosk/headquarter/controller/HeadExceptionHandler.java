@@ -21,10 +21,31 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HeadExceptionHandler {
 
-    @ExceptionHandler({IllegalArgumentException.class, MethodArgumentNotValidException.class})
-    public ResponseEntity<HeadApiResponse<Void>> handleBadRequest(Exception e) {
-        log.warn("본사 API 잘못된 요청", e);
-        return response(HttpStatus.BAD_REQUEST, "요청값이 올바르지 않습니다.");
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<HeadApiResponse<Void>> handleIllegalArgument(IllegalArgumentException e) {
+        log.warn("본사 API 잘못된 요청: {}", e.getMessage());
+
+        String message = e.getMessage();
+        if (message == null || message.isBlank()) {
+            message = "요청값이 올바르지 않습니다.";
+        }
+
+        return response(HttpStatus.BAD_REQUEST, message);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<HeadApiResponse<Void>> handleValidation(MethodArgumentNotValidException e) {
+        log.warn("본사 API 입력값 검증 실패", e);
+
+        String message = e.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .findFirst()
+                .map(error -> error.getDefaultMessage())
+                .filter(value -> value != null && !value.isBlank())
+                .orElse("요청값이 올바르지 않습니다.");
+
+        return response(HttpStatus.BAD_REQUEST, message);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
