@@ -744,6 +744,10 @@ const connectBranchSocket = () => {
       brokerURL:
         getWebSocketUrl(),
 
+      connectHeaders: {
+        Authorization: `Bearer ${localStorage.getItem('branchToken')}`
+      },
+
       reconnectDelay:
         5000,
 
@@ -956,9 +960,17 @@ nextClient.subscribe(
  */
 const connectHeadSocket = () => {
 
-  const isHeadPage = route.path.startsWith('/head')
+  // 로그인/권한 없음처럼 공개된 본사 화면에서는 소켓을 열지 않습니다.
+  // 본사 보호 라우트이며 로그인 토큰과 사용자 정보가 모두 있을 때만 연결합니다.
+  const requiresHeadAuth = route.matched.some(
+    routeRecord => routeRecord.meta.requiresHeadAuth
+  )
+  const hasHeadSession = Boolean(
+    localStorage.getItem('headToken') &&
+    localStorage.getItem('headUser')
+  )
 
-  if (!isHeadPage) {
+  if (!requiresHeadAuth || !hasHeadSession) {
     disconnectHeadSocket()
     return
   }
@@ -971,6 +983,9 @@ const connectHeadSocket = () => {
 
   const nextClient = new Client({
     brokerURL: getWebSocketUrl(),
+    connectHeaders: {
+      Authorization: `Bearer ${localStorage.getItem('headToken')}`
+    },
     reconnectDelay: 5000,
     heartbeatIncoming: 10000,
     heartbeatOutgoing: 10000
@@ -992,7 +1007,11 @@ const connectHeadSocket = () => {
 
       (message) => {
 
-        if (!route.path.startsWith('/head')) {
+        const isProtectedHeadPage = route.matched.some(
+          routeRecord => routeRecord.meta.requiresHeadAuth
+        )
+
+        if (!isProtectedHeadPage || !localStorage.getItem('headToken')) {
           return
         }
 

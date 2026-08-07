@@ -1,10 +1,26 @@
 package com.kiosk.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.messaging.simp.config.ChannelRegistration;
+import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+import com.kiosk.common.config.JwtTokenStore;
+import com.kiosk.common.config.JwtUtil;
 
 /**
  * [코드 흐름 안내] WebSocketConfig
@@ -17,6 +33,13 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    private final JwtUtil jwtUtil;
+    private final JwtTokenStore jwtTokenStore;
+
+    public WebSocketConfig(JwtUtil jwtUtil, JwtTokenStore jwtTokenStore) {
+        this.jwtUtil = jwtUtil;
+        this.jwtTokenStore = jwtTokenStore;
+    }
 
     @Override
     /**
@@ -48,5 +71,87 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         "https://www.baskinrobbins31.store"
                 );
 
+    }
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(new ChannelInterceptor() {
+            @Override
+            public Message<?> preSend(Message<?> message, MessageChannel channel) {
+                StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+
+                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                    authenticateConnect(accessor);
+                }
+
+                if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+                    authorizeSubscription(accessor);
+                }
+
+                return message;
+            }
+        });
+    }
+
+    private void authenticateConnect(StompHeaderAccessor accessor) {
+        String authorization = accessor.getFirstNativeHeader("Authorization");
+
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new AccessDeniedException("WebSocket 인증이 필요합니다.");
+        }
+
+        String token = authorization.substring(7);
+        if (!jwtUtil.validateToken(token)) {
+            throw new AccessDeniedException("유효하지 않은 WebSocket 토큰입니다.");
+        }
+
+        Integer employeeId = jwtUtil.getEmployeeId(token);
+        String userType = jwtUtil.getUserType(token);
+        String role = jwtUtil.getRole(token);
+
+        if (userType == null
+                || !jwtTokenStore.isValid(userType + "_" + employeeId, token)) {
+            throw new AccessDeniedException("로그아웃되었거나 만료된 WebSocket 토큰입니다.");
+        }
+
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        if (role != null && !role.isBlank()) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+        }
+        authorities.add(new SimpleGrantedAuthority("TYPE_" + userType));
+
+        accessor.setUser(new UsernamePasswordAuthenticationToken(
+                employeeId,
+                null,
+                authorities
+        ));
+    }
+
+    private void authorizeSubscription(StompHeaderAccessor accessor) {
+        if (!(accessor.getUser() instanceof Authentication authentication)) {
+            throw new AccessDeniedException("WebSocket 인증이 필요합니다.");
+        }
+
+        String destination = accessor.getDestination();
+        if (destination == null) {
+            throw new AccessDeniedException("WebSocket 구독 주소가 필요합니다.");
+        }
+
+        boolean isHeadTopic = destination.startsWith("/topic/head/");
+        boolean isBranchTopic = destination.startsWith("/topic/store/")
+                || destination.startsWith("/topic/stores/");
+
+        if (isHeadTopic && !hasAuthority(authentication, "TYPE_HEAD")) {
+            throw new AccessDeniedException("본사 WebSocket 구독 권한이 없습니다.");
+        }
+
+        if (isBranchTopic && !hasAuthority(authentication, "TYPE_BRANCH")) {
+            throw new AccessDeniedException("지점 WebSocket 구독 권한이 없습니다.");
+        }
+    }
+
+    private boolean hasAuthority(Authentication authentication, String authority) {
+        return authentication.getAuthorities().stream()
+                .anyMatch(granted -> authority.equals(granted.getAuthority()));
     }
 }

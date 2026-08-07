@@ -97,9 +97,18 @@ instance.interceptors.response.use(
      * 로그인은 되어 있지만 해당 기능에 대한 권한이 없는 경우
      */
     if (status === 403) {
+      const isPublicHeadPage =
+        currentPath === '/head/login' ||
+        currentPath === '/head/not-authorized'
+      const hasHeadSession = Boolean(
+        localStorage.getItem('headToken') &&
+        localStorage.getItem('headUser')
+      )
+
       if (
         currentPath.startsWith('/head') &&
-        currentPath !== '/head/not-authorized'
+        !isPublicHeadPage &&
+        hasHeadSession
       ) {
         window.location.href = '/head/not-authorized'
       }
