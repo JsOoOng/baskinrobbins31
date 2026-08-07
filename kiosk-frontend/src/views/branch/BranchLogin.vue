@@ -49,32 +49,63 @@ const login = async () => {
   loading.value = true
 
   try {
-    const response = await api.post('/branch/login', {
-      loginId: loginId.value.trim(),
-      password: password.value,
-      turnstileToken: turnstileToken.value
-    })
 
-    localStorage.setItem('branchToken', response.data.token)
-    // 공통 헤더·사이드바에서도 지점명과 관리자명을 사용할 수 있도록 함께 저장한다.
-    localStorage.setItem('branchUser', JSON.stringify(response.data.user))
-    await router.push('/branch/main')
-  } catch (error) {
-    console.error(error)
-    errorMessage.value = error.response
-      ? '로그인에 실패하였습니다.'
-      : '서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.'
+const formData = new URLSearchParams()
 
-      // 기존 Turnstile 폐기
-      turnstileToken.value = ''
+formData.append(
+  'loginId',
+  loginId.value.trim()
+)
 
-      // 새 인증창 발급
-      turnstileRef.value?.reset()
+formData.append(
+  'password',
+  password.value
+)
 
-    loginIdInput.value?.focus()
-  } finally {
-    loading.value = false
+formData.append(
+  'turnstileToken',
+  turnstileToken.value
+)
+
+
+const response = await api.post(
+  '/branch/login',
+  formData,
+  {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
   }
+)
+
+
+localStorage.setItem(
+  'branchToken',
+  response.data.token
+)
+
+localStorage.setItem(
+  'branchUser',
+  JSON.stringify(response.data.user)
+)
+
+await router.push('/branch/main')
+
+
+} catch (error) {
+
+console.error(error)
+
+errorMessage.value = error.response
+  ? '로그인에 실패하였습니다.'
+  : '서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.'
+
+turnstileToken.value = ''
+turnstileRef.value?.reset()
+loginIdInput.value?.focus()
+} finally {
+loading.value = false
+}
 }
 
 function handleVirtualKey(key) {
