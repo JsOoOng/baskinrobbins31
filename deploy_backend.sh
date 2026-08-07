@@ -52,8 +52,25 @@ case "$CERT_WORK_DIR" in
         ;;
 esac
 TEMP_TRUSTSTORE=$(mktemp)
-rm -f "$TEMP_TRUSTSTORE"
 trap 'rm -rf "$CERT_WORK_DIR"; rm -f "${TEMP_TRUSTSTORE:-}"' EXIT
+
+# RDS CA만 들어 있는 truststore로 JVM 기본 truststore를 대체하면
+# Cloudflare, Toss 등 외부 HTTPS 인증서를 신뢰하지 못합니다.
+# Java 기본 공인 CA를 복사한 뒤 RDS CA를 추가합니다.
+JAVA_BIN=$(readlink -f "$(command -v java)")
+JAVA_HOME_DIR=$(dirname "$(dirname "$JAVA_BIN")")
+DEFAULT_JAVA_TRUSTSTORE="${JAVA_HOME_DIR}/lib/security/cacerts"
+
+if [ ! -r "$DEFAULT_JAVA_TRUSTSTORE" ]; then
+    echo "ERROR: Java default truststore를 찾을 수 없습니다: $DEFAULT_JAVA_TRUSTSTORE"
+    exit 1
+fi
+
+cp -L "$DEFAULT_JAVA_TRUSTSTORE" "$TEMP_TRUSTSTORE"
+keytool -storepasswd \
+    -keystore "$TEMP_TRUSTSTORE" \
+    -storepass changeit \
+    -new "$RDS_TRUSTSTORE_PASSWORD" >/dev/null
 
 curl --fail --silent --show-error --location \
     "$RDS_CA_BUNDLE_URL" \
@@ -84,7 +101,6 @@ for certificate_file in "${CERT_WORK_DIR}"/rds-root-*.pem; do
         -alias "aws-rds-root-${certificate_index}" \
         -file "$certificate_file" \
         -keystore "$TEMP_TRUSTSTORE" \
-        -storetype JKS \
         -storepass "$RDS_TRUSTSTORE_PASSWORD" \
         -noprompt >/dev/null
 done
