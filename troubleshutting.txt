@@ -1,0 +1,61 @@
+운영 장애 대응 기록 (Troubleshooting)
+=====================================
+
+본사 로그인 및 Turnstile
+------------------------
+1. 프런트에는 VITE_TURNSTILE_SITE_KEY(사이트 키)를 설정한다.
+2. 백엔드에는 TURNSTILE_SECRET_KEY(시크릿 키)를 설정한다.
+3. 사이트 키와 시크릿 키는 같은 Turnstile 위젯에서 발급된 쌍이어야 한다.
+4. 시크릿 키를 프런트 번들 또는 저장소에 넣지 않는다.
+5. 운영 서버에서 환경 변수 적용 여부 확인:
+
+   PID=$(systemctl show -p MainPID --value kiosk-backend)
+   sudo tr '\0' '\n' < "/proc/$PID/environ" | \
+     grep '^TURNSTILE_SECRET_KEY=' | sed 's/=.*/=[SET]/'
+
+6. Turnstile 상세 오류 확인:
+
+   sudo grep -i -A 30 -B 5 -E \
+     'Turnstile verification error|SSLHandshakeException|PKIX|certificate' \
+     /home/ubuntu/kiosk-deploy/logs/error.log | tail -n 100
+
+7. curl Siteverify 호출은 OS truststore를 사용한다. curl 성공만으로 Java
+   RestTemplate의 TLS 연결 성공을 보장할 수 없다.
+8. 운영 클라이언트에는 Turnstile 검증 단계나 공급자 이름을 직접 노출하지
+   않는다. 사용자에게는 일반 로그인 오류만 반환하고 상세 원인은 서버의
+   application.log/error.log에서 확인한다.
+
+본사 WebSocket / STOMP
+---------------------
+1. "연결 성공" 직후 clientInboundChannel 오류가 나면 CONNECT는 완료됐고,
+   이후 SUBSCRIBE 처리에서 실패했을 가능성이 높다.
+2. 서버 상세 오류 확인:
+
+   sudo grep -i -A 30 -B 5 -E \
+     'clientInboundChannel|AccessDeniedException|WebSocket|STOMP|SUBSCRIBE' \
+     /home/ubuntu/kiosk-deploy/logs/error.log | tail -n 150
+
+3. 실시간 확인:
+
+   sudo journalctl -u kiosk-backend -f -l
+
+4. 정상 동작 기준:
+   - 브라우저에 "본사 WebSocket 연결 성공"이 한 번 출력된다.
+   - 이어서 STOMP 오류나 연결 종료가 반복되지 않는다.
+   - /topic/head/inventory-shortages 구독이 유지된다.
+
+배포 후 공통 점검
+-----------------
+1. sudo systemctl status kiosk-backend --no-pager
+2. sudo journalctl -u kiosk-backend --since "5 minutes ago" --no-pager -l
+3. 로그인 후 REST API 200 응답 확인
+4. 브라우저 Network의 WS 연결과 STOMP CONNECTED/SUBSCRIBE 확인
+5. 새 배포 시각 이후 error.log에 PKIX 또는 clientInboundChannel 오류가
+   추가되는지 확인
+
+참고
+----
+- Cloudflare Turnstile 내부의 WebGL, powerPreference, OTS 글꼴 경고는
+  로그인 API 실패의 직접 원인이 아니었다.
+- 노출된 Turnstile 시크릿 키는 Cloudflare에서 회전한 뒤 운영 환경 변수와
+  배포 시크릿을 함께 갱신해야 한다.

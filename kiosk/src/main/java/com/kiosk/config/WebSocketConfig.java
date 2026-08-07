@@ -11,6 +11,7 @@ import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -78,7 +79,21 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registration.interceptors(new ChannelInterceptor() {
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+                /*
+                 * CONNECT에서 설정한 Principal은 원본 STOMP accessor에 기록해야
+                 * WebSocket 세션에 보존되고 이후 SUBSCRIBE 프레임에도 전달됩니다.
+                 * wrap(message)는 별도 accessor를 만들기 때문에 setUser() 결과가
+                 * 실제 inbound message에 반영되지 않을 수 있습니다.
+                 */
+                StompHeaderAccessor accessor =
+                        MessageHeaderAccessor.getAccessor(
+                                message,
+                                StompHeaderAccessor.class
+                        );
+
+                if (accessor == null) {
+                    return message;
+                }
 
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
                     authenticateConnect(accessor);

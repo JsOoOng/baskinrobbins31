@@ -1,0 +1,44 @@
+SpotBugs / 정적 분석 및 결함 수정 기록
+========================================
+
+1. Turnstile 외부 HTTPS 인증서 검증 실패
+----------------------------------------
+- 증상
+  - 본사 로그인 요청이 항상 HTTP 400으로 실패했다.
+  - 응답 메시지는 "자동입력 방지(Turnstile) 검증에 실패했습니다"였다.
+- 실제 원인
+  - 운영 JVM이 /etc/kiosk/rds-truststore.jks를 전역 truststore로 사용했다.
+  - 기존 배포 스크립트는 빈 truststore에 AWS RDS CA만 넣었으므로,
+    Cloudflare의 공개 TLS 인증서 체인을 검증할 수 없었다.
+  - error.log에서 SSLHandshakeException, PKIX path building failed가 확인됐다.
+- 수정
+  - deploy_backend.sh가 Java 기본 cacerts를 먼저 복사한 다음 AWS RDS CA를
+    추가하도록 변경했다.
+  - Cloudflare, Toss 같은 공개 HTTPS 서비스와 AWS RDS를 모두 신뢰한다.
+  - 원인 확인 후 로그인 API의 외부 오류 문구는 Turnstile 구현을 노출하지 않는
+    "로그인 시도 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."로
+    일반화하고, 상세 원인은 서버 로그에만 남긴다.
+
+2. 본사 STOMP CONNECT 이후 SUBSCRIBE 실패
+------------------------------------------
+- 증상
+  - 브라우저에는 "본사 WebSocket 연결 성공" 직후
+    "Failed to send message to ExecutorSubscribableChannel[clientInboundChannel]"가
+    출력되고 연결이 반복 종료됐다.
+- 원인
+  - WebSocketConfig의 inbound interceptor가 StompHeaderAccessor.wrap(message)로
+    새 accessor를 만들고 여기에 Principal을 설정했다.
+  - CONNECT 인증 결과가 원본 메시지와 WebSocket 세션에 보존되지 않으면,
+    다음 SUBSCRIBE 프레임은 인증 사용자가 없는 요청으로 처리된다.
+- 수정
+  - MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class)로
+    원본 accessor를 가져와 Principal을 기록한다.
+  - accessor가 없는 비-STOMP 메시지는 그대로 통과시킨다.
+
+3. 애플리케이션 상세 로그가 journalctl에 보이지 않음
+------------------------------------------------------
+- 원인
+  - com.kiosk logger의 additivity가 false이고 FILE/ERROR_FILE만 연결돼 있었다.
+- 수정
+  - logback-spring.xml의 com.kiosk logger에 CONSOLE appender를 추가했다.
+  - 재배포 이후 프로젝트 로그를 journalctl -u kiosk-backend에서도 확인할 수 있다.

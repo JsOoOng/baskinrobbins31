@@ -67,7 +67,13 @@ public class HeadAuthController {
     ) {
 
         if (!turnstileService.verifyToken(request.getTurnstileToken())) {
-            throw new IllegalArgumentException("자동입력 방지(Turnstile) 검증에 실패했습니다. 새로고침 후 다시 시도해주세요.");
+            /*
+             * 외부 응답에는 Turnstile 사용 여부나 검증 단계를 노출하지 않습니다.
+             * 실제 검증 실패 원인은 TurnstileService의 서버 로그에서 확인합니다.
+             */
+            throw new IllegalArgumentException(
+                    "로그인 시도 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+            );
         }
 
         HeadLoginResponse loginUser =
