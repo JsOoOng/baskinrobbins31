@@ -482,7 +482,15 @@ router.beforeEach(async (to) => {
       headAuthStore.headUser &&
       hasHeadAccessRole(headAuthStore.role)
     ) {
-      return { name: 'head-dashboard' }
+      // 캐시 삭제만으로는 localStorage의 예전 JWT가 지워지지 않습니다.
+      // 남아 있는 토큰을 서버에서 검증한 뒤에만 대시보드로 이동합니다.
+      const restored = await headAuthStore.restoreSession()
+
+      if (restored) {
+        return { name: 'head-dashboard' }
+      }
+
+      headAuthStore.clearAuthentication()
     }
 
     return true
