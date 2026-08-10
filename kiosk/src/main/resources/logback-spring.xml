@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- 이 파일이 UTF-8 인코딩을 사용하는 XML 문서임을 선언합니다. -->
 
+<!-- Logback 로그 설정의 시작과 끝을 감싸는 최상위 루트 태그입니다. -->
 <configuration>
 
-    <!-- 로그 저장 위치 -->
+    <!-- 로그 파일들이 저장될 기본 디렉토리 경로를 변수(LOG_PATH)로 지정합니다. -->
     <property name="LOG_PATH" value="/home/ubuntu/kiosk-deploy/logs"/>
 
-    <!-- 로그 출력 형식 -->
+    <!-- 로그에 출력될 문자열의 형식(날짜, 스레드, 레벨, 로거 이름, 메시지 등)을 변수로 지정합니다. -->
     <property name="LOG_PATTERN"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
 
@@ -15,102 +17,91 @@
     <!-- INFO / WARN 저장 -->
     <!-- =============================== -->
 
+    <!-- 일반 로그를 파일에 기록하고 용량/날짜별로 분리(Rolling)하기 위한 처리기입니다. -->
     <appender name="FILE"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
 
+        <!-- 일반 로그가 실시간으로 기록될 실제 파일의 경로와 이름을 지정합니다. -->
         <file>${LOG_PATH}/application.log</file>
 
-
-        <!-- ERROR 제외 -->
+        <!-- 특정 레벨의 로그만 걸러내기 위한 필터 설정을 시작합니다. -->
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <!-- 필터링의 기준이 되는 로그 레벨을 'ERROR'로 설정합니다. -->
             <level>ERROR</level>
+            <!-- 로그 레벨이 ERROR와 일치하면 파일에 기록하지 않고 차단(DENY)합니다. -->
             <onMatch>DENY</onMatch>
+            <!-- 로그 레벨이 ERROR가 아니면(INFO, WARN 등) 파일에 기록(ACCEPT)합니다. -->
             <onMismatch>ACCEPT</onMismatch>
         </filter>
 
-
+        <!-- 날짜와 파일 용량을 기준으로 로그 파일을 쪼개어 저장하는 롤링 정책입니다. -->
         <rollingPolicy
                 class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
 
-            <!-- 날짜별 + 파일 크기별 분리 -->
+            <!-- 로그 파일이 분리될 때 붙을 백업 파일의 이름 규칙(날짜와 순번)을 정의합니다. -->
             <fileNamePattern>
                 ${LOG_PATH}/application.%d{yyyy-MM-dd}.%i.log
             </fileNamePattern>
 
-
-            <!-- 파일 하나 최대 크기 -->
+            <!-- 로그 파일 1개의 최대 용량을 100MB로 제한하며, 초과 시 새 파일로 분리합니다. -->
             <maxFileSize>100MB</maxFileSize>
 
-
-            <!-- 14일 보관 -->
+            <!-- 생성된 백업 로그 파일을 최대 14일 동안만 보관하고 오래된 것은 삭제합니다. -->
             <maxHistory>14</maxHistory>
 
-
-            <!-- 전체 로그 최대 용량 -->
+            <!-- 보관 중인 모든 일반 로그 파일의 총 용량이 512MB를 넘지 않도록 제한합니다. -->
             <totalSizeCap>512MB</totalSizeCap>
-
         </rollingPolicy>
 
-
+        <!-- 지정해 둔 LOG_PATTERN 양식과 UTF-8 인코딩을 적용해 로그를 텍스트로 변환합니다. -->
         <encoder>
             <pattern>${LOG_PATTERN}</pattern>
             <charset>UTF-8</charset>
         </encoder>
 
     </appender>
-
 
 
     <!-- =============================== -->
     <!-- ERROR 전용 로그 -->
     <!-- =============================== -->
 
+    <!-- ERROR 레벨의 로그만 따로 모아서 파일에 기록하기 위한 처리기입니다. -->
     <appender name="ERROR_FILE"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
 
-
+        <!-- ERROR 로그가 실시간으로 기록될 파일의 경로와 이름을 지정합니다. -->
         <file>${LOG_PATH}/error.log</file>
 
-
-        <!-- ERROR만 저장 -->
+        <!-- ERROR 레벨의 로그만 처리하기 위해 필터 설정을 시작합니다. -->
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
-
             <level>ERROR</level>
-
+            <!-- 로그 레벨이 ERROR일 때만 기록(ACCEPT)합니다. -->
             <onMatch>ACCEPT</onMatch>
-
+            <!-- 로그 레벨이 ERROR가 아니면 무시(DENY)합니다. -->
             <onMismatch>DENY</onMismatch>
-
         </filter>
 
-
-
+        <!-- 파일 용량 제한 없이 날짜 기준으로만 에러 로그 파일을 분리하는 정책입니다. -->
         <rollingPolicy
                 class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 
-
+            <!-- 에러 로그 백업 파일의 이름 규칙(날짜)을 정의합니다. -->
             <fileNamePattern>
                 ${LOG_PATH}/error.%d{yyyy-MM-dd}.log
             </fileNamePattern>
 
-
-            <!-- 30일 보관 -->
+            <!-- 에러 로그 파일은 분석을 위해 일반 로그보다 긴 최대 30일 동안 보관합니다. -->
             <maxHistory>30</maxHistory>
-
-
         </rollingPolicy>
 
-
-
+        <!-- 지정해 둔 양식과 인코딩으로 에러 로그를 텍스트로 변환합니다. -->
         <encoder>
             <pattern>${LOG_PATTERN}</pattern>
             <charset>UTF-8</charset>
         </encoder>
 
-
     </appender>
-
-
 
 
     <!-- =============================== -->
@@ -118,58 +109,49 @@
     <!-- 개발 확인용 -->
     <!-- =============================== -->
 
+    <!-- 개발 및 서버 모니터링을 위해 터미널(콘솔) 화면에 출력하는 처리기입니다. -->
     <appender name="CONSOLE"
               class="ch.qos.logback.core.ConsoleAppender">
 
-
+        <!-- 지정해 둔 양식과 인코딩으로 콘솔 로그를 텍스트로 변환합니다. -->
         <encoder>
             <pattern>${LOG_PATTERN}</pattern>
             <charset>UTF-8</charset>
         </encoder>
 
-
     </appender>
-
-
-
 
 
     <!-- =============================== -->
     <!-- 기본 로그 설정 -->
     <!-- =============================== -->
 
+    <!-- 애플리케이션 전체(외부 라이브러리 포함)의 기본 로그 레벨을 WARN(경고 이상)으로 설정합니다. -->
     <root level="WARN">
-
+        <!-- 전체 애플리케이션에서 발생하는 로그를 FILE(일반 로그)로 보냅니다. -->
         <appender-ref ref="FILE"/>
-
+        <!-- 전체 애플리케이션에서 발생하는 로그를 ERROR_FILE(에러 로그)로 보냅니다. -->
         <appender-ref ref="ERROR_FILE"/>
-
-        <!-- 필요하면 유지 -->
+        <!-- 전체 애플리케이션에서 발생하는 로그를 CONSOLE(화면)로 보냅니다. -->
         <appender-ref ref="CONSOLE"/>
-
     </root>
-
-
 
 
     <!-- =============================== -->
     <!-- 프로젝트 로그 -->
     <!-- =============================== -->
 
+    <!-- 우리 패키지(com.kiosk)의 로그 레벨을 INFO로 설정하고, root 로거와 중복 출력되지 않게(additivity="false") 막습니다. -->
     <logger name="com.kiosk"
             level="INFO"
             additivity="false">
-
+        <!-- 프로젝트 패키지의 로그를 FILE 처리기로 보냅니다. -->
         <appender-ref ref="FILE"/>
-
+        <!-- 프로젝트 패키지의 로그를 ERROR_FILE 처리기로 보냅니다. -->
         <appender-ref ref="ERROR_FILE"/>
-
         <!-- systemd/journald에서도 프로젝트 로그를 확인할 수 있게 콘솔로 출력합니다. -->
         <appender-ref ref="CONSOLE"/>
-
     </logger>
-
-
 
 
     <!-- =============================== -->
@@ -177,12 +159,12 @@
     <!-- 운영에서는 필요 시 DEBUG -->
     <!-- =============================== -->
 
+    <!-- 하이버네이트가 생성하는 SQL 쿼리 로그가 너무 많이 찍히지 않도록 WARN 레벨로 숨깁니다. -->
     <logger name="org.hibernate.SQL"
             level="WARN"/>
 
-
+    <!-- SQL 쿼리에 바인딩되는 파라미터(?) 값 로그가 너무 많이 찍히지 않도록 WARN 레벨로 숨깁니다. -->
     <logger name="org.hibernate.orm.jdbc.bind"
             level="WARN"/>
-
 
 </configuration>
