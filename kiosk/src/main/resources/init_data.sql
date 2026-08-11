@@ -150,8 +150,8 @@ INSERT INTO users (phone, point_balance, created_at) VALUES
 
 -- 10. EMPLOYEES (직원)
 INSERT INTO employees (store_id, login_id, password, name, role, status) VALUES
-(1, 'emp001', '1234', '김점장', 'MANAGER', 'EMPLOYED'),
-(1, 'emp002', '1234', '이알바', 'STAFF', 'EMPLOYED');
+(1, 'emp001', '$2a$10$k1fpMyMGZPSPMjNOrSyjEe.HgjuDmZtSuDmk0ykCoJOBueADqLAQW', '김점장', 'MANAGER', 'EMPLOYED'),
+(1, 'emp002', '$2a$10$k1fpMyMGZPSPMjNOrSyjEe.HgjuDmZtSuDmk0ykCoJOBueADqLAQW', '이알바', 'STAFF', 'EMPLOYED');
 
 -- 11. HEADQUARTER_ADMINS (본사 관리자)
 INSERT INTO headquarter_admins (login_id, password, name, department, role, status, created_at) VALUES

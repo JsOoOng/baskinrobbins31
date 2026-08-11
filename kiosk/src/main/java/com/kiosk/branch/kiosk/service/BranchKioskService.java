@@ -31,7 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class BranchKioskService {
 
 
@@ -89,6 +88,7 @@ public class BranchKioskService {
      * [메서드 흐름] getKiosks
      * Controller 또는 상위 서비스에서 호출되어 BranchKioskRepository, StoreRepository, Map을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
+    @Transactional(readOnly = true)
     public List<BranchKioskResponse> getKiosks(
             Integer storeId
     ){
@@ -104,6 +104,7 @@ public class BranchKioskService {
      * [메서드 흐름] getAllKiosks
      * Controller 또는 상위 서비스에서 호출되어 BranchKioskRepository, StoreRepository, Map을 사용해 검증·조회·저장 등의 처리를 수행하고 결과를 반환한다.
      */
+    @Transactional(readOnly = true)
     public List<BranchKioskResponse> getAllKiosks(){
         return kioskRepository.findAll()
                 .stream()
