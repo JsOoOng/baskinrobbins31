@@ -43,7 +43,9 @@ public class SecurityConfig {
                 // 명시된 프론트엔드 도메인(출처)에서의 접근만 허용 (화이트리스트)
                 config.setAllowedOrigins(
                         java.util.List.of(
-                                "*"
+                                "http://localhost:5173",           // 로컬 프론트엔드 개발 환경
+                                "https://baskinrobbins31.store",   // 실서버 프론트엔드 도메인
+                                "https://www.baskinrobbins31.store" // 실서버 프론트엔드 도메인(www 포함)
                         )
                 );
 
