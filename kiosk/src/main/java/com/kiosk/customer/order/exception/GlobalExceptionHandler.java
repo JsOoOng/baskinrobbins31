@@ -12,6 +12,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,6 +56,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleUnexpected(Exception e) {
         log.error("처리되지 않은 서버 오류", e);
         return error(HttpStatus.INTERNAL_SERVER_ERROR, "서버에서 요청을 처리하지 못했습니다.");
+    }
+    
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> handleResponseStatus(
+            ResponseStatusException e
+    ) {
+        log.warn("HTTP 상태 오류: {}", e.getReason());
+
+        return error(
+                HttpStatus.valueOf(e.getStatusCode().value()),
+                e.getReason() != null
+                        ? e.getReason()
+                        : "요청을 처리할 수 없습니다."
+        );
     }
 
     private ResponseEntity<Map<String, String>> error(HttpStatus status, String message) {
