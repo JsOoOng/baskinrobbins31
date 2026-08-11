@@ -18,7 +18,7 @@ import lombok.Setter;
 @Setter
 public class HeadEmployeeCreateRequest {
 
-    @NotNull(message = "지점 ID는 필수 입력 값입니다.")
+    
     private Integer storeId;
 
     @NotBlank(message = "아이디는 필수 입력 값입니다.")
