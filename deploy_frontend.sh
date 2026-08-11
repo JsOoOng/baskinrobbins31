@@ -43,10 +43,16 @@ if [ ! -L /etc/nginx/sites-enabled/default ]; then
     sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 fi
 
-# 3. Nginx 재시작
-echo "[Step 3] Nginx 재시작"
-sudo systemctl restart nginx
-echo " > Nginx 설정 적용 및 재시작 완료."
+# 3. 새 설정을 적용하기 전에 문법 검사
+echo "[Step 3] Nginx 설정 검사 및 적용"
+if ! sudo nginx -t; then
+    echo " > Nginx 설정 검사 실패. 기존 서비스는 유지하고 배포를 중단합니다."
+    exit 1
+fi
+
+# 연결을 끊는 restart 대신 검증된 설정을 무중단 reload
+sudo systemctl reload nginx
+echo " > Nginx 설정 검사 및 무중단 적용 완료."
 
 echo "=========================================="
 echo "🎉 프론트엔드 배포가 성공적으로 완료되었습니다!"
