@@ -30,7 +30,7 @@ class AuthServiceTest {
 
     private PasswordEncoder passwordEncoder;
     private AuthService authService;
-
+/*
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
@@ -40,6 +40,8 @@ class AuthServiceTest {
         );
     }
 
+  */
+    
     @Test
     void rejectsLegacyPlainTextPassword() {
         Employee employee = employeeWithPassword("1234");
