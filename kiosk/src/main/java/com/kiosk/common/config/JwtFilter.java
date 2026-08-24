@@ -33,18 +33,23 @@ public class JwtFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
 
-        String authorizationHeader =
-                request.getHeader("Authorization");
+        String token = null;
 
+        String authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        }
 
-        if (authorizationHeader != null
-                && authorizationHeader.startsWith("Bearer ")) {
+        if (token == null && request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("headToken".equals(cookie.getName()) || "branchToken".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
 
-
-            String token =
-                    authorizationHeader.substring(7);
-
-
+        if (token != null) {
             // 1. JWT 기본 검증
             if (jwtUtil.validateToken(token)) {
 

@@ -744,10 +744,6 @@ const connectBranchSocket = () => {
       brokerURL:
         getWebSocketUrl(),
 
-      connectHeaders: {
-        Authorization: `Bearer ${localStorage.getItem('branchToken')}`
-      },
-
       reconnectDelay:
         5000,
 
@@ -966,7 +962,6 @@ const connectHeadSocket = () => {
     routeRecord => routeRecord.meta.requiresHeadAuth
   )
   const hasHeadSession = Boolean(
-    localStorage.getItem('headToken') &&
     localStorage.getItem('headUser')
   )
 
@@ -983,9 +978,6 @@ const connectHeadSocket = () => {
 
   const nextClient = new Client({
     brokerURL: getWebSocketUrl(),
-    connectHeaders: {
-      Authorization: `Bearer ${localStorage.getItem('headToken')}`
-    },
     reconnectDelay: 5000,
     heartbeatIncoming: 10000,
     heartbeatOutgoing: 10000
@@ -1011,7 +1003,7 @@ const connectHeadSocket = () => {
           routeRecord => routeRecord.meta.requiresHeadAuth
         )
 
-        if (!isProtectedHeadPage || !localStorage.getItem('headToken')) {
+        if (!isProtectedHeadPage || !localStorage.getItem('headUser')) {
           return
         }
 

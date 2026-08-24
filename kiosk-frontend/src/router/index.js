@@ -478,8 +478,7 @@ router.beforeEach(async (to) => {
   // ============================
   if (to.name === 'head-login') {
     if (
-      headAuthStore.token &&
-      headAuthStore.headUser &&
+      headAuthStore.isAuthenticated &&
       hasHeadAccessRole(headAuthStore.role)
     ) {
       // 캐시 삭제만으로는 localStorage의 예전 JWT가 지워지지 않습니다.
@@ -518,10 +517,9 @@ router.beforeEach(async (to) => {
   // 지점 인증
   // ============================
   if (requiresBranchAuth) {
-    const token = localStorage.getItem('branchToken')
     const branchUser = localStorage.getItem('branchUser')
 
-    if (!token || !branchUser) {
+    if (!branchUser) {
       return {
         name: 'branch-login',
         query: { redirect: to.fullPath }
@@ -539,14 +537,9 @@ router.beforeEach(async (to) => {
   }
 
   // ============================
-  // 본사 JWT 검사
+  // 본사 JWT 검사 (쿠키 전환으로 프론트엔드 검사 생략)
   // ============================
-  if (!headAuthStore.token) {
-    return {
-      name: 'head-login',
-      query: { redirect: to.fullPath }
-    }
-  }
+  // 백엔드 API 호출 시 401 에러로 처리됨
 
   // ============================
   // 세션 복구

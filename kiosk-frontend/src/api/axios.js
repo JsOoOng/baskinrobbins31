@@ -29,17 +29,8 @@ const instance = axios.create({
  */
 instance.interceptors.request.use(
   (config) => {
-    const isHeadRequest =
-      config.url?.startsWith('/head/') ||
-      window.location.pathname.startsWith('/head')
-    const token = localStorage.getItem(
-      isHeadRequest ? 'headToken' : 'branchToken'
-    )
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-
+    // HttpOnly 쿠키는 withCredentials: true 에 의해 브라우저가 자동 전송하므로 
+    // Authorization 헤더 세팅 로직은 삭제되었습니다.
     return config
   },
 
@@ -101,7 +92,6 @@ instance.interceptors.response.use(
         currentPath === '/head/login' ||
         currentPath === '/head/not-authorized'
       const hasHeadSession = Boolean(
-        localStorage.getItem('headToken') &&
         localStorage.getItem('headUser')
       )
 
@@ -125,12 +115,10 @@ instance.interceptors.response.use(
  */
 const clearAuthentication = () => {
   if (window.location.pathname.startsWith('/head')) {
-    localStorage.removeItem('headToken')
     localStorage.removeItem('headUser')
     return
   }
 
-  localStorage.removeItem('branchToken')
   localStorage.removeItem('branchUser')
 }
 

@@ -15,7 +15,7 @@ import {
   logoutHeadAdmin
 } from '@/api/head/headAuthApi'
 
-const TOKEN_KEY = 'headToken'
+// const TOKEN_KEY = 'headToken' // HttpOnly 쿠키 전환으로 사용 안 함
 const HEAD_USER_KEY = 'headUser'
 const AUTH_USER_TYPE_KEY = 'authUserType'
 
@@ -61,9 +61,7 @@ export const useHeadAuthStore = defineStore(
     /*
      * 상태
      */
-    const token = ref(
-      localStorage.getItem(TOKEN_KEY)
-    )
+    const token = ref(null) // 하위 호환성을 위해 변수는 두되 쿠키 전환으로 사용하지 않음
 
     const headUser = ref(
       readStoredHeadUser()
@@ -76,10 +74,7 @@ export const useHeadAuthStore = defineStore(
      * 로그인 여부
      */
     const isAuthenticated = computed(() => {
-      return Boolean(
-        token.value &&
-        headUser.value
-      )
+      return Boolean(headUser.value)
     })
 
     /*
@@ -146,13 +141,10 @@ export const useHeadAuthStore = defineStore(
         )
       }
 
-      token.value = newToken
+      // token.value = newToken
       headUser.value = normalizedUser
 
-      localStorage.setItem(
-        TOKEN_KEY,
-        newToken
-      )
+      // localStorage.setItem(TOKEN_KEY, newToken)
 
       localStorage.setItem(
         HEAD_USER_KEY,
@@ -173,9 +165,7 @@ export const useHeadAuthStore = defineStore(
       headUser.value = null
       errorMessage.value = ''
 
-      localStorage.removeItem(
-        TOKEN_KEY
-      )
+      // localStorage.removeItem(TOKEN_KEY)
 
       localStorage.removeItem(
         HEAD_USER_KEY
@@ -225,11 +215,9 @@ export const useHeadAuthStore = defineStore(
           )
         }
 
-        if (!loginData.token) {
-          throw new Error(
-            '로그인 토큰이 발급되지 않았습니다.'
-          )
-        }
+        // if (!loginData.token) {
+        //  throw new Error('로그인 토큰이 발급되지 않았습니다.')
+        // }
 
         const normalizedRole =
           normalizeHeadRole(
@@ -286,10 +274,8 @@ export const useHeadAuthStore = defineStore(
      * JWT를 이용해 현재 로그인한 관리자 조회
      */
     const fetchMe = async () => {
-      if (!token.value) {
-        clearAuthentication()
-        return null
-      }
+      // 쿠키 기반이므로 토큰 확인 없이 일단 찔러봄
+      // if (!token.value) { ... }
 
       loading.value = true
       errorMessage.value = ''
@@ -365,10 +351,7 @@ export const useHeadAuthStore = defineStore(
      * 새로고침 후 로그인 상태 복구
      */
     const restoreSession = async () => {
-      if (!token.value) {
-        clearAuthentication()
-        return false
-      }
+      // if (!token.value) { ... }
 
       try {
         await fetchMe()
