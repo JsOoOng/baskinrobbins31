@@ -158,32 +158,14 @@ public class AuthController {
          */
         try {
 
-            AuthResponse user =
-                    authService.login(request);
+            AuthResponse user = authService.login(request);
 
-
-        ResponseCookie cookie = ResponseCookie.from("branchToken", token)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(72000) // 20시간
-                .build();
-
-        return ResponseEntity.ok()
-            .header(HttpHeaders.SET_COOKIE, cookie.toString())
-            .body(
-                Map.of(
-                    "user", user
-                )
-            );
             /*
              * =====================================================
              * 5. JWT 생성
              * =====================================================
              */
-            String token =
-                    jwtUtil.createToken(user);
-
+            String token = jwtUtil.createToken(user);
 
             /*
              * =====================================================
@@ -195,7 +177,6 @@ public class AuthController {
                     token
             );
 
-
             /*
              * =====================================================
              * 7. 로그인 성공
@@ -203,15 +184,24 @@ public class AuthController {
              *
              * AuthService에서 이미 실패 기록을 초기화한다.
              */
-            return ResponseEntity.ok(
-                    Map.of(
-                            "token", token,
-                            "user", user,
-                            "failedCount", 0,
-                            "maxAttempts", 5,
-                            "blocked", false
-                    )
-            );
+            ResponseCookie cookie = ResponseCookie.from("branchToken", token)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(72000) // 20시간
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(
+                            Map.of(
+                                    "token", token,
+                                    "user", user,
+                                    "failedCount", 0,
+                                    "maxAttempts", 5,
+                                    "blocked", false
+                            )
+                    );
 
         } catch (IllegalArgumentException e) {
 
@@ -309,36 +299,5 @@ public class AuthController {
                                 "로그아웃 완료"
                         )
                 );
-        /*
-         * Bearer 접두사 제거
-         */
-        String token =
-                authorization.replace("Bearer ", "");
-
-
-        /*
-         * JWT에서 직원 ID 추출
-         */
-        Integer employeeId =
-                jwtUtil.getEmployeeId(token);
-
-
-        /*
-         * 서버의 JWT 저장소에서 제거
-         */
-        jwtTokenStore.remove(
-                "BRANCH_" + employeeId
-        );
-
-
-        /*
-         * 로그아웃 완료 응답
-         */
-        return ResponseEntity.ok(
-                Map.of(
-                        "message",
-                        "로그아웃 완료"
-                )
-        );
     }
 }
