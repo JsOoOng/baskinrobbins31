@@ -78,11 +78,7 @@ const response = await api.post(
   }
 )
 
-
-localStorage.setItem(
-  'branchToken',
-  response.data.token
-)
+// branchToken은 HttpOnly 쿠키로 응답받으므로 프론트엔드에서 저장하지 않습니다.
 
 localStorage.setItem(
   'branchUser',

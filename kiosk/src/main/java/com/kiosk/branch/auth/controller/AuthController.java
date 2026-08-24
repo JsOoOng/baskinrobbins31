@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.HttpHeaders;
 
 import com.kiosk.branch.auth.dto.AuthRequest;
 import com.kiosk.branch.auth.dto.AuthResponse;
@@ -71,33 +74,52 @@ public class AuthController {
         );
 
 
-        return ResponseEntity.ok(
-            Map.of(
-                "token", token,
-                "user", user
-            )
-        );
+        ResponseCookie cookie = ResponseCookie.from("branchToken", token)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(72000) // 20시간
+                .build();
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, cookie.toString())
+            .body(
+                Map.of(
+                    "user", user
+                )
+            );
     }
     
     @PostMapping("/logout")
     public ResponseEntity<?> logout(
-            @RequestHeader("Authorization") String authorization
+            @CookieValue(value = "branchToken", required = false) String token,
+            @RequestHeader(value = "Authorization", required = false) String authorization
     ) {
+        String actualToken = token;
+        if (actualToken == null && authorization != null && authorization.startsWith("Bearer ")) {
+            actualToken = authorization.substring(7);
+        }
 
-        String token = authorization.replace("Bearer ", "");
+        if (actualToken != null) {
+            Integer employeeId = jwtUtil.getEmployeeId(actualToken);
+            jwtTokenStore.remove("BRANCH_" + employeeId);
+        }
 
-        Integer employeeId = jwtUtil.getEmployeeId(token);
+        ResponseCookie cookie = ResponseCookie.from("branchToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .build();
 
-        jwtTokenStore.remove(
-                "BRANCH_" + employeeId
-        );
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "message",
-                        "로그아웃 완료"
-                )
-        );
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(
+                        Map.of(
+                                "message",
+                                "로그아웃 완료"
+                        )
+                );
     }
     
     

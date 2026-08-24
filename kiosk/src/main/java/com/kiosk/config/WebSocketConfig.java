@@ -109,37 +109,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     private void authenticateConnect(StompHeaderAccessor accessor) {
-        String authorization = accessor.getFirstNativeHeader("Authorization");
-
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
-            throw new AccessDeniedException("WebSocket 인증이 필요합니다.");
+        if (accessor.getUser() == null) {
+            throw new AccessDeniedException("WebSocket 인증이 필요합니다. (쿠키 누락)");
         }
-
-        String token = authorization.substring(7);
-        if (!jwtUtil.validateToken(token)) {
-            throw new AccessDeniedException("유효하지 않은 WebSocket 토큰입니다.");
-        }
-
-        Integer employeeId = jwtUtil.getEmployeeId(token);
-        String userType = jwtUtil.getUserType(token);
-        String role = jwtUtil.getRole(token);
-
-        if (userType == null
-                || !jwtTokenStore.isValid(userType + "_" + employeeId, token)) {
-            throw new AccessDeniedException("로그아웃되었거나 만료된 WebSocket 토큰입니다.");
-        }
-
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        if (role != null && !role.isBlank()) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
-        }
-        authorities.add(new SimpleGrantedAuthority("TYPE_" + userType));
-
-        accessor.setUser(new UsernamePasswordAuthenticationToken(
-                employeeId,
-                null,
-                authorities
-        ));
     }
 
     private void authorizeSubscription(StompHeaderAccessor accessor) {

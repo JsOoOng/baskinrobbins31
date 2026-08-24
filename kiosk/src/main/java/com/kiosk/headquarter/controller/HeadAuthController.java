@@ -2,6 +2,9 @@ package com.kiosk.headquarter.controller;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.HttpHeaders;
 
 import com.kiosk.headquarter.dto.auth.HeadLoginRequest;
 import com.kiosk.headquarter.dto.auth.HeadLoginResponse;
@@ -62,7 +65,7 @@ public class HeadAuthController {
      * 프론트 요청을 받아 login() 메서드가 입력을 받고 HeadAuthService 호출 후 결과를 응답한다.
      */
     @PostMapping("/login")
-    public HeadApiResponse<HeadLoginResponse> login(
+    public ResponseEntity<HeadApiResponse<HeadLoginResponse>> login(
             @RequestBody @Valid HeadLoginRequest request
     ) {
 
@@ -79,10 +82,22 @@ public class HeadAuthController {
         HeadLoginResponse loginUser =
                 headAuthService.login(request);
 
-        return HeadApiResponse.ok(
-                "본사 관리자 로그인 성공",
-                loginUser
-        );
+        String token = loginUser.getToken();
+        loginUser.setToken(null);
+
+        ResponseCookie cookie = ResponseCookie.from("headToken", token)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(72000)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(HeadApiResponse.ok(
+                        "본사 관리자 로그인 성공",
+                        loginUser
+                ));
     }
 
     /*
@@ -155,7 +170,7 @@ public class HeadAuthController {
      * 프론트 요청을 받아 logout() 메서드가 입력을 받고 HeadAuthService 호출 후 결과를 응답한다.
      */
     @PostMapping("/logout")
-    public HeadApiResponse<Void> logout(Authentication authentication) {
+    public ResponseEntity<HeadApiResponse<Void>> logout(Authentication authentication) {
 
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new org.springframework.security.authentication.AuthenticationCredentialsNotFoundException(
@@ -166,9 +181,18 @@ public class HeadAuthController {
         Integer employeeId = Integer.valueOf(authentication.getName());
         jwtTokenStore.remove("HEAD_" + employeeId);
 
-        return HeadApiResponse.ok(
-                "로그아웃되었습니다.",
-                null
-        );
+        ResponseCookie cookie = ResponseCookie.from("headToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(HeadApiResponse.ok(
+                        "로그아웃되었습니다.",
+                        null
+                ));
     }
 }

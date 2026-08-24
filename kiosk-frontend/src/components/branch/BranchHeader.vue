@@ -23,7 +23,6 @@ const logout = async () => {
   try {
     await api.post('/branch/logout')
   } finally {
-    localStorage.removeItem('branchToken')
     localStorage.removeItem('branchUser')
 
     await router.replace({
