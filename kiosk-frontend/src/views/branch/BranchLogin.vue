@@ -88,20 +88,47 @@ localStorage.setItem(
 await router.push('/branch/main')
 
 
-} catch (error) {
+}catch (error) {
 
-console.error(error)
+    console.error(error)
 
-errorMessage.value = error.response
-  ? '로그인에 실패하였습니다.'
-  : '서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.'
+    const response = error.response
+    const data = response?.data
 
-turnstileToken.value = ''
-turnstileRef.value?.reset()
-loginIdInput.value?.focus()
-} finally {
-loading.value = false
-}
+    // 로그인 5회 실패 → 10분 차단
+    if (data?.code === 'LOGIN_BLOCKED') {
+
+      errorMessage.value =
+        `로그인 실패 횟수를 초과했습니다. ` +
+        `${data.failedCount}/${data.maxAttempts}회 실패하여 ` +
+        `10분간 로그인이 차단되었습니다.`
+
+    // 비밀번호 오류
+    } else if (data?.code === 'LOGIN_FAILED') {
+
+      errorMessage.value =
+        `${data.message} ` +
+        `(${data.failedCount}/${data.maxAttempts}회 실패)`
+
+    // 그 외 서버 오류
+    } else if (response) {
+
+      errorMessage.value =
+        data?.message || '로그인에 실패하였습니다.'
+
+    } else {
+
+      errorMessage.value =
+        '서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.'
+    }
+
+    turnstileToken.value = ''
+    turnstileRef.value?.reset()
+    loginIdInput.value?.focus()
+
+  } finally {
+    loading.value = false
+  }
 }
 
 function handleVirtualKey(key) {

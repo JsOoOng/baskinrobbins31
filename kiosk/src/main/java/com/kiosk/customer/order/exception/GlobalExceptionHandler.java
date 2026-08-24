@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.kiosk.branch.auth.exception.LoginAttemptException;
+
 import lombok.extern.slf4j.Slf4j;
 
 /** 모든 API에서 발생한 예외를 안전한 고정 메시지와 올바른 HTTP 상태로 변환합니다. */
@@ -72,6 +74,35 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(LoginAttemptException.class)
+    public ResponseEntity<Map<String, Object>> handleLoginAttempt(
+            LoginAttemptException e
+    ) {
+
+        if (e.isBlocked()) {
+
+            return ResponseEntity
+                    .status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of(
+                            "code", "LOGIN_BLOCKED",
+                            "message", "로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.",
+                            "failedCount", e.getFailedAttempts(),
+                            "maxAttempts", e.getMaxAttempts(),
+                            "blocked", true
+                    ));
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of(
+                        "code", "LOGIN_FAILED",
+                        "message", "아이디 또는 비밀번호가 올바르지 않습니다.",
+                        "failedCount", e.getFailedAttempts(),
+                        "maxAttempts", e.getMaxAttempts(),
+                        "blocked", false
+                ));
+    }
+    
     private ResponseEntity<Map<String, String>> error(HttpStatus status, String message) {
         return ResponseEntity.status(status).body(Map.of(
                 "code", status.name(),
