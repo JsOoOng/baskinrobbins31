@@ -28,29 +28,34 @@ class AuthServiceTest {
     @Mock
     private EmployeeMapper employeeMapper;
 
+    @Mock
+    private LoginAttemptService loginAttemptService;
+
     private PasswordEncoder passwordEncoder;
     private AuthService authService;
-/*
+
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
         authService = new AuthService(
                 employeeMapper,
-                passwordEncoder
+                passwordEncoder,
+                loginAttemptService
         );
     }
-
-  */
     
     @Test
     void rejectsLegacyPlainTextPassword() {
         Employee employee = employeeWithPassword("1234");
         when(employeeMapper.findByLoginId("emp001"))
                 .thenReturn(Optional.of(employee));
+        
+        when(loginAttemptService.loginFailed("emp001"))
+                .thenReturn(new LoginAttemptService.LoginAttemptResult(1, 5, false));
 
         assertThatThrownBy(() -> authService.login(request(" emp001 ", "1234")))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("로그인에 실패하였습니다.");
+                .isInstanceOf(com.kiosk.branch.auth.exception.LoginAttemptException.class)
+                .hasMessage("아이디 또는 비밀번호가 올바르지 않습니다.");
     }
 
     @Test
@@ -73,16 +78,17 @@ class AuthServiceTest {
         Employee employee = employeeWithPassword(passwordEncoder.encode("1234"));
         when(employeeMapper.findByLoginId("emp001"))
                 .thenReturn(Optional.of(employee));
+        
+        when(loginAttemptService.loginFailed("emp001"))
+                .thenReturn(new LoginAttemptService.LoginAttemptResult(1, 5, false));
 
         assertThatThrownBy(() ->
                 authService.login(
                         request("emp001", "wrong")
                 )
         )
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(
-                        "로그인에 실패하였습니다."
-                );
+                .isInstanceOf(com.kiosk.branch.auth.exception.LoginAttemptException.class)
+                .hasMessage("아이디 또는 비밀번호가 올바르지 않습니다.");
     }
 
     private AuthRequest request(
