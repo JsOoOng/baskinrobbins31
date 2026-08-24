@@ -28,6 +28,9 @@ class AuthServiceTest {
     @Mock
     private EmployeeMapper employeeMapper;
 
+    @Mock
+    private LoginAttemptService loginAttemptService;
+    
     private PasswordEncoder passwordEncoder;
     private AuthService authService;
 /*
@@ -36,7 +39,8 @@ class AuthServiceTest {
         passwordEncoder = new BCryptPasswordEncoder();
         authService = new AuthService(
                 employeeMapper,
-                passwordEncoder
+                passwordEncoder,
+                loginAttemptService
         );
     }
 
@@ -48,9 +52,11 @@ class AuthServiceTest {
         when(employeeMapper.findByLoginId("emp001"))
                 .thenReturn(Optional.of(employee));
 
-        assertThatThrownBy(() -> authService.login(request(" emp001 ", "1234")))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("로그인에 실패하였습니다.");
+        when(loginAttemptService.loginFailed("emp001"))
+        .thenReturn(new LoginAttemptService.LoginAttemptResult(1, 5, false));
+        
+        .isInstanceOf(com.kiosk.branch.auth.exception.LoginAttemptException.class)
+                .hasMessage("아이디 또는 비밀번호가 올바르지 않습니다.");
     }
 
     @Test
