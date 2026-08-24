@@ -12,6 +12,9 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.kiosk.branch.auth.exception.LoginAttemptException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,7 +59,50 @@ public class GlobalExceptionHandler {
         log.error("처리되지 않은 서버 오류", e);
         return error(HttpStatus.INTERNAL_SERVER_ERROR, "서버에서 요청을 처리하지 못했습니다.");
     }
+    
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> handleResponseStatus(
+            ResponseStatusException e
+    ) {
+        log.warn("HTTP 상태 오류: {}", e.getReason());
 
+        return error(
+                HttpStatus.valueOf(e.getStatusCode().value()),
+                e.getReason() != null
+                        ? e.getReason()
+                        : "요청을 처리할 수 없습니다."
+        );
+    }
+
+    @ExceptionHandler(LoginAttemptException.class)
+    public ResponseEntity<Map<String, Object>> handleLoginAttempt(
+            LoginAttemptException e
+    ) {
+
+        if (e.isBlocked()) {
+
+            return ResponseEntity
+                    .status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of(
+                            "code", "LOGIN_BLOCKED",
+                            "message", "로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.",
+                            "failedCount", e.getFailedAttempts(),
+                            "maxAttempts", e.getMaxAttempts(),
+                            "blocked", true
+                    ));
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of(
+                        "code", "LOGIN_FAILED",
+                        "message", "아이디 또는 비밀번호가 올바르지 않습니다.",
+                        "failedCount", e.getFailedAttempts(),
+                        "maxAttempts", e.getMaxAttempts(),
+                        "blocked", false
+                ));
+    }
+    
     private ResponseEntity<Map<String, String>> error(HttpStatus status, String message) {
         return ResponseEntity.status(status).body(Map.of(
                 "code", status.name(),

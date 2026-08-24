@@ -3,14 +3,18 @@ package com.kiosk.branch.statistics.controller;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.kiosk.branch.statistics.dto.BranchStatisticsResponse;
 import com.kiosk.branch.statistics.service.BranchStatisticsService;
+import com.kiosk.common.config.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,7 +33,9 @@ import lombok.RequiredArgsConstructor;
 public class BranchStatisticsController {
 
 
-    private final BranchStatisticsService statisticsService;
+	private final BranchStatisticsService statisticsService;
+	private final JwtUtil jwtUtil;
+
 
 
 
@@ -38,95 +44,61 @@ public class BranchStatisticsController {
      * [요청 흐름] GET /branch/statistics/{storeId}
      * 프론트 요청을 받아 getStatistics() 메서드가 입력을 받고 BranchStatisticsService 호출 후 결과를 응답한다.
      */
-    @GetMapping("/{storeId}")
-    public BranchStatisticsResponse getStatistics(
+	@GetMapping("/{storeId}")
+	public BranchStatisticsResponse getStatistics(
+	        @PathVariable Integer storeId,
 
+	        @RequestParam(required = false)
+	        LocalDate startDate,
 
-            @PathVariable
-            Integer storeId,
+	        @RequestParam(required = false)
+	        LocalDate endDate,
 
+	        @RequestParam(required = false)
+	        LocalTime startTime,
 
-            @RequestParam(required = false)
-            LocalDate startDate,
+	        @RequestParam(required = false)
+	        LocalTime endTime,
 
+	        @RequestHeader("Authorization")
+	        String authorization
+	) {
 
-            @RequestParam(required = false)
-            LocalDate endDate,
+	    String token = authorization.substring(7);
 
+	    Integer jwtStoreId = jwtUtil.getStoreId(token);
 
-            @RequestParam(required = false)
-            LocalTime startTime,
+	    if (!jwtStoreId.equals(storeId)) {
+	        throw new ResponseStatusException(
+	                HttpStatus.FORBIDDEN,
+	                "본인 지점의 통계만 조회할 수 있습니다."
+	        );
+	    }
 
+	    if (startDate == null) {
+	        startDate = LocalDate.now().minusMonths(1);
+	    }
 
-            @RequestParam(required = false)
-            LocalTime endTime
+	    if (endDate == null) {
+	        endDate = LocalDate.now();
+	    }
 
+	    if (startTime == null) {
+	        startTime = LocalTime.of(0, 0, 0);
+	    }
 
-    ){
+	    if (endTime == null) {
+	        endTime = LocalTime.of(23, 59, 59);
+	    }
 
-
-
-        /*
-         * 날짜 기본값
-         */
-        if(startDate == null){
-
-            startDate =
-                    LocalDate.now()
-                    .minusMonths(1);
-
-        }
-
-
-
-        if(endDate == null){
-
-            endDate =
-                    LocalDate.now();
-
-        }
-
-
-
-
-        /*
-         * 시간 기본값
-         */
-        if(startTime == null){
-
-            startTime =
-                    LocalTime.of(0,0,0);
-
-        }
-
-
-
-        if(endTime == null){
-
-            endTime =
-                    LocalTime.of(23,59,59);
-
-        }
-
-
-
-
-
-        return statisticsService.getStatistics(
-
-                storeId,
-
-                startDate,
-
-                endDate,
-
-                startTime,
-
-                endTime
-
-        );
-
-    }
+	    return statisticsService.getStatistics(
+	            storeId,
+	            startDate,
+	            endDate,
+	            startTime,
+	            endTime
+	    );
+	}
 
 
 }
