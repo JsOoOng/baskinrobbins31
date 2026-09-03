@@ -64,11 +64,26 @@ public class BranchStatisticsController {
 	        @org.springframework.format.annotation.DateTimeFormat(pattern = "HH:mm")
 	        LocalTime endTime,
 
-	        @RequestHeader("Authorization")
-	        String authorization
+	        @org.springframework.web.bind.annotation.CookieValue(name = "branchToken", required = false) 
+	        String branchToken,
+	        
+	        @RequestHeader(name = "Authorization", required = false) 
+	        String authorizationHeader
 	) {
 
-	    String token = authorization.substring(7);
+	    String token = null;
+	    if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+	        token = authorizationHeader.substring(7);
+	    } else if (branchToken != null) {
+	        token = branchToken;
+	    }
+
+	    if (token == null) {
+	        throw new ResponseStatusException(
+	                HttpStatus.UNAUTHORIZED,
+	                "로그인이 필요합니다."
+	        );
+	    }
 
 	    Integer jwtStoreId = jwtUtil.getStoreId(token);
 
