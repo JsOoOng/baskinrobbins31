@@ -2,7 +2,7 @@ name: Deploy to EC2 (3-Tier Bastion)
 
 on:
   push:
-    branches: [ "dev1_errorVideo" ]
+    branches: [ "dev_errorVideo" ]
 
 jobs:
   build-and-deploy:
