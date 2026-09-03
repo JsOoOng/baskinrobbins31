@@ -604,6 +604,7 @@ const closeEmployeeModal = () => {
 }
 
 const validateEmployeeForm = () => {
+  /*
   if (!employeeForm.loginId.trim()) {
     showMessage(
       '지점 관리자 로그인 ID를 입력해주세요.',
@@ -639,7 +640,7 @@ const validateEmployeeForm = () => {
 
       return false
     }
-
+*/
     if (
       employeeForm.password !==
       employeeForm.passwordConfirm
