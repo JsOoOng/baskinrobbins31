@@ -96,7 +96,7 @@ public class HeadEmployeeService {
         Integer storeId = request.getStoreId();
         String loginId = request.getLoginId().trim();
         String name = request.getName().trim();
-*/
+
         // 6. 실제 지점 조회
         Store store = headStoreMapper.findById(storeId)
                 .orElseThrow(
@@ -144,5 +144,7 @@ public class HeadEmployeeService {
                 .role(savedEmployee.getRole().name())
                 .status(savedEmployee.getStatus().name())
                 .build();
+                */
     }
+    
 }
