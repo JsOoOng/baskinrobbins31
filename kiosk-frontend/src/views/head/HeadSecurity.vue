@@ -455,6 +455,7 @@ const closeAdminModal = () => {
       return false
     }
 
+    /*
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/
     if (!passwordRegex.test(adminForm.password)) {
       showMessage(
@@ -464,6 +465,7 @@ const closeAdminModal = () => {
 
       return false
     }
+    */
 
     if (
       adminForm.password !==

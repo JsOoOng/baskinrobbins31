@@ -40,7 +40,7 @@ public class HeadEmployeeController {
                     Integer storeId,
 
                     @RequestBody
-                    @Valid HeadEmployeeCreateRequest request
+                    HeadEmployeeCreateRequest request
             ) {
 
         request.setStoreId(storeId);
