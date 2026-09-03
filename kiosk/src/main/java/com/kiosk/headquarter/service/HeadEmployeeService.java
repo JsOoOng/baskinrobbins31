@@ -112,6 +112,7 @@ public class HeadEmployeeService {
             );
         }
 
+        //test
         // 8. 지점 관리자 엔티티 생성
         Employee employee = Employee.builder()
                 .store(store)
