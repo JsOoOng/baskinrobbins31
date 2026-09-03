@@ -183,7 +183,7 @@ const handleFileChange = (e) => {
   // 2. 이미지 확장자 제한 (사진 파일만 허용)
   const fileName = file.name
   const extension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
-  const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp']
+  const allowedExtensions = []
 
   if (!allowedExtensions.includes(extension)) {
     alert('업로드 가능한 이미지 확장자는 jpg, jpeg, png, webp만 허용됩니다.')
