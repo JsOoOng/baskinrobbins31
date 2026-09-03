@@ -51,7 +51,7 @@ public class HeadEmployeeService {
     public HeadEmployeeCreateResponse createStoreManager(
             HeadEmployeeCreateRequest request
     ) {
-
+/*
         // 1. 요청 객체 검사
         if (request == null) {
             throw new IllegalArgumentException(
@@ -96,7 +96,7 @@ public class HeadEmployeeService {
         Integer storeId = request.getStoreId();
         String loginId = request.getLoginId().trim();
         String name = request.getName().trim();
-
+*/
         // 6. 실제 지점 조회
         Store store = headStoreMapper.findById(storeId)
                 .orElseThrow(
