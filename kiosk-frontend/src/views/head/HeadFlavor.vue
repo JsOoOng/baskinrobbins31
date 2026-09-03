@@ -180,17 +180,17 @@ const handleFileChange = (e) => {
     return
   }
 
-  // 2. 이미지 확장자 제한 (사진 파일만 허용) - 임시 해제
+  // 2. 이미지 확장자 제한 (사진 파일만 허용)
   const fileName = file.name
   const extension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
-  // const allowedExtensions = []
+  const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp']
 
-  // if (!allowedExtensions.includes(extension)) {
-  //   alert('업로드 가능한 이미지 확장자는 jpg, jpeg, png, webp만 허용됩니다.')
-  //   e.target.value = '' // 파일 input 초기화
-  //   form.imageFile = null
-  //   return
-  // }
+  if (!allowedExtensions.includes(extension)) {
+    alert('업로드 가능한 이미지 확장자는 jpg, jpeg, png, webp만 허용됩니다.')
+    e.target.value = '' // 파일 input 초기화
+    form.imageFile = null
+    return
+  }
 
   // 검증 통과 시 저장
   form.imageFile = file
@@ -394,6 +394,7 @@ const removeFlavor = async (confirmation) => {
             </span>
           <input
             type="file"
+            accept=".png,.jpeg,.jpg,.webp,image/png,image/jpeg,image/webp"
             @change="handleFileChange"
             ref="fileInputRef"
             :disabled="saving"
