@@ -435,8 +435,9 @@ const closeAdminModal = () => {
 
     return false
   }
-
+  
   if (adminModal.mode === 'create') {
+    /*
     if (!adminForm.password) {
       showMessage(
         '초기 비밀번호를 입력해주세요.',
@@ -445,7 +446,7 @@ const closeAdminModal = () => {
 
       return false
     }
-
+  
     if (adminForm.password.length < 8) {
       showMessage(
         '비밀번호는 영문, 숫자, 특수문자를 포함하여 8자 이상이어야 합니다.',
@@ -455,7 +456,7 @@ const closeAdminModal = () => {
       return false
     }
 
-    /*
+    
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/
     if (!passwordRegex.test(adminForm.password)) {
       showMessage(
@@ -465,7 +466,7 @@ const closeAdminModal = () => {
 
       return false
     }
-    */
+  */
 
     if (
       adminForm.password !==
@@ -479,7 +480,7 @@ const closeAdminModal = () => {
       return false
     }
   }
-
+  
   return true
 }
 
