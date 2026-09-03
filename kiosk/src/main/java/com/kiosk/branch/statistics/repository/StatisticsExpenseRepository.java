@@ -195,9 +195,9 @@ extends JpaRepository<StoreExpense, Integer>{
     	    ORDER BY e.expenseDate DESC
     	""")
     	List<StoreExpense> findExpenseDetail(
-    	        Integer storeId,
-    	        LocalDate startDate,
-    	        LocalDate endDate
+    			@Param("storeId") Integer storeId,
+                @Param("startDate") LocalDate startDate,
+                @Param("endDate") LocalDate endDate
     	);
 
 
