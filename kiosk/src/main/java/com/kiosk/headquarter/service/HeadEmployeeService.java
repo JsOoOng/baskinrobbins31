@@ -59,17 +59,19 @@ public class HeadEmployeeService {
             );
         }
 
+        Integer storeId = request.getStoreId();
+        String loginId = request.getLoginId().trim();
+        String name = request.getName().trim();
+        
+
         // 2. 지점 ID 검사
-        /*
         if (request.getStoreId() == null) {
             throw new IllegalArgumentException(
                     "지점 ID를 입력해야 합니다."
             );
         }
-        */
 
         // 3. 로그인 ID 검사
-        /*
         if (request.getLoginId() == null
                 || request.getLoginId().isBlank()) {
 
@@ -77,10 +79,8 @@ public class HeadEmployeeService {
                     "로그인 ID를 입력해야 합니다."
             );
         }
-        */
 
         // 4. 비밀번호 검사
-        /*
         if (request.getPassword() == null
                 || request.getPassword().isBlank()) {
 
@@ -88,10 +88,8 @@ public class HeadEmployeeService {
                     "비밀번호를 입력해야 합니다."
             );
         }
-        */
 
         // 5. 담당자 이름 검사
-        /*
         if (request.getName() == null
                 || request.getName().isBlank()) {
 
@@ -99,11 +97,6 @@ public class HeadEmployeeService {
                     "담당자 이름을 입력해야 합니다."
             );
         }
-        */
-
-        Integer storeId = request.getStoreId();
-        String loginId = request.getLoginId().trim();
-        String name = request.getName().trim();
 
         // 6. 실제 지점 조회
         Store store = headStoreMapper.findById(storeId)
