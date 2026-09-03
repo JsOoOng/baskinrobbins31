@@ -49,15 +49,19 @@ public class BranchStatisticsController {
 	        @PathVariable Integer storeId,
 
 	        @RequestParam(required = false)
+	        @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd")
 	        LocalDate startDate,
 
 	        @RequestParam(required = false)
+	        @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd")
 	        LocalDate endDate,
 
 	        @RequestParam(required = false)
+	        @org.springframework.format.annotation.DateTimeFormat(pattern = "HH:mm")
 	        LocalTime startTime,
 
 	        @RequestParam(required = false)
+	        @org.springframework.format.annotation.DateTimeFormat(pattern = "HH:mm")
 	        LocalTime endTime,
 
 	        @RequestHeader("Authorization")
